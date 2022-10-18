@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "slash",
+    "listener"
+]
