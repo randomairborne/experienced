@@ -63,7 +63,15 @@ type UserList = Arc<Mutex<HashSet<String>>>;
 
 async fn flush(db: MySqlPool, users: UserList) {
     loop {
+        let mut users_locked = users.lock().await;
+        let actives = users_locked.clone();
+        users_locked.clear();
+        drop(users_locked);
+        tokio::spawn(do_insert(db.clone(), actives));
         tokio::time::sleep(std::time::Duration::from_secs(60)).await;
-        query!("INSERT INTO levels VALUE")
     }
+}
+
+async fn do_insert(db: MySqlPool, users: HashSet<String>) {
+
 }
