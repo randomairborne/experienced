@@ -1,4 +1,5 @@
 use futures::stream::StreamExt;
+use rand::Rng;
 use sqlx::MySqlPool;
 use std::{collections::HashSet, env, error::Error, sync::Arc};
 use tokio::sync::Mutex;
@@ -73,5 +74,16 @@ async fn flush(db: MySqlPool, users: UserList) {
 }
 
 async fn do_insert(db: MySqlPool, users: HashSet<String>) {
-
+    for user in users {
+        let xp_count = rand::thread_rng().gen_range(15..=25);
+        if let Err(e) = sqlx::query("INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE levels SET xp=xp+? WHERE id = ?")
+            .bind(&user)
+            .bind(xp_count)
+            .bind(xp_count)
+            .bind(&user)
+            .execute(&db)
+            .await {
+                eprintln!("SQL insert error: {e:?}");
+            };
+    }
 }

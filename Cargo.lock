@@ -574,6 +574,7 @@ name = "listener"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "rand",
  "sqlx",
  "tokio",
  "twilight-gateway",
