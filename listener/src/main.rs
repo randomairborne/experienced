@@ -1,6 +1,6 @@
 use futures::stream::StreamExt;
-use sqlx::{MySqlPool, mysql::MySqlPoolOptions};
-use std::{env, error::Error, sync::Arc, collections::HashSet};
+use sqlx::MySqlPool;
+use std::{collections::HashSet, env, error::Error, sync::Arc};
 use tokio::sync::Mutex;
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
@@ -62,5 +62,8 @@ async fn handle_event(event: Event, users: UserList) {
 type UserList = Arc<Mutex<HashSet<String>>>;
 
 async fn flush(db: MySqlPool, users: UserList) {
-    
+    loop {
+        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+        query!("INSERT INTO levels VALUE")
+    }
 }
