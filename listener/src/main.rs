@@ -75,8 +75,10 @@ async fn flush(db: MySqlPool, users: UserList) {
 
 async fn do_insert(db: MySqlPool, users: HashSet<String>) {
     for user in users {
-        let xp_count = rand::thread_rng().gen_range(15..=25);
-        if let Err(e) = sqlx::query("INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE levels SET xp=xp+? WHERE id = ?")
+        let db = db.clone();
+        tokio::spawn(async move {
+            let xp_count = rand::thread_rng().gen_range(15..=25);
+            if let Err(e) = sqlx::query("INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE levels SET xp=xp+? WHERE id = ?")
             .bind(&user)
             .bind(xp_count)
             .bind(xp_count)
@@ -85,5 +87,6 @@ async fn do_insert(db: MySqlPool, users: HashSet<String>) {
             .await {
                 eprintln!("SQL insert error: {e:?}");
             };
+        });
     }
 }
