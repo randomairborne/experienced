@@ -44,7 +44,6 @@ name = "anvil-slash"
 version = "0.1.0"
 dependencies = [
  "axum",
- "axum-macros",
  "ed25519-dalek",
  "hex",
  "serde_json",
@@ -126,18 +125,6 @@ dependencies = [
  "mime",
  "tower-layer",
  "tower-service",
-]
-
-[[package]]
-name = "axum-macros"
-version = "0.3.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "247a599903eb2e02abbaf2facc6396140df7af6dcc84e64ce3b71d117702fa22"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

@@ -6,7 +6,6 @@ use twilight_model::{
 
 use crate::AppState;
 
-#[axum_macros::debug_handler]
 pub async fn handle(
     headers: HeaderMap,
     State(state): State<AppState>,
