@@ -10,7 +10,7 @@ RUN cargo build --release
 
 FROM alpine
 
-COPY --from builder /build/target/release/anvil-slash /usr/bin/
+COPY --from=builder /build/target/release/anvil-slash /usr/bin/
 
 EXPOSE 8080
 

@@ -10,6 +10,6 @@ RUN cargo build --release
 
 FROM alpine
 
-COPY --from builder /build/target/release/anvil-listener /usr/bin/
+COPY --from=builder /build/target/release/anvil-listener /usr/bin/
 
 ENTRYPOINT "/usr/bin/anvil-listener"
