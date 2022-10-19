@@ -6,6 +6,7 @@ use twilight_model::{
 
 use crate::AppState;
 
+// This should support a level slash command as well as a user context menu command for levels
 pub async fn handle(
     headers: HeaderMap,
     State(state): State<AppState>,
@@ -14,7 +15,7 @@ pub async fn handle(
     let body = body.to_vec();
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
     // TODO make this actually do something
-    let interaction: Interaction = serde_json::from_slice(&body)?;
+    let _interaction: Interaction = serde_json::from_slice(&body)?;
     Ok(Json(InteractionResponse {
         kind: InteractionResponseType::Pong,
         data: None,
