@@ -10,6 +10,8 @@ RUN cargo build --release
 
 FROM alpine
 
-COPY --from builder /build/target/release/anvil-listener /usr/bin/
+COPY --from builder /build/target/release/anvil-slash /usr/bin/
 
-ENTRYPOINT "/usr/bin/anvil-listener"
+EXPOSE 8080
+
+ENTRYPOINT "/usr/bin/anvil-slash"

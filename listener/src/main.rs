@@ -11,7 +11,7 @@ use twilight_gateway::{
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let token = env::var("DISCORD_TOKEN")?;
-    let mysql = env::var("MYSQL_URL")?;
+    let mysql = env::var("DATABASE_URL")?;
 
     let scheme = ShardScheme::Range {
         from: 0,
@@ -47,17 +47,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 }
 
 async fn handle_event(event: Event, users: UserList) {
-    match event {
-        Event::MessageCreate(msg) => {
-            if msg.author.bot {
-                return;
-            } else {
-                let mut u = users.lock().await;
-                u.insert(msg.author.id.to_string());
-            }
+    if let Event::MessageCreate(msg) = event {
+        if msg.author.bot {
+        } else {
+            let mut u = users.lock().await;
+            u.insert(msg.author.id.to_string());
         }
-        _ => {}
-    };
+    }
 }
 
 type UserList = Arc<Mutex<HashSet<String>>>;

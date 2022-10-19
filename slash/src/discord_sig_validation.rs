@@ -1,19 +1,15 @@
 use ed25519_dalek::{PublicKey, Signature, Verifier};
 
-fn validate_discord_sig(
-    headers: &http::header::HeaderMap,
+pub fn validate_discord_sig(
+    headers: &axum::http::HeaderMap,
     body: &[u8],
-    pub_key_string: String,
+    pub_key_string: &str,
 ) -> std::result::Result<(), SignatureValidationError> {
-    let sig_hex = hex::decode(
+    let sig_arr = hex::decode(
         headers
             .get("X-Signature-Ed25519")
             .ok_or(SignatureValidationError::MissingSignatureHeader)?,
     )?;
-    let mut sig_arr: [u8; 64] = [0; 64];
-    for (i, byte) in sig_hex.into_iter().enumerate() {
-        sig_arr[i] = byte;
-    }
     let sig = Signature::from_bytes(&sig_arr)?;
     let timestamp = headers
         .get("X-Signature-Timestamp")

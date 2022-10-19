@@ -1,29 +1,33 @@
+use std::sync::Arc;
+
+use axum::routing::post;
+use sqlx::{Connection, MySqlConnection};
+
 mod discord_sig_validation;
+mod handler;
+
+pub type AppState = Arc<UnderlyingAppState>;
 
 #[tokio::main]
-async fn main() {
-    serve(([0, 0, 0, 0], 8080)).await;
-}
-
-pub async fn serve(addr: SocketAddr) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let tcp_listener = TcpListener::bind(addr).await?;
-    loop {
-        let (tcp_stream, _) = tcp_listener.accept().await?;
-        tokio::task::spawn(async move {
-            if let Err(http_err) = Http::new()
-                .http1_only(true)
-                .http1_keep_alive(true)
-                .serve_connection(tcp_stream, service_fn(Self::handle_discord_message))
-                .await
-            {
-                eprintln!("Error while serving HTTP connection: {}", http_err);
-            }
-        });
-    }
-}
-
-async fn handle_discord_message(_req: Request<Body>) -> Result<Response<Body>, Infallible> {
-    Ok(Response::new(Body::from("Hello World!")))
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let token = std::env::var("DISCORD_TOKEN")?;
+    let pubkey = std::env::var("DISCORD_PUBKEY")?;
+    let db = MySqlConnection::connect(&std::env::var("DATABASE_URL")?)
+        .await
+        .expect("Failed to connect to the database!");
+    let state = Arc::new(UnderlyingAppState {
+        db,
+        client: twilight_http::Client::new(token),
+        pubkey,
+    });
+    let route = axum::Router::with_state(state).route("/", post(handler::handle));
+    axum::Server::bind(&([0, 0, 0, 0], 8080).into()).serve(route.into_make_service());
+    Ok(())
 }
 
 // mee6 algorithm: 5 * (lvl ^ 2) + (50 * lvl) + 100 - xp;
+pub struct UnderlyingAppState {
+    pub db: MySqlConnection,
+    pub pubkey: String,
+    pub client: twilight_http::Client,
+}
