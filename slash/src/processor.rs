@@ -5,11 +5,13 @@ use twilight_model::{
     application::{
         command::CommandType,
         interaction::{
-            application_command::CommandData, Interaction, InteractionData, InteractionType,
+            application_command::{CommandData, CommandOptionValue},
+            Interaction, InteractionData, InteractionType,
         },
     },
     channel::message::MessageFlags,
-    http::interaction::{InteractionResponse, InteractionResponseData},
+    http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    id::{marker::UserMarker, Id},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -34,6 +36,7 @@ fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
+    let author_id = interaction.author_id();
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd
@@ -43,24 +46,53 @@ fn process_app_cmd(
     } else {
         return err("Discord didn't send interaction data!");
     };
-    match data.kind {
-        CommandType::ChatInput => process_slash_cmd(data),
+    let author_id = match data.kind {
+        CommandType::ChatInput => process_slash_cmd(data, author_id),
         CommandType::User => process_user_cmd(data),
         CommandType::Message => process_msg_cmd(data),
-        _ => err("Discord sent unknown kind of interaction!"),
+        _ => return err("Discord sent unknown kind of interaction!"),
+    }?;
+    Ok(InteractionResponseDataBuilder::new()
+        .flags(MessageFlags::EPHEMERAL)
+        .content(format!("ID of user to check level of: {author_id}"))
+        .build())
+}
+
+fn process_slash_cmd(
+    data: CommandData,
+    invoker: Option<Id<UserMarker>>,
+) -> Result<Id<UserMarker>, CommandProcessorError> {
+    if &data.name != "level" && &data.name != "rank" {
+        return Err(CommandProcessorError::UnrecognizedCommand);
+    };
+    for option in data.options {
+        if option.name == "user" {
+            if let CommandOptionValue::User(val) = option.value {
+                return Ok(val);
+            };
+        }
+    }
+    if let Some(val) = invoker {
+        Ok(val)
+    } else {
+        Err(CommandProcessorError::NoInvokerId)
     }
 }
 
-fn process_slash_cmd(data: CommandData) -> Result<InteractionResponseData, CommandProcessorError> {
-
+fn process_msg_cmd(data: CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
+    Err(CommandProcessorError::NoInvokerId)
 }
 
-fn process_msg_cmd(data: CommandData) -> Result<InteractionResponseData, CommandProcessorError> {}
-
-fn process_user_cmd(data: CommandData) -> Result<InteractionResponseData, CommandProcessorError> {}
-
+fn process_user_cmd(data: CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
+    Err(CommandProcessorError::NoInvokerId)
+}
 #[derive(Debug, thiserror::Error)]
-pub enum CommandProcessorError {}
+pub enum CommandProcessorError {
+    #[error("Discord sent a command that is not known!")]
+    UnrecognizedCommand,
+    #[error("Discord did not send a user ID for the command invoker when it was required!")]
+    NoInvokerId,
+}
 
 fn err(msg: impl Display) -> Result<InteractionResponseData, CommandProcessorError> {
     Ok(InteractionResponseDataBuilder::new()

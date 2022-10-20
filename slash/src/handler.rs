@@ -1,7 +1,6 @@
 use axum::{body::Bytes, extract::State, http::HeaderMap, response::IntoResponse, Json};
 use twilight_model::{
-    application::interaction::Interaction,
-    http::interaction::{InteractionResponse, InteractionResponseType},
+    application::interaction::Interaction, http::interaction::InteractionResponse,
 };
 
 use crate::AppState;
