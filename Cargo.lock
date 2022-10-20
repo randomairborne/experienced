@@ -52,6 +52,7 @@ dependencies = [
  "tokio",
  "twilight-http",
  "twilight-model",
+ "twilight-util",
 ]
 
 [[package]]
@@ -816,6 +817,10 @@ name = "matchit"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dfc802da7b1cf80aefffa0c7b2f77247c8b32206cc83c270b61264f5b360a80"
+
+[[package]]
+name = "mee6-xp-to-level"
+version = "0.1.0"
 
 [[package]]
 name = "memchr"
@@ -1995,6 +2000,16 @@ dependencies = [
  "serde_repr",
  "time",
  "tracing",
+]
+
+[[package]]
+name = "twilight-util"
+version = "0.13.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15c8282a2806ead7baed20dcb3f12dc89b2fc83da29cbc2c8e73cc27f849218d"
+dependencies = [
+ "twilight-model",
+ "twilight-validate",
 ]
 
 [[package]]

@@ -3,9 +3,9 @@ use std::sync::Arc;
 use axum::routing::post;
 use sqlx::{Connection, MySqlConnection};
 
+mod cmd_defs;
 mod discord_sig_validation;
 mod handler;
-
 pub type AppState = Arc<UnderlyingAppState>;
 
 #[tokio::main]

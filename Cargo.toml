@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "slash",
-    "listener"
+    "listener",
+    "mee6-xp-to-level"
 ]
