@@ -1,3 +1,5 @@
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
+
 use futures::stream::StreamExt;
 use rand::Rng;
 use sqlx::MySqlPool;

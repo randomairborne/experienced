@@ -2,6 +2,11 @@
 name = "anvil-slash"
 version = "0.1.0"
 edition = "2021"
+authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
+description = "A slash command handler for anvil"
+repository = "https://github.com/randomairborne/anvil"
+readme = "README.txt"
+license = "MS-PL"
 
 
 [dependencies]

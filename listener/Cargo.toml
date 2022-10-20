@@ -2,6 +2,11 @@
 name = "anvil-listener"
 version = "0.1.0"
 edition = "2021"
+authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
+description = "A websocket listener for anvil"                
+repository = "https://github.com/randomairborne/anvil"    
+readme = "README.txt"                                     
+license = "MS-PL"
 
 [dependencies]
 futures = "0.3"
