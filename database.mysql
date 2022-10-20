@@ -1,4 +1,4 @@
 CREATE TABLE levels (
     id VARCHAR(128) PRIMARY KEY,
-    xp BIGINT NOT NULL,
+    xp BIGINT NOT NULL
 );

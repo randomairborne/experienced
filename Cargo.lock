@@ -32,6 +32,7 @@ dependencies = [
 name = "anvil-listener"
 version = "0.1.0"
 dependencies = [
+ "dotenvy",
  "futures",
  "rand 0.8.5",
  "sqlx",
@@ -44,6 +45,7 @@ name = "anvil-slash"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "dotenvy",
  "ed25519-dalek",
  "hex",
  "serde_json",
@@ -817,10 +819,6 @@ name = "matchit"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dfc802da7b1cf80aefffa0c7b2f77247c8b32206cc83c270b61264f5b360a80"
-
-[[package]]
-name = "mee6-xp-to-level"
-version = "0.1.0"
 
 [[package]]
 name = "memchr"
