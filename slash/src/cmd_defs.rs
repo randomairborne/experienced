@@ -6,7 +6,13 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
             .dm_permission(false)
             .option(UserBuilder::new("user", "User to check level of").required(false))
             .validate()
-            .expect("Slash command is invalid!")
+            .expect("Level slash command is invalid!")
+            .build(),
+        CommandBuilder::new("rank", "Check someone's level", CommandType::ChatInput)
+            .dm_permission(false)
+            .option(UserBuilder::new("user", "User to check level of").required(false))
+            .validate()
+            .expect("Rank slash command is invalid!")
             .build(),
         CommandBuilder::new("Get level", "", CommandType::User).build(),
         CommandBuilder::new("Get level", "", CommandType::Message).build(),

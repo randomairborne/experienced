@@ -1,7 +1,17 @@
+use std::fmt::Display;
+
 use crate::AppState;
+use twilight_http::request::user;
 use twilight_model::{
-    application::interaction::{Interaction, InteractionType},
+    application::{
+        command::CommandType,
+        interaction::{
+            application_command::CommandData, Interaction, InteractionData, InteractionType,
+        },
+    },
+    channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    id::{marker::UserMarker, Id},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -26,8 +36,37 @@ fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
-    Ok(InteractionResponseDataBuilder::new().build())
+    let data = if let Some(data) = interaction.data {
+        if let InteractionData::ApplicationCommand(cmd) = data {
+            *cmd
+        } else {
+            return err("This bot does not support ModalSubmit or MessageComponent interactions!");
+        }
+    } else {
+        return err("Discord didn't send interaction data!");
+    };
+    match data.kind {
+        CommandType::ChatInput => process_slash_cmd(data),
+        CommandType::User => process_user_cmd(data),
+        CommandType::Message => process_msg_cmd(data),
+        _ => err("Discord sent unknown kind of interaction!"),
+    }
 }
+
+fn process_slash_cmd(data: CommandData) -> Result<InteractionResponseData, CommandProcessorError> {
+
+}
+
+fn process_msg_cmd(data: CommandData) -> Result<InteractionResponseData, CommandProcessorError> {}
+
+fn process_user_cmd(data: CommandData) -> Result<InteractionResponseData, CommandProcessorError> {}
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandProcessorError {}
+
+fn err(msg: impl Display) -> Result<InteractionResponseData, CommandProcessorError> {
+    Ok(InteractionResponseDataBuilder::new()
+        .content(format!("Oops! {msg}"))
+        .flags(MessageFlags::EPHEMERAL)
+        .build())
+}
