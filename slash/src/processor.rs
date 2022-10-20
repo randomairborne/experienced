@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
 use crate::AppState;
-use twilight_http::request::user;
 use twilight_model::{
     application::{
         command::CommandType,
@@ -10,8 +9,7 @@ use twilight_model::{
         },
     },
     channel::message::MessageFlags,
-    http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    id::{marker::UserMarker, Id},
+    http::interaction::{InteractionResponse, InteractionResponseData},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
