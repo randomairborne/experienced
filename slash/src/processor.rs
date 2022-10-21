@@ -73,8 +73,19 @@ fn process_slash_cmd(
     invoker.ok_or(CommandProcessorError::NoInvokerId)
 }
 
-const fn process_msg_cmd(_data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
-    Err(CommandProcessorError::Unimplemented("I have not yet figured out how to get the user who sent a message from a message command. Please click the user instead."))
+fn process_msg_cmd(data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
+    let msg_id = data
+        .target_id
+        .ok_or(CommandProcessorError::NoMessageTargetId)?;
+    Ok(data
+        .resolved
+        .as_ref()
+        .ok_or(CommandProcessorError::NoResolvedData)?
+        .messages
+        .get(&msg_id.cast())
+        .ok_or(CommandProcessorError::NoInvokerId)?
+        .author
+        .id)
 }
 
 const fn process_user_cmd(data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
@@ -116,8 +127,10 @@ pub enum CommandProcessorError {
     UnrecognizedCommand,
     #[error("Discord did not send a user ID for the command invoker when it was required!")]
     NoInvokerId,
-    #[error("This command is not yet implemented: {0}")]
-    Unimplemented(&'static str),
+    #[error("Discord did not send part of the Resolved Data!")]
+    NoResolvedData,
+    #[error("Discord did not send target ID for message!")]
+    NoMessageTargetId,
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }

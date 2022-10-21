@@ -14,10 +14,14 @@ jobs:
 
       - name: Install cargo
         uses: actions-rs/toolchain@v1
-
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+          
       - name: Check formatting
         run: cargo fmt --check
 
       - name: Check build
-        run: cargo clippy 
+        run: cargo clippy
 
