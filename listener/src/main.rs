@@ -77,7 +77,7 @@ async fn do_insert(db: MySqlPool, users: HashSet<String>) {
         let db = db.clone();
         tokio::spawn(async move {
             let xp_count = rand::thread_rng().gen_range(15..=25);
-            if let Err(e) = sqlx::query("INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE levels SET xp=xp+? WHERE id = ?")
+            if let Err(e) = sqlx::query("INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE xp=xp+? WHERE id = ?")
             .bind(&user)
             .bind(xp_count)
             .bind(xp_count)
