@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use axum::routing::post;
-use sqlx::{Connection, MySqlConnection};
+use sqlx::MySqlPool;
 
 mod cmd_defs;
 mod discord_sig_validation;
@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_TOKEN").expect("Expected environment variable DISCORD_TOKEN");
     let pubkey =
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
-    let db = MySqlConnection::connect(
+    let db = MySqlPool::connect(
         &std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL"),
     )
     .await
@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         ),
     )
     .await;
-    let state = Arc::new(UnderlyingAppState { db, client, pubkey });
+    let state = Arc::new(UnderlyingAppState { db, pubkey });
     let route = axum::Router::with_state(state).route("/", post(handler::handle));
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
@@ -49,7 +49,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 // mee6 algorithm: 5 * (lvl ^ 2) + (50 * lvl) + 100 - xp;
 pub struct UnderlyingAppState {
-    pub db: MySqlConnection,
+    pub db: MySqlPool,
     pub pubkey: String,
-    pub client: twilight_http::Client,
 }

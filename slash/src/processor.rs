@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use crate::AppState;
+use sqlx::query;
 use twilight_model::{
     application::{
         command::CommandType,
@@ -15,14 +16,14 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-pub fn process(
+pub async fn process(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     Ok(if interaction.kind == InteractionType::ApplicationCommand {
         InteractionResponse {
             kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(process_app_cmd(interaction, state)?),
+            data: Some(process_app_cmd(interaction, state).await?),
         }
     } else {
         InteractionResponse {
@@ -32,7 +33,7 @@ pub fn process(
     })
 }
 
-fn process_app_cmd(
+async fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
@@ -48,14 +49,11 @@ fn process_app_cmd(
     };
     let author_id = match data.kind {
         CommandType::ChatInput => process_slash_cmd(data, author_id),
-        CommandType::User => process_user_cmd(data),
-        CommandType::Message => process_msg_cmd(data),
+        CommandType::User => process_user_cmd(&data),
+        CommandType::Message => process_msg_cmd(&data),
         _ => return err("Discord sent unknown kind of interaction!"),
     }?;
-    Ok(InteractionResponseDataBuilder::new()
-        .flags(MessageFlags::EPHEMERAL)
-        .content(format!("ID of user to check level of: {author_id}"))
-        .build())
+    get_level(author_id, state).await
 }
 
 fn process_slash_cmd(
@@ -72,28 +70,59 @@ fn process_slash_cmd(
             };
         }
     }
-    if let Some(val) = invoker {
-        Ok(val)
-    } else {
-        Err(CommandProcessorError::NoInvokerId)
+    invoker.ok_or(CommandProcessorError::NoInvokerId)
+}
+
+const fn process_msg_cmd(_data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
+    Err(CommandProcessorError::Unimplemented("I have not yet figured out how to get the user who sent a message from a message command. Please click the user instead."))
+}
+
+const fn process_user_cmd(data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
+    if let Some(target_id) = data.target_id {
+        return Ok(target_id.cast());
     }
-}
-
-fn process_msg_cmd(data: CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
     Err(CommandProcessorError::NoInvokerId)
 }
 
-fn process_user_cmd(data: CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
-    Err(CommandProcessorError::NoInvokerId)
+async fn get_level(
+    user: Id<UserMarker>,
+    state: AppState,
+) -> Result<InteractionResponseData, CommandProcessorError> {
+    // Select current XP from the database, return 0 if there is no row
+    let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.to_string())
+        .fetch_one(&state.db)
+        .await
+    {
+        Ok(val) => val.xp,
+        Err(e) => match e {
+            sqlx::Error::RowNotFound => 0,
+            _ => Err(e)?,
+        },
+    };
+    let content = if xp == 0 {
+        "This user isn't ranked, because they haven't sent any messages.".to_string()
+    } else {
+        format!("This user currently has {xp} xp.")
+    };
+    Ok(InteractionResponseDataBuilder::new()
+        .flags(MessageFlags::EPHEMERAL)
+        .content(content)
+        .build())
 }
+
 #[derive(Debug, thiserror::Error)]
 pub enum CommandProcessorError {
     #[error("Discord sent a command that is not known!")]
     UnrecognizedCommand,
     #[error("Discord did not send a user ID for the command invoker when it was required!")]
     NoInvokerId,
+    #[error("This command is not yet implemented: {0}")]
+    Unimplemented(&'static str),
+    #[error("SQLx encountered an error: {0}")]
+    Sqlx(#[from] sqlx::Error),
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn err(msg: impl Display) -> Result<InteractionResponseData, CommandProcessorError> {
     Ok(InteractionResponseDataBuilder::new()
         .content(format!("Oops! {msg}"))

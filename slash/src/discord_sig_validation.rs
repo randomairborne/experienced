@@ -19,7 +19,7 @@ pub fn validate_discord_sig(
         .as_bytes()
         .iter()
         .chain(body.iter())
-        .cloned()
+        .copied()
         .collect();
     pub_key.verify(to_be_verified.as_slice(), &sig)?;
     Ok(())

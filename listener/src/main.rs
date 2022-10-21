@@ -12,8 +12,9 @@ use twilight_gateway::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let token = env::var("DISCORD_TOKEN")?;
-    let mysql = env::var("DATABASE_URL")?;
+    dotenvy::dotenv().ok();
+    let token = env::var("DISCORD_TOKEN").expect("Failed to get DATABASE_TOKEN environment variable");
+    let mysql = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
 
     let scheme = ShardScheme::Range {
         from: 0,
