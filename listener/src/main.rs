@@ -3,7 +3,7 @@
 use futures::stream::StreamExt;
 use rand::Rng;
 use sqlx::MySqlPool;
-use std::{env, error::Error, sync::Arc};
+use std::{env, sync::Arc};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
