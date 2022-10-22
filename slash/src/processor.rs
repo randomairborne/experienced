@@ -37,7 +37,7 @@ async fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
-    let author_id = interaction.author_id();
+    let invoker_id = interaction.author_id();
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd
@@ -48,12 +48,12 @@ async fn process_app_cmd(
         return err("Discord didn't send interaction data!");
     };
     let author_id = match data.kind {
-        CommandType::ChatInput => process_slash_cmd(data, author_id),
+        CommandType::ChatInput => process_slash_cmd(data, invoker_id),
         CommandType::User => process_user_cmd(&data),
         CommandType::Message => process_msg_cmd(&data),
         _ => return err("Discord sent unknown kind of interaction!"),
     }?;
-    get_level(author_id, state).await
+    get_level(author_id, invoker_id, state).await
 }
 
 fn process_slash_cmd(
@@ -97,6 +97,7 @@ const fn process_user_cmd(data: &CommandData) -> Result<Id<UserMarker>, CommandP
 
 async fn get_level(
     user: Id<UserMarker>,
+    invoker: Option<Id<UserMarker>>,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     // Select current XP from the database, return 0 if there is no row
@@ -110,11 +111,26 @@ async fn get_level(
             _ => Err(e)?,
         },
     };
-    let content = if xp == 0 {
-        "This user isn't ranked, because they haven't sent any messages.".to_string()
+    let content: String;
+    if let Some(invoker) = invoker {
+        if invoker == user {
+            if xp == 0 {
+                content =
+                    "You aren't ranked yet, because you haven't sent any messages!".to_string();
+            } else {
+                content = format!("You have {xp} xp.");
+            };
+        } else if xp == 0 {
+            content =
+                "This user isn't ranked yet, because they haven't sent any messages!".to_string();
+        } else {
+            content = format!("This user has {xp} xp.");
+        }
+    } else if xp == 0 {
+        content = "This user isn't ranked yet, because they haven't sent any messages!".to_string();
     } else {
-        format!("This user currently has {xp} xp.")
-    };
+        content = format!("This user has {xp} xp.");
+    }
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)
         .content(content)
