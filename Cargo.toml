@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "slash",
-    "listener"
+    "listener",
+    "libmee6"
 ]

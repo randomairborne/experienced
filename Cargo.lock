@@ -35,6 +35,7 @@ dependencies = [
  "dashmap",
  "dotenvy",
  "futures",
+ "libmee6",
  "rand 0.8.5",
  "sqlx",
  "tokio",
@@ -50,6 +51,7 @@ dependencies = [
  "dotenvy",
  "ed25519-dalek",
  "hex",
+ "libmee6",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -809,6 +811,10 @@ name = "libm"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "292a948cd991e376cf75541fe5b97a1081d713c618b4f1b9500f8844e49eb565"
+
+[[package]]
+name = "libmee6"
+version = "0.1.0"
 
 [[package]]
 name = "lock_api"

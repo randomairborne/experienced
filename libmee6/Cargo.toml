@@ -1,0 +1,12 @@
+[package]
+name = "libmee6"
+version = "0.1.0"
+edition = "2021"
+authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
+description = "A struct to calculate mee6 leveling data"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/randomairborne/anvil"
+categories = ["no-std", "mathematics"]
+keywords = ["mee6"]
+
+[dependencies]
