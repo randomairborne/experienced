@@ -58,7 +58,7 @@ async fn handle_event(
     cooldown: Arc<DashMap<Id<UserMarker>, Instant>>,
 ) {
     if let Event::MessageCreate(msg) = event {
-        if !msg.author.bot && cooldown.get(&msg.author.id).is_some() {
+        if !msg.author.bot && cooldown.get(&msg.author.id).is_none() {
             let xp_count = rand::thread_rng().gen_range(15..=25);
             if let Err(e) = sqlx::query(
                 "INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
