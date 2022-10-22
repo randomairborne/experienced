@@ -112,24 +112,43 @@ async fn get_level(
         },
     };
     let content: String;
+    let level_info = libmee6::LevelInfo::new(xp);
     if let Some(invoker) = invoker {
         if invoker == user {
             if xp == 0 {
                 content =
                     "You aren't ranked yet, because you haven't sent any messages!".to_string();
             } else {
-                content = format!("You have {xp} xp.");
+                content = format!(
+                    "You are level {} with {} xp, and are {}% of the way to level {}.",
+                    level_info.level(),
+                    level_info.xp(),
+                    level_info.percentage(),
+                    level_info.level() + 1
+                );
             };
         } else if xp == 0 {
             content =
                 "This user isn't ranked yet, because they haven't sent any messages!".to_string();
         } else {
-            content = format!("This user has {xp} xp.");
+            content = format!(
+                "This user is level {} with {} xp, and is {}% of the way to level {}.",
+                level_info.level(),
+                level_info.xp(),
+                level_info.percentage(),
+                level_info.level() + 1
+            );
         }
     } else if xp == 0 {
         content = "This user isn't ranked yet, because they haven't sent any messages!".to_string();
     } else {
-        content = format!("This user has {xp} xp.");
+        content = format!(
+            "This user is level {} with {} xp, and is {}% of the way to level {}.",
+            level_info.level(),
+            level_info.xp(),
+            level_info.percentage(),
+            level_info.level() + 1
+        );
     }
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)

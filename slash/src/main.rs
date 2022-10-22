@@ -47,7 +47,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-// mee6 algorithm: 5 * (lvl ^ 2) + (50 * lvl) + 100 - xp;
 pub struct UnderlyingAppState {
     pub db: MySqlPool,
     pub pubkey: String,
