@@ -34,7 +34,9 @@ impl LevelInfo {
         Self {
             xp,
             level: i64::from(level),
-            percentage: (last_level_xp_requirement / next_level_xp_requirement * 100.0) as u8,
+            percentage: (((xp as f64 - last_level_xp_requirement)
+                / (next_level_xp_requirement - last_level_xp_requirement))
+                * 100.0) as u8,
         }
     }
     #[must_use]
@@ -74,7 +76,7 @@ mod tests {
     #[test]
     fn percentage() {
         let inf = LevelInfo::new(3255);
-        assert_eq!(inf.percentage(), 77);
+        assert_eq!(inf.percentage(), 43);
     }
 
     #[bench]
