@@ -1,3 +1,4 @@
+#![cfg_attr(test, feature(test))]
 #![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
 // We allow cast precision loss because we will never be messing with integers bigger then 52 bits realistically
 #![allow(
@@ -59,6 +60,7 @@ impl LevelInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    extern crate test;
     #[test]
     fn level() {
         let inf = LevelInfo::new(3255);
@@ -73,5 +75,12 @@ mod tests {
     fn percentage() {
         let inf = LevelInfo::new(3255);
         assert_eq!(inf.percentage(), 77);
+    }
+
+    #[bench]
+    fn create_levelinfo(b: &mut test::Bencher) {
+        b.iter(|| for i in 1..1_000_000 {
+            test::black_box(LevelInfo::new(i));
+        })
     }
 }
