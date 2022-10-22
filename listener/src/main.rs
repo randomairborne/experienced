@@ -1,13 +1,15 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
+use dashmap::DashMap;
 use futures::stream::StreamExt;
 use rand::Rng;
 use sqlx::MySqlPool;
-use std::{env, sync::Arc};
+use std::{env, sync::Arc, time::Instant};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
+use twilight_model::id::{marker::UserMarker, Id};
 
 #[tokio::main]
 async fn main() {
@@ -20,6 +22,7 @@ async fn main() {
         .connect(&mysql)
         .await
         .expect("Failed to connect to database");
+    let cooldown: Arc<DashMap<Id<UserMarker>, Instant>> = Arc::new(DashMap::new());
     let scheme = ShardScheme::Range {
         from: 0,
         to: 0,
@@ -42,17 +45,20 @@ async fn main() {
         cluster_spawn.up().await;
     });
 
+    tokio::spawn(clean_cooldown(cooldown.clone()));
+
     while let Some((_shard_id, event)) = events.next().await {
-        tokio::spawn(handle_event(event, db.clone()));
+        tokio::spawn(handle_event(event, db.clone(), cooldown.clone()));
     }
 }
 
-async fn handle_event(event: Event, db: MySqlPool) {
+async fn handle_event(
+    event: Event,
+    db: MySqlPool,
+    cooldown: Arc<DashMap<Id<UserMarker>, Instant>>,
+) {
     if let Event::MessageCreate(msg) = event {
-        if !msg.author.bot {
-            // TODO edit sql to only allow user to gain xp one time per minute
-            // This could be done using redis, but I don't really want to add more external requirements.
-            // I plan to somehow do it within the DB, prob with an additional column.
+        if !msg.author.bot && cooldown.get(&msg.author.id).is_some() {
             let xp_count = rand::thread_rng().gen_range(15..=25);
             if let Err(e) = sqlx::query(
                 "INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
@@ -65,6 +71,14 @@ async fn handle_event(event: Event, db: MySqlPool) {
             {
                 eprintln!("SQL insert error: {e:?}");
             };
+            cooldown.insert(msg.author.id, Instant::now());
         }
+    }
+}
+
+async fn clean_cooldown(cooldown: Arc<DashMap<Id<UserMarker>, Instant>>) {
+    loop {
+        cooldown.retain(|_, time| time.elapsed() < std::time::Duration::from_secs(60));
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 }
