@@ -111,6 +111,10 @@ async fn get_level(
             _ => Err(e)?,
         },
     };
+    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp < ?", xp)
+        .fetch_one(&state.db)
+        .await?
+        .count;
     let content: String;
     let level_info = libmee6::LevelInfo::new(xp);
     if let Some(invoker) = invoker {
@@ -120,8 +124,9 @@ async fn get_level(
                     "You aren't ranked yet, because you haven't sent any messages!".to_string();
             } else {
                 content = format!(
-                    "You are level {} with {} xp, and are {}% of the way to level {}.",
+                    "You are level {} (rank {}) with {} xp, and are {}% of the way to level {}.",
                     level_info.level(),
+                    rank,
                     level_info.xp(),
                     level_info.percentage(),
                     level_info.level() + 1
@@ -132,8 +137,9 @@ async fn get_level(
                 "This user isn't ranked yet, because they haven't sent any messages!".to_string();
         } else {
             content = format!(
-                "This user is level {} with {} xp, and is {}% of the way to level {}.",
+                "This user is level {} (rank {}) with {} xp, and is {}% of the way to level {}.",
                 level_info.level(),
+                rank,
                 level_info.xp(),
                 level_info.percentage(),
                 level_info.level() + 1
@@ -143,8 +149,9 @@ async fn get_level(
         content = "This user isn't ranked yet, because they haven't sent any messages!".to_string();
     } else {
         content = format!(
-            "This user is level {} with {} xp, and is {}% of the way to level {}.",
+            "This user is level {} (rank {}) with {} xp, and is {}% of the way to level {}.",
             level_info.level(),
+            rank,
             level_info.xp(),
             level_info.percentage(),
             level_info.level() + 1
