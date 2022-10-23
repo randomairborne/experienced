@@ -39,9 +39,6 @@ async fn process_app_cmd(
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     #[cfg(debug_assertions)]
     println!("DEBUG: {:#?}", interaction);
-    let invoker_id = interaction
-        .author_id()
-        .ok_or(CommandProcessorError::NoInvokerId)?;
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd
@@ -51,21 +48,17 @@ async fn process_app_cmd(
     } else {
         return Err(CommandProcessorError::NoInteractionData);
     };
-    let resolved = data
-        .resolved
-        .as_ref()
-        .ok_or(CommandProcessorError::NoResolvedData)?;
-    let invoker = resolved
-        .users
-        .get(&invoker_id)
-        .ok_or(CommandProcessorError::NoInvokerId)?;
+    let invoker = match interaction.member {
+        Some(val) => val.user,
+        None => interaction.user,
+    }.ok_or(CommandProcessorError::NoInvoker)?;
     let target = match data.kind {
-        CommandType::ChatInput => process_slash_cmd(&data, invoker),
+        CommandType::ChatInput => process_slash_cmd(&data, &invoker),
         CommandType::User => process_user_cmd(&data),
         CommandType::Message => process_msg_cmd(&data),
         _ => return err("Discord sent unknown kind of interaction!"),
     }?;
-    get_level(target, invoker, state).await
+    get_level(target, &invoker, state).await
 }
 
 fn process_slash_cmd<'a>(
@@ -84,7 +77,7 @@ fn process_slash_cmd<'a>(
                     .ok_or(CommandProcessorError::NoResolvedData)?
                     .users
                     .get(&user_id)
-                    .ok_or(CommandProcessorError::NoInvokerId);
+                    .ok_or(CommandProcessorError::NoTarget);
             };
         }
     }
@@ -100,7 +93,7 @@ fn process_user_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> 
         .ok_or(CommandProcessorError::NoResolvedData)?
         .users
         .get(&msg_id.cast())
-        .ok_or(CommandProcessorError::NoInvokerId)
+        .ok_or(CommandProcessorError::NoTarget)
 }
 
 fn process_msg_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> {
@@ -113,7 +106,7 @@ fn process_msg_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> {
         .ok_or(CommandProcessorError::NoResolvedData)?
         .messages
         .get(&msg_id.cast())
-        .ok_or(CommandProcessorError::NoInvokerId)?
+        .ok_or(CommandProcessorError::NoTarget)?
         .author)
 }
 
@@ -177,8 +170,10 @@ async fn get_level(
 pub enum CommandProcessorError {
     #[error("Discord sent a command that is not known!")]
     UnrecognizedCommand,
-    #[error("Discord did not send a user ID for the command invoker when it was required!")]
-    NoInvokerId,
+    #[error("Discord did not send a user object for the command invoker when it was required!")]
+    NoInvoker,
+    #[error("Discord did not send a user object for the command target when it was required!")]
+    NoTarget,
     #[error("Discord did not send part of the Resolved Data!")]
     NoResolvedData,
     #[error("Discord did not send target ID for message!")]
