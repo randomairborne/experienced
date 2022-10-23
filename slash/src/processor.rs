@@ -37,6 +37,7 @@ async fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
+    println!("DEBUG: {:?}", interaction);
     let invoker_id = interaction
         .author_id()
         .ok_or(CommandProcessorError::NoInvokerId)?;
@@ -81,7 +82,7 @@ fn process_slash_cmd<'a>(
                     .as_ref()
                     .ok_or(CommandProcessorError::NoResolvedData)?
                     .users
-                    .get(&user_id.cast())
+                    .get(&user_id)
                     .ok_or(CommandProcessorError::NoInvokerId);
             };
         }
