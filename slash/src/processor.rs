@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::AppState;
 use sqlx::query;
 use twilight_model::{
@@ -51,12 +49,13 @@ async fn process_app_cmd(
     let invoker = match interaction.member {
         Some(val) => val.user,
         None => interaction.user,
-    }.ok_or(CommandProcessorError::NoInvoker)?;
+    }
+    .ok_or(CommandProcessorError::NoInvoker)?;
     let target = match data.kind {
         CommandType::ChatInput => process_slash_cmd(&data, &invoker),
         CommandType::User => process_user_cmd(&data),
         CommandType::Message => process_msg_cmd(&data),
-        _ => return err("Discord sent unknown kind of interaction!"),
+        _ => return Err(CommandProcessorError::WrongInteractionData),
     }?;
     get_level(target, &invoker, state).await
 }
@@ -132,7 +131,9 @@ async fn get_level(
         .count
         + 1;
     let level_info = libmee6::LevelInfo::new(xp);
-    let content = if invoker == user {
+    let content = if user.bot {
+        "Bots aren't ranked, that would be silly!".to_string()
+    } else if invoker == user {
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
@@ -184,12 +185,4 @@ pub enum CommandProcessorError {
     NoInteractionData,
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
-}
-
-#[allow(clippy::unnecessary_wraps)]
-fn err(msg: impl Display) -> Result<InteractionResponseData, CommandProcessorError> {
-    Ok(InteractionResponseDataBuilder::new()
-        .content(format!("Oops! {msg}"))
-        .flags(MessageFlags::EPHEMERAL)
-        .build())
 }
