@@ -111,7 +111,7 @@ async fn get_level(
             _ => Err(e)?,
         },
     };
-    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp < ?", xp)
+    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > ?", xp)
         .fetch_one(&state.db)
         .await?
         .count;
