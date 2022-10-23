@@ -37,7 +37,8 @@ async fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
-    println!("DEBUG: {:?}", interaction);
+    #[cfg(debug_assertions)]
+    println!("DEBUG: {:#?}", interaction);
     let invoker_id = interaction
         .author_id()
         .ok_or(CommandProcessorError::NoInvokerId)?;
