@@ -46,10 +46,10 @@ async fn process_app_cmd(
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd
         } else {
-            return err("This bot does not support ModalSubmit or MessageComponent interactions!");
+            return Err(CommandProcessorError::WrongInteractionData);
         }
     } else {
-        return Err(CommandProcessorError::NoResolvedData);
+        return Err(CommandProcessorError::NoInteractionData);
     };
     let resolved = data
         .resolved
@@ -183,6 +183,10 @@ pub enum CommandProcessorError {
     NoResolvedData,
     #[error("Discord did not send target ID for message!")]
     NoMessageTargetId,
+    #[error("Discord sent interactiond data for an unsupported interaction type!")]
+    WrongInteractionData,
+    #[error("Discord did not send any interaction data!")]
+    NoInteractionData,
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }
