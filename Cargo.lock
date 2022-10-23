@@ -29,12 +29,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anstyle"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a14a192897f8e90c08a67fd5d079b30a882b00ab7e4bff6ddaacb2a021f36b17"
-
-[[package]]
 name = "anvil-listener"
 version = "0.1.0"
 dependencies = [
@@ -53,7 +47,6 @@ dependencies = [
 name = "anvil-slash"
 version = "0.1.0"
 dependencies = [
- "anstyle",
  "axum",
  "dotenvy",
  "ed25519-dalek",
