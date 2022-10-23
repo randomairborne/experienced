@@ -3,7 +3,7 @@
 use dashmap::DashMap;
 use futures::stream::StreamExt;
 use rand::Rng;
-use sqlx::MySqlPool;
+use sqlx::{MySqlPool, query};
 use std::{env, sync::Arc, time::Instant};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
@@ -60,18 +60,20 @@ async fn handle_event(
     if let Event::MessageCreate(msg) = event {
         if !msg.author.bot && cooldown.get(&msg.author.id).is_none() {
             let xp_count = rand::thread_rng().gen_range(15..=25);
-            if let Err(e) = sqlx::query(
+            if let Err(e) = query!(
                 "INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
+                msg.author.id.get(),
+                xp_count,
+                xp_count 
             )
-            .bind(msg.author.id.to_string())
-            .bind(xp_count)
-            .bind(xp_count)
             .execute(&db)
             .await
             {
                 eprintln!("SQL insert error: {e:?}");
             };
             cooldown.insert(msg.author.id, Instant::now());
+
+            let role_rewards = query!("SELECT id FROM role_rewards WHERE requirement <= ? ORDER BY requirement LIMIT 1", level_info.level()).fetch_one(&state.db).await;
         }
     }
 }

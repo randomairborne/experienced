@@ -115,7 +115,7 @@ async fn get_level(
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     // Select current XP from the database, return 0 if there is no row
-    let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.id.to_string())
+    let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.id.get())
         .fetch_one(&state.db)
         .await
     {

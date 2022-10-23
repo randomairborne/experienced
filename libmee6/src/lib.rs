@@ -10,14 +10,14 @@
 //! A library to calculate mee6 levels.
 
 pub struct LevelInfo {
-    xp: i64,
-    level: i64,
+    xp: u64,
+    level: u64,
     percentage: u8,
 }
 
 impl LevelInfo {
     #[must_use]
-    pub fn new(xp: i64) -> Self {
+    pub fn new(xp: u64) -> Self {
         // The operation used to calculate how many XP a given level is is (5 / 6) * level * (2 * level * level + 27 * level + 91), but it's optimized here.
         let level = {
             let xp = xp as f64;
@@ -33,18 +33,18 @@ impl LevelInfo {
         let next_level_xp_requirement = Self::xp_to_level(f64::from(level + 1));
         Self {
             xp,
-            level: i64::from(level),
+            level: level as u64,
             percentage: (((xp as f64 - last_level_xp_requirement)
                 / (next_level_xp_requirement - last_level_xp_requirement))
                 * 100.0) as u8,
         }
     }
     #[must_use]
-    pub const fn xp(&self) -> i64 {
+    pub const fn xp(&self) -> u64 {
         self.xp
     }
     #[must_use]
-    pub const fn level(&self) -> i64 {
+    pub const fn level(&self) -> u64 {
         self.level
     }
     #[must_use]
