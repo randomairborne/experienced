@@ -12,7 +12,7 @@ use twilight_model::{
     },
     channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    id::{marker::UserMarker, Id},
+    user::User,
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -37,7 +37,9 @@ async fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
-    let invoker_id = interaction.author_id();
+    let invoker_id = interaction
+        .author_id()
+        .ok_or(CommandProcessorError::NoInvokerId)?;
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd
@@ -45,63 +47,81 @@ async fn process_app_cmd(
             return err("This bot does not support ModalSubmit or MessageComponent interactions!");
         }
     } else {
-        return err("Discord didn't send interaction data!");
+        return Err(CommandProcessorError::NoResolvedData);
     };
-    let author_id = match data.kind {
-        CommandType::ChatInput => process_slash_cmd(data, invoker_id),
+    let resolved = data
+        .resolved
+        .as_ref()
+        .ok_or(CommandProcessorError::NoResolvedData)?;
+    let invoker = resolved
+        .users
+        .get(&invoker_id)
+        .ok_or(CommandProcessorError::NoInvokerId)?;
+    let target = match data.kind {
+        CommandType::ChatInput => process_slash_cmd(&data, invoker),
         CommandType::User => process_user_cmd(&data),
         CommandType::Message => process_msg_cmd(&data),
         _ => return err("Discord sent unknown kind of interaction!"),
     }?;
-    get_level(author_id, invoker_id, state).await
+    get_level(target, invoker, state).await
 }
 
-fn process_slash_cmd(
-    data: CommandData,
-    invoker: Option<Id<UserMarker>>,
-) -> Result<Id<UserMarker>, CommandProcessorError> {
+fn process_slash_cmd<'a>(
+    data: &'a CommandData,
+    invoker: &'a User,
+) -> Result<&'a User, CommandProcessorError> {
     if &data.name != "level" && &data.name != "rank" {
         return Err(CommandProcessorError::UnrecognizedCommand);
     };
-    for option in data.options {
+    for option in &data.options {
         if option.name == "user" {
-            if let CommandOptionValue::User(val) = option.value {
-                return Ok(val);
+            if let CommandOptionValue::User(user_id) = option.value {
+                return data
+                    .resolved
+                    .as_ref()
+                    .ok_or(CommandProcessorError::NoResolvedData)?
+                    .users
+                    .get(&user_id.cast())
+                    .ok_or(CommandProcessorError::NoInvokerId);
             };
         }
     }
-    invoker.ok_or(CommandProcessorError::NoInvokerId)
+    Ok(invoker)
 }
 
-fn process_msg_cmd(data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
+fn process_user_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> {
     let msg_id = data
         .target_id
         .ok_or(CommandProcessorError::NoMessageTargetId)?;
-    Ok(data
+    data.resolved
+        .as_ref()
+        .ok_or(CommandProcessorError::NoResolvedData)?
+        .users
+        .get(&msg_id.cast())
+        .ok_or(CommandProcessorError::NoInvokerId)
+}
+
+fn process_msg_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> {
+    let msg_id = data
+        .target_id
+        .ok_or(CommandProcessorError::NoMessageTargetId)?;
+    Ok(&data
         .resolved
         .as_ref()
         .ok_or(CommandProcessorError::NoResolvedData)?
         .messages
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoInvokerId)?
-        .author
-        .id)
-}
-
-const fn process_user_cmd(data: &CommandData) -> Result<Id<UserMarker>, CommandProcessorError> {
-    if let Some(target_id) = data.target_id {
-        return Ok(target_id.cast());
-    }
-    Err(CommandProcessorError::NoInvokerId)
+        .author)
 }
 
 async fn get_level(
-    user: Id<UserMarker>,
-    invoker: Option<Id<UserMarker>>,
+    user: &User,
+    invoker: &User,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     // Select current XP from the database, return 0 if there is no row
-    let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.to_string())
+    let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.id.to_string())
         .fetch_one(&state.db)
         .await
     {
@@ -114,49 +134,37 @@ async fn get_level(
     let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > ?", xp)
         .fetch_one(&state.db)
         .await?
-        .count + 1;
-    let content: String;
+        .count
+        + 1;
     let level_info = libmee6::LevelInfo::new(xp);
-    if let Some(invoker) = invoker {
-        if invoker == user {
-            if xp == 0 {
-                content =
-                    "You aren't ranked yet, because you haven't sent any messages!".to_string();
-            } else {
-                content = format!(
-                    "You are level {} (rank {}) with {} xp, and are {}% of the way to level {}.",
-                    level_info.level(),
-                    rank,
-                    level_info.xp(),
-                    level_info.percentage(),
-                    level_info.level() + 1
-                );
-            };
-        } else if xp == 0 {
-            content =
-                "This user isn't ranked yet, because they haven't sent any messages!".to_string();
+    let content = if invoker == user {
+        if xp == 0 {
+            "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            content = format!(
-                "This user is level {} (rank {}) with {} xp, and is {}% of the way to level {}.",
+            format!(
+                "You are level {} (rank #{}), and are {}% of the way to level {}.",
                 level_info.level(),
                 rank,
-                level_info.xp(),
                 level_info.percentage(),
                 level_info.level() + 1
-            );
+            )
         }
     } else if xp == 0 {
-        content = "This user isn't ranked yet, because they haven't sent any messages!".to_string();
+        format!(
+            "{}#{} isn't ranked yet, because they haven't sent any messages!",
+            user.name, user.discriminator
+        )
     } else {
-        content = format!(
-            "This user is level {} (rank {}) with {} xp, and is {}% of the way to level {}.",
+        format!(
+            "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
+            user.name,
+            user.discriminator,
             level_info.level(),
             rank,
-            level_info.xp(),
             level_info.percentage(),
             level_info.level() + 1
-        );
-    }
+        )
+    };
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)
         .content(content)
