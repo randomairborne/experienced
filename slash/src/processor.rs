@@ -154,7 +154,7 @@ async fn get_level(
         format!(
             "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
             user.name,
-            user.discriminator,
+            user.discriminator(),
             level_info.level(),
             rank,
             level_info.percentage(),
