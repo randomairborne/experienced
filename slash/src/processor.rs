@@ -114,7 +114,7 @@ async fn get_level(
     let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > ?", xp)
         .fetch_one(&state.db)
         .await?
-        .count;
+        .count + 1;
     let content: String;
     let level_info = libmee6::LevelInfo::new(xp);
     if let Some(invoker) = invoker {
