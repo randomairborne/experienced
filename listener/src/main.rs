@@ -17,6 +17,7 @@ async fn main() {
     let token =
         env::var("DISCORD_TOKEN").expect("Failed to get DATABASE_TOKEN environment variable");
     let mysql = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
+    println!("Connecting to database {}", mysql);
     let db = sqlx::mysql::MySqlPoolOptions::new()
         .max_connections(50)
         .connect(&mysql)
@@ -44,7 +45,7 @@ async fn main() {
     let cluster = Arc::new(cluster);
 
     let cluster_spawn = cluster.clone();
-
+    println!("Connecting to discord");
     tokio::spawn(async move {
         cluster_spawn.up().await;
     });
