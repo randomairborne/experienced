@@ -13,7 +13,10 @@ jobs:
 
     steps:
       - name: Start MySQL
-        run: sudo /etc/init.d/mysql start && mysql -e 'CREATE DATABASE testing;' -u root -p root
+        run: sudo /etc/init.d/mysql start
+
+      - name: Create MySQL test database
+        run: mysql -e 'CREATE DATABASE testing;' -u root -p root
           
       - name: Check out code into the proper directory
         uses: actions/checkout@v2
