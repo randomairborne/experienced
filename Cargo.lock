@@ -839,7 +839,7 @@ checksum = "3dfc802da7b1cf80aefffa0c7b2f77247c8b32206cc83c270b61264f5b360a80"
 
 [[package]]
 name = "mee6"
-version = "0.0.1"
+version = "0.0.2"
 
 [[package]]
 name = "memchr"

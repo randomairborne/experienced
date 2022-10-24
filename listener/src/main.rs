@@ -79,7 +79,7 @@ async fn handle_event(
     event: Event,
     db: MySqlPool,
     cooldown: Arc<DashMap<Id<UserMarker>, Instant>>,
-    rewards: Vec<(u64, Id<RoleMarker>)>,
+    rewards: HashMap<u64, Vec<(u64, Id<RoleMarker>)>>,
 ) {
     if let Event::MessageCreate(msg) = event {
         if !msg.author.bot && cooldown.get(&msg.author.id).is_none() {

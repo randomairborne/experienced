@@ -4,13 +4,22 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  DATABASE_URL: "mysql://root:root@localhost/testing"
+
 jobs:
   check:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start && mysql -e 'CREATE DATABASE testing;' -u root -p root
+          
       - name: Check out code into the proper directory
         uses: actions/checkout@v2
+
+      - name: Run database migrations
+        run: mysql -u root -p root testing < database.mysql
 
       - name: Install cargo
         uses: actions-rs/toolchain@v1

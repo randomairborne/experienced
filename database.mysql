@@ -1,9 +1,13 @@
 CREATE TABLE levels (
-    id BIGINT UNSIGNED PRIMARY KEY,
-    xp BIGINT UNSIGNED NOT NULL
+    id BIGINT UNSIGNED NOT NULL,
+    xp BIGINT UNSIGNED NOT NULL,
+    guild BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (id, xp, guild)
 );
 
 CREATE TABLE role_rewards (
     id BIGINT UNSIGNED NOT NULL,
-    requirement BIGINT UNSIGNED NOT NULL
+    requirement BIGINT UNSIGNED NOT NULL,
+    guild BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (guild, id, requirement)
 );
