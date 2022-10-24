@@ -17,7 +17,7 @@ rand = "0.8"
 dotenvy = "0.15"
 twilight-model = "0.13"
 twilight-http = "0.13"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 twilight-gateway = { default-features = false, features = ["native"], version = "0.13" }
-sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "tls", "mysql", "macros", "offline"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "tls", "mysql", "macros"] }
 mee6 = { path = "../mee6" }

@@ -11,8 +11,8 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
-sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "tls", "mysql", "macros", "offline"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "tls", "mysql", "macros"] }
 axum = "0.6.0-rc.2"
 serde_json = "1"
 ed25519-dalek = "1"
