@@ -73,9 +73,10 @@ async fn handle_event(
             if !msg.author.bot && cooldown.get(&msg.author.id).is_none() {
                 let xp_count = rand::thread_rng().gen_range(15..=25);
                 if let Err(e) = query!(
-                    "INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
+                    "INSERT INTO levels (id, xp, guild) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
                     msg.author.id.get(),
                     xp_count,
+                    guild_id,
                     xp_count
                 )
                 .execute(&db)
@@ -84,7 +85,7 @@ async fn handle_event(
                     eprintln!("SQL insert error: {e:?}");
                 };
                 cooldown.insert(msg.author.id, Instant::now());
-                let xp = match query!("SELECT xp FROM levels WHERE id = ?", msg.author.id.get())
+                let xp = match query!("SELECT xp FROM levels WHERE id = ? AND guild = ?", msg.author.id.get())
                     .fetch_one(&db)
                     .await
                 {
@@ -96,7 +97,7 @@ async fn handle_event(
                 }
                 .xp;
                 let level_info = mee6::LevelInfo::new(xp);
-                let reward = match query!("SELECT id FROM role_rewards WHERE guild = ? AND requirement >= ? ORDER BY requirement DESC LIMIT 1", guild_id.get(), level_info.level())
+                let reward = match query!("SELECT id FROM role_rewards WHERE guild = ? AND requirement <= ? ORDER BY requirement DESC LIMIT 1", guild_id.get(), level_info.level())
                     .fetch_one(&db)
                     .await
                 {
