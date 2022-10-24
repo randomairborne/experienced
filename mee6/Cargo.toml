@@ -1,6 +1,6 @@
 [package]
 name = "mee6"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 description = "A library to calculate mee6 leveling data"
@@ -9,5 +9,7 @@ readme = "README.txt"
 repository = "https://github.com/randomairborne/anvil"
 categories = ["no-std", "mathematics"]
 keywords = ["mee6"]
+documentation = "https://docs.rs/mee6"
+
 
 [dependencies]

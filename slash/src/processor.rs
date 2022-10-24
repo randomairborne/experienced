@@ -148,7 +148,8 @@ async fn get_level(
     } else if xp == 0 {
         format!(
             "{}#{} isn't ranked yet, because they haven't sent any messages!",
-            user.name, user.discriminator()
+            user.name,
+            user.discriminator()
         )
     } else {
         format!(

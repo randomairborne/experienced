@@ -47,16 +47,19 @@ impl LevelInfo {
     }
     /// Get the xp that was input into this `LevelInfo`.
     #[must_use]
+    #[inline]
     pub const fn xp(&self) -> u64 {
         self.xp
     }
     /// Get the level that this `LevelInfo` represents.
     #[must_use]
+    #[inline]
     pub const fn level(&self) -> u64 {
         self.level
     }
     /// Get the percentage of the way this `LevelInfo` is to gaining a level, from the last level.
     #[must_use]
+    #[inline]
     pub const fn percentage(&self) -> u8 {
         self.percentage
     }

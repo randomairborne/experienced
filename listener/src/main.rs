@@ -38,7 +38,8 @@ async fn main() {
                     .cast(),
             )
         })
-        .collect::<Vec<(u64, Id<RoleMarker>)>>().sort();
+        .collect::<Vec<(u64, Id<RoleMarker>)>>()
+        .sort();
     let cooldown: Arc<DashMap<Id<UserMarker>, Instant>> = Arc::new(DashMap::new());
     let scheme = ShardScheme::Range {
         from: 0,
@@ -65,7 +66,12 @@ async fn main() {
     tokio::spawn(clean_cooldown(cooldown.clone()));
 
     while let Some((_shard_id, event)) = events.next().await {
-        tokio::spawn(handle_event(event, db.clone(), cooldown.clone(), rewards.clone()));
+        tokio::spawn(handle_event(
+            event,
+            db.clone(),
+            cooldown.clone(),
+            rewards.clone(),
+        ));
     }
 }
 
@@ -103,7 +109,6 @@ async fn handle_event(
             .xp;
             let level_info = mee6::LevelInfo::new(xp);
             for reward in rewards {}
-
         }
     }
 }
