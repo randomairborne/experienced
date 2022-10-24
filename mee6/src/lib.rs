@@ -8,7 +8,11 @@
 )]
 #![no_std]
 //! A library to calculate mee6 levels.
+//! This can be calculated using the `LevelInfo` struct.
 
+/// `LevelInfo` stores all of the data calculated when using `LevelInfo::new`(), so it can be cheaply
+/// gotten with getters.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct LevelInfo {
     xp: u64,
     level: u64,
@@ -16,6 +20,8 @@ pub struct LevelInfo {
 }
 
 impl LevelInfo {
+    /// Create a new `LevelInfo` struct. This operation calculates the current percentage and level
+    /// immediately, rather then when the getter is called.
     #[must_use]
     pub fn new(xp: u64) -> Self {
         // The operation used to calculate how many XP a given level is is (5 / 6) * level * (2 * level * level + 27 * level + 91), but it's optimized here.
@@ -39,14 +45,17 @@ impl LevelInfo {
                 * 100.0) as u8,
         }
     }
+    /// Get the xp that was input into this `LevelInfo`.
     #[must_use]
     pub const fn xp(&self) -> u64 {
         self.xp
     }
+    /// Get the level that this `LevelInfo` represents.
     #[must_use]
     pub const fn level(&self) -> u64 {
         self.level
     }
+    /// Get the percentage of the way this `LevelInfo` is to gaining a level, from the last level.
     #[must_use]
     pub const fn percentage(&self) -> u8 {
         self.percentage

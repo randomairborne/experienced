@@ -2,5 +2,5 @@
 members = [
     "slash",
     "listener",
-    "libmee6"
+    "mee6"
 ]

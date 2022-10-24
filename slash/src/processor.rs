@@ -130,7 +130,7 @@ async fn get_level(
         .await?
         .count
         + 1;
-    let level_info = libmee6::LevelInfo::new(xp);
+    let level_info = mee6::LevelInfo::new(xp);
     let content = if user.bot {
         "Bots aren't ranked, that would be silly!".to_string()
     } else if invoker == user {
@@ -148,7 +148,7 @@ async fn get_level(
     } else if xp == 0 {
         format!(
             "{}#{} isn't ranked yet, because they haven't sent any messages!",
-            user.name, user.discriminator
+            user.name, user.discriminator()
         )
     } else {
         format!(

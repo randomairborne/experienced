@@ -101,7 +101,7 @@ async fn handle_event(
                 }
             }
             .xp;
-            let level_info = libmee6::LevelInfo::new(xp);
+            let level_info = mee6::LevelInfo::new(xp);
             for reward in rewards {}
 
         }

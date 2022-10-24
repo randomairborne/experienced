@@ -22,4 +22,4 @@ twilight-model = "0.13"
 twilight-http = "0.13"
 twilight-util = { version = "0.13", features = ["builder"] }
 dotenvy = "0.15"
-libmee6 = { path = "../libmee6" }
+mee6 = { path = "../mee6" }

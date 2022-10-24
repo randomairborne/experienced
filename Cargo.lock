@@ -35,7 +35,7 @@ dependencies = [
  "dashmap",
  "dotenvy",
  "futures",
- "libmee6",
+ "mee6",
  "rand 0.8.5",
  "sqlx",
  "tokio",
@@ -51,7 +51,7 @@ dependencies = [
  "dotenvy",
  "ed25519-dalek",
  "hex",
- "libmee6",
+ "mee6",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -813,10 +813,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "292a948cd991e376cf75541fe5b97a1081d713c618b4f1b9500f8844e49eb565"
 
 [[package]]
-name = "libmee6"
-version = "0.1.0"
-
-[[package]]
 name = "lock_api"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -840,6 +836,10 @@ name = "matchit"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dfc802da7b1cf80aefffa0c7b2f77247c8b32206cc83c270b61264f5b360a80"
+
+[[package]]
+name = "mee6"
+version = "0.0.1"
 
 [[package]]
 name = "memchr"
