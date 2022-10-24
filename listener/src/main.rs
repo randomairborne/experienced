@@ -3,13 +3,16 @@
 use dashmap::DashMap;
 use futures::stream::StreamExt;
 use rand::Rng;
-use sqlx::{MySqlPool, query};
+use sqlx::{query, MySqlPool};
 use std::{env, sync::Arc, time::Instant};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
-use twilight_model::id::{marker::UserMarker, Id};
+use twilight_model::id::{
+    marker::{RoleMarker, UserMarker},
+    Id,
+};
 
 #[tokio::main]
 async fn main() {
@@ -22,6 +25,20 @@ async fn main() {
         .connect(&mysql)
         .await
         .expect("Failed to connect to database");
+    let rewards: Vec<(u64, Id<RoleMarker>)> = query!("SELECT id, requirement FROM role_rewards",)
+        .fetch_all(&db)
+        .await
+        .expect("Failed to get role rewards from database")
+        .iter()
+        .map(|v| {
+            (
+                v.requirement,
+                Id::<RoleMarker>::new_checked(v.id)
+                    .expect("One of your role rewards has an invalid role ID!")
+                    .cast(),
+            )
+        })
+        .collect::<Vec<(u64, Id<RoleMarker>)>>().sort();
     let cooldown: Arc<DashMap<Id<UserMarker>, Instant>> = Arc::new(DashMap::new());
     let scheme = ShardScheme::Range {
         from: 0,
@@ -48,7 +65,7 @@ async fn main() {
     tokio::spawn(clean_cooldown(cooldown.clone()));
 
     while let Some((_shard_id, event)) = events.next().await {
-        tokio::spawn(handle_event(event, db.clone(), cooldown.clone()));
+        tokio::spawn(handle_event(event, db.clone(), cooldown.clone(), rewards.clone()));
     }
 }
 
@@ -56,6 +73,7 @@ async fn handle_event(
     event: Event,
     db: MySqlPool,
     cooldown: Arc<DashMap<Id<UserMarker>, Instant>>,
+    rewards: Vec<(u64, Id<RoleMarker>)>,
 ) {
     if let Event::MessageCreate(msg) = event {
         if !msg.author.bot && cooldown.get(&msg.author.id).is_none() {
@@ -64,7 +82,7 @@ async fn handle_event(
                 "INSERT INTO levels (id, xp) VALUES (?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
                 msg.author.id.get(),
                 xp_count,
-                xp_count 
+                xp_count
             )
             .execute(&db)
             .await
@@ -72,8 +90,20 @@ async fn handle_event(
                 eprintln!("SQL insert error: {e:?}");
             };
             cooldown.insert(msg.author.id, Instant::now());
+            let xp = match query!("SELECT xp FROM levels WHERE id = ?", msg.author.id.get())
+                .fetch_one(&db)
+                .await
+            {
+                Ok(xp) => xp,
+                Err(e) => {
+                    eprintln!("SQL select error: {e:?}");
+                    return;
+                }
+            }
+            .xp;
+            let level_info = libmee6::LevelInfo::new(xp);
+            for reward in rewards {}
 
-            let role_rewards = query!("SELECT id FROM role_rewards WHERE requirement <= ? ORDER BY requirement LIMIT 1", level_info.level()).fetch_one(&state.db).await;
         }
     }
 }
