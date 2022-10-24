@@ -51,8 +51,12 @@ async fn main() {
     });
 
     tokio::spawn(clean_cooldown(cooldown.clone()));
-
+    let mut has_conned = false;
     while let Some((_shard_id, event)) = events.next().await {
+        if !has_connected {
+            has_connected = true;
+            println!("Connected to discord");
+        }
         tokio::spawn(handle_event(
             event,
             db.clone(),
@@ -76,7 +80,7 @@ async fn handle_event(
                     "INSERT INTO levels (id, xp, guild) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
                     msg.author.id.get(),
                     xp_count,
-                    guild_id,
+                    guild_id.get(),
                     xp_count
                 )
                 .execute(&db)
@@ -85,9 +89,13 @@ async fn handle_event(
                     eprintln!("SQL insert error: {e:?}");
                 };
                 cooldown.insert(msg.author.id, Instant::now());
-                let xp = match query!("SELECT xp FROM levels WHERE id = ? AND guild = ?", msg.author.id.get())
-                    .fetch_one(&db)
-                    .await
+                let xp = match query!(
+                    "SELECT xp FROM levels WHERE id = ? AND guild = ?",
+                    msg.author.id.get(),
+                    guild_id.get()
+                )
+                .fetch_one(&db)
+                .await
                 {
                     Ok(xp) => xp,
                     Err(e) => {
