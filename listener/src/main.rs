@@ -51,7 +51,7 @@ async fn main() {
     });
 
     tokio::spawn(clean_cooldown(cooldown.clone()));
-    let mut has_conned = false;
+    let mut has_connected = false;
     while let Some((_shard_id, event)) = events.next().await {
         if !has_connected {
             has_connected = true;
