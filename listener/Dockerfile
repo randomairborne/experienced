@@ -15,7 +15,4 @@ FROM alpine
 
 COPY --from=builder /build/target/release/anvil-listener /usr/bin/
 
-ARG database_url
-ENV DATABASE_URL=${database_url}
-
 ENTRYPOINT "/usr/bin/anvil-listener"

@@ -15,9 +15,6 @@ FROM alpine
 
 COPY --from=builder /build/target/release/anvil-slash /usr/bin/
 
-ARG database_url
-ENV DATABASE_URL=${database_url}
-
 EXPOSE 8080
 
 ENTRYPOINT "/usr/bin/anvil-slash"
