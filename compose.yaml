@@ -14,7 +14,6 @@ services:
       - "8080:5389"
     networks:
       - database
-      - frontend
     environment:                 
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_PUBKEY: ${DISCORD_PUBKEY}
@@ -37,7 +36,6 @@ services:
 
 networks:
   database: {}
-  frontend: {}
 
 volumes:
   anvil-data: {}
