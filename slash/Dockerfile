@@ -6,6 +6,9 @@ RUN apk add pkgconf musl-dev openssl-dev
 
 COPY . .
 
+ARG database_url
+ENV DATABASE_URL=${database_url}
+
 RUN cargo build --release
 
 FROM alpine

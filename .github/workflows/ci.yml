@@ -16,7 +16,7 @@ jobs:
 
       - name: Create MySQL test database
         run: sudo mysql -e 'CREATE DATABASE testing;' --user=root --password=root
-          
+
       - name: Check out code into the proper directory
         uses: actions/checkout@v2
 
@@ -29,7 +29,7 @@ jobs:
           toolchain: nightly
           override: true
           components: rustfmt, clippy
-          
+
       - name: Check formatting
         run: cargo fmt --check
 
@@ -55,15 +55,15 @@ jobs:
       - name: Check out code into the proper directory
         uses: actions/checkout@v2
 
-      - name: Start MySQL                                                                                         
-        run: sudo /etc/init.d/mysql start  
-  
-      - name: Create MySQL test database  
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+
+      - name: Create MySQL test database
         run: sudo mysql -e 'CREATE DATABASE testing;' --user=root --password=root
 
       - name: Run database migrations
         run: mysql --user=root --password=root testing < database.mysql
-      
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -78,4 +78,6 @@ jobs:
           push: true
           tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
           platforms: linux/amd64
+          build-args:
+            - database_url=${{ env.DATABASE_URL }}
 
