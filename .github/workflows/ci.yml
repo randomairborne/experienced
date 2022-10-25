@@ -79,5 +79,5 @@ jobs:
           tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
           platforms: linux/amd64
           build-args:
-            - database_url=${{ env.DATABASE_URL }}
+            - database_url: ${{ env.DATABASE_URL }}
 
