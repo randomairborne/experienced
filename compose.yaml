@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  listener:
+    image: ghcr.io/randomairborne/anvil-listener
+    networks:
+      - database
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DATABASE_URL: "mysql://anvil:anvil@database/anvil"
+
+  slash:
+    image: ghcr.io/randomairborne/anvil-slash
+    ports:
+      - "8080:5389"
+    networks:
+      - database
+      - frontend
+    environment:                 
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_PUBKEY: ${DISCORD_PUBKEY}
+      DATABASE_URL: "mysql://anvil:anvil@database/anvil"
+
+
+  database:
+    image: mysql:latest
+    command: --init-file /tmp/database.mysql
+    volumes:
+        - ./database.mysql:/tmp/database.mysql
+        - anvil-data:/var/lib/mysql/
+    networks:
+      - database
+    environment:
+      MYSQL_ROOT_PASSWORD: root-pw
+      MYSQL_DATABASE: anvil
+      MYSQL_USER: anvil
+      MYSQL_PASSWORD: anvil
+
+networks:
+  database: {}
+  frontend: {}
+
+volumes:
+  anvil-data: {}
