@@ -11,7 +11,7 @@ services:
   slash:
     image: ghcr.io/randomairborne/anvil-slash:latest
     ports:
-      - "8080:5389"
+      - "5389:8080"
     networks:
       - database
     environment:
