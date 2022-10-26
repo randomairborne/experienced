@@ -1,3 +1,5 @@
+USE anvil;
+
 CREATE TABLE levels (
     id BIGINT UNSIGNED NOT NULL,
     xp BIGINT UNSIGNED NOT NULL,

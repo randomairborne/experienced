@@ -51,62 +51,85 @@ async fn process_app_cmd(
         None => interaction.user,
     }
     .ok_or(CommandProcessorError::NoInvoker)?;
-    let target = match data.kind {
-        CommandType::ChatInput => process_slash_cmd(&data, &invoker),
-        CommandType::User => process_user_cmd(&data),
-        CommandType::Message => process_msg_cmd(&data),
+    match data.kind {
+        CommandType::ChatInput => process_slash_cmd(&data, &invoker, state).await,
+        CommandType::User => process_user_cmd(&data, &invoker, state).await,
+        CommandType::Message => process_msg_cmd(&data, &invoker, state).await,
         _ => return Err(CommandProcessorError::WrongInteractionData),
-    }?;
-    get_level(target, &invoker, state).await
+    }
 }
 
-fn process_slash_cmd<'a>(
+async fn process_slash_cmd<'a>(
     data: &'a CommandData,
     invoker: &'a User,
-) -> Result<&'a User, CommandProcessorError> {
-    if &data.name != "level" && &data.name != "rank" {
-        return Err(CommandProcessorError::UnrecognizedCommand);
-    };
-    for option in &data.options {
-        if option.name == "user" {
-            if let CommandOptionValue::User(user_id) = option.value {
-                return data
-                    .resolved
-                    .as_ref()
-                    .ok_or(CommandProcessorError::NoResolvedData)?
-                    .users
-                    .get(&user_id)
-                    .ok_or(CommandProcessorError::NoTarget);
-            };
+    state: AppState,
+) -> Result<InteractionResponseData, CommandProcessorError> {
+    match data.name.as_str() {
+        "rank" | "level" => {
+            for option in &data.options {
+                if option.name == "user" {
+                    if let CommandOptionValue::User(user_id) = option.value {
+                        let user = data
+                            .resolved
+                            .as_ref()
+                            .ok_or(CommandProcessorError::NoResolvedData)?
+                            .users
+                            .get(&user_id)
+                            .ok_or(CommandProcessorError::NoTarget)?;
+                        return get_level(user, invoker, state).await;
+                    };
+                }
+            }
+            get_level(invoker, invoker, state).await
         }
+        "anvil" => process_anvil(data, invoker, state).await,
+        _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
-    Ok(invoker)
 }
 
-fn process_user_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> {
+async fn process_anvil<'a>(data: &'a CommandData, invoker: &'a User, state: AppState) -> Result<InteractionResponseData, CommandProcessorError> {
+    let subcommand_group = for option in data.options {
+        match option.name.as_str() {
+
+        }
+    };
+}
+
+async fn process_user_cmd<'a>(
+    data: &'a CommandData,
+    invoker: &'a User,
+    state: AppState,
+) -> Result<InteractionResponseData, CommandProcessorError> {
     let msg_id = data
         .target_id
         .ok_or(CommandProcessorError::NoMessageTargetId)?;
-    data.resolved
+    let user = data
+        .resolved
         .as_ref()
         .ok_or(CommandProcessorError::NoResolvedData)?
         .users
         .get(&msg_id.cast())
-        .ok_or(CommandProcessorError::NoTarget)
+        .ok_or(CommandProcessorError::NoTarget)?;
+    get_level(user, invoker, state).await
 }
 
-fn process_msg_cmd(data: &CommandData) -> Result<&User, CommandProcessorError> {
+async fn process_msg_cmd<'a>(
+    data: &'a CommandData,
+    invoker: &'a User,
+    state: AppState,
+) -> Result<InteractionResponseData, CommandProcessorError> {
     let msg_id = data
         .target_id
         .ok_or(CommandProcessorError::NoMessageTargetId)?;
-    Ok(&data
+    let user = &data
         .resolved
         .as_ref()
         .ok_or(CommandProcessorError::NoResolvedData)?
         .messages
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?
-        .author)
+        .author;
+    get_level(user, invoker, state).await
 }
 
 async fn get_level(
