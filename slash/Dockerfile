@@ -2,7 +2,7 @@ FROM rust:alpine AS builder
 
 WORKDIR /build
 
-RUN apk add pkgconf musl-dev openssl-dev
+RUN apk add musl-dev
 
 COPY . .
 
