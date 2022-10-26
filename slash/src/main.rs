@@ -4,10 +4,10 @@ use std::sync::Arc;
 use axum::routing::post;
 use sqlx::MySqlPool;
 
-mod mgr;
 mod cmd_defs;
 mod discord_sig_validation;
 mod handler;
+mod manager;
 mod processor;
 
 pub type AppState = Arc<UnderlyingAppState>;

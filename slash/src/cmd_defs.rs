@@ -1,6 +1,6 @@
 use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::{
-    CommandBuilder, NumberBuilder, RoleBuilder, SubCommandBuilder, SubCommandGroupBuilder,
+    CommandBuilder, IntegerBuilder, RoleBuilder, SubCommandBuilder, SubCommandGroupBuilder,
     UserBuilder,
 };
 pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
@@ -25,14 +25,14 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
                     [
                         SubCommandBuilder::new("add", "Add a new leveling reward")
                             .option(
-                                NumberBuilder::new("level", "What level to grant the role at")
-                                    .min_value(1.0)
+                                IntegerBuilder::new("level", "What level to grant the role at")
+                                    .min_value(1)
                                     .required(true),
                             )
                             .option(RoleBuilder::new("role", "Role to grant").required(true)),
                         SubCommandBuilder::new("remove", "Remove a leveling reward").option(
-                            NumberBuilder::new("level", "What level of role reward to remove")
-                                .min_value(1.0)
+                            IntegerBuilder::new("level", "What level of role reward to remove")
+                                .min_value(1)
                                 .required(true)
                                 .autocomplete(true),
                         ),

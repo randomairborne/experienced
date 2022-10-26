@@ -82,17 +82,9 @@ async fn process_slash_cmd<'a>(
             }
             get_level(invoker, invoker, state).await
         }
-        "anvil" => process_anvil(data, invoker, state).await,
+        "anvil" => crate::manager::process_anvil(data, invoker, state).await,
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
-}
-
-async fn process_anvil<'a>(data: &'a CommandData, invoker: &'a User, state: AppState) -> Result<InteractionResponseData, CommandProcessorError> {
-    let subcommand_group = for option in data.options {
-        match option.name.as_str() {
-
-        }
-    };
 }
 
 async fn process_user_cmd<'a>(
@@ -207,6 +199,10 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
+    #[error("Discord sent an invalid subcommand!")]
+    InvalidSubcommand,
+    #[error("Discord sent an unknown subcommand!")]
+    UnknownSubcommand,
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }
