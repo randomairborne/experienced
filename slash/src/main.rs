@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_TOKEN").expect("Expected environment variable DISCORD_TOKEN");
     let pubkey =
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
-        println!("Connecting to the database..");
+    println!("Connecting to the database..");
     let db = MySqlPool::connect(
         &std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL"),
     )
