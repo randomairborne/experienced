@@ -18,12 +18,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_TOKEN").expect("Expected environment variable DISCORD_TOKEN");
     let pubkey =
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
+        println!("Connecting to the database..");
     let db = MySqlPool::connect(
         &std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL"),
     )
     .await
     .expect("Failed to connect to the database!");
     let client = twilight_http::Client::new(token);
+    println!("Creating commands...");
     cmd_defs::register(
         client.interaction(
             client
@@ -40,6 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     .await;
     let state = Arc::new(UnderlyingAppState { db, pubkey });
     let route = axum::Router::with_state(state).route("/", post(handler::handle));
+    println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
         .await
