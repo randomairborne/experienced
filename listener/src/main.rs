@@ -15,7 +15,7 @@ use twilight_model::id::{marker::UserMarker, Id};
 async fn main() {
     dotenvy::dotenv().ok();
     let token =
-        env::var("DISCORD_TOKEN").expect("Failed to get DATABASE_TOKEN environment variable");
+        env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
     let mysql = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
     println!("Connecting to database {}", mysql);
     let db = sqlx::mysql::MySqlPoolOptions::new()
