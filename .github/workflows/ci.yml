@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  DATABASE_URL: "mysql://root:root@localhost/testing"
+  DATABASE_URL: "mysql://root:root@localhost/anvil"
 
 jobs:
   check:
@@ -15,13 +15,13 @@ jobs:
         run: sudo /etc/init.d/mysql start
 
       - name: Create MySQL test database
-        run: sudo mysql -e 'CREATE DATABASE testing;' --user=root --password=root
+        run: sudo mysql -e 'CREATE DATABASE anvil;' --user=root --password=root
 
       - name: Check out code into the proper directory
         uses: actions/checkout@v2
 
       - name: Run database migrations
-        run: mysql --user=root --password=root testing < database.mysql
+        run: mysql --user=root --password=root < database.mysql
 
       - name: Install cargo
         uses: actions-rs/toolchain@v1
