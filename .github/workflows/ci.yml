@@ -23,6 +23,9 @@ jobs:
       - name: Run database migrations
         run: mysql --user=root --password=root < database.mysql
 
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+
       - name: Install cargo
         uses: actions-rs/toolchain@v1
         with:
