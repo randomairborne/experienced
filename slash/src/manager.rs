@@ -94,22 +94,19 @@ async fn process_rewards_rm(
     state: AppState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let role_id = if let CommandOptionValue::Role(role) = options
-        .get("role")
-        .ok_or(Error::MissingRequiredArgument("role"))?
-    {
-        role
-    } else {
+    if let Some(CommandOptionValue::Role(role)) = options.get("role") {
+        query!(
+            "DELETE FROM role_rewards WHERE id = ? AND guild = ?",
+            role_id.get(),
+            guild_id.get()
+        )
+        .execute(&state.db)
+        .await?;
+        Ok(format!("Removed role reward <@{}>!", role_id))
+    } else if let CommandOptionValue {
         return Err(Error::WrongArgumentType("role"));
     };
-    query!(
-        "DELETE FROM role_rewards WHERE id = ? AND guild = ?",
-        role_id.get(),
-        guild_id.get()
-    )
-    .execute(&state.db)
-    .await?;
-    Ok(format!("Removed role reward <@{}>!", role_id))
+
 }
 async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
     let roles = query!("SELECT * FROM role_rewards WHERE guild = ?", guild_id.get())
