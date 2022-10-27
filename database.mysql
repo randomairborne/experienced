@@ -1,13 +1,13 @@
 USE anvil;
 
-CREATE TABLE levels (
+CREATE TABLE IF NOT EXISTS levels (
     id BIGINT UNSIGNED NOT NULL,
     xp BIGINT UNSIGNED NOT NULL,
     guild BIGINT UNSIGNED NOT NULL,
     PRIMARY KEY (id, xp, guild)
 );
 
-CREATE TABLE role_rewards (
+CREATE TABLE IF NOT EXISTS role_rewards (
     id BIGINT UNSIGNED NOT NULL,
     requirement BIGINT UNSIGNED NOT NULL,
     guild BIGINT UNSIGNED NOT NULL,
