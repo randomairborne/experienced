@@ -61,13 +61,13 @@ async fn process_rewards_add(
     state: AppState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let level_requirement = if let CommandOptionValue::Integer(requirement) = options
-        .get("requirement")
-        .ok_or(Error::MissingRequiredArgument("requirement"))?
+    let level_requirement = if let CommandOptionValue::Integer(level) = options
+        .get("level")
+        .ok_or(Error::MissingRequiredArgument("level"))?
     {
-        requirement
+        *level
     } else {
-        return Err(Error::WrongArgumentType("requirement"));
+        return Err(Error::WrongArgumentType("level"));
     };
     let role_id = if let CommandOptionValue::Role(role) = options
         .get("role")
