@@ -52,16 +52,16 @@ async fn process_app_cmd(
     }
     .ok_or(CommandProcessorError::NoInvoker)?;
     match data.kind {
-        CommandType::ChatInput => process_slash_cmd(&data, &invoker, state).await,
-        CommandType::User => process_user_cmd(&data, &invoker, state).await,
-        CommandType::Message => process_msg_cmd(&data, &invoker, state).await,
-        _ => return Err(CommandProcessorError::WrongInteractionData),
+        CommandType::ChatInput => process_slash_cmd(data, invoker, state).await,
+        CommandType::User => process_user_cmd(data, invoker, state).await,
+        CommandType::Message => process_msg_cmd(data, invoker, state).await,
+        _ => Err(CommandProcessorError::WrongInteractionData),
     }
 }
 
-async fn process_slash_cmd<'a>(
-    data: &'a CommandData,
-    invoker: &'a User,
+async fn process_slash_cmd(
+    data: CommandData,
+    invoker: User,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     match data.name.as_str() {
@@ -76,20 +76,20 @@ async fn process_slash_cmd<'a>(
                             .users
                             .get(&user_id)
                             .ok_or(CommandProcessorError::NoTarget)?;
-                        return get_level(user, invoker, state).await;
+                        return get_level(user, &invoker, state).await;
                     };
                 }
             }
-            get_level(invoker, invoker, state).await
+            get_level(&invoker, &invoker, state).await
         }
-        "anvil" => crate::manager::process_anvil(data, invoker, state).await,
+        "anvil" => Ok(crate::manager::process_anvil(data, &invoker, state).await?),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
 
-async fn process_user_cmd<'a>(
-    data: &'a CommandData,
-    invoker: &'a User,
+async fn process_user_cmd(
+    data: CommandData,
+    invoker: User,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     let msg_id = data
@@ -102,12 +102,12 @@ async fn process_user_cmd<'a>(
         .users
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?;
-    get_level(user, invoker, state).await
+    get_level(user, &invoker, state).await
 }
 
-async fn process_msg_cmd<'a>(
-    data: &'a CommandData,
-    invoker: &'a User,
+async fn process_msg_cmd(
+    data: CommandData,
+    invoker: User,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     let msg_id = data
@@ -121,7 +121,7 @@ async fn process_msg_cmd<'a>(
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?
         .author;
-    get_level(user, invoker, state).await
+    get_level(user, &invoker, state).await
 }
 
 async fn get_level(
@@ -195,14 +195,12 @@ pub enum CommandProcessorError {
     NoResolvedData,
     #[error("Discord did not send target ID for message!")]
     NoMessageTargetId,
-    #[error("Discord sent interactiond data for an unsupported interaction type!")]
+    #[error("Discord sent interaction data for an unsupported interaction type!")]
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
-    #[error("Discord sent an invalid subcommand!")]
-    InvalidSubcommand,
-    #[error("Discord sent an unknown subcommand!")]
-    UnknownSubcommand,
+    #[error("Anvil subprocessor encountered an error {0}!")]
+    AnvilSubprocessor(#[from] crate::manager::Error),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }
