@@ -30,12 +30,12 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
                                     .required(true),
                             )
                             .option(RoleBuilder::new("role", "Role to grant").required(true)),
-                        SubCommandBuilder::new("remove", "Remove a leveling reward").option(
-                            IntegerBuilder::new("level", "What level of role reward to remove")
-                                .min_value(1)
-                                .required(true)
-                                .autocomplete(true),
-                        ),
+                        SubCommandBuilder::new("remove", "Remove a leveling reward")
+                            .option(
+                                IntegerBuilder::new("level", "What level of role reward to remove")
+                                    .min_value(1),
+                            )
+                            .option(RoleBuilder::new("role", "What role reward to remove")),
                         SubCommandBuilder::new("list", "Show a list of leveling rewards"),
                     ],
                 ),
