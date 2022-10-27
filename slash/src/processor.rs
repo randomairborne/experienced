@@ -10,7 +10,8 @@ use twilight_model::{
     },
     channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    user::User, id::{Id, marker::GuildMarker},
+    id::{marker::GuildMarker, Id},
+    user::User,
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -52,7 +53,9 @@ async fn process_app_cmd(
     }
     .ok_or(CommandProcessorError::NoInvoker)?;
     match data.kind {
-        CommandType::ChatInput => process_slash_cmd(data, interaction.guild_id, invoker, state).await,
+        CommandType::ChatInput => {
+            process_slash_cmd(data, interaction.guild_id, invoker, state).await
+        }
         CommandType::User => process_user_cmd(data, invoker, state).await,
         CommandType::Message => process_msg_cmd(data, invoker, state).await,
         _ => Err(CommandProcessorError::WrongInteractionData),
