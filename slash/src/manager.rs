@@ -97,16 +97,25 @@ async fn process_rewards_rm(
     if let Some(CommandOptionValue::Role(role)) = options.get("role") {
         query!(
             "DELETE FROM role_rewards WHERE id = ? AND guild = ?",
-            role_id.get(),
+            role.get(),
             guild_id.get()
         )
         .execute(&state.db)
         .await?;
-        Ok(format!("Removed role reward <@{}>!", role_id))
-    } else if let CommandOptionValue {
-        return Err(Error::WrongArgumentType("role"));
+        return Ok(format!("Removed role reward <@{}>!", role));
+    } else if let Some(CommandOptionValue::Integer(level)) = options.get("level") {
+        query!(
+            "DELETE FROM role_rewards WHERE requirement = ? AND guild = ?",
+            level,
+            guild_id.get()
+        )
+        .execute(&state.db)
+        .await?;
+        return Ok(format!("Removed role reward for level {level}!"));
     };
-
+    Err(Error::WrongArgumentCount(
+        "`/anvil rewards remove` requires either a level or a role!",
+    ))
 }
 async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
     let roles = query!("SELECT * FROM role_rewards WHERE guild = ?", guild_id.get())
@@ -135,6 +144,8 @@ pub enum Error {
     WrongArgumentType(&'static str),
     #[error("Discord did not send a guild ID!")]
     MissingGuildId,
+    #[error("Command had wrong number of arguments: {0}!")]
+    WrongArgumentCount(&'static str),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
     #[error("Rust writeln! returned an error: {0}")]
