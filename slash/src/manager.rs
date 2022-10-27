@@ -15,10 +15,11 @@ use crate::AppState;
 
 pub async fn process_anvil(
     data: CommandData,
+    guild_id: Option<Id<GuildMarker>>,
     _invoker: &User,
     state: AppState,
 ) -> Result<InteractionResponseData, Error> {
-    let guild_id = data.guild_id.ok_or(Error::MissingGuildId)?;
+    let guild_id = guild_id.ok_or(Error::MissingGuildId)?;
     for maybe_group in data.options {
         if let CommandOptionValue::SubCommandGroup(group) = maybe_group.value {
             match maybe_group.name.as_str() {

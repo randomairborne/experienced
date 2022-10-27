@@ -3,6 +3,7 @@ use twilight_util::builder::command::{
     CommandBuilder, IntegerBuilder, RoleBuilder, SubCommandBuilder, SubCommandGroupBuilder,
     UserBuilder,
 };
+
 pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
     let cmds = [
         CommandBuilder::new("level", "Check someone's level", CommandType::ChatInput)
@@ -43,8 +44,10 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
             .validate()
             .expect("Anvil slash command is invalid")
             .build(),
-        CommandBuilder::new("Get level", "", CommandType::User).build(),
-        CommandBuilder::new("Get author level", "", CommandType::Message).build(),
+        CommandBuilder::new("Get level", "", CommandType::User)
+            .build(),
+        CommandBuilder::new("Get author level", "", CommandType::Message)
+            .build(),
     ];
     http.set_global_commands(&cmds)
         .exec()

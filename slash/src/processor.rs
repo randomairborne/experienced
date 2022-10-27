@@ -10,7 +10,7 @@ use twilight_model::{
     },
     channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    user::User,
+    user::User, id::{Id, marker::GuildMarker},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -52,7 +52,7 @@ async fn process_app_cmd(
     }
     .ok_or(CommandProcessorError::NoInvoker)?;
     match data.kind {
-        CommandType::ChatInput => process_slash_cmd(data, invoker, state).await,
+        CommandType::ChatInput => process_slash_cmd(data, interaction.guild_id, invoker, state).await,
         CommandType::User => process_user_cmd(data, invoker, state).await,
         CommandType::Message => process_msg_cmd(data, invoker, state).await,
         _ => Err(CommandProcessorError::WrongInteractionData),
@@ -61,6 +61,7 @@ async fn process_app_cmd(
 
 async fn process_slash_cmd(
     data: CommandData,
+    guild_id: Option<Id<GuildMarker>>,
     invoker: User,
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
@@ -82,7 +83,7 @@ async fn process_slash_cmd(
             }
             get_level(&invoker, &invoker, state).await
         }
-        "anvil" => Ok(crate::manager::process_anvil(data, &invoker, state).await?),
+        "anvil" => Ok(crate::manager::process_anvil(data, guild_id, &invoker, state).await?),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -199,7 +200,7 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
-    #[error("Anvil subprocessor encountered an error {0}!")]
+    #[error("Anvil subprocessor encountered an error: {0}!")]
     AnvilSubprocessor(#[from] crate::manager::Error),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
