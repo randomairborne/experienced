@@ -59,10 +59,10 @@ jobs:
         run: sudo /etc/init.d/mysql start
 
       - name: Create MySQL test database
-        run: sudo mysql -e 'CREATE DATABASE testing;' --user=root --password=root
+        run: sudo mysql -e 'CREATE DATABASE anvil;' --user=root --password=root
 
       - name: Run database migrations
-        run: mysql --user=root --password=root testing < database.mysql
+        run: mysql --user=root --password=root < database.mysql
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
