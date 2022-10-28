@@ -31,7 +31,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root-pw
       MYSQL_DATABASE: anvil
-      MYSQL_USER: anvil
+      MYSQL_USER: anvil@'%'
       MYSQL_PASSWORD: anvil
 
 networks:
