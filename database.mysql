@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS levels (
     id BIGINT UNSIGNED NOT NULL,
     xp BIGINT UNSIGNED NOT NULL,
     guild BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (id, xp, guild)
+    PRIMARY KEY (id, guild)
 );
 
 CREATE TABLE IF NOT EXISTS role_rewards (
