@@ -73,7 +73,7 @@ async fn process_rewards_add(
         .get("role")
         .ok_or(Error::MissingRequiredArgument("role"))?
     {
-        role
+        *role
     } else {
         return Err(Error::WrongArgumentType("role"));
     };
@@ -86,7 +86,7 @@ async fn process_rewards_add(
     .execute(&state.db)
     .await?;
     Ok(format!(
-        "Added role reward <@{}> at level {}!",
+        "Added role reward <@&{}> at level {}!",
         role_id, level_requirement
     ))
 }
@@ -103,7 +103,7 @@ async fn process_rewards_rm(
         )
         .execute(&state.db)
         .await?;
-        return Ok(format!("Removed role reward <@{}>!", role));
+        return Ok(format!("Removed role reward <@&{}>!", role));
     } else if let Some(CommandOptionValue::Integer(level)) = options.get("level") {
         query!(
             "DELETE FROM role_rewards WHERE requirement = ? AND guild = ?",
@@ -151,4 +151,8 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
+    #[error("Discord API error: {0}")]
+    DiscordApi(#[from] twilight_http::Error),
+    #[error("Discord API decoding error: {0}")]
+    DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
 }
