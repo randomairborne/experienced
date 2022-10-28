@@ -77,23 +77,6 @@ async fn process_rewards_add(
     } else {
         return Err(Error::WrongArgumentType("role"));
     };
-    let assigned_role_status = state
-        .client
-        .add_guild_member_role(guild_id, state.my_id.cast(), role_id)
-        .exec()
-        .await?
-        .status();
-    if assigned_role_status.is_client_error() {
-        return Err(Error::MissingRoleAssignmentPermissions);
-    } else if !assigned_role_status.is_success() {
-        return Err(Error::MissingGuildPermissions);
-    }
-    state
-        .client
-        .remove_guild_member_role(guild_id, state.my_id.cast(), role_id)
-        .exec()
-        .await
-        .ok();
     query!(
         "INSERT INTO role_rewards (id, requirement, guild) VALUES (?, ?, ?)",
         role_id.get(),
@@ -162,10 +145,6 @@ pub enum Error {
     WrongArgumentType(&'static str),
     #[error("Discord did not send a guild ID!")]
     MissingGuildId,
-    #[error("Discord did not send permissions for guild!")]
-    MissingGuildPermissions,
-    #[error("I don't have permission to assign that role!")]
-    MissingRoleAssignmentPermissions,
     #[error("Command had wrong number of arguments: {0}!")]
     WrongArgumentCount(&'static str),
     #[error("SQLx encountered an error: {0}")]
