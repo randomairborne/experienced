@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use axum::routing::post;
 use sqlx::MySqlPool;
+use twilight_model::id::{marker::ApplicationMarker, Id};
 
 mod cmd_defs;
 mod discord_sig_validation;
@@ -27,21 +28,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .expect("Failed to connect to the database!");
     let client = twilight_http::Client::new(token);
     println!("Creating commands...");
-    cmd_defs::register(
-        client.interaction(
-            client
-                .current_user_application()
-                .exec()
-                .await
-                .expect("Failed to get own app ID!")
-                .model()
-                .await
-                .expect("Failed to convert own app ID!")
-                .id,
-        ),
-    )
-    .await;
-    let state = Arc::new(UnderlyingAppState { db, pubkey });
+    let my_id = client
+        .current_user_application()
+        .exec()
+        .await
+        .expect("Failed to get own app ID!")
+        .model()
+        .await
+        .expect("Failed to convert own app ID!")
+        .id;
+    cmd_defs::register(client.interaction(my_id)).await;
+    let state = Arc::new(UnderlyingAppState {
+        db,
+        pubkey,
+        client,
+        my_id,
+    });
     let route = axum::Router::with_state(state).route("/", post(handler::handle));
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
@@ -54,4 +56,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 pub struct UnderlyingAppState {
     pub db: MySqlPool,
     pub pubkey: String,
+    pub client: twilight_http::Client,
+    pub my_id: Id<ApplicationMarker>,
 }
