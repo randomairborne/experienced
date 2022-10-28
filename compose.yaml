@@ -21,7 +21,7 @@ services:
 
 
   database:
-    image: mysql:latest
+    image: mariadb:latest
     command: --init-file /tmp/database.mysql
     volumes:
         - ./database.mysql:/tmp/database.mysql
