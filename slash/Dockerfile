@@ -13,8 +13,8 @@ RUN cargo build --release
 
 FROM alpine
 
-COPY --from=builder /build/target/release/anvil-slash /usr/bin/
+COPY --from=builder /build/target/release/experienced-slash /usr/bin/
 
 EXPOSE 8080
 
-ENTRYPOINT "/usr/bin/anvil-slash"
+ENTRYPOINT "/usr/bin/experienced-slash"

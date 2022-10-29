@@ -1,4 +1,4 @@
-USE anvil;
+USE experienced;
 
 CREATE TABLE IF NOT EXISTS levels (
     id BIGINT UNSIGNED NOT NULL,

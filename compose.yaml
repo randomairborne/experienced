@@ -1,15 +1,15 @@
 version: "3.9"
 services:
   listener:
-    image: ghcr.io/randomairborne/anvil-listener:latest
+    image: ghcr.io/randomairborne/experienced-listener:latest
     networks:
       - database
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
-      DATABASE_URL: "mysql://anvil:anvil@database/anvil"
+      DATABASE_URL: "mysql://experienced:experienced@database/experienced"
 
   slash:
-    image: ghcr.io/randomairborne/anvil-slash:latest
+    image: ghcr.io/randomairborne/experienced-slash:latest
     ports:
       - "5389:8080"
     networks:
@@ -17,7 +17,7 @@ services:
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_PUBKEY: ${DISCORD_PUBKEY}
-      DATABASE_URL: "mysql://anvil:anvil@database/anvil"
+      DATABASE_URL: "mysql://experienced:experienced@database/experienced"
 
 
   database:
@@ -25,17 +25,17 @@ services:
     command: --init-file /tmp/database.mysql
     volumes:
         - ./database.mysql:/tmp/database.mysql
-        - anvil-data:/var/lib/mysql/
+        - experienced-data:/var/lib/mysql/
     networks:
       - database
     environment:
       MYSQL_ROOT_PASSWORD: root-pw
-      MYSQL_DATABASE: anvil
-      MYSQL_USER: anvil
-      MYSQL_PASSWORD: anvil
+      MYSQL_DATABASE: experienced
+      MYSQL_USER: experienced
+      MYSQL_PASSWORD: experienced
 
 networks:
   database: {}
 
 volumes:
-  anvil-data: {}
+  experienced-data: {}
