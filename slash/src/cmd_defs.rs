@@ -18,7 +18,7 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
             .validate()
             .expect("Rank slash command is invalid!")
             .build(),
-        CommandBuilder::new("anvil", "Manage anvil functions", CommandType::ChatInput)
+        CommandBuilder::new("xp", "Manage Experienced functions", CommandType::ChatInput)
             .default_member_permissions(Permissions::ADMINISTRATOR)
             .dm_permission(false)
             .option(
@@ -42,7 +42,7 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
                 ),
             )
             .validate()
-            .expect("Anvil slash command is invalid")
+            .expect("XP slash command is invalid")
             .build(),
         CommandBuilder::new("Get level", "", CommandType::User).build(),
         CommandBuilder::new("Get author level", "", CommandType::Message).build(),
