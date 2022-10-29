@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  DATABASE_URL: "mysql://root:root@localhost/anvil"
+  DATABASE_URL: "mysql://root:root@localhost/experienced"
 
 jobs:
   check:
@@ -15,10 +15,10 @@ jobs:
         run: sudo /etc/init.d/mysql start
 
       - name: Create MySQL test database
-        run: sudo mysql -e 'CREATE DATABASE anvil;' --user=root --password=root
+        run: sudo mysql -e 'CREATE DATABASE experienced;' --user=root --password=root
 
       - name: Check out code into the proper directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run database migrations
         run: mysql --user=root --password=root < database.mysql
@@ -56,13 +56,13 @@ jobs:
           echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
 
       - name: Check out code into the proper directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Start MySQL
         run: sudo /etc/init.d/mysql start
 
       - name: Create MySQL test database
-        run: sudo mysql -e 'CREATE DATABASE anvil;' --user=root --password=root
+        run: sudo mysql -e 'CREATE DATABASE experienced;' --user=root --password=root
 
       - name: Run database migrations
         run: mysql --user=root --password=root < database.mysql

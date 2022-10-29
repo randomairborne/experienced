@@ -86,7 +86,7 @@ async fn process_slash_cmd(
             }
             get_level(&invoker, &invoker, state).await
         }
-        "anvil" => Ok(crate::manager::process_anvil(data, guild_id, &invoker, state).await?),
+        "xp" => Ok(crate::manager::process_xp(data, guild_id, &invoker, state).await?),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -203,8 +203,8 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
-    #[error("Anvil subprocessor encountered an error: {0}!")]
-    AnvilSubprocessor(#[from] crate::manager::Error),
+    #[error("XP subprocessor encountered an error: {0}!")]
+    XpSubprocessor(#[from] crate::manager::Error),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }

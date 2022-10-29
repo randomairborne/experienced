@@ -13,7 +13,7 @@ use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::AppState;
 
-pub async fn process_anvil(
+pub async fn process_xp(
     data: CommandData,
     guild_id: Option<Id<GuildMarker>>,
     _invoker: &User,
@@ -115,7 +115,7 @@ async fn process_rewards_rm(
         return Ok(format!("Removed role reward for level {level}!"));
     };
     Err(Error::WrongArgumentCount(
-        "`/anvil rewards remove` requires either a level or a role!",
+        "`/xp rewards remove` requires either a level or a role!",
     ))
 }
 async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Result<String, Error> {

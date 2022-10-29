@@ -35,40 +35,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anvil-listener"
-version = "0.1.0"
-dependencies = [
- "dashmap",
- "dotenvy",
- "futures",
- "mee6 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.8.5",
- "sqlx",
- "tokio",
- "twilight-gateway",
- "twilight-http",
- "twilight-model",
-]
-
-[[package]]
-name = "anvil-slash"
-version = "0.1.0"
-dependencies = [
- "axum",
- "dotenvy",
- "ed25519-dalek",
- "hex",
- "mee6 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json",
- "sqlx",
- "thiserror",
- "tokio",
- "twilight-http",
- "twilight-model",
- "twilight-util",
-]
-
-[[package]]
 name = "async-trait"
 version = "0.1.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -218,9 +184,9 @@ checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
 
 [[package]]
 name = "cc"
-version = "1.0.73"
+version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
+checksum = "581f5dba903aac52ea3feb5ec4810848460ee833876f1f9b0fdeab1f19091574"
 
 [[package]]
 name = "cfg-if"
@@ -418,6 +384,40 @@ name = "event-listener"
 version = "2.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
+
+[[package]]
+name = "experienced-listener"
+version = "0.1.0"
+dependencies = [
+ "dashmap",
+ "dotenvy",
+ "futures",
+ "mee6 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.8.5",
+ "sqlx",
+ "tokio",
+ "twilight-gateway",
+ "twilight-http",
+ "twilight-model",
+]
+
+[[package]]
+name = "experienced-slash"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "dotenvy",
+ "ed25519-dalek",
+ "hex",
+ "mee6 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "twilight-http",
+ "twilight-model",
+ "twilight-util",
+]
 
 [[package]]
 name = "flate2"
@@ -965,9 +965,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.15.0"
+version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
+checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
 
 [[package]]
 name = "opaque-debug"
@@ -1910,9 +1910,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-http"
-version = "0.13.2"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bb51e1a73e14ddd1ccbad0e3d0b739ef11b101e4acf5fe2e39d079c275cb3db"
+checksum = "37947c5ffdd701c224f7fca56cb573bb745f78862ffed2fb4f0e4fd9865ea182"
 dependencies = [
  "brotli",
  "hyper",
@@ -1930,9 +1930,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-http-ratelimiting"
-version = "0.13.2"
+version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "effb20caaa9acad1036e37a14102cc999e254e929f2013b11057a544ec8d0ada"
+checksum = "dcd4c27f33d986ebba7e33b228794a02da3e9cf22ec6254931d5038cbf2c78cc"
 dependencies = [
  "futures-util",
  "http",
@@ -1942,9 +1942,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-model"
-version = "0.13.5"
+version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e8bed7791a3e790a633d89082c78e5f7f1109d30135fd465f716772c19b6fbb"
+checksum = "2a29e014c5318cc1c176220fe450a87ea6c83d433296013805c4a89045cefb8c"
 dependencies = [
  "bitflags",
  "serde",
@@ -1966,9 +1966,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-validate"
-version = "0.13.1"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c17e502d312ae4c78ff55fe55c0ad23d68e3a4394591c16ed350e3d362d9826"
+checksum = "8ec43cf35d2155b0cf2401aef0c0e87cc43985745679438c0a17f125f8818c5b"
 dependencies = [
  "twilight-model",
 ]
