@@ -8,7 +8,7 @@ env:
   DATABASE_URL: "mysql://root:root@localhost/experienced"
 
 concurrency:
-  group: "pages"
+  group: "rust"
   cancel-in-progress: true
 
 jobs:
