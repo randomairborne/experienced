@@ -1,0 +1,17 @@
+@media (prefers-color-scheme: light) {
+    body {
+        background-color: bisque;
+        color: black;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: black;
+        color: whitesmoke;
+    }
+}
+
+body {
+    font-family: Helvetica, sans-serif;
+}
