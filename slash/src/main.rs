@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let route = axum::Router::with_state(state)
         .route("/api/interactions", post(handler::handle))
         .route(
-            "/*",
+            "/",
             get(|| async move { Redirect::temporary(&website_url) }),
         );
     println!("Server listening on https://0.0.0.0:8080!");
