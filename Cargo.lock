@@ -398,7 +398,7 @@ dependencies = [
  "tokio",
  "twilight-gateway",
  "twilight-http 0.14.0",
- "twilight-model 0.13.7",
+ "twilight-model 0.14.0",
 ]
 
 [[package]]
@@ -415,7 +415,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "twilight-http 0.14.0",
- "twilight-model 0.13.7",
+ "twilight-model 0.14.0",
  "twilight-util",
 ]
 
