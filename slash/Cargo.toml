@@ -19,7 +19,7 @@ ed25519-dalek = "1"
 hex = "0.4"
 thiserror = "1"
 twilight-model = "0.13"
-twilight-http = "0.13"
+twilight-http = "0.14"
 twilight-util = { version = "0.13", features = ["builder"] }
 dotenvy = "0.15"
 mee6 = "0.0.2"
