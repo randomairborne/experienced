@@ -7,10 +7,6 @@ on:
 env:
   DATABASE_URL: "mysql://root:root@localhost/experienced"
 
-concurrency:
-  group: "rust"
-  cancel-in-progress: true
-
 jobs:
   check:
     runs-on: ubuntu-latest
