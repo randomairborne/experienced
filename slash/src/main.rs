@@ -35,7 +35,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Creating commands...");
     let my_id = client
         .current_user_application()
-        .exec()
         .await
         .expect("Failed to get own app ID!")
         .model()
@@ -49,12 +48,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         client,
         my_id,
     });
-    let route = axum::Router::with_state(state)
+    let route = axum::Router::new()
         .route("/api/interactions", post(handler::handle))
         .route(
             "/",
             get(|| async move { Redirect::temporary(&website_url) }),
-        );
+        )
+        .with_state(state);
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())

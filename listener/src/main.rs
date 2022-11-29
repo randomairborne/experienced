@@ -1,4 +1,4 @@
-#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
+#![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 use dashmap::DashMap;
 use futures::stream::StreamExt;
@@ -17,7 +17,7 @@ async fn main() {
     let token =
         env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
     let mysql = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
-    println!("Connecting to database {}", mysql);
+    println!("Connecting to database {mysql}");
     let db = sqlx::mysql::MySqlPoolOptions::new()
         .max_connections(50)
         .connect(&mysql)
@@ -111,7 +111,7 @@ async fn handle_event(
                 {
                     Ok(rw) => rw.id,
                     Err(e) => {
-                        if let sqlx::Error::RowNotFound = e {return;}
+                        if matches!(e, sqlx::Error::RowNotFound) {return;}
                         eprintln!("SQL select error: {e:?}");
                         return;
                     }
