@@ -20,7 +20,6 @@ services:
       WEBSITE_URL: ${WEBSITE_URL}
       DATABASE_URL: "mysql://experienced:experienced@database/experienced"
 
-
   database:
     image: mariadb:latest
     command: --init-file /tmp/database.mysql
