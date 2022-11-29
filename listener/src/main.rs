@@ -117,7 +117,6 @@ async fn handle_event(
                     }
                 };
                 http.add_guild_member_role(guild_id, msg.author.id, Id::new(reward))
-                    .exec()
                     .await
                     .ok();
             }
