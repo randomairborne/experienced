@@ -37,7 +37,7 @@ async fn process_app_cmd(
     state: AppState,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     #[cfg(debug_assertions)]
-    println!("DEBUG: {:#?}", interaction);
+    println!("DEBUG: {interaction:#?}");
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd

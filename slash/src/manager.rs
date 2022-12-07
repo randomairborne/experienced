@@ -86,8 +86,7 @@ async fn process_rewards_add(
     .execute(&state.db)
     .await?;
     Ok(format!(
-        "Added role reward <@&{}> at level {}!",
-        role_id, level_requirement
+        "Added role reward <@&{role_id}> at level {level_requirement}!",
     ))
 }
 async fn process_rewards_rm(
@@ -103,7 +102,7 @@ async fn process_rewards_rm(
         )
         .execute(&state.db)
         .await?;
-        return Ok(format!("Removed role reward <@&{}>!", role));
+        return Ok(format!("Removed role reward <@&{role}>!"));
     } else if let Some(CommandOptionValue::Integer(level)) = options.get("level") {
         query!(
             "DELETE FROM role_rewards WHERE requirement = ? AND guild = ?",
