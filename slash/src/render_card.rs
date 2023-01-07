@@ -26,10 +26,10 @@ pub async fn render(
         discriminator,
         width: 40 + (u64::from(percentage) * 7),
     })?;
-    tokio::task::spawn_blocking(move || do_render(state, &context)).await?
+    tokio::task::spawn_blocking(move || do_render(&state, &context)).await?
 }
 
-fn do_render(state: AppState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
+fn do_render(state: &AppState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
     let opt = resvg::usvg::Options::default();
     let svg = state.svg.tera.render("svg", context)?;
     let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
