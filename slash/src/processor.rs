@@ -176,21 +176,25 @@ async fn get_level(
         .build())
 }
 
-async fn generate_level_response(user: &User, level_info: mee6::LevelInfo, rank: u64) -> Result<InteractionResponseData, CommandProcessorError> {
+async fn generate_level_response(
+    user: &User,
+    level_info: mee6::LevelInfo,
+    rank: u64,
+) -> Result<InteractionResponseData, CommandProcessorError> {
     Ok(InteractionResponseDataBuilder::new()
-            .attachments(vec![Attachment {
-                description: Some("Rank card".to_string()),
-                file: crate::render_card::render(
-                    user.name.clone(),
-                    user.discriminator().to_string(),
-                    level_info.level().to_string(),
-                    rank.to_string(),
-                )
-                .await?,
-                filename: "card.png".to_string(),
-                id: 0,
-            }])
-            .build())
+        .attachments(vec![Attachment {
+            description: Some("Rank card".to_string()),
+            file: crate::render_card::render(
+                user.name.clone(),
+                user.discriminator().to_string(),
+                level_info.level().to_string(),
+                rank.to_string(),
+            )
+            .await?,
+            filename: "card.png".to_string(),
+            id: 0,
+        }])
+        .build())
 }
 
 #[derive(Debug, thiserror::Error)]
