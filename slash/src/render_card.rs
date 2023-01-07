@@ -22,10 +22,10 @@ pub async fn render(
 }
 
 fn do_render(context: Context) -> Result<Vec<u8>, RenderingError> {
-    let mut opt = resvg::usvg::Options::default();
+    let opt = resvg::usvg::Options::default();
     let mut fontdb = fontdb::Database::new();
     fontdb.load_font_data(include_bytes!("resources/OpenSans.ttf").to_vec());
-    let tt = tinytemplate::TinyTemplate::new();
+    let mut tt = tinytemplate::TinyTemplate::new();
     tt.add_template("svg", include_str!("resources/card.svg"));
 
     let svg = tt.render("hello", &context)?;
