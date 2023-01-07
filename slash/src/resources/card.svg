@@ -3,38 +3,38 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .name {
-        font: 40px sans-serif;
-        fill: #FFFFFF;
+      font: 40px sans-serif;
+      fill: #FFFFFF;
     }
     .discriminator {
-        font: 20px sans-serif;
-        fill: #CCCCCC;
+      font: 20px sans-serif;
+      fill: #CCCCCC;
     }
     .stat {
-        font: 40px sans-serif;
+      font: 40px sans-serif;
     }
     .stat-name {
-        font: 20px sans-serif;
+      font: 20px sans-serif;
     }
     .rank {
-        fill: #FFFFFF;
+      fill: #FFFFFF;
     }
     .level {
-        fill: #8FCA5C;
+      fill: #8FCA5C;
     }
   </style>
   <rect width="800" height="200" fill="#854F2B" />
   <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="#61371F" />
   <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="#477A1E" />
-  <rect width="{ width }" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
+  <rect width="{{ width }}" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
   <text x="30" y="55">
     <tspan class="stat-name level">Level</tspan>
-    <tspan class="stat level">{ level }</tspan>
+    <tspan class="stat level">{{ level }}</tspan>
     <tspan class="stat-name level">Rank</tspan>
-    <tspan class="stat level">#{ rank }</tspan>
+    <tspan class="stat level">#{{ rank }}</tspan>
   </text>
   <text x="30" y="100">
-    <tspan class="name">{ name }</tspan>
-    <tspan class="discriminator">#{ discriminator }</tspan>
+    <tspan class="name">{{ name }}</tspan>
+    <tspan class="discriminator">#{{ discriminator }}</tspan>
   </text>
 </svg>

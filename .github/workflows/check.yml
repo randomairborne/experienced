@@ -1,0 +1,42 @@
+name: PR check
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DATABASE_URL: "mysql://root:root@localhost/experienced"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start MySQL
+        run: sudo /etc/init.d/mysql start
+
+      - name: Create MySQL test database
+        run: sudo mysql -e 'CREATE DATABASE experienced;' --user=root --password=root
+
+      - name: Check out code into the proper directory
+        uses: actions/checkout@v3
+
+      - name: Run database migrations
+        run: mysql --user=root --password=root < database.mysql
+
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Check build
+        run: cargo clippy
+
+      - name: Run tests
+        run: cargo test

@@ -159,7 +159,7 @@ async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(user, level_info, rank).await;
+            return generate_level_response(state, user, level_info, rank).await;
         }
     } else if xp == 0 {
         format!(
@@ -168,7 +168,7 @@ async fn get_level(
             user.discriminator()
         )
     } else {
-        return generate_level_response(user, level_info, rank).await;
+        return generate_level_response(state, user, level_info, rank).await;
     };
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)
@@ -177,6 +177,7 @@ async fn get_level(
 }
 
 async fn generate_level_response(
+    state: AppState,
     user: &User,
     level_info: mee6::LevelInfo,
     rank: i64,
@@ -185,6 +186,7 @@ async fn generate_level_response(
         .attachments(vec![Attachment {
             description: Some("Rank card".to_string()),
             file: crate::render_card::render(
+                state,
                 user.name.clone(),
                 user.discriminator().to_string(),
                 level_info.level().to_string(),
