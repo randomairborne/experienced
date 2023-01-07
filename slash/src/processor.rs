@@ -179,7 +179,7 @@ async fn get_level(
 async fn generate_level_response(
     user: &User,
     level_info: mee6::LevelInfo,
-    rank: u64,
+    rank: i64,
 ) -> Result<InteractionResponseData, CommandProcessorError> {
     Ok(InteractionResponseDataBuilder::new()
         .attachments(vec![Attachment {
