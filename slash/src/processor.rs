@@ -11,7 +11,7 @@ use twilight_model::{
     channel::message::MessageFlags,
     http::{
         attachment::Attachment,
-        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+        interaction::{InteractionResponse, InteractionResponseType},
     },
     id::{marker::GuildMarker, Id},
     user::User,
@@ -23,10 +23,7 @@ pub async fn process(
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     Ok(if interaction.kind == InteractionType::ApplicationCommand {
-        InteractionResponse {
-            kind: InteractionResponseType::ChannelMessageWithSource,
-            data: Some(process_app_cmd(interaction, state).await?),
-        }
+        process_app_cmd(interaction, state).await?
     } else {
         InteractionResponse {
             kind: InteractionResponseType::Pong,
@@ -38,9 +35,9 @@ pub async fn process(
 async fn process_app_cmd(
     interaction: Interaction,
     state: AppState,
-) -> Result<InteractionResponseData, CommandProcessorError> {
+) -> Result<InteractionResponse, CommandProcessorError> {
     #[cfg(debug_assertions)]
-    println!("DEBUG: {interaction:#?}");
+    trace!("{interaction:#?}");
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
             *cmd
@@ -57,20 +54,28 @@ async fn process_app_cmd(
     .ok_or(CommandProcessorError::NoInvoker)?;
     match data.kind {
         CommandType::ChatInput => {
-            process_slash_cmd(data, interaction.guild_id, invoker, state).await
+            process_slash_cmd(
+                data,
+                interaction.token,
+                interaction.guild_id,
+                invoker,
+                state,
+            )
+            .await
         }
-        CommandType::User => process_user_cmd(data, invoker, state).await,
-        CommandType::Message => process_msg_cmd(data, invoker, state).await,
+        CommandType::User => process_user_cmd(data, interaction.token, invoker, state).await,
+        CommandType::Message => process_msg_cmd(data, interaction.token, invoker, state).await,
         _ => Err(CommandProcessorError::WrongInteractionData),
     }
 }
 
 async fn process_slash_cmd(
     data: CommandData,
+    token: String,
     guild_id: Option<Id<GuildMarker>>,
     invoker: User,
     state: AppState,
-) -> Result<InteractionResponseData, CommandProcessorError> {
+) -> Result<InteractionResponse, CommandProcessorError> {
     match data.name.as_str() {
         "rank" | "level" => {
             for option in &data.options {
@@ -83,22 +88,26 @@ async fn process_slash_cmd(
                             .users
                             .get(&user_id)
                             .ok_or(CommandProcessorError::NoTarget)?;
-                        return get_level(user, &invoker, state).await;
+                        return get_level(user.clone(), invoker, token, state).await;
                     };
                 }
             }
-            get_level(&invoker, &invoker, state).await
+            get_level(invoker.clone(), invoker, token, state).await
         }
-        "xp" => Ok(crate::manager::process_xp(data, guild_id, &invoker, state).await?),
+        "xp" => Ok(InteractionResponse {
+            data: Some(crate::manager::process_xp(data, guild_id, &invoker, state).await?),
+            kind: InteractionResponseType::ChannelMessageWithSource,
+        }),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
 
 async fn process_user_cmd(
     data: CommandData,
+    token: String,
     invoker: User,
     state: AppState,
-) -> Result<InteractionResponseData, CommandProcessorError> {
+) -> Result<InteractionResponse, CommandProcessorError> {
     let msg_id = data
         .target_id
         .ok_or(CommandProcessorError::NoMessageTargetId)?;
@@ -109,14 +118,15 @@ async fn process_user_cmd(
         .users
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?;
-    get_level(user, &invoker, state).await
+    get_level(user.clone(), invoker, token, state).await
 }
 
 async fn process_msg_cmd(
     data: CommandData,
+    token: String,
     invoker: User,
     state: AppState,
-) -> Result<InteractionResponseData, CommandProcessorError> {
+) -> Result<InteractionResponse, CommandProcessorError> {
     let msg_id = data
         .target_id
         .ok_or(CommandProcessorError::NoMessageTargetId)?;
@@ -128,14 +138,15 @@ async fn process_msg_cmd(
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?
         .author;
-    get_level(user, &invoker, state).await
+    get_level(user.clone(), invoker, token, state).await
 }
 
 async fn get_level(
-    user: &User,
-    invoker: &User,
+    user: User,
+    invoker: User,
+    token: String,
     state: AppState,
-) -> Result<InteractionResponseData, CommandProcessorError> {
+) -> Result<InteractionResponse, CommandProcessorError> {
     // Select current XP from the database, return 0 if there is no row
     let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.id.get())
         .fetch_one(&state.db)
@@ -159,7 +170,7 @@ async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(state, user, level_info, rank).await;
+            return generate_level_response(state, token, user, level_info, rank).await;
         }
     } else if xp == 0 {
         format!(
@@ -168,36 +179,75 @@ async fn get_level(
             user.discriminator()
         )
     } else {
-        return generate_level_response(state, user, level_info, rank).await;
+        return generate_level_response(state, token, user, level_info, rank).await;
     };
-    Ok(InteractionResponseDataBuilder::new()
-        .flags(MessageFlags::EPHEMERAL)
-        .content(content)
-        .build())
+    Ok(InteractionResponse {
+        kind: InteractionResponseType::ChannelMessageWithSource,
+        data: Some(
+            InteractionResponseDataBuilder::new()
+                .flags(MessageFlags::EPHEMERAL)
+                .content(content)
+                .build(),
+        ),
+    })
 }
 
 async fn generate_level_response(
     state: AppState,
-    user: &User,
+    token: String,
+    user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
-) -> Result<InteractionResponseData, CommandProcessorError> {
-    Ok(InteractionResponseDataBuilder::new()
-        .attachments(vec![Attachment {
-            description: Some("Rank card".to_string()),
-            file: crate::render_card::render(
-                state,
-                user.name.clone(),
-                user.discriminator().to_string(),
-                level_info.level().to_string(),
-                rank.to_string(),
-                level_info.percentage(),
-            )
-            .await?,
-            filename: "card.png".to_string(),
-            id: 0,
-        }])
-        .build())
+) -> Result<InteractionResponse, CommandProcessorError> {
+    tokio::task::spawn(async move {
+        let interaction_client = state.client.interaction(state.my_id);
+        match crate::render_card::render(
+            state.clone(),
+            user.name.clone(),
+            user.discriminator().to_string(),
+            level_info.level().to_string(),
+            rank.to_string(),
+            level_info.percentage(),
+        )
+        .await
+        {
+            Ok(png) => {
+                match interaction_client
+                    .create_followup(&token)
+                    .attachments(&[Attachment::from_bytes("card.png".to_string(), png, 0)])
+                {
+                    Ok(followup) => followup.await,
+                    Err(e) => {
+                        warn!("{e}");
+                        interaction_client
+                            .create_followup(&token)
+                            .content("Invalid upload, please contact bot administrators")
+                            .unwrap()
+                            .await
+                    }
+                }
+            }
+            Err(err) => {
+                match interaction_client
+                    .create_followup(&token)
+                    .content(&format!("Rendering card failed: {err}"))
+                {
+                    Ok(awaitable) => awaitable.await,
+                    Err(e) => {warn!("{e}");
+                        interaction_client
+                            .create_followup(&token)
+                            .content("Error too long, please contact bot administrators")
+                            .unwrap()
+                            .await
+                    }
+                }
+            }
+        }
+    });
+    Ok(InteractionResponse {
+        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+        data: None,
+    })
 }
 
 #[derive(Debug, thiserror::Error)]

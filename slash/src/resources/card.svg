@@ -3,18 +3,22 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .name {
-      font: 40px sans-serif;
+      font-family: Mojang;
+      font-size: 40px;
       fill: #FFFFFF;
     }
     .discriminator {
-      font: 20px sans-serif;
+      font-family: Mojang;
+      font-size: 20px;
       fill: #CCCCCC;
     }
     .stat {
-      font: 40px sans-serif;
+      font-family: Mojang;
+      font-size: 40px;
     }
     .stat-name {
-      font: 20px sans-serif;
+      font-family: Mojang;
+      font-size: 20px;
     }
     .rank {
       fill: #FFFFFF;
