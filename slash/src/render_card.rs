@@ -1,3 +1,5 @@
+use resvg::usvg_text_layout::TreeTextToPath;
+
 use crate::AppState;
 
 #[derive(serde::Serialize)]
@@ -30,7 +32,8 @@ pub async fn render(
 fn do_render(state: AppState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
     let opt = resvg::usvg::Options::default();
     let svg = state.svg.tera.render("svg", context)?;
-    let tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
+    let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
+    tree.convert_text(state.svg.fonts, opt.keep_named_groups);
     let pixmap_size = tree.size.to_screen_size();
     let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
         .ok_or(RenderingError::PixmapCreation)?;
