@@ -18,7 +18,7 @@ pub async fn render(
         name,
         discriminator,
     };
-    tokio::task::spawn_blocking(|| do_render(&context)).await?
+    tokio::task::spawn_blocking(move || do_render(&context)).await?
 }
 
 fn do_render(context: &Context) -> Result<Vec<u8>, RenderingError> {
