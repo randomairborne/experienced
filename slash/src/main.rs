@@ -13,6 +13,7 @@ mod discord_sig_validation;
 mod handler;
 mod manager;
 mod processor;
+mod render_card;
 
 pub type AppState = Arc<UnderlyingAppState>;
 

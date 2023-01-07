@@ -9,7 +9,10 @@ use twilight_model::{
         },
     },
     channel::message::MessageFlags,
-    http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    http::{
+        attachment::Attachment,
+        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    },
     id::{marker::GuildMarker, Id},
     user::User,
 };
@@ -156,13 +159,7 @@ async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            format!(
-                "You are level {} (rank #{}), and are {}% of the way to level {}.",
-                level_info.level(),
-                rank,
-                level_info.percentage(),
-                level_info.level() + 1
-            )
+            return generate_level_response(user, level_info, rank).await;
         }
     } else if xp == 0 {
         format!(
@@ -171,20 +168,29 @@ async fn get_level(
             user.discriminator()
         )
     } else {
-        format!(
-            "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
-            user.name,
-            user.discriminator(),
-            level_info.level(),
-            rank,
-            level_info.percentage(),
-            level_info.level() + 1
-        )
+        return generate_level_response(user, level_info, rank).await;
     };
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)
         .content(content)
         .build())
+}
+
+async fn generate_level_response(user: &User, level_info: mee6::LevelInfo, rank: u64) -> Result<InteractionResponseData, CommandProcessorError> {
+    Ok(InteractionResponseDataBuilder::new()
+            .attachments(vec![Attachment {
+                description: Some("Rank card".to_string()),
+                file: crate::render_card::render(
+                    user.name.clone(),
+                    user.discriminator().to_string(),
+                    level_info.level().to_string(),
+                    rank.to_string(),
+                )
+                .await?,
+                filename: "card.png".to_string(),
+                id: 0,
+            }])
+            .build())
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -205,6 +211,8 @@ pub enum CommandProcessorError {
     NoInteractionData,
     #[error("XP subprocessor encountered an error: {0}!")]
     XpSubprocessor(#[from] crate::manager::Error),
+    #[error("SVG renderer encountered an error: {0}!")]
+    ImageGenerator(#[from] crate::render_card::RenderingError),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }
