@@ -4,6 +4,7 @@ struct Context {
     rank: String,
     name: String,
     discriminator: String,
+    width: u64,
 }
 
 pub async fn render(
@@ -11,12 +12,14 @@ pub async fn render(
     discriminator: String,
     level: String,
     rank: String,
+    percentage: u8,
 ) -> Result<Vec<u8>, RenderingError> {
     let context = Context {
         level,
         rank,
         name,
         discriminator,
+        width: 40 + (percentage as u64 * 7),
     };
     tokio::task::spawn_blocking(move || do_render(&context)).await?
 }

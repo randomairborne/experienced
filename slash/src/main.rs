@@ -1,10 +1,7 @@
 #![deny(clippy::all, clippy::cargo, clippy::pedantic, clippy::nursery)]
 use std::sync::Arc;
 
-use axum::{
-    response::Redirect,
-    routing::{get, post},
-};
+use axum::routing::post;
 use sqlx::MySqlPool;
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
@@ -26,8 +23,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
-    let website_url =
-        std::env::var("WEBSITE_URL").expect("Expected environment variable WEBSITE_URL");
     println!("Connecting to database {database_url}");
     let db = MySqlPool::connect(&database_url)
         .await
@@ -50,11 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         my_id,
     });
     let route = axum::Router::new()
-        .route("/api/interactions", post(handler::handle))
-        .route(
-            "/",
-            get(|| async move { Redirect::temporary(&website_url) }),
-        )
+        .route("/", post(handler::handle))
         .with_state(state);
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
