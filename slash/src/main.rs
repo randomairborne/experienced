@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
-    let mut fonts = fontdb::Database::new();
+    let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
     fonts.load_font_data(include_bytes!("resources/OpenSans.ttf").to_vec());
     let mut tera = tera::Tera::default();
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
@@ -71,6 +71,6 @@ pub struct UnderlyingAppState {
 }
 
 pub struct SvgState {
-    fonts: fontdb::Database,
+    fonts: resvg::usvg_text_layout::fontdb::Database,
     tera: tera::Tera,
 }

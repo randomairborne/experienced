@@ -25,6 +25,5 @@ twilight-util = { version = "0.14", features = ["builder"] }
 dotenvy = "0.15"
 mee6 = "0.0.2"
 resvg = "0.28"
-fontdb = "0.11"
 tera = "1"
 png = "0.17"
