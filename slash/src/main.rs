@@ -23,6 +23,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
+    let mut fonts = fontdb::Database::new();
+    fonts.load_font_data(include_bytes!("resources/OpenSans.ttf").to_vec());
+    let mut tera = tera::Tera::default();
+    tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
+    let svg = SvgState { fonts, tera };
     println!("Connecting to database {database_url}");
     let db = MySqlPool::connect(&database_url)
         .await
@@ -38,11 +43,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .expect("Failed to convert own app ID!")
         .id;
     cmd_defs::register(client.interaction(my_id)).await;
+
     let state = Arc::new(UnderlyingAppState {
         db,
         pubkey,
         client,
         my_id,
+        svg,
     });
     let route = axum::Router::new()
         .route("/", post(handler::handle))
@@ -60,4 +67,10 @@ pub struct UnderlyingAppState {
     pub pubkey: String,
     pub client: twilight_http::Client,
     pub my_id: Id<ApplicationMarker>,
+    pub svg: SvgState,
+}
+
+pub struct SvgState {
+    fonts: fontdb::Database,
+    tera: tera::Tera,
 }

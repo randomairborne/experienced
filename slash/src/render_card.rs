@@ -1,3 +1,5 @@
+use crate::AppState;
+
 #[derive(serde::Serialize)]
 struct Context {
     level: String,
@@ -8,30 +10,26 @@ struct Context {
 }
 
 pub async fn render(
+    state: AppState,
     name: String,
     discriminator: String,
     level: String,
     rank: String,
     percentage: u8,
 ) -> Result<Vec<u8>, RenderingError> {
-    let context = Context {
+    let context = tera::Context::from_serialize(Context {
         level,
         rank,
         name,
         discriminator,
         width: 40 + (u64::from(percentage) * 7),
-    };
-    tokio::task::spawn_blocking(move || do_render(&context)).await?
+    })?;
+    tokio::task::spawn_blocking(move || do_render(state, &context)).await?
 }
 
-fn do_render(context: &Context) -> Result<Vec<u8>, RenderingError> {
+fn do_render(state: AppState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
     let opt = resvg::usvg::Options::default();
-    let mut fontdb = fontdb::Database::new();
-    fontdb.load_font_data(include_bytes!("resources/OpenSans.ttf").to_vec());
-    let mut tt = tinytemplate::TinyTemplate::new();
-    tt.add_template("svg", include_str!("resources/card.svg"))?;
-
-    let svg = tt.render("svg", context)?;
+    let svg = state.svg.tera.render("svg", context)?;
     let tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
     let pixmap_size = tree.size.to_screen_size();
     let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
@@ -47,8 +45,8 @@ fn do_render(context: &Context) -> Result<Vec<u8>, RenderingError> {
 
 #[derive(Debug, thiserror::Error)]
 pub enum RenderingError {
-    #[error("TinyTemplate error: {0}")]
-    Template(#[from] tinytemplate::error::Error),
+    #[error("Tera error: {0}")]
+    Template(#[from] tera::Error),
     #[error("Tokio JoinError: {0}")]
     Join(#[from] tokio::task::JoinError),
     #[error("uSVG error: {0}")]
