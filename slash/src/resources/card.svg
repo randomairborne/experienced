@@ -26,7 +26,7 @@
   <rect width="800" height="200" fill="#854F2B" />
   <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="#61371F" />
   <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="#477A1E" />
-  <rect width="370" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
+  <rect width="{ width }" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
   <text x="30" y="55">
     <tspan class="stat-name level">Level</tspan>
     <tspan class="stat level">{ level }</tspan>

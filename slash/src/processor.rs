@@ -189,6 +189,7 @@ async fn generate_level_response(
                 user.discriminator().to_string(),
                 level_info.level().to_string(),
                 rank.to_string(),
+                level_info.percentage(),
             )
             .await?,
             filename: "card.png".to_string(),

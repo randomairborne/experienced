@@ -17,7 +17,6 @@ services:
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_PUBKEY: ${DISCORD_PUBKEY}
-      WEBSITE_URL: ${WEBSITE_URL}
       DATABASE_URL: "mysql://experienced:experienced@database/experienced"
 
   database:
