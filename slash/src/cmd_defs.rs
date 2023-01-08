@@ -6,18 +6,26 @@ use twilight_util::builder::command::{
 
 pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
     let cmds = [
-        CommandBuilder::new("level", "Check someone's level", CommandType::ChatInput)
-            .dm_permission(false)
-            .option(UserBuilder::new("user", "User to check level of").required(false))
-            .validate()
-            .expect("Level slash command is invalid!")
-            .build(),
-        CommandBuilder::new("rank", "Check someone's level", CommandType::ChatInput)
-            .dm_permission(false)
-            .option(UserBuilder::new("user", "User to check level of").required(false))
-            .validate()
-            .expect("Rank slash command is invalid!")
-            .build(),
+        CommandBuilder::new(
+            "level",
+            "Check someone's level and rank",
+            CommandType::ChatInput,
+        )
+        .dm_permission(false)
+        .option(UserBuilder::new("user", "User to check level of").required(false))
+        .validate()
+        .expect("Level slash command is invalid!")
+        .build(),
+        CommandBuilder::new(
+            "rank",
+            "Check someone's rank and level",
+            CommandType::ChatInput,
+        )
+        .dm_permission(false)
+        .option(UserBuilder::new("user", "User to check level of").required(false))
+        .validate()
+        .expect("Rank slash command is invalid!")
+        .build(),
         CommandBuilder::new("xp", "Manage Experienced functions", CommandType::ChatInput)
             .default_member_permissions(Permissions::ADMINISTRATOR)
             .dm_permission(false)
