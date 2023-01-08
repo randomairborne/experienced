@@ -89,12 +89,11 @@ async fn handle_event(
     if let Event::MessageCreate(msg) = event {
         if let Some(guild_id) = msg.guild_id {
             let has_sent: bool = redis::cmd("GET")
-            .arg(format!("{guild_id}-{}", msg.author.id))
-            .query_async(&mut redis)
-            .await.unwrap_or(false);
-            if !msg.author.bot
-                && !has_sent
-            {
+                .arg(format!("{guild_id}-{}", msg.author.id))
+                .query_async(&mut redis)
+                .await
+                .unwrap_or(false);
+            if !msg.author.bot && !has_sent {
                 let xp_count = rand::thread_rng().gen_range(15..=25);
                 if let Err(e) = query!(
                     "INSERT INTO levels (id, xp, guild) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
