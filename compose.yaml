@@ -4,6 +4,7 @@ services:
     image: ghcr.io/randomairborne/experienced-listener:latest
     networks:
       - database
+      - redis
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DATABASE_URL: "mysql://experienced:experienced@database/experienced"
