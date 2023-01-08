@@ -11,6 +11,7 @@ pub struct Context {
     pub width: u64,
     pub current: u64,
     pub needed: f64,
+    pub colors: crate::colors::Colors,
 }
 
 pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {

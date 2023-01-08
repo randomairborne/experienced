@@ -81,6 +81,7 @@ async fn generate_level_response(
                 current: level_info.xp(),
                 #[allow(clippy::cast_precision_loss)]
                 needed: mee6::LevelInfo::xp_to_level((level_info.level() + 1) as f64),
+                colors: crate::colors::Colors::for_user(&state.db, user.id).await,
             },
         )
         .await

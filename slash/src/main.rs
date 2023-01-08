@@ -7,9 +7,11 @@ use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::Subs
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
 mod cmd_defs;
+mod colors;
 mod discord_sig_validation;
 mod handler;
 mod levels;
+mod manage_colors;
 mod manager;
 mod processor;
 mod render_card;
