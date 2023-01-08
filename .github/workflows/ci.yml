@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run database migrations
-        run: mysql --user=root --password=root < database.mysql
+        run: mysql --user=root --password=root < ./migrations/init.sql
 
       - name: Cache rust
         uses: Swatinem/rust-cache@v2
