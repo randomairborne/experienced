@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS levels (
 CREATE TABLE IF NOT EXISTS custom_colors (
     important VARCHAR(7),
     secondary VARCHAR(7),
-    rank VARCHAR(7),
+    `rank` VARCHAR(7),
     level VARCHAR(7),
     border VARCHAR(7),
     background VARCHAR(7),

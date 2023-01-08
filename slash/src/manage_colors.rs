@@ -59,7 +59,7 @@ async fn process_edit(
         "INSERT INTO custom_colors (
             important,
             secondary,
-            rank,
+            `rank`,
             level,
             border,
             background,
