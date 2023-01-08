@@ -19,7 +19,7 @@ pub async fn handle(
     let response = match crate::processor::process(interaction, state).await {
         Ok(val) => val,
         Err(e) => {
-            eprintln!("ERROR: {e}");
+            error!("{e}");
             InteractionResponse {
                 kind: InteractionResponseType::ChannelMessageWithSource,
                 data: Some(
@@ -44,7 +44,7 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        eprintln!("ERROR: {self}");
+        error!("{self}");
         axum::response::Response::builder()
             .body(axum::body::boxed(axum::body::Full::from(self.to_string())))
             .unwrap()

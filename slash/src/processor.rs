@@ -92,6 +92,10 @@ async fn process_slash_cmd(
             data: Some(crate::manager::process_xp(data, guild_id, &invoker, state).await?),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
+        "card" => Ok(InteractionResponse {
+            data: Some(crate::manage_colors::process_colors(data, &invoker, state).await?),
+            kind: InteractionResponseType::ChannelMessageWithSource,
+        }),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -151,8 +155,8 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
-    #[error("XP subprocessor encountered an error: {0}!")]
-    XpSubprocessor(#[from] crate::manager::Error),
+    #[error("Manager command encountered an error: {0}!")]
+    Manager(#[from] crate::manager::Error),
     #[error("SVG renderer encountered an error: {0}!")]
     ImageGenerator(#[from] crate::render_card::RenderingError),
     #[error("SQLx encountered an error: {0}")]

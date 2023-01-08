@@ -148,6 +148,8 @@ pub enum Error {
     WrongArgumentCount(&'static str),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
+    #[error("Colors encountered an error: {0}")]
+    Color(#[from] crate::colors::Error),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
     #[error("Discord API error: {0}")]

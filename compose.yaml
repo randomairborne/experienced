@@ -26,9 +26,9 @@ services:
 
   database:
     image: mariadb:latest
-    command: --init-file /tmp/database.mysql
+    command: --init-file /tmp/init.sql
     volumes:
-        - ./database.mysql:/tmp/database.mysql
+        - ./migrations/init.sql:/tmp/init.sql
         - experienced-data:/var/lib/mysql/
     networks:
       - database
