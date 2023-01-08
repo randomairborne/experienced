@@ -4,12 +4,12 @@
   <style>
     .name {
       font-family: Mojang;
-      font-size: 40px;
+      font-size: 25px;
       fill: #FFFFFF;
     }
     .discriminator {
       font-family: Mojang;
-      font-size: 20px;
+      font-size: 10px;
       fill: #CCCCCC;
     }
     .stat {
@@ -18,7 +18,7 @@
     }
     .stat-name {
       font-family: Mojang;
-      font-size: 25px;
+      font-size: 20px;
     }
     .rank {
       fill: #FFFFFF;
@@ -28,12 +28,12 @@
     }
     .needed {
       font-family: Mojang;
-      font-size: 20px;
+      font-size: 15px;
       fill: #CCCCCC;
     }
     .current {
       font-family: Mojang;
-      font-size: 20px;
+      font-size: 15px;
       fill: #FFFFFF;
     }
   </style>
@@ -41,17 +41,17 @@
   <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="#61371F" />
   <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="#477A1E" />
   <rect width="{{ width }}" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
-  <text x="760" y="55" text-anchor="end">
+  <text x="760" y="75" text-anchor="end">
+    <tspan class="stat-name rank">RANK:</tspan>
+    <tspan class="stat rank">&#160;#{{ rank }}&#160;&#160;</tspan>
     <tspan class="stat-name level">LEVEL:</tspan>
-    <tspan class="stat level">&#160;{{ level }}&#160;&#160;</tspan>
-    <tspan class="stat-name level">RANK:</tspan>
-    <tspan class="stat level">&#160;#{{ rank }}</tspan>
+    <tspan class="stat level">&#160;{{ level }}</tspan>
   </text>
-  <text x="760" y="110" text-anchor="end">
+  <text x="760" y="125" text-anchor="end">
     <tspan class="current">{{ current }}</tspan>
     <tspan class="needed">&#160;/&#160;{{ needed }} xp</tspan>
   </text>
-  <text x="30" y="100">
+  <text x="40" y="120">
     <tspan class="name">{{ name }}</tspan>
     <tspan class="discriminator">#{{ discriminator }}</tspan>
   </text>
