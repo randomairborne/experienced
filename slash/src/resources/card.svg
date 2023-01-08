@@ -4,7 +4,7 @@
   <style>
     .name {
       font-family: Mojang;
-      font-size: 20px;
+      font-size: 25px;
       fill: #FFFFFF;
     }
     .discriminator {
@@ -51,7 +51,7 @@
     <tspan class="current">{{ current }}</tspan>
     <tspan class="needed">&#160;/&#160;{{ needed }} xp</tspan>
   </text>
-  <text x="30" y="125">
+  <text x="40" y="125">
     <tspan class="name">{{ name }}</tspan>
     <tspan class="discriminator">#{{ discriminator }}</tspan>
   </text>
