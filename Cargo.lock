@@ -547,7 +547,7 @@ dependencies = [
  "dashmap",
  "dotenvy",
  "futures",
- "mee6 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mee6 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.8.5",
  "sqlx",
  "tokio",
@@ -564,7 +564,7 @@ dependencies = [
  "dotenvy",
  "ed25519-dalek",
  "hex",
- "mee6 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mee6 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "png",
  "resvg",
  "serde",
@@ -1145,13 +1145,13 @@ checksum = "b87248edafb776e59e6ee64a79086f65890d3510f2c656c000bf2a7e8a0aea40"
 
 [[package]]
 name = "mee6"
-version = "0.0.2"
+version = "0.0.3"
 
 [[package]]
 name = "mee6"
-version = "0.0.2"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf493efaf3e1fc955513685de241d6abdec741420dbdd8aa1fe591201848b1a2"
+checksum = "225c477e23abbb392c49827ebe3ce6c35c4625718e93d6d4785f4689656c523a"
 
 [[package]]
 name = "memchr"

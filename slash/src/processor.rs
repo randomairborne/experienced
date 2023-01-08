@@ -203,11 +203,16 @@ async fn generate_level_response(
         let interaction_client = state.client.interaction(state.my_id);
         match crate::render_card::render(
             state.clone(),
-            user.name.clone(),
-            user.discriminator().to_string(),
-            level_info.level().to_string(),
-            rank.to_string(),
-            level_info.percentage(),
+            crate::render_card::Context {
+                level: level_info.level(),
+                rank,
+                name: user.name.clone(),
+                discriminator: user.discriminator().to_string(),
+                width: 40 + (u64::from(level_info.percentage()) * 7),
+                current: level_info.xp(),
+                #[allow(clippy::cast_precision_loss)]
+                needed: mee6::LevelInfo::xp_to_level((level_info.level() + 1) as f64),
+            },
         )
         .await
         {
@@ -233,7 +238,8 @@ async fn generate_level_response(
                     .content(&format!("Rendering card failed: {err}"))
                 {
                     Ok(awaitable) => awaitable.await,
-                    Err(e) => {warn!("{e}");
+                    Err(e) => {
+                        warn!("{e}");
                         interaction_client
                             .create_followup(&token)
                             .content("Error too long, please contact bot administrators")

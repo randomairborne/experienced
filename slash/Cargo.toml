@@ -25,7 +25,7 @@ twilight-model = "0.14"
 twilight-http = "0.14"
 twilight-util = { version = "0.14", features = ["builder"] }
 dotenvy = "0.15"
-mee6 = "0.0.2"
+mee6 = "0.0.3"
 resvg = "0.28"
 tera = "1"
 png = "0.17"

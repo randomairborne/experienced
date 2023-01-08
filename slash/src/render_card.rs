@@ -3,29 +3,18 @@ use resvg::usvg_text_layout::TreeTextToPath;
 use crate::AppState;
 
 #[derive(serde::Serialize)]
-struct Context {
-    level: String,
-    rank: String,
-    name: String,
-    discriminator: String,
-    width: u64,
+pub struct Context {
+    pub level: u64,
+    pub rank: i64,
+    pub name: String,
+    pub discriminator: String,
+    pub width: u64,
+    pub current: u64,
+    pub needed: f64,
 }
 
-pub async fn render(
-    state: AppState,
-    name: String,
-    discriminator: String,
-    level: String,
-    rank: String,
-    percentage: u8,
-) -> Result<Vec<u8>, RenderingError> {
-    let context = tera::Context::from_serialize(Context {
-        level,
-        rank,
-        name,
-        discriminator,
-        width: 40 + (u64::from(percentage) * 7),
-    })?;
+pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {
+    let context = tera::Context::from_serialize(context)?;
     tokio::task::spawn_blocking(move || do_render(&state, &context)).await?
 }
 
