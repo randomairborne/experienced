@@ -93,7 +93,7 @@ async fn handle_event(
                     .arg(format!("{guild_id}-{}", msg.author.id))
                     .query_async(&mut redis)
                     .await
-                    .map_or(false, |v| v)
+                    .map_or(false, |v: bool| !v)
             {
                 let xp_count = rand::thread_rng().gen_range(15..=25);
                 if let Err(e) = query!(
