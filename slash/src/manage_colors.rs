@@ -71,7 +71,7 @@ async fn process_edit(
         ) ON DUPLICATE KEY UPDATE
             important = COALESCE(?, important),
             secondary = COALESCE(?, secondary),
-            rank = COALESCE(?, rank),
+            `rank` = COALESCE(?, `rank`),
             level = COALESCE(?, level),
             border = COALESCE(?, border),
             background = COALESCE(?, background),
