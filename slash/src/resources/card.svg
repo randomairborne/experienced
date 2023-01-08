@@ -28,7 +28,7 @@
     }
     .needed {
       font-family: Mojang;
-      font-size: 15px; oh
+      font-size: 15px;
       fill: #CCCCCC;
     }
     .current {
