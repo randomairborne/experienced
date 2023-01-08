@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use axum::routing::post;
 use sqlx::MySqlPool;
+use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
 mod cmd_defs;
@@ -14,9 +15,16 @@ mod render_card;
 
 pub type AppState = Arc<UnderlyingAppState>;
 
+#[macro_use]
+extern crate tracing;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     dotenvy::dotenv().ok();
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::EnvFilter::from_env("LOG"))
+        .init();
     let token =
         std::env::var("DISCORD_TOKEN").expect("Expected environment variable DISCORD_TOKEN");
     let pubkey =
@@ -24,7 +32,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
-    fonts.load_font_data(include_bytes!("resources/OpenSans.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/Mojang.ttf").to_vec());
+    fonts.set_sans_serif_family("Mojang");
     let mut tera = tera::Tera::default();
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
     let svg = SvgState { fonts, tera };

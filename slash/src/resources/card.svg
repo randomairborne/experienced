@@ -3,18 +3,22 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .name {
-      font: 40px sans-serif;
+      font-family: Mojang;
+      font-size: 40px;
       fill: #FFFFFF;
     }
     .discriminator {
-      font: 20px sans-serif;
+      font-family: Mojang;
+      font-size: 20px;
       fill: #CCCCCC;
     }
     .stat {
-      font: 40px sans-serif;
+      font-family: Mojang;
+      font-size: 40px;
     }
     .stat-name {
-      font: 20px sans-serif;
+      font-family: Mojang;
+      font-size: 25px;
     }
     .rank {
       fill: #FFFFFF;
@@ -22,16 +26,30 @@
     .level {
       fill: #8FCA5C;
     }
+    .needed {
+      font-family: Mojang;
+      font-size: 20px;
+      fill: #CCCCCC;
+    }
+    .current {
+      font-family: Mojang;
+      font-size: 20px;
+      fill: #FFFFFF;
+    }
   </style>
   <rect width="800" height="200" fill="#854F2B" />
   <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="#61371F" />
   <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="#477A1E" />
   <rect width="{{ width }}" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
-  <text x="30" y="55">
-    <tspan class="stat-name level">Level</tspan>
-    <tspan class="stat level">{{ level }}</tspan>
-    <tspan class="stat-name level">Rank</tspan>
-    <tspan class="stat level">#{{ rank }}</tspan>
+  <text x="760" y="55" text-anchor="end">
+    <tspan class="stat-name level">LEVEL:</tspan>
+    <tspan class="stat level">&#160;{{ level }}&#160;&#160;</tspan>
+    <tspan class="stat-name level">RANK:</tspan>
+    <tspan class="stat level">&#160;#{{ rank }}</tspan>
+  </text>
+  <text x="760" y="110" text-anchor="end">
+    <tspan class="current">{{ current }}</tspan>
+    <tspan class="needed">&#160;/&#160;{{ needed }} xp</tspan>
   </text>
   <text x="30" y="100">
     <tspan class="name">{{ name }}</tspan>

@@ -66,7 +66,8 @@ impl LevelInfo {
     // mul_add is not no-std
     #[allow(clippy::suboptimal_flops)]
     #[inline]
-    fn xp_to_level(level: f64) -> f64 {
+    #[must_use]
+    pub fn xp_to_level(level: f64) -> f64 {
         (5.0 / 6.0) * level * (2.0 * level * level + 27.0 * level + 91.0)
     }
 }

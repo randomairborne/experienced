@@ -14,6 +14,8 @@ keywords = ["discord-bot", "mee6"]
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "mysql", "macros"] }
 serde = { version = "1", features = ["derive"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1"
 axum = "0.6.1"
 serde_json = "1"
 ed25519-dalek = "1"
@@ -23,7 +25,7 @@ twilight-model = "0.14"
 twilight-http = "0.14"
 twilight-util = { version = "0.14", features = ["builder"] }
 dotenvy = "0.15"
-mee6 = "0.0.2"
+mee6 = "0.0.3"
 resvg = "0.28"
 tera = "1"
 png = "0.17"
