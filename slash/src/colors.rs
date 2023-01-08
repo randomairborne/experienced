@@ -24,13 +24,9 @@ impl Colors {
         db: &sqlx::MySqlPool,
         id: twilight_model::id::Id<twilight_model::id::marker::UserMarker>,
     ) -> Self {
-        let rec = match sqlx::query!("SELECT * FROM custom_colors WHERE id = ?", id.get())
+        let Ok(rec) = sqlx::query!("SELECT * FROM custom_colors WHERE id = ?", id.get())
             .fetch_one(db)
-            .await
-        {
-            Ok(val) => val,
-            Err(_) => return Self::default(),
-        };
+            .await else {return Self::default();};
         let important = rec.important.map_or(DEFAULT_IMPORTANT, |color| {
             Color::from_hex(&color).unwrap_or(DEFAULT_IMPORTANT)
         });
