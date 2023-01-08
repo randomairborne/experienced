@@ -1,21 +1,35 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
-use dashmap::DashMap;
 use futures::stream::StreamExt;
 use rand::Rng;
 use sqlx::{query, MySqlPool};
-use std::{env, sync::Arc, time::Instant};
+use std::{env, sync::Arc};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
-use twilight_model::id::{marker::UserMarker, Id};
+use twilight_model::id::Id;
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
     let token =
         env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
+    let scheme = ShardScheme::Range {
+        from: env::var("SHARDS_START")
+            .expect("Failed to get SHARDS_START environment variable")
+            .parse()
+            .expect("Failed to parse SHARDS_START as u64"),
+        to: env::var("SHARDS_END")
+            .expect("Failed to get SHARDS_END environment variable")
+            .parse()
+            .expect("Failed to parse SHARDS_END as u64"),
+        total: env::var("TOTAL_SHARDS")
+            .expect("Failed to get TOTAL_SHARDS environment variable")
+            .parse()
+            .expect("Failed to parse TOTAL_SHARDS as u64"),
+    };
+    let redis_url = env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
     let mysql = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
     println!("Connecting to database {mysql}");
     let db = sqlx::mysql::MySqlPoolOptions::new()
@@ -24,15 +38,9 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
-    let cooldown: Arc<DashMap<Id<UserMarker>, Instant>> = Arc::new(DashMap::new());
+    let redis = redis::Client::open(redis_url).expect("Failed to connect to redis");
 
     let client = Arc::new(twilight_http::Client::new(token.clone()));
-
-    let scheme = ShardScheme::Range {
-        from: 0,
-        to: 0,
-        total: 1,
-    };
 
     let intents = Intents::GUILD_MESSAGES;
 
@@ -50,31 +58,43 @@ async fn main() {
         cluster_spawn.up().await;
     });
 
-    tokio::spawn(clean_cooldown(cooldown.clone()));
     let mut has_connected = false;
     while let Some((_shard_id, event)) = events.next().await {
         if !has_connected {
             has_connected = true;
             println!("Connected to discord");
         }
-        tokio::spawn(handle_event(
-            event,
-            db.clone(),
-            cooldown.clone(),
-            client.clone(),
-        ));
+        let redis = redis.clone();
+        let client = client.clone();
+        let db = db.clone();
+        tokio::spawn(async move {
+            let redis = match redis.get_async_connection().await {
+                Ok(val) => val,
+                Err(e) => {
+                    eprintln!("Redis connection error: {e}");
+                    return;
+                }
+            };
+            handle_event(event, db, redis, client).await;
+        });
     }
 }
 
 async fn handle_event(
     event: Event,
     db: MySqlPool,
-    cooldown: Arc<DashMap<Id<UserMarker>, Instant>>,
+    mut redis: redis::aio::Connection,
     http: Arc<twilight_http::Client>,
 ) {
     if let Event::MessageCreate(msg) = event {
         if let Some(guild_id) = msg.guild_id {
-            if !msg.author.bot && cooldown.get(&msg.author.id).is_none() {
+            if !msg.author.bot
+                && redis::cmd("GET")
+                    .arg(format!("{guild_id}-{}", msg.author.id))
+                    .query_async(&mut redis)
+                    .await
+                    .map_or(false, |v| v)
+            {
                 let xp_count = rand::thread_rng().gen_range(15..=25);
                 if let Err(e) = query!(
                     "INSERT INTO levels (id, xp, guild) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
@@ -88,7 +108,17 @@ async fn handle_event(
                 {
                     eprintln!("SQL insert error: {e:?}");
                 };
-                cooldown.insert(msg.author.id, Instant::now());
+                if let Err(e) = redis::cmd("SET")
+                    .arg(format!("{guild_id}-{}", msg.author.id))
+                    .arg(true)
+                    .arg("EX")
+                    .arg(60)
+                    .query_async::<redis::aio::Connection, ()>(&mut redis)
+                    .await
+                {
+                    eprintln!("Redis error: {e}");
+                    return;
+                };
                 let xp = match query!(
                     "SELECT xp FROM levels WHERE id = ? AND guild = ?",
                     msg.author.id.get(),
@@ -121,12 +151,5 @@ async fn handle_event(
                     .ok();
             }
         }
-    }
-}
-
-async fn clean_cooldown(cooldown: Arc<DashMap<Id<UserMarker>, Instant>>) {
-    loop {
-        cooldown.retain(|_, time| time.elapsed() < std::time::Duration::from_secs(60));
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 }

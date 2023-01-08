@@ -12,8 +12,8 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 futures = "0.3"
-dashmap = "5.4"
 rand = "0.8"
+redis = { version = "0.22", features = ["aio", "tokio-comp"] }
 dotenvy = "0.15"
 twilight-model = "0.14"
 twilight-http = "0.14"
