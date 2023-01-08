@@ -28,7 +28,7 @@
     }
     .needed {
       font-family: Mojang;
-      font-size: 15px;
+      font-size: 15px; oh
       fill: #CCCCCC;
     }
     .current {
@@ -51,7 +51,7 @@
     <tspan class="current">{{ current }}</tspan>
     <tspan class="needed">&#160;/&#160;{{ needed }} xp</tspan>
   </text>
-  <text x="40" y="125">
+  <text x="40" y="120">
     <tspan class="name">{{ name }}</tspan>
     <tspan class="discriminator">#{{ discriminator }}</tspan>
   </text>
