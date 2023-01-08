@@ -89,8 +89,20 @@ async fn generate_level_response(
             Ok(png) => {
                 match interaction_client
                     .create_followup(&token)
-                    .attachments(&[Attachment::from_bytes("card.png".to_string(), png, 0)])
-                {
+                    .attachments(&[Attachment {
+                        description: Some(format!(
+                            "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
+                            user.name,
+                            user.discriminator(),
+                            level_info.level(),
+                            rank,
+                            level_info.percentage(),
+                            level_info.level() + 1
+                        )),
+                        file: png,
+                        filename: "card.png".to_string(),
+                        id: 0,
+                    }]) {
                     Ok(followup) => followup.await,
                     Err(e) => {
                         warn!("{e}");
