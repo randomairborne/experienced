@@ -97,7 +97,7 @@ async fn process_edit(
     )
     .execute(&state.db)
     .await?;
-    Ok("Updated".to_string())
+    Ok("Updated colors!".to_string())
 }
 async fn process_reset(state: AppState, user: &User) -> Result<String, Error> {
     query!("DELETE FROM custom_colors WHERE id = ?", user.id.get())
