@@ -16,7 +16,7 @@ sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "mysql", "m
 serde = { version = "1", features = ["derive"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = "0.1"
-axum = "0.6.1"
+axum = "0.6.2"
 serde_json = "1"
 ed25519-dalek = "1"
 hex = "0.4"
