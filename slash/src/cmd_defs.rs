@@ -4,6 +4,7 @@ use twilight_util::builder::command::{
     SubCommandGroupBuilder, UserBuilder,
 };
 
+#[allow(clippy::too_many_lines)]
 pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
     let cmds = [
         CommandBuilder::new(
