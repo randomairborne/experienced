@@ -58,6 +58,7 @@ async fn main() {
     let cluster = Arc::new(cluster);
 
     let cluster_spawn = cluster.clone();
+    let cluster_down = cluster.clone();
     println!("Connecting to discord");
     tokio::spawn(async move {
         cluster_spawn.up().await;
@@ -91,7 +92,7 @@ async fn main() {
                 handle_event(event, db, redis, client).await;
             });
         } else if SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
-            cluster_spawn.down();
+            cluster_down.down();
             break;
         }
     }
