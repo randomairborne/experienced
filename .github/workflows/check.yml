@@ -24,7 +24,7 @@ jobs:
         run: mysql --user=root --password=root < ./migrations/init.sql
 
       - name: Install cargo
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
  
