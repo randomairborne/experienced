@@ -3,12 +3,17 @@
 use futures::stream::StreamExt;
 use rand::Rng;
 use sqlx::{query, MySqlPool};
-use std::{env, sync::Arc};
+use std::{
+    env,
+    sync::{atomic::AtomicBool, Arc},
+};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
 use twilight_model::id::Id;
+
+static SHOULD_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
 #[tokio::main]
 async fn main() {
@@ -57,27 +62,40 @@ async fn main() {
     tokio::spawn(async move {
         cluster_spawn.up().await;
     });
+    tokio::spawn(async move {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("Failed to listen to ctrl-c");
+        println!("Shutting down...");
+        SHOULD_SHUTDOWN.store(true, std::sync::atomic::Ordering::Relaxed);
+    });
 
     let mut has_connected = false;
-    while let Some((_shard_id, event)) = events.next().await {
-        if !has_connected {
-            has_connected = true;
-            println!("Connected to discord");
+    loop {
+        if let Some((_shard_id, event)) = events.next().await {
+            if !has_connected {
+                has_connected = true;
+                println!("Connected to discord!");
+            }
+            let redis = redis.clone();
+            let client = client.clone();
+            let db = db.clone();
+            tokio::spawn(async move {
+                let redis = match redis.get_async_connection().await {
+                    Ok(val) => val,
+                    Err(e) => {
+                        eprintln!("Redis connection error: {e}");
+                        return;
+                    }
+                };
+                handle_event(event, db, redis, client).await;
+            });
+        } else if SHOULD_SHUTDOWN {
+            cluster_spawn.down();
+            break;
         }
-        let redis = redis.clone();
-        let client = client.clone();
-        let db = db.clone();
-        tokio::spawn(async move {
-            let redis = match redis.get_async_connection().await {
-                Ok(val) => val,
-                Err(e) => {
-                    eprintln!("Redis connection error: {e}");
-                    return;
-                }
-            };
-            handle_event(event, db, redis, client).await;
-        });
     }
+    println!("Done, see ya!");
 }
 
 async fn handle_event(
