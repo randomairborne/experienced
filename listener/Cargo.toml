@@ -17,7 +17,7 @@ redis = { version = "0.22", features = ["aio", "tokio-comp"] }
 dotenvy = "0.15"
 twilight-model = "0.14"
 twilight-http = "0.14"
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 twilight-gateway = "0.14"
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "mysql", "macros"] }
 mee6 = "0.0.3"
