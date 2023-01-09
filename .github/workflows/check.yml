@@ -2,6 +2,7 @@ name: PR check
 on:
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 env:
   DATABASE_URL: "mysql://root:root@localhost/experienced"
@@ -26,10 +27,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install cargo
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly
-          override: true
           components: rustfmt, clippy
 
       - name: Check formatting

@@ -1,6 +1,8 @@
 name: CI
 on:
   push:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
@@ -8,42 +10,10 @@ env:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Start MySQL
-        run: sudo /etc/init.d/mysql start
-
-      - name: Create MySQL test database
-        run: sudo mysql -e 'CREATE DATABASE experienced;' --user=root --password=root
-
-      - name: Check out code into the proper directory
-        uses: actions/checkout@v3
-
-      - name: Run database migrations
-        run: mysql --user=root --password=root < ./migrations/init.sql
-
-      - name: Cache rust
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-          components: rustfmt, clippy
-
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Check build
-        run: cargo clippy
-
-      - name: Run tests
-        run: cargo test
-
+    uses: ./.github/workflows/check.yml
   deploy:
     runs-on: ubuntu-latest
-    needs: check
+    needs: [check]
     strategy:
       fail-fast: true
       matrix:
@@ -66,14 +36,14 @@ jobs:
         run: mysql --user=root --password=root < ./migrations/init.sql
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build container
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./${{ matrix.side }}/
           push: true
