@@ -28,10 +28,10 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
         .build(),
         CommandBuilder::new("card", "Set hex codes for different color schemes in your rank card.", CommandType::ChatInput)
             .dm_permission(true)
-            .option(SubCommandBuilder::new("reset", "Reset your card to defaults").build())
+            .option(SubCommandBuilder::new("reset", "Reset your card to defaults.").build())
             .option(SubCommandBuilder::new("fetch", "Get your current card settings, including defaults.").build())
             .option(
-                SubCommandBuilder::new("edit", "Edit card colors by specifying hex codes for values you would like to change. Values left blank will be unchanged.")
+                SubCommandBuilder::new("edit", "Edit card colors by specifying hex codes for values you would like to change.")
                     .option(StringBuilder::new(
                         "background",
                         "What background color to use",
