@@ -90,7 +90,7 @@ async fn main() {
                 };
                 handle_event(event, db, redis, client).await;
             });
-        } else if SHOULD_SHUTDOWN {
+        } else if SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
             cluster_spawn.down();
             break;
         }
