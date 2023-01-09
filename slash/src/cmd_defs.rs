@@ -26,46 +26,59 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
         .validate()
         .expect("Rank slash command is invalid!")
         .build(),
-        CommandBuilder::new("card", "Set hex codes for different color schemes in your rank card.", CommandType::ChatInput)
-            .dm_permission(true)
-            .option(SubCommandBuilder::new("reset", "Reset your card to defaults.").build())
-            .option(SubCommandBuilder::new("fetch", "Get your current card settings, including defaults.").build())
-            .option(
-                SubCommandBuilder::new("edit", "Edit card colors by specifying hex codes for values you would like to change.")
-                    .option(StringBuilder::new(
-                        "background",
-                        "What background color to use",
-                    ))
-                    .option(StringBuilder::new("border", "What border color to use"))
-                    .option(StringBuilder::new(
-                        "important",
-                        "What color to use for important informational text",
-                    ))
-                    .option(StringBuilder::new(
-                        "secondary",
-                        "What color to use for secondary informational text",
-                    ))
-                    .option(StringBuilder::new(
-                        "rank",
-                        "What color to use for rank display",
-                    ))
-                    .option(StringBuilder::new(
-                        "level",
-                        "What color to use for level display",
-                    ))
-                    .option(StringBuilder::new(
-                        "progress_background",
-                        "What color to use for the empty part of the level up progress bar",
-                    ))
-                    .option(StringBuilder::new(
-                        "progress_foreground",
-                        "What color to use for the filled part of the level up progress baray",
-                    ))
-                    .build(),
+        CommandBuilder::new(
+            "card",
+            "Set hex codes for different color schemes in your rank card.",
+            CommandType::ChatInput,
+        )
+        .dm_permission(true)
+        .option(SubCommandBuilder::new("reset", "Reset your card to defaults.").build())
+        .option(
+            SubCommandBuilder::new(
+                "fetch",
+                "Get your current card settings, including defaults.",
             )
-            .validate()
-            .expect("Card slash command is invalid!")
             .build(),
+        )
+        .option(
+            SubCommandBuilder::new(
+                "edit",
+                "Edit card colors by specifying hex codes for values you would like to change.",
+            )
+            .option(StringBuilder::new(
+                "background",
+                "What background color to use",
+            ))
+            .option(StringBuilder::new("border", "What border color to use"))
+            .option(StringBuilder::new(
+                "important",
+                "What color to use for important informational text",
+            ))
+            .option(StringBuilder::new(
+                "secondary",
+                "What color to use for secondary informational text",
+            ))
+            .option(StringBuilder::new(
+                "rank",
+                "What color to use for rank display",
+            ))
+            .option(StringBuilder::new(
+                "level",
+                "What color to use for level display",
+            ))
+            .option(StringBuilder::new(
+                "progress_background",
+                "What color to use for the empty part of the level up progress bar",
+            ))
+            .option(StringBuilder::new(
+                "progress_foreground",
+                "What color to use for the filled part of the level up progress baray",
+            ))
+            .build(),
+        )
+        .validate()
+        .expect("Card slash command is invalid!")
+        .build(),
         CommandBuilder::new("xp", "Manage Experienced functions", CommandType::ChatInput)
             .default_member_permissions(Permissions::ADMINISTRATOR)
             .dm_permission(false)
