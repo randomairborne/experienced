@@ -11,7 +11,7 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "mysql", "macros"] }
 serde = { version = "1", features = ["derive"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
