@@ -26,12 +26,12 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
         .validate()
         .expect("Rank slash command is invalid!")
         .build(),
-        CommandBuilder::new("card", "Edit your card", CommandType::ChatInput)
+        CommandBuilder::new("card", "Set hex codes for different color schemes in your rank card.", CommandType::ChatInput)
             .dm_permission(true)
             .option(SubCommandBuilder::new("reset", "Reset your card to defaults").build())
-            .option(SubCommandBuilder::new("fetch", "Get your current card settings").build())
+            .option(SubCommandBuilder::new("fetch", "Get your current card settings, including defaults.").build())
             .option(
-                SubCommandBuilder::new("edit", "Edit aspects of your card")
+                SubCommandBuilder::new("edit", "Edit card colors by specifying hex codes for values you would like to change. Values left blank will be unchanged.")
                     .option(StringBuilder::new(
                         "background",
                         "What background color to use",
