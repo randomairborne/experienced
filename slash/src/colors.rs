@@ -28,7 +28,12 @@ impl Colors {
         let colors = if let Ok(colors) =
             sqlx::query!("SELECT * FROM custom_colors WHERE id = $1", id.get() as i64)
                 .fetch_one(db)
-                .await {colors} else { return Self::default(); };
+                .await
+        {
+            colors
+        } else {
+            return Self::default();
+        };
         Self {
             important: crate::from_maybe_hex!(colors.important, DEFAULT_IMPORTANT),
             secondary: crate::from_maybe_hex!(colors.secondary, DEFAULT_SECONDARY),
