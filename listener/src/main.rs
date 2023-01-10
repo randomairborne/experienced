@@ -1,19 +1,14 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
-use futures::{stream::StreamExt, FutureExt};
+use futures::stream::StreamExt;
 use rand::Rng;
 use sqlx::{query, PgPool};
-use std::{
-    env,
-    sync::{atomic::AtomicBool, Arc},
-};
+use std::{env, sync::Arc};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
 use twilight_model::id::Id;
-
-static SHOULD_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
 #[tokio::main]
 async fn main() {
@@ -67,36 +62,28 @@ async fn main() {
             .await
             .expect("Failed to listen to ctrl-c");
         println!("Shutting down...");
-        SHOULD_SHUTDOWN.store(true, std::sync::atomic::Ordering::Relaxed);
+        cluster.down();
     });
 
     let mut has_connected = false;
-    loop {
-        if let Some(Some((_shard_id, event))) = events.next().now_or_never() {
-            if !has_connected {
-                has_connected = true;
-                println!("Connected to discord!");
-            }
-            let redis = redis.clone();
-            let client = client.clone();
-            let db = db.clone();
-            tokio::spawn(async move {
-                let redis = match redis.get_async_connection().await {
-                    Ok(val) => val,
-                    Err(e) => {
-                        eprintln!("Redis connection error: {e}");
-                        return;
-                    }
-                };
-                handle_event(event, db, redis, client).await;
-            });
-        };
-        if SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
-            println!("Stopping cluster...");
-            cluster.down();
-            println!("Stopped cluster!");
-            break;
+    while let Some((_shard_id, event)) = events.next().await {
+        if !has_connected {
+            has_connected = true;
+            println!("Connected to discord!");
         }
+        let redis = redis.clone();
+        let client = client.clone();
+        let db = db.clone();
+        tokio::spawn(async move {
+            let redis = match redis.get_async_connection().await {
+                Ok(val) => val,
+                Err(e) => {
+                    eprintln!("Redis connection error: {e}");
+                    return;
+                }
+            };
+            handle_event(event, db, redis, client).await;
+        });
     }
     println!("Done, see ya!");
 }
