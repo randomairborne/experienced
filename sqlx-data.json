@@ -1,6 +1,39 @@
 {
   "db": "PostgreSQL",
-  "0677888c397796fc0e91aa4f9be1c153dff3e1cbc0299c901f2ee627c7617c2f": {
+  "105860c01061a630e22a303f46ce0d7d984899c9aea1d27ef55db0cea7556b58": {
+    "describe": {
+      "columns": [
+        {
+          "name": "xp",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT xp FROM levels WHERE id = $1"
+  },
+  "21852dc3f8e13e61f2b3ce8dbc0856dd4cebc69251b711f22f4723b97a816f14": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "DELETE FROM role_rewards WHERE id = $1 AND guild = $2"
+  },
+  "2789a4214d7f7b16be1cf8b429e137fc676688ce0359ea70effa283c11ed990f": {
     "describe": {
       "columns": [
         {
@@ -47,50 +80,24 @@
           "name": "id",
           "ordinal": 8,
           "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT * FROM custom_colors WHERE id = $1"
-  },
-  "0b056bd458d4910d7576d7aa7da7f583749dbbd12d319fb754e391fa8882a6c2": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "DELETE FROM custom_colors WHERE id = $1"
-  },
-  "105860c01061a630e22a303f46ce0d7d984899c9aea1d27ef55db0cea7556b58": {
-    "describe": {
-      "columns": [
+        },
         {
-          "name": "xp",
-          "ordinal": 0,
-          "type_info": "Int8"
+          "name": "font",
+          "ordinal": 9,
+          "type_info": "Varchar"
         }
       ],
       "nullable": [
-        false
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
       ],
       "parameters": {
         "Left": [
@@ -98,20 +105,40 @@
         ]
       }
     },
-    "query": "SELECT xp FROM levels WHERE id = $1"
+    "query": "SELECT * FROM custom_card WHERE id = $1"
   },
-  "21852dc3f8e13e61f2b3ce8dbc0856dd4cebc69251b711f22f4723b97a816f14": {
+  "49627aa02d870d3b2f19809a10f59c653f28e889469f489d9b3e4864c8bf3474": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
         "Left": [
-          "Int8",
           "Int8"
         ]
       }
     },
-    "query": "DELETE FROM role_rewards WHERE id = $1 AND guild = $2"
+    "query": "DELETE FROM custom_card WHERE id = $1"
+  },
+  "508e7048755072039d7be7640367a3f9e9f8eaf0f2c0c85f0ab33ce140b59461": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO custom_card (\n            important,\n            secondary,\n            rank,\n            level,\n            border,\n            background,\n            progress_foreground,\n            progress_background,\n            font,\n            id\n        ) VALUES (\n            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10\n        ) ON CONFLICT (id) DO UPDATE SET\n            important = COALESCE(excluded.important, custom_card.important),\n            secondary = COALESCE(excluded.secondary, custom_card.secondary),\n            rank = COALESCE(excluded.rank, custom_card.rank),\n            level = COALESCE(excluded.level, custom_card.level),\n            border = COALESCE(excluded.border, custom_card.border),\n            background = COALESCE(excluded.background, custom_card.background),\n            progress_foreground = COALESCE(excluded.progress_foreground, custom_card.progress_foreground),\n            progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),\n            font = COALESCE(excluded.font, custom_card.font)"
   },
   "60b545369754f67f331a4a7c79b5e7dc0a995e0905cdf00f5b25e562c0ed5504": {
     "describe": {
@@ -214,25 +241,25 @@
     },
     "query": "SELECT COUNT(*) as count FROM levels WHERE xp > $1"
   },
-  "bc23109c2088187a8c32c21226f2f9d81ea9c20541c78cbc58543b25860cb9aa": {
+  "b90f8bbc2891349d627b14d2d95e36982789002ce1271976867310861c51d9b4": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "font",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        }
+      ],
+      "nullable": [
+        true
+      ],
       "parameters": {
         "Left": [
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
           "Int8"
         ]
       }
     },
-    "query": "INSERT INTO custom_colors (\n            important,\n            secondary,\n            rank,\n            level,\n            border,\n            background,\n            progress_foreground,\n            progress_background,\n            id\n        ) VALUES (\n            $1, $2, $3, $4, $5, $6, $7, $8, $9\n        ) ON CONFLICT (id) DO UPDATE SET\n            important = COALESCE(excluded.important, custom_colors.important),\n            secondary = COALESCE(excluded.secondary, custom_colors.secondary),\n            rank = COALESCE(excluded.rank, custom_colors.rank),\n            level = COALESCE(excluded.level, custom_colors.level),\n            border = COALESCE(excluded.border, custom_colors.border),\n            background = COALESCE(excluded.background, custom_colors.background),\n            progress_foreground = COALESCE(excluded.progress_foreground, custom_colors.progress_foreground),\n            progress_background = COALESCE(excluded.progress_background, custom_colors.progress_background)"
+    "query": "SELECT font FROM custom_card WHERE id = $1"
   },
   "c1fca0df20b46d9d4159e6de1a2d0672bfef2360ac74428ad08b010d09d253a5": {
     "describe": {
