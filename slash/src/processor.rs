@@ -93,7 +93,7 @@ async fn process_slash_cmd(
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
         "card" => Ok(InteractionResponse {
-            data: Some(crate::manage_colors::process_colors(data, &invoker, state).await?),
+            data: Some(crate::manage_card::process_colors(data, &invoker, state).await?),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
         _ => Err(CommandProcessorError::UnrecognizedCommand),

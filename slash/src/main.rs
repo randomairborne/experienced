@@ -12,7 +12,7 @@ mod colors;
 mod discord_sig_validation;
 mod handler;
 mod levels;
-mod manage_colors;
+mod manage_card;
 mod manager;
 mod processor;
 mod render_card;
@@ -37,6 +37,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
     fonts.load_font_data(include_bytes!("resources/Mojang.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/Roboto.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/JetBrainsMono.ttf").to_vec());
     let mut tera = tera::Tera::default();
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
     let svg = SvgState { fonts, tera };

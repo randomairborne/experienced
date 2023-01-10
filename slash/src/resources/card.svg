@@ -3,21 +3,21 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .name {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 25px;
       fill: {{ colors.important }};
     }
     .discriminator {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 10px;
       fill: {{ colors.secondary }};
     }
     .stat {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 40px;
     }
     .stat-name {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 20px;
     }
     .rank {
@@ -27,12 +27,12 @@
       fill: {{ colors.level }};
     }
     .needed {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 15px;
       fill: {{ colors.important }};
     }
     .current {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 15px;
       fill: {{ colors.secondary }};
     }

@@ -26,7 +26,7 @@ impl Colors {
     ) -> Self {
         #[allow(clippy::cast_possible_wrap)]
         let colors = if let Ok(colors) =
-            sqlx::query!("SELECT * FROM custom_colors WHERE id = $1", id.get() as i64)
+            sqlx::query!("SELECT * FROM custom_card WHERE id = $1", id.get() as i64)
                 .fetch_one(db)
                 .await
         {

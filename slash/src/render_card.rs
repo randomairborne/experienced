@@ -11,6 +11,7 @@ pub struct Context {
     pub width: u64,
     pub current: u64,
     pub needed: f64,
+    pub font: String,
     pub colors: crate::colors::Colors,
 }
 

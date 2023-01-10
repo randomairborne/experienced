@@ -55,9 +55,10 @@ async fn process_edit(
     let background = opts.get("background");
     let progress_foreground = opts.get("progress_foreground");
     let progress_background = opts.get("progress_background");
+    let font = opts.get("font");
     #[allow(clippy::cast_possible_wrap)]
     query!(
-        "INSERT INTO custom_colors (
+        "INSERT INTO custom_card (
             important,
             secondary,
             rank,
@@ -66,18 +67,20 @@ async fn process_edit(
             background,
             progress_foreground,
             progress_background,
+            font,
             id
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
         ) ON CONFLICT (id) DO UPDATE SET
-            important = COALESCE(excluded.important, custom_colors.important),
-            secondary = COALESCE(excluded.secondary, custom_colors.secondary),
-            rank = COALESCE(excluded.rank, custom_colors.rank),
-            level = COALESCE(excluded.level, custom_colors.level),
-            border = COALESCE(excluded.border, custom_colors.border),
-            background = COALESCE(excluded.background, custom_colors.background),
-            progress_foreground = COALESCE(excluded.progress_foreground, custom_colors.progress_foreground),
-            progress_background = COALESCE(excluded.progress_background, custom_colors.progress_background)",
+            important = COALESCE(excluded.important, custom_card.important),
+            secondary = COALESCE(excluded.secondary, custom_card.secondary),
+            rank = COALESCE(excluded.rank, custom_card.rank),
+            level = COALESCE(excluded.level, custom_card.level),
+            border = COALESCE(excluded.border, custom_card.border),
+            background = COALESCE(excluded.background, custom_card.background),
+            progress_foreground = COALESCE(excluded.progress_foreground, custom_card.progress_foreground),
+            progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),
+            font = COALESCE(excluded.font, custom_card.font)",
         important,
         secondary,
         rank,
@@ -86,16 +89,17 @@ async fn process_edit(
         background,
         progress_foreground,
         progress_background,
+        font,
         user.id.get() as i64,
     )
     .execute(&state.db)
     .await?;
-    Ok("Updated colors!".to_string())
+    Ok("Updated card!".to_string())
 }
 async fn process_reset(state: AppState, user: &User) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     query!(
-        "DELETE FROM custom_colors WHERE id = $1",
+        "DELETE FROM custom_card WHERE id = $1",
         user.id.get() as i64
     )
     .execute(&state.db)

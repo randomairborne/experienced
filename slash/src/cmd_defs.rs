@@ -75,6 +75,11 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
                 "progress_foreground",
                 "What color to use for the filled part of the level up progress baray",
             ))
+            .option(StringBuilder::new("font", "What font to use").choices([
+                ("Mojangles", "Mojang"),
+                ("Roboto", "Roboto"),
+                ("JetBrains Mono", "JetBrains Mono"),
+            ]))
             .build(),
         )
         .validate()

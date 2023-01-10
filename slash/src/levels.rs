@@ -73,6 +73,15 @@ async fn generate_level_response(
 ) -> Result<InteractionResponse, CommandProcessorError> {
     tokio::task::spawn(async move {
         let interaction_client = state.client.interaction(state.my_id);
+        #[allow(clippy::cast_possible_wrap)]
+        let chosen_font = query!(
+            "SELECT font FROM custom_card WHERE id = $1",
+            user.id.get() as i64
+        )
+        .fetch_one(&state.db)
+        .await;
+        #[allow(clippy::cast_precision_loss)]
+        let next_level = (level_info.level() + 1) as f64;
         match crate::render_card::render(
             state.clone(),
             crate::render_card::Context {
@@ -82,9 +91,12 @@ async fn generate_level_response(
                 discriminator: user.discriminator().to_string(),
                 width: 40 + (u64::from(level_info.percentage()) * 7),
                 current: level_info.xp(),
-                #[allow(clippy::cast_precision_loss)]
-                needed: mee6::LevelInfo::xp_to_level((level_info.level() + 1) as f64),
+                needed: mee6::LevelInfo::xp_to_level(next_level),
                 colors: crate::colors::Colors::for_user(&state.db, user.id).await,
+                font: chosen_font.map_or_else(
+                    |_| "Roboto".to_string(),
+                    |v| v.font.unwrap_or_else(|| "Roboto".to_string()),
+                ),
             },
         )
         .await
