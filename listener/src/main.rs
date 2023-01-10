@@ -38,6 +38,11 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
+    sqlx::migrate!()
+        .run(&db)
+        .await
+        .expect("Failed to run database migrations!");
+
     let redis = redis::Client::open(redis_url).expect("Failed to connect to redis");
 
     let client = Arc::new(twilight_http::Client::new(token.clone()));

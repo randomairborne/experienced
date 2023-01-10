@@ -44,6 +44,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
+    sqlx::migrate!()
+        .run(&db)
+        .await
+        .expect("Failed to run database migrations!");
     let client = twilight_http::Client::new(token);
     println!("Creating commands...");
     let my_id = client

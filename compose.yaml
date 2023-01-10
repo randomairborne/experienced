@@ -7,7 +7,7 @@ services:
       - redis
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
-      DATABASE_URL: "mysql://experienced:experienced@database/experienced"
+      DATABASE_URL: "postgres://experienced:experienced@database/experienced"
       REDIS_URL: "redis://redis/"
       TOTAL_SHARDS: 1
       SHARDS_START: 0
@@ -22,21 +22,18 @@ services:
     environment:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DISCORD_PUBKEY: ${DISCORD_PUBKEY}
-      DATABASE_URL: "mysql://experienced:experienced@database/experienced"
+      DATABASE_URL: "postgres://experienced:experienced@database/experienced"
 
   database:
-    image: mariadb:latest
-    command: --init-file /tmp/init.sql
+    image: postgres:alpine
     volumes:
-        - ./migrations/init.sql:/tmp/init.sql
-        - experienced-data:/var/lib/mysql/
+        - data:/var/lib/mysql/
     networks:
       - database
     environment:
-      MYSQL_ROOT_PASSWORD: root-pw
-      MYSQL_DATABASE: experienced
-      MYSQL_USER: experienced
-      MYSQL_PASSWORD: experienced
+      POSTGRES_DB: experienced
+      POSTGRES_USER: experienced
+      POSTGRES_PASSWORD: experienced
 
   redis:
     image: redis:latest
@@ -49,4 +46,4 @@ networks:
   redis: {}
 
 volumes:
-  experienced-data: {}
+  data: {}
