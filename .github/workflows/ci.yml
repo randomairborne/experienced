@@ -28,7 +28,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install musl-dev
-        run: sudo apt install musl-dev
+        run: sudo apt install musl-dev musl-tools
 
       - name: Build executables
         run: cargo b --release --target x86_64-unknown-linux-musl
