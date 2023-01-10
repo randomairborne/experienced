@@ -1,0 +1,19 @@
+# fly.toml file generated for xpd-listen on 2023-01-10T22:21:48Z
+
+app = "xpd-listen"
+kill_signal = "SIGINT"
+kill_timeout = 5
+processes = []
+
+[build]
+  image = "ghcr.io/randomairborne/experienced-listener:latest"
+
+[env]
+  SHARDS_START=0
+  SHARDS_END=32
+  TOTAL_SHARDS=32
+[experimental]
+  allowed_public_ports = []
+  auto_rollback = true
+
+[[services]]
