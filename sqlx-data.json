@@ -1,0 +1,271 @@
+{
+  "db": "PostgreSQL",
+  "0677888c397796fc0e91aa4f9be1c153dff3e1cbc0299c901f2ee627c7617c2f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "important",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "secondary",
+          "ordinal": 1,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "rank",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "level",
+          "ordinal": 3,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "border",
+          "ordinal": 4,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "background",
+          "ordinal": 5,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "progress_foreground",
+          "ordinal": 6,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "progress_background",
+          "ordinal": 7,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "id",
+          "ordinal": 8,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT * FROM custom_colors WHERE id = $1"
+  },
+  "0b056bd458d4910d7576d7aa7da7f583749dbbd12d319fb754e391fa8882a6c2": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "DELETE FROM custom_colors WHERE id = $1"
+  },
+  "105860c01061a630e22a303f46ce0d7d984899c9aea1d27ef55db0cea7556b58": {
+    "describe": {
+      "columns": [
+        {
+          "name": "xp",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT xp FROM levels WHERE id = $1"
+  },
+  "21852dc3f8e13e61f2b3ce8dbc0856dd4cebc69251b711f22f4723b97a816f14": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "DELETE FROM role_rewards WHERE id = $1 AND guild = $2"
+  },
+  "60b545369754f67f331a4a7c79b5e7dc0a995e0905cdf00f5b25e562c0ed5504": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)"
+  },
+  "7313f7a39621e68a6184224d0e53b3688beba8933ba983e630b73a340c78db53": {
+    "describe": {
+      "columns": [
+        {
+          "name": "xp",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT xp FROM levels WHERE id = $1 AND guild = $2"
+  },
+  "8dd31c6b1b5cdc72156b422e3018b95ed94d047a185311c85736e745e30d7df3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "requirement",
+          "ordinal": 1,
+          "type_info": "Int8"
+        },
+        {
+          "name": "guild",
+          "ordinal": 2,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT * FROM role_rewards WHERE guild = $1"
+  },
+  "952f0d55501faf8037d715df8540bf9f1fb5829590a0c58f0a5bd7fd4776fc86": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp=levels.xp+excluded.xp"
+  },
+  "b47185f79be404e085469f263611c8a5237acd15ec48dfb1a9ce7f1c7f1d904b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) as count FROM levels WHERE xp > $1"
+  },
+  "bc23109c2088187a8c32c21226f2f9d81ea9c20541c78cbc58543b25860cb9aa": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO custom_colors (\n            important,\n            secondary,\n            rank,\n            level,\n            border,\n            background,\n            progress_foreground,\n            progress_background,\n            id\n        ) VALUES (\n            $1, $2, $3, $4, $5, $6, $7, $8, $9\n        ) ON CONFLICT (id) DO UPDATE SET\n            important = COALESCE(excluded.important, custom_colors.important),\n            secondary = COALESCE(excluded.secondary, custom_colors.secondary),\n            rank = COALESCE(excluded.rank, custom_colors.rank),\n            level = COALESCE(excluded.level, custom_colors.level),\n            border = COALESCE(excluded.border, custom_colors.border),\n            background = COALESCE(excluded.background, custom_colors.background),\n            progress_foreground = COALESCE(excluded.progress_foreground, custom_colors.progress_foreground),\n            progress_background = COALESCE(excluded.progress_background, custom_colors.progress_background)"
+  },
+  "c1fca0df20b46d9d4159e6de1a2d0672bfef2360ac74428ad08b010d09d253a5": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "DELETE FROM role_rewards WHERE requirement = $1 AND guild = $2"
+  },
+  "ccf6e9fda28aa97c752a64376182184c244dc7b500009e5d2448c10e69c20448": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1"
+  }
+}

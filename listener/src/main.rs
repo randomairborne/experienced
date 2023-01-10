@@ -2,18 +2,13 @@
 
 use futures::stream::StreamExt;
 use rand::Rng;
-use sqlx::{query, MySqlPool};
-use std::{
-    env,
-    sync::{atomic::AtomicBool, Arc},
-};
+use sqlx::{query, PgPool};
+use std::{env, sync::Arc};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
 use twilight_model::id::Id;
-
-static SHOULD_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
 #[tokio::main]
 async fn main() {
@@ -35,11 +30,11 @@ async fn main() {
             .expect("Failed to parse TOTAL_SHARDS as u64"),
     };
     let redis_url = env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
-    let mysql = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
-    println!("Connecting to database {mysql}");
-    let db = sqlx::mysql::MySqlPoolOptions::new()
+    let pg = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
+    println!("Connecting to database {pg}");
+    let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
-        .connect(&mysql)
+        .connect(&pg)
         .await
         .expect("Failed to connect to database");
 
@@ -58,7 +53,6 @@ async fn main() {
     let cluster = Arc::new(cluster);
 
     let cluster_spawn = cluster.clone();
-    let cluster_down = cluster.clone();
     println!("Connecting to discord");
     tokio::spawn(async move {
         cluster_spawn.up().await;
@@ -68,40 +62,35 @@ async fn main() {
             .await
             .expect("Failed to listen to ctrl-c");
         println!("Shutting down...");
-        SHOULD_SHUTDOWN.store(true, std::sync::atomic::Ordering::Relaxed);
+        cluster.down();
     });
 
     let mut has_connected = false;
-    loop {
-        if let Some((_shard_id, event)) = events.next().await {
-            if !has_connected {
-                has_connected = true;
-                println!("Connected to discord!");
-            }
-            let redis = redis.clone();
-            let client = client.clone();
-            let db = db.clone();
-            tokio::spawn(async move {
-                let redis = match redis.get_async_connection().await {
-                    Ok(val) => val,
-                    Err(e) => {
-                        eprintln!("Redis connection error: {e}");
-                        return;
-                    }
-                };
-                handle_event(event, db, redis, client).await;
-            });
-        } else if SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
-            cluster_down.down();
-            break;
+    while let Some((_shard_id, event)) = events.next().await {
+        if !has_connected {
+            has_connected = true;
+            println!("Connected to discord!");
         }
+        let redis = redis.clone();
+        let client = client.clone();
+        let db = db.clone();
+        tokio::spawn(async move {
+            let redis = match redis.get_async_connection().await {
+                Ok(val) => val,
+                Err(e) => {
+                    eprintln!("Redis connection error: {e}");
+                    return;
+                }
+            };
+            handle_event(event, db, redis, client).await;
+        });
     }
     println!("Done, see ya!");
 }
 
 async fn handle_event(
     event: Event,
-    db: MySqlPool,
+    db: PgPool,
     mut redis: redis::aio::Connection,
     http: Arc<twilight_http::Client>,
 ) {
@@ -114,12 +103,13 @@ async fn handle_event(
                 .unwrap_or(false);
             if !msg.author.bot && !has_sent {
                 let xp_count = rand::thread_rng().gen_range(15..=25);
+
+                #[allow(clippy::cast_possible_wrap)]
                 if let Err(e) = query!(
-                    "INSERT INTO levels (id, xp, guild) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE xp=xp+?",
-                    msg.author.id.get(),
-                    xp_count,
-                    guild_id.get(),
-                    xp_count
+                    "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp=levels.xp+excluded.xp",
+                    msg.author.id.get() as i64,
+                    i64::from(xp_count),
+                    guild_id.get() as i64
                 )
                 .execute(&db)
                 .await
@@ -137,10 +127,11 @@ async fn handle_event(
                     eprintln!("Redis error: {e}");
                     return;
                 };
+                #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
                 let xp = match query!(
-                    "SELECT xp FROM levels WHERE id = ? AND guild = ?",
-                    msg.author.id.get(),
-                    guild_id.get()
+                    "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
+                    msg.author.id.get() as i64,
+                    guild_id.get() as i64
                 )
                 .fetch_one(&db)
                 .await
@@ -151,13 +142,14 @@ async fn handle_event(
                         return;
                     }
                 }
-                .xp;
+                .xp as u64;
                 let level_info = mee6::LevelInfo::new(xp);
-                let reward = match query!("SELECT id FROM role_rewards WHERE guild = ? AND requirement <= ? ORDER BY requirement DESC LIMIT 1", guild_id.get(), level_info.level())
+                #[allow(clippy::cast_sign_loss, clippy::cast_possible_wrap)]
+                let reward = match query!("SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1", guild_id.get() as i64, level_info.level() as i64)
                     .fetch_one(&db)
                     .await
                 {
-                    Ok(rw) => rw.id,
+                    Ok(rw) => rw.id as u64,
                     Err(e) => {
                         if matches!(e, sqlx::Error::RowNotFound) {return;}
                         eprintln!("SQL select error: {e:?}");

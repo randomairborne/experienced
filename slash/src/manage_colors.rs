@@ -55,11 +55,12 @@ async fn process_edit(
     let background = opts.get("background");
     let progress_foreground = opts.get("progress_foreground");
     let progress_background = opts.get("progress_background");
+    #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO custom_colors (
             important,
             secondary,
-            `rank`,
+            rank,
             level,
             border,
             background,
@@ -67,16 +68,16 @@ async fn process_edit(
             progress_background,
             id
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?
-        ) ON DUPLICATE KEY UPDATE
-            important = COALESCE(?, important),
-            secondary = COALESCE(?, secondary),
-            `rank` = COALESCE(?, `rank`),
-            level = COALESCE(?, level),
-            border = COALESCE(?, border),
-            background = COALESCE(?, background),
-            progress_foreground = COALESCE(?, progress_foreground),
-            progress_background = COALESCE(?, progress_background)",
+            $1, $2, $3, $4, $5, $6, $7, $8, $9
+        ) ON CONFLICT (id) DO UPDATE SET
+            important = COALESCE(excluded.important, custom_colors.important),
+            secondary = COALESCE(excluded.secondary, custom_colors.secondary),
+            rank = COALESCE(excluded.rank, custom_colors.rank),
+            level = COALESCE(excluded.level, custom_colors.level),
+            border = COALESCE(excluded.border, custom_colors.border),
+            background = COALESCE(excluded.background, custom_colors.background),
+            progress_foreground = COALESCE(excluded.progress_foreground, custom_colors.progress_foreground),
+            progress_background = COALESCE(excluded.progress_background, custom_colors.progress_background)",
         important,
         secondary,
         rank,
@@ -85,24 +86,20 @@ async fn process_edit(
         background,
         progress_foreground,
         progress_background,
-        user.id.get(),
-        important,
-        secondary,
-        rank,
-        level,
-        border,
-        background,
-        progress_foreground,
-        progress_background
+        user.id.get() as i64,
     )
     .execute(&state.db)
     .await?;
     Ok("Updated colors!".to_string())
 }
 async fn process_reset(state: AppState, user: &User) -> Result<String, Error> {
-    query!("DELETE FROM custom_colors WHERE id = ?", user.id.get())
-        .execute(&state.db)
-        .await?;
+    #[allow(clippy::cast_possible_wrap)]
+    query!(
+        "DELETE FROM custom_colors WHERE id = $1",
+        user.id.get() as i64
+    )
+    .execute(&state.db)
+    .await?;
     Ok("Card settings cleared!".to_string())
 }
 async fn process_fetch(state: AppState, user: &User) -> Result<String, Error> {

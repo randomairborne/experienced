@@ -77,11 +77,12 @@ async fn process_rewards_add(
     } else {
         return Err(Error::WrongArgumentType("role"));
     };
+    #[allow(clippy::cast_possible_wrap)]
     query!(
-        "INSERT INTO role_rewards (id, requirement, guild) VALUES (?, ?, ?)",
-        role_id.get(),
-        level_requirement,
-        guild_id.get()
+        "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)",
+        role_id.get() as i64,
+        level_requirement as i64,
+        guild_id.get() as i64
     )
     .execute(&state.db)
     .await?;
@@ -95,19 +96,21 @@ async fn process_rewards_rm(
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
     if let Some(CommandOptionValue::Role(role)) = options.get("role") {
+        #[allow(clippy::cast_possible_wrap)]
         query!(
-            "DELETE FROM role_rewards WHERE id = ? AND guild = ?",
-            role.get(),
-            guild_id.get()
+            "DELETE FROM role_rewards WHERE id = $1 AND guild = $2",
+            role.get() as i64,
+            guild_id.get() as i64
         )
         .execute(&state.db)
         .await?;
         return Ok(format!("Removed role reward <@&{role}>!"));
     } else if let Some(CommandOptionValue::Integer(level)) = options.get("level") {
+        #[allow(clippy::cast_possible_wrap)]
         query!(
-            "DELETE FROM role_rewards WHERE requirement = ? AND guild = ?",
+            "DELETE FROM role_rewards WHERE requirement = $1 AND guild = $2",
             level,
-            guild_id.get()
+            guild_id.get() as i64
         )
         .execute(&state.db)
         .await?;
@@ -118,9 +121,13 @@ async fn process_rewards_rm(
     ))
 }
 async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
-    let roles = query!("SELECT * FROM role_rewards WHERE guild = ?", guild_id.get())
-        .fetch_all(&state.db)
-        .await?;
+    #[allow(clippy::cast_possible_wrap)]
+    let roles = query!(
+        "SELECT * FROM role_rewards WHERE guild = $1",
+        guild_id.get() as i64
+    )
+    .fetch_all(&state.db)
+    .await?;
     let mut data = String::new();
     for role in roles {
         writeln!(

@@ -1,20 +1,7 @@
-FROM rust:alpine AS builder
-
-WORKDIR /build
-
-RUN apk add musl-dev
-
-COPY . .
-
-ARG database_url
-ENV DATABASE_URL=${database_url}
-
-RUN cargo build --release
+FROM rust:alpine
 
 FROM alpine
 
-COPY --from=builder /build/target/release/experienced-slash /usr/bin/
-
-EXPOSE 8080
+COPY /executables/experienced-slash /usr/bin/
 
 ENTRYPOINT "/usr/bin/experienced-slash"

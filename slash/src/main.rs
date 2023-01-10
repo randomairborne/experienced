@@ -2,11 +2,12 @@
 use std::sync::Arc;
 
 use axum::routing::post;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
 mod cmd_defs;
+#[macro_use]
 mod colors;
 mod discord_sig_validation;
 mod handler;
@@ -40,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
     let svg = SvgState { fonts, tera };
     println!("Connecting to database {database_url}");
-    let db = MySqlPool::connect(&database_url)
+    let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
     let client = twilight_http::Client::new(token);
@@ -78,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 pub struct UnderlyingAppState {
-    pub db: MySqlPool,
+    pub db: PgPool,
     pub pubkey: String,
     pub client: twilight_http::Client,
     pub my_id: Id<ApplicationMarker>,
