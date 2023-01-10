@@ -59,9 +59,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: executables
+          path: executables
 
       - name: List workdir
-        run: ls -la
+        run: ls -la executables
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -74,6 +75,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           file: ${{ matrix.side }}/Dockerfile
+          context: .
           push: true
           tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
           platforms: linux/amd64
