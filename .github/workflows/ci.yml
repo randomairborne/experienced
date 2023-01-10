@@ -33,10 +33,23 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install cargo
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: x86_64-unknown-linux-musl
+
+      - name: Cache rust
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build executables
+        run: cargo b --release --target x86_64-unknown-linux-musl
+
       - name: Build container
         uses: docker/build-push-action@v3
         with:
-          context: ./${{ matrix.side }}/
+          file: ${{ matrix.side }}/Dockerfile
+          context: .
           push: true
           tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
           platforms: linux/amd64
