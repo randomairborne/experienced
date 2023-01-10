@@ -2,7 +2,7 @@
 use std::sync::Arc;
 
 use axum::routing::post;
-use sqlx::MySqlPool;
+use sqlx::{MySqlPool, PgPool};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 pub struct UnderlyingAppState {
-    pub db: MySqlPool,
+    pub db: PgPool,
     pub pubkey: String,
     pub client: twilight_http::Client,
     pub my_id: Id<ApplicationMarker>,
