@@ -11,9 +11,32 @@ env:
 jobs:
   check:
     uses: ./.github/workflows/check.yml
+  build:
+  runs-on: ubuntu-latest
+  needs: [check]
+  steps:
+    - name: Install cargo
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: x86_64-unknown-linux-musl
+
+    - name: Cache rust
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build executables
+      run: cargo b --release --target x86_64-unknown-linux-musl
+
+    - name: Upload executables
+      uses: actions/upload-artifact@v3
+      with:
+        name: executables
+        path: |
+          target/x86_64-unknown-linux-musl/release/experienced-slash
+          target/x86_64-unknown-linux-musl/release/experienced-listener
+
   deploy:
     runs-on: ubuntu-latest
-    needs: [check]
+    needs: [build]
     strategy:
       fail-fast: true
       matrix:
@@ -26,6 +49,12 @@ jobs:
       - name: Check out code into the proper directory
         uses: actions/checkout@v3
 
+      - name: Download executables
+        uses: actions/download-artifact@v3
+        with:
+          name: executables
+          path: executables
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -33,23 +62,10 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install cargo
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-          targets: x86_64-unknown-linux-musl
-
-      - name: Cache rust
-        uses: Swatinem/rust-cache@v2
-
-      - name: Build executables
-        run: cargo b --release --target x86_64-unknown-linux-musl
-
       - name: Build container
         uses: docker/build-push-action@v3
         with:
           file: ${{ matrix.side }}/Dockerfile
-          context: .
           push: true
           tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
           platforms: linux/amd64
