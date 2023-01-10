@@ -4,11 +4,11 @@ WORKDIR /build
 
 RUN apk add musl-dev
 
-COPY . .
+COPY .. .
 
 ENV SQLX_OFFLINE=true
 
-RUN cargo build --release
+RUN cargo build --release --target experienced-listener
 
 FROM alpine
 
