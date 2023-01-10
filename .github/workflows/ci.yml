@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  DATABASE_URL: "mysql://root:root@localhost/experienced"
+  SQLX_OFFLINE: true
 
 jobs:
   check:
@@ -26,15 +26,6 @@ jobs:
       - name: Check out code into the proper directory
         uses: actions/checkout@v3
 
-      - name: Start MySQL
-        run: sudo /etc/init.d/mysql start
-
-      - name: Create MySQL test database
-        run: sudo mysql -e 'CREATE DATABASE experienced;' --user=root --password=root
-
-      - name: Run database migrations
-        run: mysql --user=root --password=root < ./migrations/init.sql
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -49,7 +40,4 @@ jobs:
           push: true
           tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
           platforms: linux/amd64
-          network: host
-          build-args: |
-            database_url=${{ env.DATABASE_URL }}
 

@@ -19,5 +19,5 @@ twilight-model = "0.14"
 twilight-http = "0.14"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 twilight-gateway = "0.14"
-sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }
 mee6 = "0.0.3"

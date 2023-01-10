@@ -17,7 +17,8 @@ pub async fn get_level(
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     // Select current XP from the database, return 0 if there is no row
-    let xp = match query!("SELECT xp FROM levels WHERE id = ?", user.id.get())
+    #[allow(clippy::cast_possible_wrap)]
+    let xp = match query!("SELECT xp FROM levels WHERE id = $1", user.id.get() as i64)
         .fetch_one(&state.db)
         .await
     {
@@ -27,12 +28,14 @@ pub async fn get_level(
             _ => Err(e)?,
         },
     };
-    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > ?", xp)
+    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > $1", xp)
         .fetch_one(&state.db)
         .await?
         .count
+        .unwrap_or(0)
         + 1;
-    let level_info = mee6::LevelInfo::new(xp);
+    #[allow(clippy::cast_sign_loss)]
+    let level_info = mee6::LevelInfo::new(xp as u64);
     let content = if user.bot {
         "Bots aren't ranked, that would be silly!".to_string()
     } else if invoker == user {

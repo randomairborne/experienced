@@ -139,7 +139,8 @@ async fn handle_event(
                 {
                     eprintln!("Redis error: {e}");
                     return;
-                };#[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
+                };
+                #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
                 let xp = match query!(
                     "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
                     msg.author.id.get() as i64,

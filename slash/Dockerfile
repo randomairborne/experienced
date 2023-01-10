@@ -6,8 +6,7 @@ RUN apk add musl-dev
 
 COPY . .
 
-ARG database_url
-ENV DATABASE_URL=${database_url}
+ENV SQLX_OFFLINE=true
 
 RUN cargo build --release
 

@@ -21,64 +21,80 @@ pub struct Colors {
 
 impl Colors {
     pub async fn for_user(
-        db: &sqlx::MySqlPool,
+        db: &sqlx::PgPool,
         id: twilight_model::id::Id<twilight_model::id::marker::UserMarker>,
     ) -> Self {
-        let Ok(rec) = sqlx::query!("SELECT * FROM custom_colors WHERE id = ?", id.get())
-            .fetch_one(db)
-            .await else {return Self::default();};
-        let important = rec.important.map_or(DEFAULT_IMPORTANT, |color| {
-            Color::from_hex(&color).unwrap_or(DEFAULT_IMPORTANT)
-        });
-        let secondary = rec.secondary.map_or(DEFAULT_SECONDARY, |color| {
-            Color::from_hex(&color).unwrap_or(DEFAULT_SECONDARY)
-        });
-        let rank = rec.rank.map_or(DEFAULT_RANK, |color| {
-            Color::from_hex(&color).unwrap_or(DEFAULT_RANK)
-        });
-        let level = rec.level.map_or(DEFAULT_LEVEL, |color| {
-            Color::from_hex(&color).unwrap_or(DEFAULT_LEVEL)
-        });
-        let border = rec.border.map_or(DEFAULT_BORDER, |color| {
-            Color::from_hex(&color).unwrap_or(DEFAULT_BORDER)
-        });
-        let background = rec.background.map_or(DEFAULT_BACKGROUND, |color| {
-            Color::from_hex(&color).unwrap_or(DEFAULT_BACKGROUND)
-        });
-        let progress_foreground = rec
-            .progress_foreground
-            .map_or(DEFAULT_PROGRESS_FOREGROUND, |color| {
-                Color::from_hex(&color).unwrap_or(DEFAULT_PROGRESS_FOREGROUND)
-            });
-        let progress_background = rec
-            .progress_background
-            .map_or(DEFAULT_PROGRESS_BACKGROUND, |color| {
-                Color::from_hex(&color).unwrap_or(DEFAULT_PROGRESS_BACKGROUND)
-            });
-
+        #[allow(clippy::cast_possible_wrap)]
+        let colors = if let Ok(colors) =
+            sqlx::query!("SELECT * FROM custom_colors WHERE id = $1", id.get() as i64)
+                .fetch_one(db)
+                .await
+        {
+            colors
+        } else {
+            return Self::default();
+        };
         Self {
-            important,
-            secondary,
-            rank,
-            level,
-            border,
-            background,
-            progress_foreground,
-            progress_background,
+            important: crate::from_maybe_hex!(colors.important, DEFAULT_IMPORTANT),
+            secondary: crate::from_maybe_hex!(colors.secondary, DEFAULT_SECONDARY),
+            rank: crate::from_maybe_hex!(colors.rank, DEFAULT_RANK),
+            level: crate::from_maybe_hex!(colors.level, DEFAULT_LEVEL),
+            border: crate::from_maybe_hex!(colors.border, DEFAULT_BORDER),
+            background: crate::from_maybe_hex!(colors.background, DEFAULT_BACKGROUND),
+            progress_foreground: crate::from_maybe_hex!(
+                colors.progress_foreground,
+                DEFAULT_PROGRESS_FOREGROUND
+            ),
+            progress_background: crate::from_maybe_hex!(
+                colors.progress_background,
+                DEFAULT_PROGRESS_BACKGROUND
+            ),
         }
     }
 }
 impl std::fmt::Display for Colors {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Important text: {}", self.important)?;
-        writeln!(f, "Secondary text: {}", self.secondary)?;
-        writeln!(f, "Rank: {}", self.rank)?;
-        writeln!(f, "Level: {}", self.level)?;
-        writeln!(f, "Border: {}", self.border)?;
-        writeln!(f, "Background: {}", self.background)?;
-        writeln!(f, "Progress bar completed: {}", self.progress_foreground)?;
-        writeln!(f, "Progress bar remaining: {}", self.progress_background)
+        crate::add_output!(f, "Important text", self.important, DEFAULT_IMPORTANT);
+        crate::add_output!(f, "Secondary text", self.secondary, DEFAULT_SECONDARY);
+        crate::add_output!(f, "Rank", self.rank, DEFAULT_RANK);
+        crate::add_output!(f, "Level", self.level, DEFAULT_LEVEL);
+        crate::add_output!(f, "Border", self.border, DEFAULT_BORDER);
+        crate::add_output!(f, "Background", self.background, DEFAULT_BACKGROUND);
+        crate::add_output!(
+            f,
+            "Progress bar completed",
+            self.progress_foreground,
+            DEFAULT_PROGRESS_FOREGROUND
+        );
+        crate::add_output!(
+            f,
+            "Progress bar remaining",
+            self.progress_background,
+            DEFAULT_PROGRESS_BACKGROUND
+        );
+        Ok(())
     }
+}
+
+#[macro_export]
+macro_rules! add_output {
+    ($f:expr, $name:expr, $val:expr, $default:expr) => {
+        write!($f, "{}: `{}`", $name, $val)?;
+        if $val == $default {
+            writeln!($f, " (default)")?;
+        } else {
+            writeln!($f)?;
+        };
+    };
+}
+
+#[macro_export]
+macro_rules! from_maybe_hex {
+    ($val:expr, $default:expr) => {
+        $val.map_or($default, |color| {
+            Color::from_hex(&color).unwrap_or($default)
+        })
+    };
 }
 
 impl Default for Colors {
