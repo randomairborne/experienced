@@ -107,7 +107,18 @@ async fn process_reset(state: AppState, user: &User) -> Result<String, Error> {
     Ok("Card settings cleared!".to_string())
 }
 async fn process_fetch(state: AppState, user: &User) -> Result<String, Error> {
+    #[allow(clippy::cast_possible_wrap)]
+    let chosen_font = query!(
+        "SELECT font FROM custom_card WHERE id = $1",
+        user.id.get() as i64
+    )
+    .fetch_optional(&state.db)
+    .await?;
     Ok(crate::colors::Colors::for_user(&state.db, user.id)
         .await
-        .to_string())
+        .to_string()
+        + &chosen_font.map_or_else(
+            || "Roboto (default)\n".to_string(),
+            |v| v.font.map_or("Roboto (default)\n".to_string(), |v| v),
+        ))
 }
