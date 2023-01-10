@@ -1,6 +1,6 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
-use futures::stream::StreamExt;
+use futures::{stream::StreamExt, FutureExt};
 use rand::Rng;
 use sqlx::{query, MySqlPool};
 use std::{
@@ -58,7 +58,6 @@ async fn main() {
     let cluster = Arc::new(cluster);
 
     let cluster_spawn = cluster.clone();
-    let cluster_down = cluster.clone();
     println!("Connecting to discord");
     tokio::spawn(async move {
         cluster_spawn.up().await;
@@ -73,7 +72,7 @@ async fn main() {
 
     let mut has_connected = false;
     loop {
-        if let Some((_shard_id, event)) = events.next().await {
+        if let Some(Some((_shard_id, event))) = events.next().now_or_never() {
             if !has_connected {
                 has_connected = true;
                 println!("Connected to discord!");
@@ -91,8 +90,11 @@ async fn main() {
                 };
                 handle_event(event, db, redis, client).await;
             });
-        } else if SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
-            cluster_down.down();
+        };
+        if SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
+            println!("Stopping cluster...");
+            cluster.down();
+            println!("Stopped cluster!");
             break;
         }
     }

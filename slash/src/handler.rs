@@ -6,7 +6,7 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::AppState;
+use crate::{processor::CommandProcessorError, AppState};
 
 pub async fn handle(
     headers: HeaderMap,
@@ -18,6 +18,17 @@ pub async fn handle(
     let interaction: Interaction = serde_json::from_slice(&body)?;
     let response = match crate::processor::process(interaction, state).await {
         Ok(val) => val,
+        Err(CommandProcessorError::Manager(crate::manager::Error::Color(e))) => {
+            InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(
+                    InteractionResponseDataBuilder::new()
+                        .flags(MessageFlags::EPHEMERAL)
+                        .content(e.to_string())
+                        .build(),
+                ),
+            }
+        }
         Err(e) => {
             error!("{e}");
             InteractionResponse {
