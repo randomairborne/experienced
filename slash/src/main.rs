@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
-    sqlx::migrate!()
+    sqlx::migrate!("../migrations")
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
