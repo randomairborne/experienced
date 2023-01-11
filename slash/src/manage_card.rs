@@ -125,8 +125,9 @@ async fn process_fetch(state: AppState, user: &User) -> Result<String, Error> {
     Ok(crate::colors::Colors::for_user(&state.db, user.id)
         .await
         .to_string()
+        + "Font: "
         + &chosen_font.map_or_else(
-            || "Roboto (default)\n".to_string(),
-            |v| v.font.map_or("Roboto (default)\n".to_string(), |v| v),
+            || "`Roboto` (default)\n".to_string(),
+            |v| v.font.map_or("`Roboto` (default)\n".to_string(), |v| v),
         ))
 }
