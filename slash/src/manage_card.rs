@@ -40,7 +40,16 @@ async fn process_edit(
     user: &User,
 ) -> Result<String, Error> {
     let mut opts = HashMap::with_capacity(options.len());
+    let mut font: Option<String> = None;
     for (key, value) in options {
+        if key == "font" {
+            font = if let CommandOptionValue::String(fon) = value {
+                Some(fon)
+            } else {
+                None
+            };
+            continue;
+        }
         let val = match value {
             CommandOptionValue::String(s) => Color::from_hex(&s)?.to_string(),
             _ => Color::new(0, 0, 0).to_string(),
@@ -55,7 +64,6 @@ async fn process_edit(
     let background = opts.get("background");
     let progress_foreground = opts.get("progress_foreground");
     let progress_background = opts.get("progress_background");
-    let font = opts.get("font");
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO custom_card (
