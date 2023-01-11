@@ -51,8 +51,8 @@ async fn process_edit(
             continue;
         }
         let val = match value {
-            CommandOptionValue::String(s) => Color::from_hex(&s)?.to_string(),
-            _ => Color::new(0, 0, 0).to_string(),
+            CommandOptionValue::String(s) => Color::from_hex(&s)?,
+            _ => Color::new(0, 0, 0),
         };
         opts.insert(key, val);
     }
