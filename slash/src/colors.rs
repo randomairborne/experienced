@@ -124,62 +124,17 @@ impl Color {
     pub fn from_hex(hex: &impl ToString) -> Result<Self, Error> {
         let hex = hex.to_string();
         let hex = hex.trim_start_matches('#');
-        let color = match hex.len() {
-            3 => Self {
-                red: u8::from_str_radix(&hex[0..0], 16)?,
-                green: u8::from_str_radix(&hex[1..1], 16)?,
-                blue: u8::from_str_radix(&hex[2..2], 16)?,
-            },
-
-            6 => Self {
-                red: u8::from_str_radix(&hex[0..=1], 16)?,
-                green: u8::from_str_radix(&hex[2..=3], 16)?,
-                blue: u8::from_str_radix(&hex[4..=5], 16)?,
-            },
-            _ => return Err(Error::InvalidLength),
-        };
-        Ok(color)
+        if hex.len() != 6 {
+            return Err(Error::InvalidLength);
+        }
+        Ok(Self {
+            red: u8::from_str_radix(&hex[0..=1], 16)?,
+            green: u8::from_str_radix(&hex[2..=3], 16)?,
+            blue: u8::from_str_radix(&hex[4..=5], 16)?,
+        })
     }
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }
-    }
-    pub fn luminance(self) -> f64 {
-        #[allow(clippy::suboptimal_flops)]
-        (0.299 * f64::from(self.red) + 0.587 * f64::from(self.green) + 0.114 * f64::from(self.blue))
-    }
-    pub fn contrast(self, other: Self) -> f64 {
-        let own_luminance = self.luminance();
-        let other_luminance = other.luminance();
-        let (darker, brighter) = if own_luminance >= other_luminance {
-            (other_luminance, own_luminance)
-        } else {
-            (own_luminance, other_luminance)
-        };
-        (brighter + 0.05) / (darker + 0.05)
-    }
-}
-
-impl<'q> sqlx::Encode<'q, sqlx::Postgres> for Color {
-    fn encode_by_ref(&self, buf: &mut sqlx::postgres::PgArgumentBuffer) -> sqlx::encode::IsNull {
-        <&str as sqlx::Encode<sqlx::Postgres>>::encode(&self.to_string(), buf)
-    }
-}
-
-impl<'q> sqlx::Decode<'q, sqlx::Postgres> for Color {
-    fn decode(
-        value: <sqlx::Postgres as sqlx::database::HasValueRef<'q>>::ValueRef,
-    ) -> Result<Self, sqlx::error::BoxDynError> {
-        Ok(Self::from_hex(&value.as_str()?)?)
-    }
-}
-
-impl sqlx::Type<sqlx::Postgres> for Color {
-    fn type_info() -> sqlx::postgres::PgTypeInfo {
-        <&str as sqlx::Type<sqlx::Postgres>>::type_info()
-    }
-
-    fn compatible(ty: &sqlx::postgres::PgTypeInfo) -> bool {
-        <&str as sqlx::Type<sqlx::Postgres>>::compatible(ty)
     }
 }
 
