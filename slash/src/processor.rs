@@ -88,6 +88,10 @@ async fn process_slash_cmd(
             }
             crate::levels::get_level(invoker.clone(), invoker, token, state).await
         }
+        "import" => Ok(InteractionResponse {
+            data: Some(crate::manager::process_import(data, guild_id, &invoker, state).await?),
+            kind: InteractionResponseType::ChannelMessageWithSource,
+        }),
         "xp" => Ok(InteractionResponse {
             data: Some(crate::manager::process_xp(data, guild_id, &invoker, state).await?),
             kind: InteractionResponseType::ChannelMessageWithSource,

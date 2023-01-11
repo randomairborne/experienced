@@ -1,7 +1,7 @@
 use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::{
-    CommandBuilder, IntegerBuilder, RoleBuilder, StringBuilder, SubCommandBuilder,
-    SubCommandGroupBuilder, UserBuilder,
+    AttachmentBuilder, CommandBuilder, IntegerBuilder, RoleBuilder, StringBuilder,
+    SubCommandBuilder, SubCommandGroupBuilder, UserBuilder,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -84,6 +84,19 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
         )
         .validate()
         .expect("Card slash command is invalid!")
+        .build(),
+        CommandBuilder::new(
+            "import",
+            "Import a MEE6 levels json (github.com/randomairborne/mee6-scraper)",
+            CommandType::ChatInput,
+        )
+        .default_member_permissions(Permissions::ADMINISTRATOR)
+        .dm_permission(false)
+        .option(
+            AttachmentBuilder::new("levels", "levels.json file compatible with mee6-scraper")
+                .required(true)
+                .build(),
+        )
         .build(),
         CommandBuilder::new("xp", "Manage Experienced functions", CommandType::ChatInput)
             .default_member_permissions(Permissions::ADMINISTRATOR)

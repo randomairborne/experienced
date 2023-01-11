@@ -61,13 +61,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .expect("Failed to convert own app ID!")
         .id;
     cmd_defs::register(client.interaction(my_id)).await;
-
+    let http = reqwest::Client::new();
     let state = Arc::new(UnderlyingAppState {
         db,
         pubkey,
         client,
         my_id,
         svg,
+        http,
     });
     let route = axum::Router::new()
         .route("/", post(handler::handle))
@@ -90,6 +91,7 @@ pub struct UnderlyingAppState {
     pub client: twilight_http::Client,
     pub my_id: Id<ApplicationMarker>,
     pub svg: SvgState,
+    pub http: reqwest::Client,
 }
 
 pub struct SvgState {

@@ -13,6 +13,43 @@ use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::AppState;
 
+pub async fn process_import(
+    data: CommandData,
+    guild_id: Option<Id<GuildMarker>>,
+    _invoker: &User,
+    state: AppState,
+) -> Result<InteractionResponseData, Error> {
+    let guild_id = guild_id.ok_or(Error::MissingGuildId)?;
+    let resolved = data.resolved.ok_or(Error::NoResolvedData)?;
+    for option in data.options {
+        if option.name == "levels" {
+            if let CommandOptionValue::Attachment(attachment_id) = option.value {
+                let attachment = resolved
+                    .attachments
+                    .get(&attachment_id)
+                    .ok_or(Error::NoAttachment)?;
+                let data: Vec<Mee6User> =
+                    state.http.get(&attachment.url).send().await?.json().await?;
+                sqlx::query!(
+                    "INSERT INTO levels (guild, id, xp) VALUES ($1, $2, $3) ",
+                    guild_id.get() as i64,
+                    data.iter().map(|v| v.id).collect::<Vec<u64>>(),
+                    data.iter().map(|v| v.xp).collect::<Vec<i64>>()
+                )
+                .execute(&state.db);
+            }
+        }
+    }
+    Err(Error::InvalidSubcommand)
+}
+
+#[derive(serde::Deserialize)]
+struct Mee6User {
+    pub id: u64,
+    pub level: i64,
+    pub xp: i64,
+}
+
 pub async fn process_xp(
     data: CommandData,
     guild_id: Option<Id<GuildMarker>>,
@@ -151,6 +188,10 @@ pub enum Error {
     WrongArgumentType(&'static str),
     #[error("Discord did not send a guild ID!")]
     MissingGuildId,
+    #[error("Discord did not send a attachment ResolvedData!")]
+    NoResolvedData,
+    #[error("Discord did not send ResolvedData for an attachment!")]
+    NoAttachment,
     #[error("Command had wrong number of arguments: {0}!")]
     WrongArgumentCount(&'static str),
     #[error("SQLx encountered an error: {0}")]
@@ -159,6 +200,8 @@ pub enum Error {
     Color(#[from] crate::colors::Error),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
+    #[error("Http error: {0}")]
+    Http(#[from] reqwest::Error),
     #[error("Discord API error: {0}")]
     DiscordApi(#[from] twilight_http::Error),
     #[error("Discord API decoding error: {0}")]
