@@ -18,6 +18,6 @@ dotenvy = "0.15"
 twilight-model = "0.14"
 twilight-http = "0.14"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-twilight-gateway = "0.14"
+twilight-gateway = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }
 mee6 = "0.0.3"
