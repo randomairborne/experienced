@@ -27,6 +27,8 @@ pub enum CardCommand {
     Reset(card::CommandReset),
     #[command(name = "fetch")]
     Fetch(card::CommandFetch),
+    #[command(name = "edit")]
+    Edit(card::CommandFetch),
 }
 
 #[derive(CommandModel, CreateCommand)]
