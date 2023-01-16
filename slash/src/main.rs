@@ -39,6 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     fonts.load_font_data(include_bytes!("resources/Mojang.ttf").to_vec());
     fonts.load_font_data(include_bytes!("resources/Roboto.ttf").to_vec());
     fonts.load_font_data(include_bytes!("resources/JetBrainsMono.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/MontserratAlt1.ttf").to_vec());
     let mut tera = tera::Tera::default();
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
     let svg = SvgState { fonts, tera };

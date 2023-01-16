@@ -79,6 +79,7 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
                 ("Mojangles", "Mojang"),
                 ("Roboto", "Roboto"),
                 ("JetBrains Mono", "JetBrains Mono"),
+                ("Montserrat Alt1", "Montserrat Alt1"),
             ]))
             .build(),
         )

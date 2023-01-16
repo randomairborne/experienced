@@ -19,7 +19,7 @@ pub async fn process_import(
     _invoker: &User,
     state: AppState,
 ) -> Result<InteractionResponseData, Error> {
-    let guild_id = guild_id.ok_or(Error::MissingGuildId)?;
+    let guild_id = guild_id.ok_or(Error::MissingGuildId)?.get() as i64;
     let resolved = data.resolved.ok_or(Error::NoResolvedData)?;
     for option in data.options {
         if option.name == "levels" {
@@ -28,25 +28,41 @@ pub async fn process_import(
                     .attachments
                     .get(&attachment_id)
                     .ok_or(Error::NoAttachment)?;
-                let data: Vec<Mee6User> =
+                let mee6_users: Vec<Mee6User> =
                     state.http.get(&attachment.url).send().await?.json().await?;
-                sqlx::query!(
-                    "INSERT INTO levels (guild, id, xp) VALUES ($1, $2, $3) ",
-                    guild_id.get() as i64,
-                    data.iter().map(|v| v.id).collect::<Vec<u64>>(),
-                    data.iter().map(|v| v.xp).collect::<Vec<i64>>()
-                )
-                .execute(&state.db);
+                let mut csv_writer = csv::Writer::from_writer(Vec::new());
+                for user in mee6_users {
+                    let xp_user = XpUserGuildLevel {
+                        id: user.id as i64,
+                        guild: guild_id,
+                        xp: user.xp as i64,
+                    };
+                    csv_writer.serialize(xp_user)?;
+                }
+                let csv = csv_writer.into_inner().map_err(|_| Error::CsvIntoInner)?;
+                let mut copier = state
+                    .db
+                    .copy_in_raw("COPY levels FROM STDIN WITH (FORMAT csv)")
+                    .await?;
+                copier.send(csv).await?;
+                copier.finish().await?;
             }
         }
     }
     Err(Error::InvalidSubcommand)
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
 struct Mee6User {
     pub id: u64,
     pub level: i64,
+    pub xp: i64,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
+struct XpUserGuildLevel {
+    pub id: i64,
+    pub guild: i64,
     pub xp: i64,
 }
 
@@ -192,12 +208,16 @@ pub enum Error {
     NoResolvedData,
     #[error("Discord did not send ResolvedData for an attachment!")]
     NoAttachment,
+    #[error("CSV encountered an IntoInner error")]
+    CsvIntoInner,
     #[error("Command had wrong number of arguments: {0}!")]
     WrongArgumentCount(&'static str),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
     #[error("Colors encountered an error: {0}")]
     Color(#[from] crate::colors::Error),
+    #[error("CSV encountered an error: {0}")]
+    Csv(#[from] csv::Error),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
     #[error("Http error: {0}")]
