@@ -613,6 +613,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "twilight-http",
+ "twilight-interactions",
  "twilight-model",
  "twilight-util",
 ]
@@ -2850,6 +2851,27 @@ dependencies = [
  "http",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "twilight-interactions"
+version = "0.14.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e6d90ab40abf3026d09b28c62e88d296fd6b731738cff7d9f8d586c746fd46f"
+dependencies = [
+ "twilight-interactions-derive",
+ "twilight-model",
+]
+
+[[package]]
+name = "twilight-interactions-derive"
+version = "0.14.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "174dc585cde307e6165acf02073dbf52fd049f7957833bfc2703111832c4178d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

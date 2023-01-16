@@ -19,6 +19,7 @@ pub async fn process_import(
     _invoker: &User,
     state: AppState,
 ) -> Result<InteractionResponseData, Error> {
+    #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.ok_or(Error::MissingGuildId)?.get() as i64;
     let resolved = data.resolved.ok_or(Error::NoResolvedData)?;
     for option in data.options {
@@ -32,10 +33,11 @@ pub async fn process_import(
                     state.http.get(&attachment.url).send().await?.json().await?;
                 let mut csv_writer = csv::Writer::from_writer(Vec::new());
                 for user in mee6_users {
+                    #[allow(clippy::cast_possible_wrap)]
                     let xp_user = XpUserGuildLevel {
                         id: user.id as i64,
                         guild: guild_id,
-                        xp: user.xp as i64,
+                        xp: user.xp,
                     };
                     csv_writer.serialize(xp_user)?;
                 }
