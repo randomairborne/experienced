@@ -22,6 +22,7 @@ pub struct RankCommand {
     desc = "Set hex codes for different color schemes in your rank card.",
     dm_permission = true
 )]
+#[allow(clippy::large_enum_variant)]
 pub enum CardCommand {
     #[command(name = "reset")]
     Reset(card::CommandReset),
