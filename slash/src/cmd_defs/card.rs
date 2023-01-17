@@ -45,6 +45,6 @@ pub enum CommandEditFont {
     Roboto,
     #[option(name = "JetBrains Mono", value = "JetBrains Mono")]
     JetBrainsMono,
-    #[option(name = "Montserrat Alt1", value = "Montserrat Alt1")]
+    #[option(name = "Montserrat Alt1", value = "Montserrat-Alt1")]
     MontserratAlt1,
 }
