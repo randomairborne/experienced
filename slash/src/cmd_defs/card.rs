@@ -1,4 +1,4 @@
-use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand};
+use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your card to defaults")]
@@ -34,10 +34,10 @@ pub struct CommandEdit {
     #[command(desc = "What color to use for the progress bar's empty part")]
     pub progress_background: Option<String>,
     #[command(desc = "What font to use in the card")]
-    pub font: Option<String>,
+    pub font: Option<CommandEditFont>,
 }
 
-#[derive(CommandOption)]
+#[derive(CommandOption, CreateOption)]
 pub enum CommandEditFont {
     #[option(name = "Mojangles", value = "Mojang")]
     Mojang,
@@ -45,6 +45,6 @@ pub enum CommandEditFont {
     Roboto,
     #[option(name = "JetBrains Mono", value = "JetBrains Mono")]
     JetBrainsMono,
-    #[option(name = "Montserrat Alt1", value = "Montserrat Alt1")]
+    #[option(name = "Montserrat Alt1", value = "Montserrat-Alt1")]
     MontserratAlt1,
 }
