@@ -72,7 +72,7 @@ async fn process_import(
             "This guild is being ratelimited. Try again in {time_remaining} seconds."
         ));
     }
-    let _: () = redis::cmd("SET")
+    redis::cmd("SET")
         .arg(guild_id.get())
         .arg(3600)
         .arg("EX")
