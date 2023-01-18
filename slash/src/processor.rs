@@ -1,10 +1,10 @@
 use crate::AppState;
+use twilight_interactions::command::CommandModel;
 use twilight_model::{
     application::{
         command::CommandType,
         interaction::{
-            application_command::{CommandData, CommandOptionValue},
-            Interaction, InteractionData, InteractionType,
+            application_command::CommandData, Interaction, InteractionData, InteractionType,
         },
     },
     http::interaction::{InteractionResponse, InteractionResponseType},
@@ -71,33 +71,32 @@ async fn process_slash_cmd(
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     match data.name.as_str() {
-        "rank" | "level" => {
-            for option in &data.options {
-                if option.name == "user" {
-                    if let CommandOptionValue::User(user_id) = option.value {
-                        let user = data
-                            .resolved
-                            .as_ref()
-                            .ok_or(CommandProcessorError::NoResolvedData)?
-                            .users
-                            .get(&user_id)
-                            .ok_or(CommandProcessorError::NoTarget)?;
-                        return crate::levels::get_level(user.clone(), invoker, token, state).await;
-                    };
-                }
-            }
-            crate::levels::get_level(invoker.clone(), invoker, token, state).await
+        "rank" => {
+            let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
+                .user
+                .map_or_else(|| invoker.clone(), |v| v.resolved);
+            crate::levels::get_level(target, invoker, token, state).await
         }
-        "import" => Ok(InteractionResponse {
-            data: Some(crate::manager::process_import(data, guild_id, &invoker, state).await?),
-            kind: InteractionResponseType::ChannelMessageWithSource,
-        }),
         "xp" => Ok(InteractionResponse {
-            data: Some(crate::manager::process_xp(data, guild_id, &invoker, state).await?),
+            data: Some(
+                crate::manager::process_xp(
+                    crate::cmd_defs::XpCommand::from_interaction(data.into())?,
+                    guild_id,
+                    state,
+                )
+                .await?,
+            ),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
         "card" => Ok(InteractionResponse {
-            data: Some(crate::manage_card::process_colors(data, &invoker, state).await?),
+            data: Some(
+                crate::manage_card::process_colors(
+                    crate::cmd_defs::CardCommand::from_interaction(data.into())?,
+                    invoker,
+                    state,
+                )
+                .await?,
+            ),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
@@ -159,6 +158,8 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
+    #[error("Interaction parser encountered an error: {0}!")]
+    Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Manager command encountered an error: {0}!")]
     Manager(#[from] crate::manager::Error),
     #[error("SVG renderer encountered an error: {0}!")]

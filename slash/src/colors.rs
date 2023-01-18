@@ -1,3 +1,5 @@
+use twilight_interactions::command::{CommandOption, CreateOption};
+
 const DEFAULT_IMPORTANT: Color = Color::new(255, 255, 255);
 const DEFAULT_SECONDARY: Color = Color::new(204, 204, 204);
 const DEFAULT_RANK: Color = Color::new(255, 255, 255);
@@ -17,6 +19,43 @@ pub struct Colors {
     pub background: Color,
     pub progress_foreground: Color,
     pub progress_background: Color,
+}
+
+impl CommandOption for Color {
+    fn from_option(
+        value: twilight_model::application::interaction::application_command::CommandOptionValue,
+        _data: twilight_interactions::command::internal::CommandOptionData,
+        _resolved: Option<&twilight_model::application::interaction::application_command::CommandInteractionDataResolved>,
+    ) -> Result<Self, twilight_interactions::error::ParseOptionErrorType> {
+        if let twilight_model::application::interaction::application_command::CommandOptionValue::String(string) = value {
+            Ok(Self::from_hex(&string).map_err(|e| twilight_interactions::error::ParseOptionErrorType::InvalidChoice(format!("{e}")))?)
+        } else {
+            Err(twilight_interactions::error::ParseOptionErrorType::InvalidType(value.kind()))
+        }
+    }
+}
+
+impl CreateOption for Color {
+    fn create_option(
+        data: twilight_interactions::command::internal::CreateOptionData,
+    ) -> twilight_model::application::command::CommandOption {
+        twilight_model::application::command::CommandOption {
+            autocomplete: Some(data.autocomplete),
+            channel_types: None,
+            choices: None,
+            description: data.description,
+            description_localizations: data.description_localizations,
+            kind: twilight_model::application::command::CommandOptionType::String,
+            max_length: Some(7),
+            max_value: None,
+            min_length: Some(6),
+            min_value: None,
+            name: data.name,
+            name_localizations: data.name_localizations,
+            options: None,
+            required: data.required,
+        }
+    }
 }
 
 impl Colors {

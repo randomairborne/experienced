@@ -25,11 +25,11 @@ pub struct RankCommand {
 #[allow(clippy::large_enum_variant)]
 pub enum CardCommand {
     #[command(name = "reset")]
-    Reset(card::CommandReset),
+    Reset(card::CardCommandReset),
     #[command(name = "fetch")]
-    Fetch(card::CommandFetch),
+    Fetch(card::CardCommandFetch),
     #[command(name = "edit")]
-    Edit(card::CommandEdit),
+    Edit(card::CardCommandEdit),
 }
 
 #[derive(CommandModel, CreateCommand)]
@@ -54,7 +54,7 @@ impl XpCommand {
 }
 
 pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
-    let cmds: [twilight_model::application::command::Command; 5] = [
+    let cmds = vec![
         RankCommand::create_command().into(),
         CardCommand::create_command().into(),
         XpCommand::create_command().into(),

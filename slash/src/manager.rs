@@ -1,58 +1,22 @@
 use sqlx::query;
-use std::{collections::HashMap, fmt::Write};
+use std::fmt::Write;
 use twilight_model::{
-    application::interaction::application_command::{
-        CommandData, CommandDataOption, CommandOptionValue,
-    },
     channel::message::MessageFlags,
     http::interaction::InteractionResponseData,
     id::{marker::GuildMarker, Id},
-    user::User,
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
+use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
-use crate::AppState;
-
-pub async fn process_import(
-    data: CommandData,
-    guild_id: Option<Id<GuildMarker>>,
-    _invoker: &User,
-    state: AppState,
-) -> Result<InteractionResponseData, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_id = guild_id.ok_or(Error::MissingGuildId)?.get() as i64;
-    let resolved = data.resolved.ok_or(Error::NoResolvedData)?;
-    for option in data.options {
-        if option.name == "levels" {
-            if let CommandOptionValue::Attachment(attachment_id) = option.value {
-                let attachment = resolved
-                    .attachments
-                    .get(&attachment_id)
-                    .ok_or(Error::NoAttachment)?;
-                let mee6_users: Vec<Mee6User> =
-                    state.http.get(&attachment.url).send().await?.json().await?;
-                let mut csv_writer = csv::Writer::from_writer(Vec::new());
-                for user in mee6_users {
-                    #[allow(clippy::cast_possible_wrap)]
-                    let xp_user = XpUserGuildLevel {
-                        id: user.id as i64,
-                        guild: guild_id,
-                        xp: user.xp,
-                    };
-                    csv_writer.serialize(xp_user)?;
-                }
-                let csv = csv_writer.into_inner().map_err(|_| Error::CsvIntoInner)?;
-                let mut copier = state
-                    .db
-                    .copy_in_raw("COPY levels FROM STDIN WITH (FORMAT csv)")
-                    .await?;
-                copier.send(csv).await?;
-                copier.finish().await?;
-            }
-        }
-    }
-    Err(Error::InvalidSubcommand)
-}
+use crate::{
+    cmd_defs::{
+        manage::{
+            XpCommandExperience, XpCommandExperienceImport, XpCommandRewards, XpCommandRewardsAdd,
+            XpCommandRewardsRemove,
+        },
+        XpCommand,
+    },
+    AppState,
+};
 
 #[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
 struct Mee6User {
@@ -69,88 +33,96 @@ struct XpUserGuildLevel {
 }
 
 pub async fn process_xp(
-    data: CommandData,
+    data: XpCommand,
     guild_id: Option<Id<GuildMarker>>,
-    _invoker: &User,
     state: AppState,
 ) -> Result<InteractionResponseData, Error> {
     let guild_id = guild_id.ok_or(Error::MissingGuildId)?;
-    for maybe_group in data.options {
-        if let CommandOptionValue::SubCommandGroup(group) = maybe_group.value {
-            match maybe_group.name.as_str() {
-                "rewards" => return process_rewards(group, state, guild_id).await,
-                _ => return Err(Error::UnknownSubcommand),
-            }
-        }
+    let contents = match data {
+        XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
+        XpCommand::Experience(experience) => process_experience(experience, guild_id, state).await,
+    }?;
+    Ok(InteractionResponseDataBuilder::new()
+        .flags(MessageFlags::EPHEMERAL)
+        .embeds([EmbedBuilder::new().description(contents).build()])
+        .build())
+}
+
+async fn process_experience(
+    data: XpCommandExperience,
+    guild_id: Id<GuildMarker>,
+    state: AppState,
+) -> Result<String, Error> {
+    match data {
+        XpCommandExperience::Import(import) => process_import(import, guild_id, state).await,
     }
-    Err(Error::InvalidSubcommand)
+}
+
+async fn process_import(
+    data: XpCommandExperienceImport,
+    guild_id: Id<GuildMarker>,
+    state: AppState,
+) -> Result<String, Error> {
+    let mee6_users: Vec<Mee6User> = state.http.get(data.levels.url).send().await?.json().await?;
+    let user_count = mee6_users.len();
+    let mut csv_writer = csv::Writer::from_writer(Vec::new());
+    for user in mee6_users {
+        #[allow(clippy::cast_possible_wrap)]
+        let xp_user = XpUserGuildLevel {
+            id: user.id as i64,
+            #[allow(clippy::cast_possible_wrap)]
+            guild: guild_id.get() as i64,
+            xp: user.xp,
+        };
+        csv_writer.serialize(xp_user)?;
+    }
+    let csv = csv_writer.into_inner().map_err(|_| Error::CsvIntoInner)?;
+    let mut copier = state
+        .db
+        .copy_in_raw("COPY levels FROM STDIN WITH (FORMAT csv)")
+        .await?;
+    copier.send(csv).await?;
+    copier.finish().await?;
+    Ok(format!("Imported {user_count} rows of user leveling data!"))
 }
 
 async fn process_rewards<'a>(
-    options: Vec<CommandDataOption>,
-    state: AppState,
+    cmd: XpCommandRewards,
     guild_id: Id<GuildMarker>,
-) -> Result<InteractionResponseData, Error> {
-    for maybe_cmd in options {
-        let cmd_name = maybe_cmd.name.clone();
-        if let CommandOptionValue::SubCommand(opts) = maybe_cmd.value {
-            let args: HashMap<String, CommandOptionValue> =
-                opts.into_iter().map(|val| (val.name, val.value)).collect();
-            let contents = match cmd_name.as_str() {
-                "add" => process_rewards_add(args, state, guild_id).await,
-                "remove" => process_rewards_rm(args, state, guild_id).await,
-                "list" => process_rewards_list(state, guild_id).await,
-                _ => return Err(Error::UnknownSubcommand),
-            }?;
-            return Ok(InteractionResponseDataBuilder::new()
-                .content(contents)
-                .flags(MessageFlags::EPHEMERAL)
-                .build());
-        }
+    state: AppState,
+) -> Result<String, Error> {
+    match cmd {
+        XpCommandRewards::Add(add) => process_rewards_add(add, state, guild_id).await,
+        XpCommandRewards::Remove(remove) => process_rewards_rm(remove, state, guild_id).await,
+        XpCommandRewards::List(_list) => process_rewards_list(state, guild_id).await,
     }
-    Err(Error::InvalidSubcommand)
 }
 
 async fn process_rewards_add(
-    options: HashMap<String, CommandOptionValue>,
+    options: XpCommandRewardsAdd,
     state: AppState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let level_requirement = if let CommandOptionValue::Integer(level) = options
-        .get("level")
-        .ok_or(Error::MissingRequiredArgument("level"))?
-    {
-        *level
-    } else {
-        return Err(Error::WrongArgumentType("level"));
-    };
-    let role_id = if let CommandOptionValue::Role(role) = options
-        .get("role")
-        .ok_or(Error::MissingRequiredArgument("role"))?
-    {
-        *role
-    } else {
-        return Err(Error::WrongArgumentType("role"));
-    };
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)",
-        role_id.get() as i64,
-        level_requirement as i64,
+        options.role.id.get() as i64,
+        options.level,
         guild_id.get() as i64
     )
     .execute(&state.db)
     .await?;
     Ok(format!(
-        "Added role reward <@&{role_id}> at level {level_requirement}!",
+        "Added role reward <@&{}> at level {}!",
+        options.role.id, options.level
     ))
 }
 async fn process_rewards_rm(
-    options: HashMap<String, CommandOptionValue>,
+    options: XpCommandRewardsRemove,
     state: AppState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    if let Some(CommandOptionValue::Role(role)) = options.get("role") {
+    if let Some(role) = options.role {
         #[allow(clippy::cast_possible_wrap)]
         query!(
             "DELETE FROM role_rewards WHERE id = $1 AND guild = $2",
@@ -160,7 +132,7 @@ async fn process_rewards_rm(
         .execute(&state.db)
         .await?;
         return Ok(format!("Removed role reward <@&{role}>!"));
-    } else if let Some(CommandOptionValue::Integer(level)) = options.get("level") {
+    } else if let Some(level) = options.level {
         #[allow(clippy::cast_possible_wrap)]
         query!(
             "DELETE FROM role_rewards WHERE requirement = $1 AND guild = $2",
@@ -196,20 +168,8 @@ async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Res
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Discord sent an invalid subcommand!")]
-    InvalidSubcommand,
-    #[error("Discord sent an unknown subcommand!")]
-    UnknownSubcommand,
-    #[error("Discord did not send required argument {0}!")]
-    MissingRequiredArgument(&'static str),
-    #[error("Discord sent wrong type for required argument {0}!")]
-    WrongArgumentType(&'static str),
     #[error("Discord did not send a guild ID!")]
     MissingGuildId,
-    #[error("Discord did not send a attachment ResolvedData!")]
-    NoResolvedData,
-    #[error("Discord did not send ResolvedData for an attachment!")]
-    NoAttachment,
     #[error("CSV encountered an IntoInner error")]
     CsvIntoInner,
     #[error("Command had wrong number of arguments: {0}!")]

@@ -8,7 +8,7 @@ use twilight_model::{
     },
     user::User,
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
+use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 pub async fn get_level(
     user: User,
@@ -58,7 +58,7 @@ pub async fn get_level(
         data: Some(
             InteractionResponseDataBuilder::new()
                 .flags(MessageFlags::EPHEMERAL)
-                .content(content)
+                .embeds([EmbedBuilder::new().description(content).build()])
                 .build(),
         ),
     })

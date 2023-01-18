@@ -1,4 +1,8 @@
-use twilight_model::{channel::Attachment, guild::Role};
+use twilight_model::{
+    channel::Attachment,
+    guild::Role,
+    id::{marker::RoleMarker, Id},
+};
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
 
@@ -30,7 +34,9 @@ pub struct XpCommandRewardsAdd {
 #[command(name = "remove", desc = "Remove a leveling reward")]
 pub struct XpCommandRewardsRemove {
     #[command(desc = "What level of role reward to remove", min_value = 1)]
-    pub level: i64,
+    pub level: Option<i64>,
+    #[command(desc = "What role reward to remove")]
+    pub role: Option<Id<RoleMarker>>,
 }
 
 #[derive(CommandModel, CreateCommand)]
@@ -61,5 +67,5 @@ pub enum XpCommandExperience {
 )]
 pub struct XpCommandExperienceImport {
     #[command(desc = "levels.json file compatible with mee6-scraper")]
-    pub user: Attachment,
+    pub levels: Attachment,
 }

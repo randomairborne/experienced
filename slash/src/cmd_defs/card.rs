@@ -1,44 +1,52 @@
-use twilight_interactions::command::{CommandModel, CommandOption, CreateCommand, CreateOption};
+#![allow(clippy::module_name_repetitions)]
+use twilight_interactions::command::{
+    CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
+};
+
+use crate::colors::Color;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your card to defaults")]
-pub struct CommandReset;
+pub struct CardCommandReset;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "fetch",
     desc = "Get your current card settings, including defaults."
 )]
-pub struct CommandFetch;
+pub struct CardCommandFetch {
+    #[command(desc = "User to fetch settings of")]
+    pub user: Option<ResolvedUser>,
+}
 
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "edit",
     desc = "Edit card colors by specifying hex codes for values you would like to change."
 )]
-pub struct CommandEdit {
+pub struct CardCommandEdit {
     #[command(desc = "What color to use for the background")]
-    pub background: Option<String>,
+    pub background: Option<Color>,
     #[command(desc = "What color to use for the border")]
-    pub border: Option<String>,
+    pub border: Option<Color>,
     #[command(desc = "What color to use for the important informational text")]
-    pub important: Option<String>,
+    pub important: Option<Color>,
     #[command(desc = "What color to use for the secondary informational text")]
-    pub secondary: Option<String>,
+    pub secondary: Option<Color>,
     #[command(desc = "What color to use for your rank")]
-    pub rank: Option<String>,
+    pub rank: Option<Color>,
     #[command(desc = "What color to use for your level")]
-    pub level: Option<String>,
+    pub level: Option<Color>,
     #[command(desc = "What color to use for the progress bar's filled part")]
-    pub progress_foreground: Option<String>,
+    pub progress_foreground: Option<Color>,
     #[command(desc = "What color to use for the progress bar's empty part")]
-    pub progress_background: Option<String>,
+    pub progress_background: Option<Color>,
     #[command(desc = "What font to use in the card")]
-    pub font: Option<CommandEditFont>,
+    pub font: Option<CardCommandEditFont>,
 }
 
 #[derive(CommandOption, CreateOption)]
-pub enum CommandEditFont {
+pub enum CardCommandEditFont {
     #[option(name = "Mojangles", value = "Mojang")]
     Mojang,
     #[option(name = "Roboto", value = "Roboto")]
