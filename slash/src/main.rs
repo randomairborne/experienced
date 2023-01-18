@@ -1,7 +1,6 @@
 #![deny(clippy::all, clippy::cargo, clippy::pedantic, clippy::nursery)]
 use std::sync::Arc;
 
-use axum::routing::post;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{marker::ApplicationMarker, Id};
@@ -72,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         http,
     });
     let route = axum::Router::new()
-        .route("/", post(handler::handle))
+        .route("/", axum::routing::get(|| async {}).post(handler::handle))
         .with_state(state);
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
