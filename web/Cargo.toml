@@ -2,6 +2,12 @@
 name = "experienced-web"
 version = "0.1.0"
 edition = "2021"
+description = "A web dashboard for experienced"
+repository = "https://github.com/randomairborne/experienced"
+readme = "README.txt"
+license = "MS-PL"
+categories = ["games"]
+keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }

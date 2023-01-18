@@ -294,5 +294,37 @@
       }
     },
     "query": "SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1"
+  },
+  "f36e283f819839f640ccd420966b399ccedfc31fce69027bace2fe931721fc0e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "xp",
+          "ordinal": 1,
+          "type_info": "Int8"
+        },
+        {
+          "name": "guild",
+          "ordinal": 2,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp LIMIT 100"
   }
 }
