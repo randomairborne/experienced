@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Path, State},
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Redirect},
 };
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
@@ -30,23 +30,30 @@ async fn main() {
     let route = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| async { Html(include_bytes!("homepage.html").as_slice()) }),
+            axum::routing::get(|| async { Html(include_bytes!("index.html").as_slice()) }),
         )
         .route(
-            "/homepage.css",
+            "/privacy",
+            axum::routing::get(|| async { Redirect::to("/privacy/") }),
+        )
+        .route(
+            "/privacy/",
+            axum::routing::get(|| async { Html(include_bytes!("privacy.html").as_slice()) }),
+        )
+        .route(
+            "/terms",
+            axum::routing::get(|| async { Redirect::to("/terms/") }),
+        )
+        .route(
+            "/terms/",
+            axum::routing::get(|| async { Html(include_bytes!("terms.html").as_slice()) }),
+        )
+        .route(
+            "/main.css",
             axum::routing::get(|| async {
                 (
                     [("Content-Type", "text/css")],
-                    include_bytes!("homepage.css").as_slice(),
-                )
-            }),
-        )
-        .route(
-            "/leaderboard.css",
-            axum::routing::get(|| async {
-                (
-                    [("Content-Type", "text/css")],
-                    include_bytes!("leaderboard.css").as_slice(),
+                    include_bytes!("main.css").as_slice(),
                 )
             }),
         )

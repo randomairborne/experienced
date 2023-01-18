@@ -91,3 +91,9 @@ body {
     transition-duration: 200ms;
     background-color: #7289DA25;
 }
+
+.policy {
+    text-align: left;
+    width: 60%;
+    margin: 5vw;
+}
