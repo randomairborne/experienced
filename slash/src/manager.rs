@@ -61,8 +61,24 @@ async fn process_experience(
 async fn process_import(
     data: XpCommandExperienceImport,
     guild_id: Id<GuildMarker>,
-    state: AppState,
+    mut state: AppState,
 ) -> Result<String, Error> {
+    let time_remaining: isize = redis::cmd("TTL")
+        .arg(guild_id.get())
+        .query_async(&mut state.redis)
+        .await?;
+    if time_remaining > 0 {
+        return Ok(format!(
+            "This guild is being ratelimited. Try again in {time_remaining} seconds."
+        ));
+    }
+    let _: () = redis::cmd("SET")
+        .arg(guild_id.get())
+        .arg(3600)
+        .arg("EX")
+        .arg(3600)
+        .query_async(&mut state.redis)
+        .await?;
     let mee6_users: Vec<Mee6User> = state.http.get(data.levels.url).send().await?.json().await?;
     let user_count = mee6_users.len();
     let mut csv_writer = csv::Writer::from_writer(Vec::new());
@@ -182,8 +198,10 @@ pub enum Error {
     Csv(#[from] csv::Error),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
-    #[error("Http error: {0}")]
+    #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
+    #[error("Redis error: {0}")]
+    Redis(#[from] redis::RedisError),
     #[error("Discord API error: {0}")]
     DiscordApi(#[from] twilight_http::Error),
     #[error("Discord API decoding error: {0}")]

@@ -16,8 +16,6 @@ mod manager;
 mod processor;
 mod render_card;
 
-pub type AppState = Arc<UnderlyingAppState>;
-
 #[macro_use]
 extern crate tracing;
 
@@ -34,6 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
+    let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
     let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
     fonts.load_font_data(include_bytes!("resources/Mojang.ttf").to_vec());
     fonts.load_font_data(include_bytes!("resources/Roboto.ttf").to_vec());
@@ -42,6 +41,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut tera = tera::Tera::default();
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
     let svg = SvgState { fonts, tera };
+    println!("Connecting to redis {redis_url}");
+    let redis = redis::aio::ConnectionManager::new(
+        redis::Client::open(redis_url).expect("Failed to connect to redis"),
+    )
+    .await
+    .expect("Failed to connect to redis!");
     println!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await
@@ -62,14 +67,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .id;
     cmd_defs::register(client.interaction(my_id)).await;
     let http = reqwest::Client::new();
-    let state = Arc::new(UnderlyingAppState {
+    let state = AppState {
         db,
-        pubkey,
-        client,
+        pubkey: pubkey.into(),
+        client: client.into(),
         my_id,
-        svg,
+        svg: svg.into(),
         http,
-    });
+        redis,
+    };
     let route = axum::Router::new()
         .route("/", axum::routing::get(|| async {}).post(handler::handle))
         .with_state(state);
@@ -85,13 +91,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-pub struct UnderlyingAppState {
+#[derive(Clone)]
+pub struct AppState {
     pub db: PgPool,
-    pub pubkey: String,
-    pub client: twilight_http::Client,
+    pub pubkey: Arc<String>,
+    pub client: Arc<twilight_http::Client>,
     pub my_id: Id<ApplicationMarker>,
-    pub svg: SvgState,
+    pub svg: Arc<SvgState>,
     pub http: reqwest::Client,
+    pub redis: redis::aio::ConnectionManager,
 }
 
 pub struct SvgState {
