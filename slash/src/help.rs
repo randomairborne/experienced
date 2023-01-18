@@ -21,7 +21,7 @@ pub fn help() -> InteractionResponse {
         .inline()
         .build();
     let help_embed = EmbedBuilder::new()
-        .color(0x333366)
+        .color(0x33_33_66)
         .title("Experienced Help")
         .field(help_help)
         .field(rank_help)
