@@ -22,9 +22,12 @@ body {
 .bot-name {
     font-family: 'Montserrat-Alt1', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 10vw;
-    background: linear-gradient(#EEFFEE, #444477);
+    background-image: linear-gradient(#EEFFEE, #444477);
     background-clip: text;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
     -webkit-text-fill-color: transparent;
+    -moz-text-fill-color: transparent;
     width: 100%;
     margin-top: 10vh;
 }
