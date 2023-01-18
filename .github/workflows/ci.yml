@@ -83,7 +83,7 @@ jobs:
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - run: flyctl deploy
+      - run: flyctl deploy --detach
         working-directory: ./${{ matrix.side }}/
         env:
           FLY_ACCESS_TOKEN: ${{ secrets.FLY_ACCESS_TOKEN }}
