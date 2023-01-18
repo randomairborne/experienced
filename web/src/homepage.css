@@ -30,13 +30,13 @@ body {
 
 .title {
     width: 100%;
-    font-size: 3.5vh;
+    font-size: 3.8vh;
     padding: 1vw;
 }
 
 .subtitle {
     width: 100%;
-    font-size: 2.5vh;
+    font-size: 2.7vh;
 }
 
 .features {
@@ -52,7 +52,7 @@ body {
 
 .list-spacer {
     padding-top: 1vh;
-    font-size: 1.5vh;
+    font-size: 2vh;
 }
 
 .invite-button-container {
@@ -65,7 +65,7 @@ body {
 .invite-button {
     color: #000000;
     background-color: #7289DA;
-    padding: 1vh;
+    padding: 0.6vh;
     text-decoration: none;
     border-radius: 10px;
 }
@@ -78,7 +78,7 @@ body {
     color: #FFFFFF;
     border-color: #7289DA;
     border-style: solid;
-    padding: 1vh;
+    padding: 0.6vh;
     text-decoration: none;
     border-radius: 10px;
 }
