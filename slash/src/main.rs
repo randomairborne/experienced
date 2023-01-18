@@ -10,6 +10,7 @@ mod cmd_defs;
 mod colors;
 mod discord_sig_validation;
 mod handler;
+mod help;
 mod levels;
 mod manage_card;
 mod manager;

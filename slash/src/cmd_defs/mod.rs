@@ -6,6 +6,10 @@ use twilight_util::builder::command::CommandBuilder;
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
 #[derive(CommandModel, CreateCommand)]
+#[command(name = "help", desc = "Learn about how to use experienced")]
+pub struct HelpCommand;
+
+#[derive(CommandModel, CreateCommand)]
 #[command(
     name = "rank",
     desc = "Check someone's rank and level",
@@ -57,6 +61,7 @@ pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
     let cmds = vec![
         RankCommand::create_command().into(),
         CardCommand::create_command().into(),
+        HelpCommand::create_command().into(),
         XpCommand::create_command().into(),
         CommandBuilder::new("Get level", "", CommandType::User).build(),
         CommandBuilder::new("Get author level", "", CommandType::Message).build(),
