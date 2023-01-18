@@ -59,7 +59,7 @@ async fn fetch_stats(
     State(state): State<AppState>,
 ) -> Result<Html<String>, Error> {
     let user_rows = sqlx::query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp LIMIT 100",
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100",
         i64::from_str_radix(&id, 10)?
     )
     .fetch_all(&state.db)
