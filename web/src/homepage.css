@@ -64,8 +64,26 @@ body {
 
 .invite-button {
     color: #000000;
-    background-color: #00ff73;
+    background-color: #7289DA;
     padding: 1vh;
     text-decoration: none;
     border-radius: 10px;
+}
+
+.tiny-spacer {
+    width: 3%;
+}
+
+.selfhost-button {
+    color: #FFFFFF;
+    border-color: #7289DA;
+    border-style: solid;
+    padding: 1vh;
+    text-decoration: none;
+    border-radius: 10px;
+}
+
+.selfhost-button:hover {
+    transition-duration: 200ms;
+    background-color: #7289DA25;
 }
