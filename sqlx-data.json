@@ -295,7 +295,7 @@
     },
     "query": "SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1"
   },
-  "f36e283f819839f640ccd420966b399ccedfc31fce69027bace2fe931721fc0e": {
+  "e923b348b66a4ef3a88ba37bd0a34926abd78a3c84cd277a8ebd1fe046a75192": {
     "describe": {
       "columns": [
         {
@@ -325,6 +325,6 @@
         ]
       }
     },
-    "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp LIMIT 100"
+    "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100"
   }
 }
