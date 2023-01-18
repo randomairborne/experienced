@@ -85,7 +85,7 @@ async fn main() {
         )
         .route(
             "/robots.txt",
-            axum::routing::get(|| async { "User-Agent: *\nAllow: /\nDisallow: /*" }),
+            axum::routing::get(|| async { "User-Agent: *\nAllow: /$\nDisallow: /" }),
         )
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState {
