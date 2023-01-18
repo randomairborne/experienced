@@ -54,7 +54,10 @@ async fn main() {
             "/MontserratAlt1.woff",
             axum::routing::get(|| async {
                 (
-                    [("Content-Type", "font/woff")],
+                    [
+                        ("Content-Type", "font/woff"),
+                        ("Cache-Control", "max-age=31536000"),
+                    ],
                     include_bytes!("MontserratAlt1.woff").as_slice(),
                 )
             }),
@@ -63,7 +66,10 @@ async fn main() {
             "/MontserratAlt1.woff2",
             axum::routing::get(|| async {
                 (
-                    [("Content-Type", "font/woff2")],
+                    [
+                        ("Content-Type", "font/woff2"),
+                        ("Cache-Control", "max-age=31536000"),
+                    ],
                     include_bytes!("MontserratAlt1.woff2").as_slice(),
                 )
             }),
@@ -76,6 +82,10 @@ async fn main() {
                     include_bytes!("favicon.png").as_slice(),
                 )
             }),
+        )
+        .route(
+            "/robots.txt",
+            axum::routing::get(|| async { "User-Agent: *\nAllow: /" }),
         )
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState {

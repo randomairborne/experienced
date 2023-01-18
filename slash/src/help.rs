@@ -8,9 +8,12 @@ pub fn help() -> InteractionResponse {
     let help_help = EmbedFieldBuilder::new("/help", "This command! Takes no arguments.")
         .inline()
         .build();
-    let rank_help = EmbedFieldBuilder::new("/rank", "Get someone's rank. Takes one optional argument, for the user to rank.")
-        .inline()
-        .build();
+    let rank_help = EmbedFieldBuilder::new(
+        "/rank",
+        "Get someone's rank. Takes one optional argument, for the user to rank.",
+    )
+    .inline()
+    .build();
     let card_help = EmbedFieldBuilder::new("/card", "Usually, edit your card. Anything with an open-ended input needs a hex code. You can `/card fetch` anyone's card with its optional user argument.")
         .inline()
         .build();

@@ -4,6 +4,7 @@
     font-style: normal;
     src: url("/MontserratAlt1.woff2") format("woff2"),
         url("/MontserratAlt1.woff") format("woff");
+    font-display: swap;
 }
 
 html,
