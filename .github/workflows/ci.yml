@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        side: [listener, slash]
+        side: [listener, slash, web]
     steps:
       - name: Correct env
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
