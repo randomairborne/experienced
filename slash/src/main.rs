@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::cargo, clippy::pedantic, clippy::nursery)]
+#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 use std::sync::Arc;
 
 use sqlx::PgPool;

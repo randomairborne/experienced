@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <table>
+            <tr>
+                <th>User</th>
+                <th>Rank</th>
+                <th>Level</th>
+              </tr>
+              {% for user in users %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ loop.index }}</td>
+                <td>{{ user.level }}</td>
+              </tr>
+              {% endfor %}
+        </table>
+    </body>
+</html>
