@@ -40,6 +40,7 @@ jobs:
           path: |
             target/x86_64-unknown-linux-musl/release/experienced-slash
             target/x86_64-unknown-linux-musl/release/experienced-listener
+            target/x86_64-unknown-linux-musl/release/experienced-web
 
   deploy:
     runs-on: ubuntu-latest
