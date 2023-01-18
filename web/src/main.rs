@@ -30,7 +30,27 @@ async fn main() {
     let route = axum::Router::new()
         .route(
             "/",
-            axum::routing::get(|| async { Html(include_str!("homepage.html")) }),
+            axum::routing::get(|| async { Html(include_bytes!("homepage.html").as_slice()) }),
+        )
+        .route(
+            "/homepage.css",
+            axum::routing::get(|| async { ([("Content-Type", "text/css")], include_bytes!("homepage.css").as_slice()) }),
+        )
+        .route(
+            "/leaderboard.css",
+            axum::routing::get(|| async { ([("Content-Type", "text/css")], include_bytes!("leaderboard.css").as_slice()) }),
+        )
+        .route(
+            "/MontserratAlt1.woff",
+            axum::routing::get(|| async { ([("Content-Type", "font/woff")], include_bytes!("MontserratAlt1.woff").as_slice()) }),
+        )
+        .route(
+            "/MontserratAlt1.woff2",
+            axum::routing::get(|| async { ([("Content-Type", "font/woff2")], include_bytes!("MontserratAlt1.woff2").as_slice()) }),
+        )
+        .route(
+            "/favicon.png",
+            axum::routing::get(|| async { ([("Content-Type", "image/png")], include_bytes!("favicon.png").as_slice()) }),
         )
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState {

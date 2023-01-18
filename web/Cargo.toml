@@ -15,8 +15,7 @@ sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "macro
 serde = { version = "1", features = ["derive"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 twilight-http = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
-axum = "0.6"
-serde_json = "1"
+axum = { version = "0.6", features = ["tokio"], default-features = false }
 thiserror = "1"
 dotenvy = "0.15"
 mee6 = "0.0.3"
