@@ -18,16 +18,10 @@ pub async fn get_level(
 ) -> Result<InteractionResponse, CommandProcessorError> {
     // Select current XP from the database, return 0 if there is no row
     #[allow(clippy::cast_possible_wrap)]
-    let xp = match query!("SELECT xp FROM levels WHERE id = $1", user.id.get() as i64)
-        .fetch_one(&state.db)
-        .await
-    {
-        Ok(val) => val.xp,
-        Err(e) => match e {
-            sqlx::Error::RowNotFound => 0,
-            _ => Err(e)?,
-        },
-    };
+    let xp = query!("SELECT xp FROM levels WHERE id = $1", user.id.get() as i64)
+        .fetch_optional(&state.db)
+        .await?
+        .map_or(0, |v| v.xp);
     let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > $1", xp)
         .fetch_one(&state.db)
         .await?
