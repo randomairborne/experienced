@@ -21,3 +21,5 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 twilight-gateway = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }
 mee6 = "0.0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

@@ -105,7 +105,7 @@ async fn handle_event(
         Event::MemberAdd(member_add) => todo!(),
         Event::MemberRemove(member_rm) => todo!(),
         Event::MemberUpdate(member_update) => todo!(),
-        Event::MemberChunk(member_chunk) => redis::cmd("MSET").args(&member_chunk.members.into_iter().map(|v| (v.)))
+        Event::MemberChunk(member_chunk) => redis::cmd("MSET").arg(&member_chunk.members.into_iter().map(|v|(v.user.id, serde_json::to_value(v.user)?).collect() )).query_async(&mut redis).await?,
         Event::ThreadCreate(thread) => http.join_thread(thread.id).await.map_or((), |_| ()),
         _ => {}
     }
