@@ -1,14 +1,12 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 use futures::stream::StreamExt;
-use redis::AsyncCommands;
 use sqlx::PgPool;
 use std::{env, sync::Arc};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
-use twilight_model::user::User;
 mod message;
 mod user_cache;
 #[tokio::main]
@@ -104,12 +102,14 @@ async fn handle_event(
 ) -> Result<(), Error> {
     match event {
         Event::MessageCreate(msg) => Ok(message::save(*msg, db, redis, http).await),
-        Event::GuildCreate(guild_add) => todo!(),
-        Event::GuildDelete(guild_del) => todo!(),
-        Event::MemberAdd(member_add) => todo!(),
-        Event::MemberRemove(member_rm) => todo!(),
-        Event::MemberUpdate(member_update) => todo!(),
-        Event::MemberChunk(member_chunk) => user_cache::set_chunk(&mut redis, member_chunk).await,
+        Event::GuildCreate(guild_add) => user_cache::set_chunk(&mut redis, guild_add.0.members).await,
+        Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, member_add.0.user).await,
+        Event::MemberUpdate(member_update) => {
+            user_cache::set_user(&mut redis, member_update.user).await
+        }
+        Event::MemberChunk(member_chunk) => {
+            user_cache::set_chunk(&mut redis, member_chunk.members).await
+        }
         Event::ThreadCreate(thread) => http.join_thread(thread.id).await.map(|_| Ok(()))?,
         _ => Ok(()),
     }
@@ -123,4 +123,6 @@ pub enum Error {
     Redis(#[from] redis::RedisError),
     #[error("Discord error: {0}")]
     Twilight(#[from] twilight_http::Error),
+    #[error("JSON error: {0}")]
+    SerdeJson(#[from] serde_json::Error),
 }

@@ -1,20 +1,23 @@
 use redis::AsyncCommands;
-use twilight_model::gateway::payload::incoming::MemberChunk;
+use twilight_model::{guild::Member, user::User};
 
 use crate::Error;
 
 pub async fn set_chunk(
     redis: &mut redis::aio::Connection,
-    member_chunk: MemberChunk,
+    chunk: Vec<Member>,
 ) -> Result<(), Error> {
+    let mut user_pairs: Vec<(u64, String)> = Vec::with_capacity(chunk.len());
+    for member in chunk {
+        user_pairs.push((member.user.id.get(), serde_json::to_string(&member.user)?));
+    }
     Ok(redis
-        .set_multiple::<u64, String, ()>(
-            member_chunk
-                .members
-                .iter()
-                .map(|v| (v.user.id.get(), serde_json::to_string(&v.user).unwrap()))
-                .collect::<Vec<(u64, String)>>()
-                .as_slice(),
-        )
+        .set_multiple::<u64, String, ()>(user_pairs.as_slice())
+        .await?)
+}
+
+pub async fn set_user(redis: &mut redis::aio::Connection, user: User) -> Result<(), Error> {
+    Ok(redis
+        .set::<u64, String, ()>(user.id.get(), serde_json::to_string(&user)?)
         .await?)
 }
