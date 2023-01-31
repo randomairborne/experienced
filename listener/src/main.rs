@@ -1,12 +1,14 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 use futures::stream::StreamExt;
+use redis::AsyncCommands;
 use sqlx::PgPool;
 use std::{env, sync::Arc};
 use twilight_gateway::{
     cluster::{Cluster, ShardScheme},
     Event, Intents,
 };
+use twilight_model::user::User;
 mod message;
 mod user_cache;
 #[tokio::main]
@@ -86,7 +88,9 @@ async fn main() {
                     return;
                 }
             };
-            handle_event(event, db, redis, client).await;
+            if let Err(e) = handle_event(event, db, redis, client).await {
+                eprintln!("Error: {e}")
+            }
         });
     }
     println!("Done, see ya!");
@@ -95,18 +99,28 @@ async fn main() {
 async fn handle_event(
     event: Event,
     db: PgPool,
-    redis: redis::aio::Connection,
+    mut redis: redis::aio::Connection,
     http: Arc<twilight_http::Client>,
-) {
+) -> Result<(), Error> {
     match event {
-        Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
+        Event::MessageCreate(msg) => Ok(message::save(*msg, db, redis, http).await),
         Event::GuildCreate(guild_add) => todo!(),
         Event::GuildDelete(guild_del) => todo!(),
         Event::MemberAdd(member_add) => todo!(),
         Event::MemberRemove(member_rm) => todo!(),
         Event::MemberUpdate(member_update) => todo!(),
-        Event::MemberChunk(member_chunk) => redis::cmd("MSET").arg(&member_chunk.members.into_iter().map(|v|(v.user.id, serde_json::to_value(v.user)?).collect() )).query_async(&mut redis).await?,
-        Event::ThreadCreate(thread) => http.join_thread(thread.id).await.map_or((), |_| ()),
-        _ => {}
+        Event::MemberChunk(member_chunk) => user_cache::set_chunk(&mut redis, member_chunk).await,
+        Event::ThreadCreate(thread) => http.join_thread(thread.id).await.map(|_| Ok(()))?,
+        _ => Ok(()),
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("SQL error: {0}")]
+    Sqlx(#[from] sqlx::Error),
+    #[error("Redis error: {0}")]
+    Redis(#[from] redis::RedisError),
+    #[error("Discord error: {0}")]
+    Twilight(#[from] twilight_http::Error),
 }

@@ -1,7 +1,7 @@
 use rand::Rng;
 use sqlx::{query, PgPool};
 use std::sync::Arc;
-use twilight_model::{id::Id, gateway::payload::incoming::MessageCreate};
+use twilight_model::{gateway::payload::incoming::MessageCreate, id::Id};
 
 pub async fn save(
     msg: MessageCreate,
@@ -11,7 +11,7 @@ pub async fn save(
 ) {
     if let Some(guild_id) = msg.guild_id {
         let has_sent: bool = redis::cmd("GET")
-            .arg(format!("{guild_id}-{}", msg.author.id))
+            .arg(format!("cooldown-{guild_id}-{}", msg.author.id))
             .query_async(&mut redis)
             .await
             .unwrap_or(false);
@@ -31,7 +31,7 @@ pub async fn save(
                 eprintln!("SQL insert error: {e:?}");
             };
             if let Err(e) = redis::cmd("SET")
-                .arg(format!("{guild_id}-{}", msg.author.id))
+                .arg(format!("cooldown-{guild_id}-{}", msg.author.id))
                 .arg(true)
                 .arg("EX")
                 .arg(60)
