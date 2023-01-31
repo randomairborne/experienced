@@ -32,6 +32,10 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
+    let mut tera = tera::Tera::default();
+    tera.add_raw_template("leaderboard.html", include_str!("leaderboard.html"))
+        .expect("Failed to add leaderboard");
+    let tera = Arc::new(tera);
     let route = axum::Router::new()
         .route(
             "/",
@@ -100,10 +104,7 @@ async fn main() {
             axum::routing::get(|| async { "User-Agent: *\nAllow: /$\nDisallow: /" }),
         )
         .route("/:id", axum::routing::get(fetch_stats))
-        .with_state(AppState {
-            db,
-            redis,
-        });
+        .with_state(AppState { db, tera, redis });
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
@@ -113,6 +114,13 @@ async fn main() {
         })
         .await
         .expect("failed to run server!");
+}
+
+#[derive(Clone)]
+struct AppState {
+    pub db: PgPool,
+    pub redis: ConnectionManager,
+    pub tera: Arc<tera::Tera>,
 }
 
 #[derive(serde::Serialize)]
@@ -132,7 +140,7 @@ async fn fetch_stats(
     Path(guild_id): Path<u64>,
     State(mut state): State<AppState>,
     Query(query): Query<FetchQuery>,
-) -> Result<Json<Vec<User>>, Error> {
+) -> Result<Html<String>, Error> {
     let user_rows = sqlx::query!(
         "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2",
         guild_id as i64,
@@ -168,13 +176,10 @@ async fn fetch_stats(
             users[*i].name = Some(user.name);
         }
     }
-    Ok(Json(users))
-}
-
-#[derive(Clone)]
-struct AppState {
-    pub db: PgPool,
-    pub redis: ConnectionManager,
+    let mut context = tera::Context::new();
+    context.insert("users", &users);
+    let rendered = state.tera.render("leaderboard.html", &context)?;
+    Ok(Html(rendered))
 }
 
 #[derive(Debug, thiserror::Error)]
