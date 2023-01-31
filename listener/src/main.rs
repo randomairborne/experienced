@@ -44,7 +44,9 @@ async fn main() {
 
     let redis = redis::aio::ConnectionManager::new(
         redis::Client::open(redis_url).expect("Failed to connect to redis"),
-    ).await.expect("Failed to create connection manager");
+    )
+    .await
+    .expect("Failed to create connection manager");
 
     let client = Arc::new(twilight_http::Client::new(token.clone()));
 

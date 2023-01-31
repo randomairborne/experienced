@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     response::{Html, IntoResponse, Redirect},
+    Json,
 };
-use redis::aio::ConnectionManager;
+use redis::{aio::ConnectionManager, AsyncCommands};
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
@@ -17,18 +18,16 @@ async fn main() {
         .init();
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
-        let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
-
-    let mut tera = tera::Tera::default();
-    tera.add_raw_template("leaderboard.html", include_str!("leaderboard.html"))
-        .expect("Failed to add template");
+    let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
     println!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
-        let redis = redis::aio::ConnectionManager::new(
-            redis::Client::open(redis_url).expect("Failed to connect to redis"),
-        ).await.expect("Redis connection manager creation failed");
+    let redis = redis::aio::ConnectionManager::new(
+        redis::Client::open(redis_url).expect("Failed to connect to redis"),
+    )
+    .await
+    .expect("Redis connection manager creation failed");
     sqlx::migrate!("../migrations")
         .run(&db)
         .await
@@ -103,7 +102,6 @@ async fn main() {
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState {
             db,
-            tera: Arc::new(tera),
             redis,
         });
     println!("Server listening on https://0.0.0.0:8080!");
@@ -119,37 +117,64 @@ async fn main() {
 
 #[derive(serde::Serialize)]
 struct User {
-    id: i64,
+    id: u64,
     level: u64,
+    name: Option<String>,
+    discriminator: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+pub struct FetchQuery {
+    offset: i64,
 }
 
 async fn fetch_stats(
-    Path(id): Path<String>,
-    State(state): State<AppState>,
-) -> Result<Html<String>, Error> {
+    Path(guild_id): Path<u64>,
+    State(mut state): State<AppState>,
+    Query(query): Query<FetchQuery>,
+) -> Result<Json<Vec<User>>, Error> {
     let user_rows = sqlx::query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100",
-        i64::from_str_radix(&id, 10)?
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2",
+        guild_id as i64,
+        query.offset * 100
     )
     .fetch_all(&state.db)
     .await?;
-    let users: Vec<User> = user_rows
+    let mut ids_to_indices: HashMap<u64, usize> = HashMap::with_capacity(user_rows.len());
+    let mut users: Vec<User> = user_rows
         .into_iter()
-        .map(|v| User {
-            id: v.id,
-            level: mee6::LevelInfo::new(v.xp as u64).level(),
+        .enumerate()
+        .map(|(i, v)| {
+            ids_to_indices.insert(v.id as u64, i);
+            User {
+                id: v.id as u64,
+                level: mee6::LevelInfo::new(v.xp as u64).level(),
+                name: None,
+                discriminator: None,
+            }
         })
         .collect();
-    let mut context = tera::Context::new();
-    context.insert("users", &users);
-    Ok(Html(state.tera.render("leaderboard.html", &context)?))
+    let user_strings: Vec<String> = state
+        .redis
+        .get(users.iter().map(|v| v.id).collect::<Vec<u64>>())
+        .await?;
+    for user_string in user_strings {
+        let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
+            Ok(v) => v,
+            Err(_e) => continue,
+        };
+        if let Some(i) = ids_to_indices.get(&user.id.get()) {
+            users[*i].discriminator = Some(format!("{}", user.discriminator()));
+            users[*i].name = Some(user.name);
+        }
+    }
+    Ok(Json(users))
 }
 
 #[derive(Clone)]
 struct AppState {
     pub db: PgPool,
-    pub tera: Arc<tera::Tera>,
-    pub redis: ConnectionManager
+    pub redis: ConnectionManager,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -158,6 +183,8 @@ enum Error {
     Sqlx(#[from] sqlx::Error),
     #[error("Templating error: {0}")]
     Tera(#[from] tera::Error),
+    #[error("Redis error: {0}")]
+    Redis(#[from] redis::RedisError),
     #[error("Non-integer value where integer expected: {0}")]
     ParseIntError(#[from] std::num::ParseIntError),
 }
