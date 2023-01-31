@@ -4,7 +4,7 @@ use twilight_model::{guild::Member, user::User};
 use crate::Error;
 
 pub async fn set_chunk(
-    redis: &mut redis::aio::Connection,
+    redis: &mut redis::aio::ConnectionManager,
     chunk: Vec<Member>,
 ) -> Result<(), Error> {
     let mut user_pairs: Vec<(u64, String)> = Vec::with_capacity(chunk.len());
@@ -16,7 +16,7 @@ pub async fn set_chunk(
         .await?)
 }
 
-pub async fn set_user(redis: &mut redis::aio::Connection, user: User) -> Result<(), Error> {
+pub async fn set_user(redis: &mut redis::aio::ConnectionManager, user: User) -> Result<(), Error> {
     Ok(redis
         .set::<u64, String, ()>(user.id.get(), serde_json::to_string(&user)?)
         .await?)

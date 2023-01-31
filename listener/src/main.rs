@@ -42,7 +42,9 @@ async fn main() {
         .await
         .expect("Failed to run database migrations!");
 
-    let redis = redis::Client::open(redis_url).expect("Failed to connect to redis");
+    let redis = redis::aio::ConnectionManager::new(
+        redis::Client::open(redis_url).expect("Failed to connect to redis"),
+    ).await.expect("Failed to create connection manager");
 
     let client = Arc::new(twilight_http::Client::new(token.clone()));
 
@@ -79,13 +81,6 @@ async fn main() {
         let client = client.clone();
         let db = db.clone();
         tokio::spawn(async move {
-            let redis = match redis.get_async_connection().await {
-                Ok(val) => val,
-                Err(e) => {
-                    eprintln!("Redis connection error: {e}");
-                    return;
-                }
-            };
             if let Err(e) = handle_event(event, db, redis, client).await {
                 eprintln!("Error: {e}")
             }
@@ -97,12 +92,14 @@ async fn main() {
 async fn handle_event(
     event: Event,
     db: PgPool,
-    mut redis: redis::aio::Connection,
+    mut redis: redis::aio::ConnectionManager,
     http: Arc<twilight_http::Client>,
 ) -> Result<(), Error> {
     match event {
         Event::MessageCreate(msg) => Ok(message::save(*msg, db, redis, http).await),
-        Event::GuildCreate(guild_add) => user_cache::set_chunk(&mut redis, guild_add.0.members).await,
+        Event::GuildCreate(guild_add) => {
+            user_cache::set_chunk(&mut redis, guild_add.0.members).await
+        }
         Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, member_add.0.user).await,
         Event::MemberUpdate(member_update) => {
             user_cache::set_user(&mut redis, member_update.user).await

@@ -13,6 +13,7 @@ keywords = ["discord-bot", "mee6"]
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "macros", "offline"] }
 serde = { version = "1", features = ["derive"] }
+redis = { version = "0.22", features = ["aio", "tokio-comp"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 twilight-http = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
 axum = { version = "0.6", features = ["tokio"], default-features = false }

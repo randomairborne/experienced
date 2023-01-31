@@ -641,6 +641,7 @@ dependencies = [
  "axum",
  "dotenvy",
  "mee6 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "redis",
  "serde",
  "sqlx",
  "tera",

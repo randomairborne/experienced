@@ -4,6 +4,7 @@ use axum::{
     extract::{Path, State},
     response::{Html, IntoResponse, Redirect},
 };
+use redis::aio::ConnectionManager;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
@@ -16,6 +17,8 @@ async fn main() {
         .init();
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
+        let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
+
     let mut tera = tera::Tera::default();
     tera.add_raw_template("leaderboard.html", include_str!("leaderboard.html"))
         .expect("Failed to add template");
@@ -23,6 +26,9 @@ async fn main() {
     let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
+        let redis = redis::aio::ConnectionManager::new(
+            redis::Client::open(redis_url).expect("Failed to connect to redis"),
+        ).await.expect("Redis connection manager creation failed");
     sqlx::migrate!("../migrations")
         .run(&db)
         .await
@@ -98,6 +104,7 @@ async fn main() {
         .with_state(AppState {
             db,
             tera: Arc::new(tera),
+            redis,
         });
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
@@ -142,6 +149,7 @@ async fn fetch_stats(
 struct AppState {
     pub db: PgPool,
     pub tera: Arc<tera::Tera>,
+    pub redis: ConnectionManager
 }
 
 #[derive(Debug, thiserror::Error)]

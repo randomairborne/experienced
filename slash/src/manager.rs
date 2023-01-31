@@ -63,10 +63,11 @@ async fn process_import(
     guild_id: Id<GuildMarker>,
     mut state: AppState,
 ) -> Result<String, Error> {
-    let time_remaining: isize = redis::cmd("TTL")
+    let time_remaining_option: Option<isize> = redis::cmd("TTL")
         .arg(guild_id.get())
         .query_async(&mut state.redis)
         .await?;
+    let time_remaining = time_remaining_option.unwrap_or(0);
     if time_remaining > 0 {
         return Ok(format!(
             "This guild is being ratelimited. Try again in {time_remaining} seconds."

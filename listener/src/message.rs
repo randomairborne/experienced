@@ -6,7 +6,7 @@ use twilight_model::{gateway::payload::incoming::MessageCreate, id::Id};
 pub async fn save(
     msg: MessageCreate,
     db: PgPool,
-    mut redis: redis::aio::Connection,
+    mut redis: redis::aio::ConnectionManager,
     http: Arc<twilight_http::Client>,
 ) {
     if let Some(guild_id) = msg.guild_id {
@@ -35,7 +35,7 @@ pub async fn save(
                 .arg(true)
                 .arg("EX")
                 .arg(60)
-                .query_async::<redis::aio::Connection, ()>(&mut redis)
+                .query_async::<redis::aio::ConnectionManager, ()>(&mut redis)
                 .await
             {
                 eprintln!("Redis error: {e}");

@@ -12,7 +12,12 @@
               </tr>
               {% for user in users %}
               <tr>
-                <td>{{ user.id }}</td>
+                <td>{% if user.name is undefined || user.discriminator is undefined %}
+                  {{ user.name }}#{{ user.discriminator }}
+                  {% else %}
+                  {{ user.id }}
+                  {% endif %}
+                </td>
                 <td>{{ loop.index }}</td>
                 <td>{{ user.level }}</td>
               </tr>
