@@ -3,7 +3,6 @@ use std::{collections::HashMap, sync::Arc};
 use axum::{
     extract::{Path, Query, State},
     response::{Html, IntoResponse, Redirect},
-    Json,
 };
 use redis::{aio::ConnectionManager, AsyncCommands};
 use sqlx::PgPool;

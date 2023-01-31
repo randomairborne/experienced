@@ -84,7 +84,7 @@ async fn main() {
         let db = db.clone();
         tokio::spawn(async move {
             if let Err(e) = handle_event(event, db, redis, client).await {
-                eprintln!("Error: {e}")
+                eprintln!("Error: {e}");
             }
         });
     }
@@ -98,7 +98,7 @@ async fn handle_event(
     http: Arc<twilight_http::Client>,
 ) -> Result<(), Error> {
     match event {
-        Event::MessageCreate(msg) => Ok(message::save(*msg, db, redis, http).await),
+        Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
         Event::GuildCreate(guild_add) => {
             user_cache::set_chunk(&mut redis, guild_add.0.members).await
         }
