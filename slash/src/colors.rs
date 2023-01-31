@@ -64,13 +64,10 @@ impl Colors {
         id: twilight_model::id::Id<twilight_model::id::marker::UserMarker>,
     ) -> Self {
         #[allow(clippy::cast_possible_wrap)]
-        let colors = if let Ok(colors) =
+        let Ok(colors) =
             sqlx::query!("SELECT * FROM custom_card WHERE id = $1", id.get() as i64)
                 .fetch_one(db)
-                .await
-        {
-            colors
-        } else {
+                .await else {
             return Self::default();
         };
         Self {
