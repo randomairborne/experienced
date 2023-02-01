@@ -162,18 +162,20 @@ async fn fetch_stats(
             }
         })
         .collect();
-    let user_strings: Vec<String> = state
+    let maybe_user_strings: Option<Vec<String>> = state
         .redis
         .get(users.iter().map(|v| v.id).collect::<Vec<u64>>())
         .await?;
-    for user_string in user_strings {
-        let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
-            Ok(v) => v,
-            Err(_e) => continue,
-        };
-        if let Some(i) = ids_to_indices.get(&user.id.get()) {
-            users[*i].discriminator = Some(format!("{}", user.discriminator()));
-            users[*i].name = Some(user.name);
+    if let Some(user_strings) = maybe_user_strings {
+        for user_string in user_strings {
+            let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
+                Ok(v) => v,
+                Err(_e) => continue,
+            };
+            if let Some(i) = ids_to_indices.get(&user.id.get()) {
+                users[*i].discriminator = Some(format!("{}", user.discriminator()));
+                users[*i].name = Some(user.name);
+            }
         }
     }
     let mut context = tera::Context::new();
