@@ -1,4 +1,5 @@
 use rand::Rng;
+use redis::AsyncCommands;
 use sqlx::{query, PgPool};
 use std::sync::Arc;
 use twilight_model::{gateway::payload::incoming::MessageCreate, id::Id};
@@ -11,11 +12,8 @@ pub async fn save(
 ) -> Result<(), crate::Error> {
     if let Some(guild_id) = msg.guild_id {
         let has_sent_key = format!("cooldown-{guild_id}-{}", msg.author.id);
-        let has_sent: bool = redis::cmd("GET")
-            .arg(&has_sent_key)
-            .query_async(&mut redis)
-            .await
-            .unwrap_or(false);
+        let has_sent: bool = redis.get(&has_sent_key)
+            .await?;
         if !msg.author.bot && !has_sent {
             let xp_count = rand::thread_rng().gen_range(15..=25);
             #[allow(clippy::cast_possible_wrap)]
@@ -27,12 +25,7 @@ pub async fn save(
             )
             .execute(&db)
             .await?;
-            redis::cmd("SET")
-                .arg(&has_sent_key)
-                .arg(true)
-                .arg("EX")
-                .arg(60)
-                .query_async::<redis::aio::ConnectionManager, ()>(&mut redis)
+            redis.set_ex(&has_sent_key, true, 60)
                 .await?;
             #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
             let xp = query!(
@@ -52,8 +45,7 @@ pub async fn save(
                 #[allow(clippy::cast_sign_loss)]
                 let id = reward.id as u64;
                 http.add_guild_member_role(guild_id, msg.author.id, Id::new(id))
-                    .await
-                    .ok();
+                    .await?;
             }
         }
     }
