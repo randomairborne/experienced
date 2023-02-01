@@ -12,7 +12,7 @@
               </tr>
               {% for user in users %}
               <tr>
-                <td>{% if user.name is undefined || user.discriminator is undefined %}
+                <td>{% if user.name is undefined or user.discriminator is undefined %}
                   {{ user.name }}#{{ user.discriminator }}
                   {% else %}
                   {{ user.id }}

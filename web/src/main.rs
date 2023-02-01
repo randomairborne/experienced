@@ -135,6 +135,7 @@ pub struct FetchQuery {
     offset: i64,
 }
 
+#[axum::debug_handler]
 async fn fetch_stats(
     Path(guild_id): Path<u64>,
     State(mut state): State<AppState>,
