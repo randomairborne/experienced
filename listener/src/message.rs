@@ -10,8 +10,9 @@ pub async fn save(
     http: Arc<twilight_http::Client>,
 ) -> Result<(), crate::Error> {
     if let Some(guild_id) = msg.guild_id {
+        let has_sent_key = format!("cooldown-{guild_id}-{}", msg.author.id);
         let has_sent: bool = redis::cmd("GET")
-            .arg(format!("cooldown-{guild_id}-{}", msg.author.id))
+            .arg(&has_sent_key)
             .query_async(&mut redis)
             .await
             .unwrap_or(false);
@@ -27,7 +28,7 @@ pub async fn save(
             .execute(&db)
             .await?;
             redis::cmd("SET")
-                .arg(format!("cooldown-{guild_id}-{}", msg.author.id))
+                .arg(&has_sent_key)
                 .arg(true)
                 .arg("EX")
                 .arg(60)

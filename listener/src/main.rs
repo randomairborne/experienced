@@ -14,19 +14,26 @@ async fn main() {
     dotenvy::dotenv().ok();
     let token =
         env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
+    let shards_end = env::var("SHARDS_END")
+        .expect("Failed to get SHARDS_END environment variable")
+        .parse()
+        .expect("Failed to parse SHARDS_END as u64");
+    let shards_start = env::var("SHARDS_START")
+        .expect("Failed to get SHARDS_START environment variable")
+        .parse()
+        .expect("Failed to parse SHARDS_START as u64");
+    let shards_total = env::var("SHARDS_TOTAL")
+        .expect("Failed to get SHARDS_TOTAL environment variable")
+        .parse()
+        .expect("Failed to parse SHARDS_TOTAL as u64");
+    assert!(
+        shards_start > shards_end,
+        "SHARDS_START must be greater then SHARDS_END!"
+    );
     let scheme = ShardScheme::Range {
-        from: env::var("SHARDS_START")
-            .expect("Failed to get SHARDS_START environment variable")
-            .parse()
-            .expect("Failed to parse SHARDS_START as u64"),
-        to: env::var("SHARDS_END")
-            .expect("Failed to get SHARDS_END environment variable")
-            .parse()
-            .expect("Failed to parse SHARDS_END as u64"),
-        total: env::var("TOTAL_SHARDS")
-            .expect("Failed to get TOTAL_SHARDS environment variable")
-            .parse()
-            .expect("Failed to parse TOTAL_SHARDS as u64"),
+        from: shards_start,
+        to: shards_end,
+        total: shards_total,
     };
     let redis_url = env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
     let pg = env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");

@@ -10,8 +10,8 @@ processes = []
 
 [env]
   SHARDS_START=0
-  SHARDS_END=32
-  TOTAL_SHARDS=32
+  SHARDS_END=3
+  SHARDS_TOTAL=4
 [experimental]
   allowed_public_ports = []
   auto_rollback = true
