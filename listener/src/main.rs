@@ -57,7 +57,7 @@ async fn main() {
 
     let client = Arc::new(twilight_http::Client::new(token.clone()));
 
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES;
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS;
 
     let (cluster, mut events) = Cluster::builder(token.clone(), intents)
         .shard_scheme(scheme)
