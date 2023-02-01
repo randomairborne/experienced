@@ -67,30 +67,31 @@ async fn main() {
 
     let cluster = Arc::new(cluster);
 
-    let cluster_spawn = cluster.clone();
+    let cluster_up = cluster.clone();
+    let cluster_down = cluster.clone();
     println!("Connecting to discord");
     tokio::spawn(async move {
-        cluster_spawn.up().await;
+        cluster_up.up().await;
     });
     tokio::spawn(async move {
         tokio::signal::ctrl_c()
             .await
             .expect("Failed to listen to ctrl-c");
         println!("Shutting down...");
-        cluster.down();
+        cluster_down.down();
     });
-
     let mut has_connected = false;
-    while let Some((_shard_id, event)) = events.next().await {
+    while let Some((shard_id, event)) = events.next().await {
         if !has_connected {
             has_connected = true;
             println!("Connected to discord!");
         }
         let redis = redis.clone();
         let client = client.clone();
+        let cluster = cluster.clone();
         let db = db.clone();
         tokio::spawn(async move {
-            if let Err(e) = handle_event(event, db, redis, client).await {
+            if let Err(e) = handle_event(event, db, redis, client, cluster, shard_id).await {
                 eprintln!("Error: {e}");
             }
         });
@@ -103,11 +104,20 @@ async fn handle_event(
     db: PgPool,
     mut redis: redis::aio::ConnectionManager,
     http: Arc<twilight_http::Client>,
+    cluster: Arc<twilight_gateway::Cluster>,
+    shard_id: u64,
 ) -> Result<(), Error> {
     match event {
         Event::ShardDisconnected(v) => Ok(eprintln!("Disconnected with {v:#?}")),
         Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
         Event::GuildCreate(guild_add) => {
+            cluster.command(
+                shard_id,
+                &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
+                    guild_add.id,
+                )
+                .query("", None),
+            ).await?;
             user_cache::set_chunk(&mut redis, guild_add.0.members).await
         }
         Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, member_add.0.user).await,
@@ -132,4 +142,6 @@ pub enum Error {
     Twilight(#[from] twilight_http::Error),
     #[error("JSON error: {0}")]
     SerdeJson(#[from] serde_json::Error),
+    #[error("ClusterCommand error: {0}")]
+    TwilightClusterCommand(#[from] twilight_gateway::cluster::ClusterCommandError),
 }
