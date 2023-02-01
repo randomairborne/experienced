@@ -132,19 +132,19 @@ struct User {
 
 #[derive(serde::Deserialize)]
 pub struct FetchQuery {
-    offset: i64,
+    offset: Option<i64>,
 }
 
-#[axum::debug_handler]
 async fn fetch_stats(
     Path(guild_id): Path<u64>,
     State(mut state): State<AppState>,
     Query(query): Query<FetchQuery>,
 ) -> Result<Html<String>, Error> {
+    let offset = query.offset.unwrap_or(0);
     let user_rows = sqlx::query!(
         "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2",
         guild_id as i64,
-        query.offset * 100
+        offset * 100
     )
     .fetch_all(&state.db)
     .await?;
@@ -178,6 +178,7 @@ async fn fetch_stats(
     }
     let mut context = tera::Context::new();
     context.insert("users", &users);
+    context.insert("offset", &offset);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
 }

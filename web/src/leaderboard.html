@@ -18,7 +18,7 @@
                   {{ user.id }}
                   {% endif %}
                 </td>
-                <td>{{ loop.index }}</td>
+                <td>{{ loop.index + offset }}</td>
                 <td>{{ user.level }}</td>
               </tr>
               {% endfor %}
