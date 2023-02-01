@@ -105,6 +105,7 @@ async fn handle_event(
     http: Arc<twilight_http::Client>,
 ) -> Result<(), Error> {
     match event {
+        Event::ShardDisconnected(v) => Ok(eprintln!("Disconnected with {v:#?}")),
         Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
         Event::GuildCreate(guild_add) => {
             user_cache::set_chunk(&mut redis, guild_add.0.members).await
