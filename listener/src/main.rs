@@ -27,8 +27,8 @@ async fn main() {
         .parse()
         .expect("Failed to parse SHARDS_TOTAL as u64");
     assert!(
-        shards_start > shards_end,
-        "SHARDS_START must be greater then SHARDS_END!"
+        shards_start < shards_end,
+        "SHARDS_END must be greater then SHARDS_START!"
     );
     let scheme = ShardScheme::Range {
         from: shards_start,
