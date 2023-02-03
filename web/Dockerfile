@@ -4,6 +4,6 @@ FROM alpine
 
 COPY /executables/experienced-web /usr/bin/
 
-EXPOSE 8080
+EXPOSE 8000
 
 ENTRYPOINT "/usr/bin/experienced-web"

@@ -121,3 +121,11 @@ body {
     width: 60%;
     margin: 5vw;
 }
+
+.leaderboard {
+    list-style: none;
+}
+
+.leaderboard-user {
+    font-size: xx-large;
+}

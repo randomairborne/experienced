@@ -3,12 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Experienced Privacy Policy</title>
+  <title>Experienced Leaderboard</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="/main.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta property="og:title" content="Experienced discord bot">
-  <meta property="og:url" content="https://xp.valk.sh/privacy/">
+  <meta property="og:url" content="https://xp.valk.sh/">
   <meta property="og:description" content="Experienced privacy policy.">
   <meta property="og:determiner" content="the" />
   <meta property="og:site_name" content="Experienced" />
@@ -35,26 +35,20 @@
       href="https://github.com/randomairborne/experienced/blob/main/SELFHOSTING.md">Selfhost</a>
   </nav>
   </div>
-  <table>
-    <tr>
-      <th>User</th>
-      <th>Rank</th>
-      <th>Level</th>
-    </tr>
+  <ol class="leaderboard">
     {% for user in users %}
-    <tr>
-      <td>
-        {% if user.name is none or user.discriminator is none %}
-        {{ user.id }}
-        {% else %}
-        {{ user.name }}#{{ user.discriminator }}
-        {% endif %}
-      </td>
-      <td>{{ loop.index + offset }}</td>
-      <td>{{ user.level }}</td>
-    </tr>
+    <li class="leaderboard-user">
+      {{ loop.index + offset }}.
+      {% if user.name is none or user.discriminator is none %}
+      {{ user.id }}
+      {% else %}
+      {{ user.name }}#{{ user.discriminator }}
+      {% endif %}
+      
+      {{ user.level }}
+    </li>
     {% endfor %}
-  </table>
+  </ol>
 </body>
 
 </html>
