@@ -20,6 +20,6 @@ twilight-model = { version = "0.14", default-features = false }
 axum = { version = "0.6", features = ["tokio", "macros", "http2", "query"], default-features = false }
 thiserror = "1"
 dotenvy = "0.15"
-mee6 = "0.0.3"
+mee6 = "0.1"
 tera = "1"
 serde_json = "1"
