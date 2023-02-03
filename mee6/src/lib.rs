@@ -11,11 +11,11 @@
 
 /// `LevelInfo` stores all of the data calculated when using `LevelInfo::new`(), so it can be cheaply
 /// gotten with getters.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct LevelInfo {
     xp: u64,
     level: u64,
-    percentage: u8,
+    percentage: f64,
 }
 
 impl LevelInfo {
@@ -25,23 +25,21 @@ impl LevelInfo {
     pub fn new(xp: u64) -> Self {
         // The operation used to calculate how many XP a given level is is (5 / 6) * level * (2 * level * level + 27 * level + 91), but it's optimized here.
         let level = {
-            let xp = xp as f64;
-            let mut testxp = 0.0;
+            let mut testxp = 0;
             let mut level = 0;
             while xp >= testxp {
                 level += 1;
-                testxp = Self::xp_to_level(f64::from(level));
+                testxp = xp_needed_for_level(level);
             }
             level - 1
         };
-        let last_level_xp_requirement = Self::xp_to_level(f64::from(level));
-        let next_level_xp_requirement = Self::xp_to_level(f64::from(level + 1));
+        let last_level_xp_requirement = xp_needed_for_level(level);
+        let next_level_xp_requirement = xp_needed_for_level(level + 1);
         Self {
             xp,
-            level: level as u64,
-            percentage: (((xp as f64 - last_level_xp_requirement)
-                / (next_level_xp_requirement - last_level_xp_requirement))
-                * 100.0) as u8,
+            level,
+            percentage: ((xp as f64 - last_level_xp_requirement as f64)
+                / (next_level_xp_requirement as f64 - last_level_xp_requirement as f64)),
         }
     }
     /// Get the xp that was input into this `LevelInfo`.
@@ -59,16 +57,18 @@ impl LevelInfo {
     /// Get the percentage of the way this `LevelInfo` is to gaining a level, from the last level.
     #[must_use]
     #[inline]
-    pub const fn percentage(&self) -> u8 {
+    pub const fn percentage(&self) -> f64 {
         self.percentage
     }
     // mul_add is not no-std
-    #[allow(clippy::suboptimal_flops)]
-    #[inline]
-    #[must_use]
-    pub fn xp_to_level(level: f64) -> f64 {
-        (5.0 / 6.0) * level * (2.0 * level * level + 27.0 * level + 91.0)
-    }
+}
+
+#[allow(clippy::suboptimal_flops)]
+#[inline]
+#[must_use]
+pub fn xp_needed_for_level(level: u64) -> u64 {
+    let level = level as f64;
+    ((5.0 / 6.0) * level * (2.0 * level * level + 27.0 * level + 91.0)) as u64
 }
 
 #[cfg(test)]
@@ -87,6 +87,6 @@ mod tests {
     #[test]
     fn percentage() {
         let inf = LevelInfo::new(3255);
-        assert_eq!(inf.percentage(), 43);
+        assert!((inf.percentage() - 0.43).abs() > f64::EPSILON);
     }
 }
