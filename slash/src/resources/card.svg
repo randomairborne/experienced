@@ -41,6 +41,7 @@
   <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="{{ colors.background }}" />
   <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_background }}" />
   <rect width="{{ width }}" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_foreground }}" />
+  <image id="image1" x="100" y="100" width="200" height="200" xlink:href="{{ icon_path }}"/>
   <text x="760" y="75" text-anchor="end">
     <tspan class="stat-name rank">RANK:</tspan>
     <tspan class="stat rank">&#160;#{{ rank }}&#160;&#160;</tspan>

@@ -1,7 +1,4 @@
-use twilight_model::{
-    http::interaction::InteractionResponse,
-    user::User,
-};
+use twilight_model::{http::interaction::InteractionResponse, user::User};
 use twilight_util::builder::{
     embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,

@@ -1,4 +1,4 @@
-use resvg::usvg_text_layout::TreeTextToPath;
+use resvg::{usvg::ImageKind, usvg_text_layout::TreeTextToPath};
 
 use crate::AppState;
 
@@ -21,7 +21,21 @@ pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, Render
 }
 
 fn do_render(state: &AppState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
-    let opt = resvg::usvg::Options::default();
+    let resolve_data =
+        Box::new(|_: &str, _: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| None);
+    let resolve_string_svg = state.svg.clone();
+    let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
+        Some(ImageKind::PNG(
+            resolve_string_svg.images.read().ok()?.get(href)?.clone(),
+        ))
+    });
+    let opt = resvg::usvg::Options {
+        image_href_resolver: resvg::usvg::ImageHrefResolver {
+            resolve_data,
+            resolve_string,
+        },
+        ..Default::default()
+    };
     let svg = state.svg.tera.render("svg", context)?;
     let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
     tree.convert_text(&state.svg.fonts, opt.keep_named_groups);

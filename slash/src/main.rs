@@ -1,5 +1,8 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
@@ -37,13 +40,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
     let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
-    fonts.load_font_data(include_bytes!("resources/Mojang.ttf").to_vec());
-    fonts.load_font_data(include_bytes!("resources/Roboto.ttf").to_vec());
-    fonts.load_font_data(include_bytes!("resources/JetBrainsMono.ttf").to_vec());
-    fonts.load_font_data(include_bytes!("resources/MontserratAlt1.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/fonts/Mojang.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/fonts/Roboto.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/fonts/JetBrainsMono.ttf").to_vec());
+    fonts.load_font_data(include_bytes!("resources/fonts/MontserratAlt1.ttf").to_vec());
     let mut tera = tera::Tera::default();
     tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
-    let svg = SvgState { fonts, tera };
+    let images = Arc::new(RwLock::new(HashMap::from([
+        (
+            "parrot.png".to_string(),
+            Arc::new(include_bytes!("resources/icons/parrot.png").to_vec()),
+        ),
+        (
+            "fox.png".to_string(),
+            Arc::new(include_bytes!("resources/icons/fox.png").to_vec()),
+        ),
+        (
+            "grassblock.png".to_string(),
+            Arc::new(include_bytes!("resources/icons/grassblock.png").to_vec()),
+        ),
+        (
+            "pickaxe.png".to_string(),
+            Arc::new(include_bytes!("resources/icons/pickaxe.png").to_vec()),
+        ),
+        (
+            "steveheart.png".to_string(),
+            Arc::new(include_bytes!("resources/icons/steveheart.png").to_vec()),
+        ),
+        (
+            "tree.png".to_string(),
+            Arc::new(include_bytes!("resources/icons/tree.png").to_vec()),
+        ),
+    ])));
+    let svg = SvgState {
+        fonts,
+        tera,
+        images,
+    };
     println!("Connecting to redis {redis_url}");
     let redis = redis::aio::ConnectionManager::new(
         redis::Client::open(redis_url).expect("Failed to connect to redis"),
@@ -108,4 +141,5 @@ pub struct AppState {
 pub struct SvgState {
     fonts: resvg::usvg_text_layout::fontdb::Database,
     tera: tera::Tera,
+    images: Arc<RwLock<HashMap<String, Arc<Vec<u8>>>>>,
 }
