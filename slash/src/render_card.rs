@@ -85,13 +85,7 @@ impl Default for SvgState {
         fonts.load_font_data(include_bytes!("resources/fonts/MontserratAlt1.ttf").to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
-        tera.register_tester("none", |val: Option<&tera::Value>, _args| {
-            Ok(if let Some(obj) = val {
-                obj.is_null()
-            } else {
-                true
-            })
-        });
+        tera.register_tester("none", none_tester);
         tera.add_raw_template("svg", include_str!("resources/card.svg"))
             .expect("Failed to build card.svg template!");
         let images = HashMap::from([
@@ -126,6 +120,11 @@ impl Default for SvgState {
             images: Arc::new(images),
         }
     }
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn none_tester(val: Option<&tera::Value>, _args: &[tera::Value]) -> Result<bool, tera::Error> {
+    Ok(val.map_or(true, serde_json::Value::is_null))
 }
 
 #[derive(Debug, thiserror::Error)]
