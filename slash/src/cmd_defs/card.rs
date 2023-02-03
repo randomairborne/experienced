@@ -44,7 +44,7 @@ pub struct CardCommandEdit {
     #[command(desc = "What font to use in the card")]
     pub font: Option<CardCommandEditFont>,
     #[command(desc = "What toy image to use in the card")]
-    pub toy_image: Option<CardCommandEditFont>,
+    pub toy_image: Option<CardCommandEditToy>,
 }
 
 #[derive(CommandOption, CreateOption)]
@@ -63,6 +63,8 @@ pub enum CardCommandEditFont {
     CommandOption, CreateOption, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, sqlx::Type,
 )]
 pub enum CardCommandEditToy {
+    #[option(name = "None", value = "None")]
+    None,
     #[option(name = "Parrot", value = "parrot.png")]
     Parrot,
     #[option(name = "Fox", value = "fox.png")]
