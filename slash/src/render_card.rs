@@ -28,13 +28,13 @@ pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, Render
 
 fn do_render(state: &SvgState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
     let svg = state.tera.render("svg", context)?;
-    let resolve_data =
-        Box::new(|mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options|
-        match mime {
+    let resolve_data = Box::new(
+        |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
             "image/png" => Some(ImageKind::PNG(data)),
             "image/jpg" | "image/jpeg" => Some(ImageKind::JPEG(data)),
-            _ => None
-        });
+            _ => None,
+        },
+    );
     let resolve_string_state = state.clone();
     let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
         Some(ImageKind::PNG(
