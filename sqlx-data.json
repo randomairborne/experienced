@@ -1,25 +1,5 @@
 {
   "db": "PostgreSQL",
-  "105860c01061a630e22a303f46ce0d7d984899c9aea1d27ef55db0cea7556b58": {
-    "describe": {
-      "columns": [
-        {
-          "name": "xp",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT xp FROM levels WHERE id = $1"
-  },
   "21852dc3f8e13e61f2b3ce8dbc0856dd4cebc69251b711f22f4723b97a816f14": {
     "describe": {
       "columns": [],
@@ -124,6 +104,27 @@
       }
     },
     "query": "DELETE FROM custom_card WHERE id = $1"
+  },
+  "50717d13d1ddd73cf2582580b26355dc60d784eda0486f5ca8bd7a340b9de910": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2"
   },
   "60b545369754f67f331a4a7c79b5e7dc0a995e0905cdf00f5b25e562c0ed5504": {
     "describe": {
@@ -264,26 +265,6 @@
       }
     },
     "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2"
-  },
-  "b47185f79be404e085469f263611c8a5237acd15ec48dfb1a9ce7f1c7f1d904b": {
-    "describe": {
-      "columns": [
-        {
-          "name": "count",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT COUNT(*) as count FROM levels WHERE xp > $1"
   },
   "b90f8bbc2891349d627b14d2d95e36982789002ce1271976867310861c51d9b4": {
     "describe": {
