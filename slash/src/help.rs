@@ -40,7 +40,7 @@ pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: &User) -> InteractionRes
             .build(),
         );
     if let Some(id) = guild_id {
-        let author = EmbedAuthorBuilder::new("Leaderboard")
+        let author = EmbedAuthorBuilder::new("Click to see leaderboard")
             .url(format!("https://xp.valk.sh/{id}"))
             .build();
         help_embed_builder = help_embed_builder.author(author);
