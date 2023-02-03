@@ -18,7 +18,7 @@ pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: &User) -> InteractionRes
     )
     .inline()
     .build();
-    let card_help = EmbedFieldBuilder::new("/card", "Usually, edit your card. Anything with an open-ended input needs a hex code. You can `/card fetch` anyone's card with its optional user argument.")
+    let card_help = EmbedFieldBuilder::new("/card", "Interact with cards. Anything with an open-ended input needs a hex code. You can `/card fetch` anyone's card with its optional user argument.")
         .inline()
         .build();
     let xp_help = EmbedFieldBuilder::new("/xp", "Commands to manage the bot in this server.")
