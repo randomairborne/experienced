@@ -179,7 +179,10 @@ async fn fetch_stats(
     for user_string in user_strings.into_iter().flatten() {
         let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
             Ok(v) => v,
-            Err(e) => {eprintln!("{e}"); continue;},
+            Err(e) => {
+                eprintln!("{e}");
+                continue;
+            }
         };
         if let Some(i) = ids_to_indices.get(&user.id.get()) {
             users[*i].discriminator = Some(user.discriminator().to_string());
@@ -212,6 +215,9 @@ impl IntoResponse for Error {
     }
 }
 
-pub fn none_tester(value: Option<&tera::Value>, _args: &[tera::Value]) -> Result<bool, tera::Error> {
+pub fn none_tester(
+    value: Option<&tera::Value>,
+    _args: &[tera::Value],
+) -> Result<bool, tera::Error> {
     Ok(value.map_or(true, |v| v.is_null()))
 }
