@@ -111,13 +111,15 @@ async fn handle_event(
         Event::ShardDisconnected(v) => Ok(eprintln!("Disconnected with {v:#?}")),
         Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
         Event::GuildCreate(guild_add) => {
-            cluster.command(
-                shard_id,
-                &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
-                    guild_add.id,
+            cluster
+                .command(
+                    shard_id,
+                    &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
+                        guild_add.id,
+                    )
+                    .query("", None),
                 )
-                .query("", None),
-            ).await?;
+                .await?;
             user_cache::set_chunk(&mut redis, guild_add.0.members).await
         }
         Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, member_add.0.user).await,

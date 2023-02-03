@@ -104,8 +104,8 @@ async fn main() {
         )
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState { db, tera, redis });
-    println!("Server listening on https://0.0.0.0:8080!");
-    axum::Server::bind(&([0, 0, 0, 0], 8080).into())
+    println!("Server listening on https://0.0.0.0:8000!");
+    axum::Server::bind(&([0, 0, 0, 0], 8000).into())
         .serve(route.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c().await.ok();
@@ -162,22 +162,25 @@ async fn fetch_stats(
             }
         })
         .collect();
-    let maybe_user_strings: Option<Vec<String>> = state
-        .redis
-        .get(users.iter().map(|v| v.id).collect::<Vec<u64>>())
-        .await?;
-    if let Some(user_strings) = maybe_user_strings {
-        for user_string in user_strings {
-            let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
-                Ok(v) => v,
-                Err(_e) => continue,
-            };
-            if let Some(i) = ids_to_indices.get(&user.id.get()) {
-                users[*i].discriminator = Some(format!("{}", user.discriminator()));
-                users[*i].name = Some(user.name);
-            }
+    let user_strings: Vec<Option<String>> = if !users.is_empty() {
+        state
+            .redis
+            .mget(users.iter().map(|v| v.id).collect::<Vec<u64>>())
+            .await?
+    } else {
+        Vec::new()
+    };
+    for user_string in user_strings.into_iter().flatten() {
+        let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
+            Ok(v) => v,
+            Err(_e) => continue,
+        };
+        if let Some(i) = ids_to_indices.get(&user.id.get()) {
+            users[*i].discriminator = Some(format!("{}", user.discriminator()));
+            users[*i].name = Some(user.name);
         }
     }
+
     let mut context = tera::Context::new();
     context.insert("users", &users);
     context.insert("offset", &offset);
