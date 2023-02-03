@@ -1,27 +1,60 @@
 <!DOCTYPE html>
-<html>
-    <head>
+<html lang="en">
 
-    </head>
-    <body>
-        <table>
-            <tr>
-                <th>User</th>
-                <th>Rank</th>
-                <th>Level</th>
-              </tr>
-              {% for user in users %}
-              <tr>
-                <td>{% if user.name is undefined or user.discriminator is undefined %}
-                  {{ user.name }}#{{ user.discriminator }}
-                  {% else %}
-                  {{ user.id }}
-                  {% endif %}
-                </td>
-                <td>{{ loop.index + offset }}</td>
-                <td>{{ user.level }}</td>
-              </tr>
-              {% endfor %}
-        </table>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Experienced Privacy Policy</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/main.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:title" content="Experienced discord bot">
+  <meta property="og:url" content="https://xp.valk.sh/privacy/">
+  <meta property="og:description" content="Experienced privacy policy.">
+  <meta property="og:determiner" content="the" />
+  <meta property="og:site_name" content="Experienced" />
+  <meta name="description" content="Experienced privacy policy.">
+</head>
+
+<body>
+  <nav class="navbar">
+    <a class="navbar" href="/">
+      <img src="/favicon.png" width="50" height="50" />
+      <div class="tiny-spacer"></div>
+      <div class="bot-name navbar-name">EXPERIENCED</div>
+    </a>
+    <div class="flex-grow"></div>
+    <a class="selfhost-button" href="/terms/">Terms</a>
+    <div class="tiny-spacer"></div>
+    <a class="selfhost-button" href="/privacy/">Privacy</a>
+    <div class="tiny-spacer"></div>
+    <a class="invite-button"
+      href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands">Add
+      to Discord</a>
+    <div class="tiny-spacer"></div>
+    <a class="selfhost-button"
+      href="https://github.com/randomairborne/experienced/blob/main/SELFHOSTING.md">Selfhost</a>
+  </nav>
+  </div>
+  <table>
+    <tr>
+      <th>User</th>
+      <th>Rank</th>
+      <th>Level</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+      <td>
+        {% if user.name is none or user.discriminator is none %}
+        {{ user.id }}
+        {% else %}
+        {{ user.name }}#{{ user.discriminator }}
+        {% endif %}
+      </td>
+      <td>{{ loop.index + offset }}</td>
+      <td>{{ user.level }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+
 </html>

@@ -57,7 +57,7 @@ async fn main() {
 
     let client = Arc::new(twilight_http::Client::new(token.clone()));
 
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS;
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
 
     let (cluster, mut events) = Cluster::builder(token.clone(), intents)
         .shard_scheme(scheme)
@@ -122,9 +122,9 @@ async fn handle_event(
                 .await?;
             user_cache::set_chunk(&mut redis, guild_add.0.members).await
         }
-        Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, member_add.0.user).await,
+        Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, &member_add.0.user).await,
         Event::MemberUpdate(member_update) => {
-            user_cache::set_user(&mut redis, member_update.user).await
+            user_cache::set_user(&mut redis, &member_update.user).await
         }
         Event::MemberChunk(member_chunk) => {
             user_cache::set_chunk(&mut redis, member_chunk.members).await
