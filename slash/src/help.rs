@@ -1,14 +1,13 @@
 use twilight_model::{
     http::interaction::InteractionResponse,
-    id::{marker::GuildMarker, Id},
     user::User,
 };
 use twilight_util::builder::{
-    embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
+    embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
 };
 
-pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: &User) -> InteractionResponse {
+pub fn help(invoker: &User) -> InteractionResponse {
     let help_help = EmbedFieldBuilder::new("/help", "This command! Takes no arguments.")
         .inline()
         .build();
@@ -24,8 +23,8 @@ pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: &User) -> InteractionRes
     let xp_help = EmbedFieldBuilder::new("/xp", "Commands to manage the bot in this server.")
         .inline()
         .build();
-    let mut help_embed_builder = EmbedBuilder::new()
-        .color(0x33_33_66)
+    let help_embed = EmbedBuilder::new()
+        .color(crate::THEME_COLOR)
         .title("Experienced Help")
         .field(help_help)
         .field(rank_help)
@@ -38,14 +37,8 @@ pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: &User) -> InteractionRes
                 invoker.discriminator()
             ))
             .build(),
-        );
-    if let Some(id) = guild_id {
-        let author = EmbedAuthorBuilder::new("Click to see leaderboard")
-            .url(format!("https://xp.valk.sh/{id}"))
-            .build();
-        help_embed_builder = help_embed_builder.author(author);
-    }
-    let help_embed = help_embed_builder.build();
+        )
+        .build();
     let data = InteractionResponseDataBuilder::new()
         .embeds([help_embed])
         .build();

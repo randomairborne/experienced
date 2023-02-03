@@ -6,6 +6,7 @@ use twilight_model::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
     },
+    id::{marker::GuildMarker, Id},
     user::User,
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
@@ -145,4 +146,19 @@ async fn generate_level_response(
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
         data: None,
     })
+}
+
+pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
+    let guild_link = format!("https://xp.valk.sh/{guild_id}");
+    let embed = EmbedBuilder::new()
+        .description(format!("[Click to view the leaderboard!]({guild_link})"))
+        .color(crate::THEME_COLOR)
+        .build();
+    let data = InteractionResponseDataBuilder::new()
+        .embeds([embed])
+        .build();
+    InteractionResponse {
+        data: Some(data),
+        kind: InteractionResponseType::ChannelMessageWithSource,
+    }
 }

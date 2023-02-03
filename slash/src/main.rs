@@ -20,6 +20,8 @@ mod render_card;
 #[macro_use]
 extern crate tracing;
 
+const THEME_COLOR: u32 = 0x33_33_66;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     dotenvy::dotenv().ok();

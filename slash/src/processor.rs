@@ -71,7 +71,7 @@ async fn process_slash_cmd(
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     match data.name.as_str() {
-        "help" => Ok(crate::help::help(guild_id, &invoker)),
+        "help" => Ok(crate::help::help(&invoker)),
         "rank" => {
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user
@@ -100,6 +100,9 @@ async fn process_slash_cmd(
             ),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
+        "leaderboard" => Ok(crate::levels::leaderboard(
+            guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        )),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -159,6 +162,8 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
+    #[error("Discord did not send a guild ID!")]
+    NoGuildId,
     #[error("Interaction parser encountered an error: {0}!")]
     Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Manager command encountered an error: {0}!")]
