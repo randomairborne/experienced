@@ -87,13 +87,8 @@ async fn generate_level_response(
         .fetch_one(&state.db)
         .await;
         let (font, icon) = non_color_customizations.map_or_else(
-            |_| ("Roboto".to_string(), "grassblock.png".to_string()),
-            |v| {
-                (
-                    v.font.unwrap_or_else(|| "Roboto".to_string()),
-                    v.toy_image.unwrap_or_else(|| "grassblock.png".to_string()),
-                )
-            },
+            |_| ("Roboto".to_string(), None),
+            |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
         );
         #[allow(clippy::cast_precision_loss)]
         match crate::render_card::render(

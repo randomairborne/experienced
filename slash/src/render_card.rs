@@ -18,7 +18,7 @@ pub struct Context {
     pub needed: u64,
     pub font: String,
     pub colors: crate::colors::Colors,
-    pub icon: String,
+    pub icon: Option<String>,
 }
 
 pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {
@@ -85,6 +85,13 @@ impl Default for SvgState {
         fonts.load_font_data(include_bytes!("resources/fonts/MontserratAlt1.ttf").to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
+        tera.register_tester("none", |val: Option<&tera::Value>, _args| {
+            Ok(if let Some(obj) = val {
+                obj.is_null()
+            } else {
+                true
+            })
+        });
         tera.add_raw_template("svg", include_str!("resources/card.svg"))
             .expect("Failed to build card.svg template!");
         let images = HashMap::from([
@@ -159,7 +166,7 @@ mod tests {
             needed: mee6::xp_needed_for_level(data.level() + 1),
             font: "Roboto".to_string(),
             colors: Colors::default(),
-            icon: "parrot.png".to_string(),
+            icon: Some("parrot.png".to_string()),
         };
         let output = do_render(&state, &tera::Context::from_serialize(context)?)?;
         std::fs::write("renderer_test.png", output).unwrap();
