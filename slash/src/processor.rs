@@ -76,7 +76,14 @@ async fn process_slash_cmd(
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user
                 .map_or_else(|| invoker.clone(), |v| v.resolved);
-            crate::levels::get_level(target, invoker, token, state).await
+            crate::levels::get_level(
+                guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+                target,
+                invoker,
+                token,
+                state,
+            )
+            .await
         }
         "xp" => Ok(InteractionResponse {
             data: Some(
@@ -123,7 +130,14 @@ async fn process_user_cmd(
         .users
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?;
-    crate::levels::get_level(user.clone(), invoker, token, state).await
+    crate::levels::get_level(
+        data.guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        user.clone(),
+        invoker,
+        token,
+        state,
+    )
+    .await
 }
 
 async fn process_msg_cmd(
@@ -143,7 +157,14 @@ async fn process_msg_cmd(
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?
         .author;
-    crate::levels::get_level(user.clone(), invoker, token, state).await
+    crate::levels::get_level(
+        data.guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        user.clone(),
+        invoker,
+        token,
+        state,
+    )
+    .await
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -12,22 +12,33 @@ use twilight_model::{
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 pub async fn get_level(
+    guild_id: Id<GuildMarker>,
     user: User,
     invoker: User,
     token: String,
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
+    #[allow(clippy::cast_possible_wrap)]
+    let guild_id = guild_id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
     #[allow(clippy::cast_possible_wrap)]
-    let xp = query!("SELECT xp FROM levels WHERE id = $1", user.id.get() as i64)
-        .fetch_optional(&state.db)
-        .await?
-        .map_or(0, |v| v.xp);
-    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > $1", xp)
-        .fetch_one(&state.db)
-        .await?
-        .count
-        .unwrap_or(0)
+    let xp = query!(
+        "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
+        user.id.get() as i64,
+        guild_id
+    )
+    .fetch_optional(&state.db)
+    .await?
+    .map_or(0, |v| v.xp);
+    let rank = query!(
+        "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
+        xp,
+        guild_id
+    )
+    .fetch_one(&state.db)
+    .await?
+    .count
+    .unwrap_or(0)
         + 1;
     #[allow(clippy::cast_sign_loss)]
     let level_info = mee6::LevelInfo::new(xp as u64);
