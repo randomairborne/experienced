@@ -43,6 +43,8 @@ pub struct CardCommandEdit {
     pub progress_background: Option<Color>,
     #[command(desc = "What font to use in the card")]
     pub font: Option<CardCommandEditFont>,
+    #[command(desc = "What toy image to use in the card")]
+    pub toy_image: Option<CardCommandEditFont>,
 }
 
 #[derive(CommandOption, CreateOption)]
@@ -55,4 +57,22 @@ pub enum CardCommandEditFont {
     JetBrainsMono,
     #[option(name = "Montserrat Alt1", value = "Montserrat-Alt1")]
     MontserratAlt1,
+}
+
+#[derive(
+    CommandOption, CreateOption, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, sqlx::Type,
+)]
+pub enum CardCommandEditToy {
+    #[option(name = "Parrot", value = "parrot.png")]
+    Parrot,
+    #[option(name = "Fox", value = "fox.png")]
+    Fox,
+    #[option(name = "Steve heart", value = "steveheart.png")]
+    SteveHeart,
+    #[option(name = "Grass block", value = "grassblock.png")]
+    GrassBlock,
+    #[option(name = "Diamond pickaxe", value = "pickaxe.png")]
+    Pickaxe,
+    #[option(name = "Tree", value = "tree.png")]
+    Tree,
 }

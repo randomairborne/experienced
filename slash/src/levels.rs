@@ -69,12 +69,21 @@ async fn generate_level_response(
     tokio::task::spawn(async move {
         let interaction_client = state.client.interaction(state.my_id);
         #[allow(clippy::cast_possible_wrap)]
-        let chosen_font = query!(
-            "SELECT font FROM custom_card WHERE id = $1",
+        let non_color_customizations = query!(
+            "SELECT font, toy_image FROM custom_card WHERE id = $1",
             user.id.get() as i64
         )
         .fetch_one(&state.db)
         .await;
+        let (font, icon) = non_color_customizations.map_or_else(
+            |_| ("Roboto".to_string(), "grassblock.png".to_string()),
+            |v| {
+                (
+                    v.font.unwrap_or_else(|| "Roboto".to_string()),
+                    v.toy_image.unwrap_or_else(|| "grassblock.png".to_string()),
+                )
+            },
+        );
         #[allow(clippy::cast_precision_loss)]
         match crate::render_card::render(
             state.clone(),
@@ -87,11 +96,8 @@ async fn generate_level_response(
                 current: level_info.xp(),
                 needed: mee6::xp_needed_for_level(level_info.level() + 1),
                 colors: crate::colors::Colors::for_user(&state.db, user.id).await,
-                font: chosen_font.map_or_else(
-                    |_| "Roboto".to_string(),
-                    |v| v.font.unwrap_or_else(|| "Roboto".to_string()),
-                ),
-                icon: "parrot.png".to_string(),
+                font,
+                icon,
             },
         )
         .await
