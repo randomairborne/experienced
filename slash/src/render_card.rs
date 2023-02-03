@@ -13,6 +13,7 @@ pub struct Context {
     pub needed: f64,
     pub font: String,
     pub colors: crate::colors::Colors,
+    pub icon: String,
 }
 
 pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {
@@ -21,6 +22,7 @@ pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, Render
 }
 
 fn do_render(state: &AppState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
+    let svg = state.svg.tera.render("svg", context)?;
     let resolve_data =
         Box::new(|_: &str, _: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| None);
     let resolve_string_svg = state.svg.clone();
@@ -36,7 +38,6 @@ fn do_render(state: &AppState, context: &tera::Context) -> Result<Vec<u8>, Rende
         },
         ..Default::default()
     };
-    let svg = state.svg.tera.render("svg", context)?;
     let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
     tree.convert_text(&state.svg.fonts, opt.keep_named_groups);
     let pixmap_size = tree.size.to_screen_size();

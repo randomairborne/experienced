@@ -92,6 +92,7 @@ async fn generate_level_response(
                     |_| "Roboto".to_string(),
                     |v| v.font.unwrap_or_else(|| "Roboto".to_string()),
                 ),
+                icon: "parrot.png".to_string(),
             },
         )
         .await
