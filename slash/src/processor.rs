@@ -71,7 +71,7 @@ async fn process_slash_cmd(
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     match data.name.as_str() {
-        "help" => Ok(crate::help::help(guild_id, invoker)),
+        "help" => Ok(crate::help::help(guild_id, &invoker)),
         "rank" => {
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user

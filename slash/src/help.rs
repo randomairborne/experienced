@@ -4,11 +4,11 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::{
-    embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder, ImageSource},
+    embed::{EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
 };
 
-pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: User) -> InteractionResponse {
+pub fn help(guild_id: Option<Id<GuildMarker>>, invoker: &User) -> InteractionResponse {
     let help_help = EmbedFieldBuilder::new("/help", "This command! Takes no arguments.")
         .inline()
         .build();
