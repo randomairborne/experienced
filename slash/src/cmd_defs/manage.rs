@@ -1,7 +1,10 @@
 use twilight_model::{
     channel::Attachment,
     guild::Role,
-    id::{marker::RoleMarker, Id},
+    id::{
+        marker::{RoleMarker, UserMarker},
+        Id,
+    },
 };
 
 use twilight_interactions::command::{CommandModel, CreateCommand};
@@ -50,13 +53,38 @@ pub struct XpCommandRewardsList;
     dm_permission = false
 )]
 pub enum XpCommandExperience {
-    // Note: Uncomment when implemented
-    // #[command(name = "add")]
-    // Add(XpCommandExperienceAdd),
-    // #[command(name = "remove")]
-    // Remove(XpCommandExperienceRemove),
+    #[command(name = "add")]
+    Add(XpCommandExperienceAdd),
+    #[command(name = "remove")]
+    Remove(XpCommandExperienceRemove),
     #[command(name = "import")]
     Import(XpCommandExperienceImport),
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "add",
+    desc = "Add experience points to a user",
+    dm_permission = false
+)]
+pub struct XpCommandExperienceAdd {
+    #[command(desc = "User to add experience to")]
+    pub user: Id<UserMarker>,
+    #[command(desc = "Amount of experience to add", min_value = 1)]
+    pub amount: i64,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "remove",
+    desc = "Remove experience points from a user",
+    dm_permission = false
+)]
+pub struct XpCommandExperienceRemove {
+    #[command(desc = "User to remove experience from")]
+    pub user: Id<UserMarker>,
+    #[command(desc = "Amount of experience to remove", min_value = 1)]
+    pub amount: i64,
 }
 
 #[derive(CommandModel, CreateCommand)]

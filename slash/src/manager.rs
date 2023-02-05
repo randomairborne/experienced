@@ -3,7 +3,10 @@ use std::fmt::Write;
 use twilight_model::{
     channel::message::MessageFlags,
     http::interaction::InteractionResponseData,
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
@@ -54,17 +57,50 @@ async fn process_experience(
     state: AppState,
 ) -> Result<String, Error> {
     match data {
-        XpCommandExperience::Import(import) => process_import(import, guild_id, state).await,
+        XpCommandExperience::Import(import) => import_level_data(import, guild_id, state).await,
+        XpCommandExperience::Add(add) => {
+            modify_user_xp(guild_id, add.user, add.amount, state).await
+        }
+        XpCommandExperience::Remove(rm) => {
+            modify_user_xp(guild_id, rm.user, -rm.amount, state).await
+        }
     }
 }
 
-async fn process_import(
+async fn modify_user_xp(
+    guild_id: Id<GuildMarker>,
+    user_id: Id<UserMarker>,
+    amount: i64,
+    state: AppState,
+) -> Result<String, Error> {
+    #[allow(clippy::cast_possible_wrap)]
+    let xp = query!(
+        "UPDATE levels SET xp = xp + $3 WHERE id = $1 AND guild = $2 RETURNING xp",
+        user_id.get() as i64,
+        guild_id.get() as i64,
+        amount
+    )
+    .fetch_one(&state.db)
+    .await?.xp;
+    #[allow(clippy::cast_sign_loss)]
+    let current_level = mee6::LevelInfo::new(xp as u64).level();
+    let action = if amount.is_positive() {
+        "Added"
+    } else {
+        "Removed"
+    };
+    let amount_abs = amount.abs();
+    Ok(format!("{action} {amount_abs} XP from <@!{user_id}>, leaving them with {xp} XP at level {current_level}"))
+}
+
+async fn import_level_data(
     data: XpCommandExperienceImport,
     guild_id: Id<GuildMarker>,
     mut state: AppState,
 ) -> Result<String, Error> {
+    let ratelimiting_key = format!("ratelimit-import-mee6-{}", guild_id.get());
     let time_remaining_option: Option<isize> = redis::cmd("TTL")
-        .arg(guild_id.get())
+        .arg(&ratelimiting_key)
         .query_async(&mut state.redis)
         .await?;
     let time_remaining = time_remaining_option.unwrap_or(0);
@@ -73,13 +109,6 @@ async fn process_import(
             "This guild is being ratelimited. Try again in {time_remaining} seconds."
         ));
     }
-    redis::cmd("SET")
-        .arg(guild_id.get())
-        .arg(3600)
-        .arg("EX")
-        .arg(3600)
-        .query_async(&mut state.redis)
-        .await?;
     let mee6_users: Vec<Mee6User> = state.http.get(data.levels.url).send().await?.json().await?;
     let user_count = mee6_users.len();
     let mut csv_writer = csv::Writer::from_writer(Vec::new());
@@ -100,6 +129,13 @@ async fn process_import(
         .await?;
     copier.send(csv).await?;
     copier.finish().await?;
+    redis::cmd("SET")
+        .arg(ratelimiting_key)
+        .arg(3600)
+        .arg("EX")
+        .arg(3600)
+        .query_async(&mut state.redis)
+        .await?;
     Ok(format!("Imported {user_count} rows of user leveling data!"))
 }
 
