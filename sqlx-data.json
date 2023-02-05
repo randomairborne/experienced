@@ -93,6 +93,28 @@
     },
     "query": "SELECT * FROM custom_card WHERE id = $1"
   },
+  "2f5c8a5e98cc21590c149f7b8ba03a8a5de5a6248004d8c1fc01c475b2711516": {
+    "describe": {
+      "columns": [
+        {
+          "name": "xp",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "UPDATE levels SET xp = xp + $3 WHERE id = $1 AND guild = $2 RETURNING xp"
+  },
   "49627aa02d870d3b2f19809a10f59c653f28e889469f489d9b3e4864c8bf3474": {
     "describe": {
       "columns": [],

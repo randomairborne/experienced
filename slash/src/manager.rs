@@ -81,7 +81,8 @@ async fn modify_user_xp(
         amount
     )
     .fetch_one(&state.db)
-    .await?.xp;
+    .await?
+    .xp;
     #[allow(clippy::cast_sign_loss)]
     let current_level = mee6::LevelInfo::new(xp as u64).level();
     let action = if amount.is_positive() {
