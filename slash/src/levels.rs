@@ -118,7 +118,7 @@ async fn generate_level_response(
                             user.discriminator(),
                             level_info.level(),
                             rank,
-                            level_info.percentage(),
+                            (level_info.percentage() * 100.0).round(),
                             level_info.level() + 1
                         )),
                         file: png,

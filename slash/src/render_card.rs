@@ -56,7 +56,7 @@ fn do_render(state: &SvgState, context: &tera::Context) -> Result<Vec<u8>, Rende
         .ok_or(RenderingError::PixmapCreation)?;
     resvg::render(
         &tree,
-        resvg::usvg::FitTo::Original,
+        resvg::usvg::FitTo::Zoom(4.0),
         resvg::tiny_skia::Transform::default(),
         pixmap.as_mut(),
     );
