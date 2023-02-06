@@ -9,9 +9,6 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       DATABASE_URL: "postgres://experienced:experienced@database/experienced"
       REDIS_URL: "redis://redis/"
-      TOTAL_SHARDS: 1
-      SHARDS_START: 0
-      SHARDS_END: 1
 
   slash:
     image: ghcr.io/randomairborne/experienced-slash:latest
