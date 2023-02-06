@@ -15,10 +15,10 @@ futures = "0.3"
 rand = "0.8"
 redis = { version = "0.22", features = ["aio", "tokio-comp", "connection-manager"] }
 dotenvy = "0.15"
-twilight-model = "0.14"
-twilight-http = "0.14"
+twilight-model = "0.15"
+twilight-http = "0.15"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-twilight-gateway = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
+twilight-gateway = { version = "0.15", features = ["rustls-native-roots", "twilight-http"], default-features = false }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }
 mee6 = "0.0.3"
 serde = { version = "1", features = ["derive"] }

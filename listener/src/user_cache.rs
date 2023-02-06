@@ -16,8 +16,8 @@ pub async fn set_chunk(
         .await?)
 }
 
-pub async fn set_user(redis: &mut redis::aio::ConnectionManager, user: User) -> Result<(), Error> {
+pub async fn set_user(redis: &mut redis::aio::ConnectionManager, user: &User) -> Result<(), Error> {
     Ok(redis
-        .set::<u64, String, ()>(user.id.get(), serde_json::to_string(&user)?)
+        .set::<u64, String, ()>(user.id.get(), serde_json::to_string(user)?)
         .await?)
 }
