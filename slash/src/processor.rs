@@ -71,12 +71,19 @@ async fn process_slash_cmd(
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     match data.name.as_str() {
-        "help" => Ok(crate::help::help()),
+        "help" => Ok(crate::help::help(&invoker)),
         "rank" => {
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user
                 .map_or_else(|| invoker.clone(), |v| v.resolved);
-            crate::levels::get_level(target, invoker, token, state).await
+            crate::levels::get_level(
+                guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+                target,
+                invoker,
+                token,
+                state,
+            )
+            .await
         }
         "xp" => Ok(InteractionResponse {
             data: Some(
@@ -100,6 +107,9 @@ async fn process_slash_cmd(
             ),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
+        "leaderboard" => Ok(crate::levels::leaderboard(
+            guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        )),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -120,7 +130,14 @@ async fn process_user_cmd(
         .users
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?;
-    crate::levels::get_level(user.clone(), invoker, token, state).await
+    crate::levels::get_level(
+        data.guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        user.clone(),
+        invoker,
+        token,
+        state,
+    )
+    .await
 }
 
 async fn process_msg_cmd(
@@ -140,7 +157,14 @@ async fn process_msg_cmd(
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?
         .author;
-    crate::levels::get_level(user.clone(), invoker, token, state).await
+    crate::levels::get_level(
+        data.guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        user.clone(),
+        invoker,
+        token,
+        state,
+    )
+    .await
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -159,6 +183,8 @@ pub enum CommandProcessorError {
     WrongInteractionData,
     #[error("Discord did not send any interaction data!")]
     NoInteractionData,
+    #[error("Discord did not send a guild ID!")]
+    NoGuildId,
     #[error("Interaction parser encountered an error: {0}!")]
     Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Manager command encountered an error: {0}!")]

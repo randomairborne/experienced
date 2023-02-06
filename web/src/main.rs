@@ -34,6 +34,7 @@ async fn main() {
     let mut tera = tera::Tera::default();
     tera.add_raw_template("leaderboard.html", include_str!("leaderboard.html"))
         .expect("Failed to add leaderboard");
+    tera.register_tester("none", none_tester);
     let tera = Arc::new(tera);
     let route = axum::Router::new()
         .route(
@@ -104,8 +105,8 @@ async fn main() {
         )
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState { db, tera, redis });
-    println!("Server listening on https://0.0.0.0:8080!");
-    axum::Server::bind(&([0, 0, 0, 0], 8080).into())
+    println!("Server listening on https://0.0.0.0:8000!");
+    axum::Server::bind(&([0, 0, 0, 0], 8000).into())
         .serve(route.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c().await.ok();
@@ -122,7 +123,7 @@ struct AppState {
     pub tera: Arc<tera::Tera>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Debug)]
 struct User {
     id: u64,
     level: u64,
@@ -162,25 +163,36 @@ async fn fetch_stats(
             }
         })
         .collect();
-    let maybe_user_strings: Option<Vec<String>> = state
-        .redis
-        .get(users.iter().map(|v| v.id).collect::<Vec<u64>>())
-        .await?;
-    if let Some(user_strings) = maybe_user_strings {
-        for user_string in user_strings {
-            let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
-                Ok(v) => v,
-                Err(_e) => continue,
-            };
-            if let Some(i) = ids_to_indices.get(&user.id.get()) {
-                users[*i].discriminator = Some(format!("{}", user.discriminator()));
-                users[*i].name = Some(user.name);
+    let user_strings: Vec<Option<String>> = if !users.is_empty() {
+        state
+            .redis
+            .mget(
+                users
+                    .iter()
+                    .map(|v| format!("cache-user-{}", v.id))
+                    .collect::<Vec<String>>(),
+            )
+            .await?
+    } else {
+        Vec::new()
+    };
+    for user_string in user_strings.into_iter().flatten() {
+        let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("{e}");
+                continue;
             }
+        };
+        if let Some(i) = ids_to_indices.get(&user.id.get()) {
+            users[*i].discriminator = Some(user.discriminator().to_string());
+            users[*i].name = Some(user.name);
         }
     }
     let mut context = tera::Context::new();
     context.insert("users", &users);
     context.insert("offset", &offset);
+    context.insert("guild", &offset);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
 }
@@ -201,4 +213,11 @@ impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         self.to_string().into_response()
     }
+}
+
+pub fn none_tester(
+    value: Option<&tera::Value>,
+    _args: &[tera::Value],
+) -> Result<bool, tera::Error> {
+    Ok(value.map_or(true, |v| v.is_null()))
 }

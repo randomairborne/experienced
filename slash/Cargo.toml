@@ -18,19 +18,23 @@ serde = { version = "1", features = ["derive"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], default-features = false }
 redis = { version = "0.22", features = ["aio", "tokio-comp", "connection-manager"] }
+twilight-http = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
+twilight-util = { version = "0.14", features = ["builder"] }
+twilight-model = "0.14"
+twilight-interactions = "0.14"
 tracing = "0.1"
 axum = "0.6"
 serde_json = "1"
 ed25519-dalek = "1"
 hex = "0.4"
 thiserror = "1"
-twilight-model = "0.14"
-twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-features = false }
-twilight-util = { version = "0.15", features = ["builder"] }
-twilight-interactions = "0.14"
 dotenvy = "0.15"
-mee6 = "0.0.3"
+mee6 = "0.1"
 resvg = "0.28"
 tera = "1"
 png = "0.17"
 csv = "1"
+
+[dev-dependencies]
+rand = "0.8"
+cargo_metadata = "0.15"

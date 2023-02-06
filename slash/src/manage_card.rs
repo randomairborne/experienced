@@ -33,6 +33,10 @@ async fn process_edit(
     state: AppState,
     user: &User,
 ) -> Result<String, Error> {
+    let toy_image = edit.toy_image.and_then(|v| match v {
+        crate::cmd_defs::card::CardCommandEditToy::None => None,
+        _ => Some(v.value()),
+    });
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO custom_card (
@@ -45,9 +49,10 @@ async fn process_edit(
             progress_foreground,
             progress_background,
             font,
+            toy_image,
             id
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
         ) ON CONFLICT (id) DO UPDATE SET
             important = COALESCE(excluded.important, custom_card.important),
             secondary = COALESCE(excluded.secondary, custom_card.secondary),
@@ -57,7 +62,8 @@ async fn process_edit(
             background = COALESCE(excluded.background, custom_card.background),
             progress_foreground = COALESCE(excluded.progress_foreground, custom_card.progress_foreground),
             progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),
-            font = COALESCE(excluded.font, custom_card.font)",
+            font = COALESCE(excluded.font, custom_card.font),
+            toy_image = COALESCE(excluded.toy_image, custom_card.toy_image)",
         edit.important.map(|v| v.to_string()),
         edit.secondary.map(|v| v.to_string()),
         edit.rank.map(|v| v.to_string()),
@@ -67,6 +73,7 @@ async fn process_edit(
         edit.progress_foreground.map(|v| v.to_string()),
         edit.progress_background.map(|v| v.to_string()),
         edit.font.map(|v| v.value()),
+        toy_image,
         user.id.get() as i64,
     )
     .execute(&state.db)

@@ -1,25 +1,5 @@
 {
   "db": "PostgreSQL",
-  "105860c01061a630e22a303f46ce0d7d984899c9aea1d27ef55db0cea7556b58": {
-    "describe": {
-      "columns": [
-        {
-          "name": "xp",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT xp FROM levels WHERE id = $1"
-  },
   "21852dc3f8e13e61f2b3ce8dbc0856dd4cebc69251b711f22f4723b97a816f14": {
     "describe": {
       "columns": [],
@@ -85,6 +65,11 @@
           "name": "font",
           "ordinal": 9,
           "type_info": "Varchar"
+        },
+        {
+          "name": "toy_image",
+          "ordinal": 10,
+          "type_info": "Text"
         }
       ],
       "nullable": [
@@ -97,6 +82,7 @@
         true,
         true,
         false,
+        true,
         true
       ],
       "parameters": {
@@ -106,6 +92,28 @@
       }
     },
     "query": "SELECT * FROM custom_card WHERE id = $1"
+  },
+  "2f5c8a5e98cc21590c149f7b8ba03a8a5de5a6248004d8c1fc01c475b2711516": {
+    "describe": {
+      "columns": [
+        {
+          "name": "xp",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "UPDATE levels SET xp = xp + $3 WHERE id = $1 AND guild = $2 RETURNING xp"
   },
   "49627aa02d870d3b2f19809a10f59c653f28e889469f489d9b3e4864c8bf3474": {
     "describe": {
@@ -119,26 +127,26 @@
     },
     "query": "DELETE FROM custom_card WHERE id = $1"
   },
-  "508e7048755072039d7be7640367a3f9e9f8eaf0f2c0c85f0ab33ce140b59461": {
+  "50717d13d1ddd73cf2582580b26355dc60d784eda0486f5ca8bd7a340b9de910": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
       "parameters": {
         "Left": [
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
-          "Varchar",
+          "Int8",
           "Int8"
         ]
       }
     },
-    "query": "INSERT INTO custom_card (\n            important,\n            secondary,\n            rank,\n            level,\n            border,\n            background,\n            progress_foreground,\n            progress_background,\n            font,\n            id\n        ) VALUES (\n            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10\n        ) ON CONFLICT (id) DO UPDATE SET\n            important = COALESCE(excluded.important, custom_card.important),\n            secondary = COALESCE(excluded.secondary, custom_card.secondary),\n            rank = COALESCE(excluded.rank, custom_card.rank),\n            level = COALESCE(excluded.level, custom_card.level),\n            border = COALESCE(excluded.border, custom_card.border),\n            background = COALESCE(excluded.background, custom_card.background),\n            progress_foreground = COALESCE(excluded.progress_foreground, custom_card.progress_foreground),\n            progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),\n            font = COALESCE(excluded.font, custom_card.font)"
+    "query": "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2"
   },
   "60b545369754f67f331a4a7c79b5e7dc0a995e0905cdf00f5b25e562c0ed5504": {
     "describe": {
@@ -221,6 +229,32 @@
     },
     "query": "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp=levels.xp+excluded.xp"
   },
+  "a207e4e2c25ccf33e647dda396a6838d074ee808bf915db2d20d9f30f4d3d939": {
+    "describe": {
+      "columns": [
+        {
+          "name": "font",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "toy_image",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT font, toy_image FROM custom_card WHERE id = $1"
+  },
   "abb479caad6d7da9f80363254cc5ec76a9af3e8cf593bf45bd775ce271df1b5a": {
     "describe": {
       "columns": [
@@ -253,26 +287,6 @@
       }
     },
     "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2"
-  },
-  "b47185f79be404e085469f263611c8a5237acd15ec48dfb1a9ce7f1c7f1d904b": {
-    "describe": {
-      "columns": [
-        {
-          "name": "count",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT COUNT(*) as count FROM levels WHERE xp > $1"
   },
   "b90f8bbc2891349d627b14d2d95e36982789002ce1271976867310861c51d9b4": {
     "describe": {
@@ -327,5 +341,27 @@
       }
     },
     "query": "SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1"
+  },
+  "d08cc8d4067594d92738d0d4723c7956e792bace4b0e68541c79e026cae75d48": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Varchar",
+          "Text",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO custom_card (\n            important,\n            secondary,\n            rank,\n            level,\n            border,\n            background,\n            progress_foreground,\n            progress_background,\n            font,\n            toy_image,\n            id\n        ) VALUES (\n            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11\n        ) ON CONFLICT (id) DO UPDATE SET\n            important = COALESCE(excluded.important, custom_card.important),\n            secondary = COALESCE(excluded.secondary, custom_card.secondary),\n            rank = COALESCE(excluded.rank, custom_card.rank),\n            level = COALESCE(excluded.level, custom_card.level),\n            border = COALESCE(excluded.border, custom_card.border),\n            background = COALESCE(excluded.background, custom_card.background),\n            progress_foreground = COALESCE(excluded.progress_foreground, custom_card.progress_foreground),\n            progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),\n            font = COALESCE(excluded.font, custom_card.font),\n            toy_image = COALESCE(excluded.toy_image, custom_card.toy_image)"
   }
 }

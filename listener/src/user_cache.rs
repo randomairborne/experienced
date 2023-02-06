@@ -7,17 +7,23 @@ pub async fn set_chunk(
     redis: &mut redis::aio::ConnectionManager,
     chunk: Vec<Member>,
 ) -> Result<(), Error> {
-    let mut user_pairs: Vec<(u64, String)> = Vec::with_capacity(chunk.len());
+    let mut user_pairs: Vec<(String, String)> = Vec::with_capacity(chunk.len());
     for member in chunk {
-        user_pairs.push((member.user.id.get(), serde_json::to_string(&member.user)?));
+        user_pairs.push((
+            format!("cache-user-{}", member.user.id.get()),
+            serde_json::to_string(&member.user)?,
+        ));
     }
     Ok(redis
-        .set_multiple::<u64, String, ()>(user_pairs.as_slice())
+        .set_multiple::<String, String, ()>(user_pairs.as_slice())
         .await?)
 }
 
 pub async fn set_user(redis: &mut redis::aio::ConnectionManager, user: &User) -> Result<(), Error> {
     Ok(redis
-        .set::<u64, String, ()>(user.id.get(), serde_json::to_string(user)?)
+        .set::<String, String, ()>(
+            format!("cache-user-{}", user.id.get()),
+            serde_json::to_string(user)?,
+        )
         .await?)
 }

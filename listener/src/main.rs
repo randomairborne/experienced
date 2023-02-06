@@ -40,8 +40,7 @@ async fn main() {
 
     let client = twilight_http::Client::new(token.clone());
 
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS;
-    let config = Config::new(token.clone(), intents);
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
 
     let mut shards: Vec<Shard> =
         twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
@@ -121,6 +120,6 @@ pub enum Error {
     Twilight(#[from] twilight_http::Error),
     #[error("JSON error: {0}")]
     SerdeJson(#[from] serde_json::Error),
-    #[error("ClusterCommand error: {0}")]
-    TwilightClusterCommand(#[from] twilight_gateway::error::SendError),
+    #[error("Send error: {0}")]
+    TwilightCommand(#[from] twilight_gateway::error::SendError),
 }

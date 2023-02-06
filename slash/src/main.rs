@@ -1,9 +1,4 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
-use std::sync::Arc;
-
-use sqlx::PgPool;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use twilight_model::id::{marker::ApplicationMarker, Id};
 
 mod cmd_defs;
 #[macro_use]
@@ -17,8 +12,16 @@ mod manager;
 mod processor;
 mod render_card;
 
+use render_card::SvgState;
+use sqlx::PgPool;
+use std::sync::Arc;
+use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+use twilight_model::id::{marker::ApplicationMarker, Id};
+
 #[macro_use]
 extern crate tracing;
+
+const THEME_COLOR: u32 = 0x33_33_66;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -29,19 +32,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .init();
     let token =
         std::env::var("DISCORD_TOKEN").expect("Expected environment variable DISCORD_TOKEN");
-    let pubkey =
-        std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY");
+    let pubkey = Arc::new(
+        std::env::var("DISCORD_PUBKEY").expect("Expected environment variable DISCORD_PUBKEY"),
+    );
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
-    let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
-    fonts.load_font_data(include_bytes!("resources/Mojang.ttf").to_vec());
-    fonts.load_font_data(include_bytes!("resources/Roboto.ttf").to_vec());
-    fonts.load_font_data(include_bytes!("resources/JetBrainsMono.ttf").to_vec());
-    fonts.load_font_data(include_bytes!("resources/MontserratAlt1.ttf").to_vec());
-    let mut tera = tera::Tera::default();
-    tera.add_raw_template("svg", include_str!("resources/card.svg"))?;
-    let svg = SvgState { fonts, tera };
     println!("Connecting to redis {redis_url}");
     let redis = redis::aio::ConnectionManager::new(
         redis::Client::open(redis_url).expect("Failed to connect to redis"),
@@ -56,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-    let client = twilight_http::Client::new(token);
+    let client = Arc::new(twilight_http::Client::new(token));
     println!("Creating commands...");
     let my_id = client
         .current_user_application()
@@ -68,12 +64,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .id;
     cmd_defs::register(client.interaction(my_id)).await;
     let http = reqwest::Client::new();
+    let svg = SvgState::new();
     let state = AppState {
         db,
-        pubkey: pubkey.into(),
-        client: client.into(),
+        pubkey,
+        client,
         my_id,
-        svg: svg.into(),
+        svg,
         http,
         redis,
     };
@@ -98,12 +95,7 @@ pub struct AppState {
     pub pubkey: Arc<String>,
     pub client: Arc<twilight_http::Client>,
     pub my_id: Id<ApplicationMarker>,
-    pub svg: Arc<SvgState>,
+    pub svg: SvgState,
     pub http: reqwest::Client,
     pub redis: redis::aio::ConnectionManager,
-}
-
-pub struct SvgState {
-    fonts: resvg::usvg_text_layout::fontdb::Database,
-    tera: tera::Tera,
 }

@@ -6,27 +6,39 @@ use twilight_model::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
     },
+    id::{marker::GuildMarker, Id},
     user::User,
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 pub async fn get_level(
+    guild_id: Id<GuildMarker>,
     user: User,
     invoker: User,
     token: String,
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
+    #[allow(clippy::cast_possible_wrap)]
+    let guild_id = guild_id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
     #[allow(clippy::cast_possible_wrap)]
-    let xp = query!("SELECT xp FROM levels WHERE id = $1", user.id.get() as i64)
-        .fetch_optional(&state.db)
-        .await?
-        .map_or(0, |v| v.xp);
-    let rank = query!("SELECT COUNT(*) as count FROM levels WHERE xp > $1", xp)
-        .fetch_one(&state.db)
-        .await?
-        .count
-        .unwrap_or(0)
+    let xp = query!(
+        "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
+        user.id.get() as i64,
+        guild_id
+    )
+    .fetch_optional(&state.db)
+    .await?
+    .map_or(0, |v| v.xp);
+    let rank = query!(
+        "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
+        xp,
+        guild_id
+    )
+    .fetch_one(&state.db)
+    .await?
+    .count
+    .unwrap_or(0)
         + 1;
     #[allow(clippy::cast_sign_loss)]
     let level_info = mee6::LevelInfo::new(xp as u64);
@@ -68,14 +80,17 @@ async fn generate_level_response(
     tokio::task::spawn(async move {
         let interaction_client = state.client.interaction(state.my_id);
         #[allow(clippy::cast_possible_wrap)]
-        let chosen_font = query!(
-            "SELECT font FROM custom_card WHERE id = $1",
+        let non_color_customizations = query!(
+            "SELECT font, toy_image FROM custom_card WHERE id = $1",
             user.id.get() as i64
         )
         .fetch_one(&state.db)
         .await;
+        let (font, icon) = non_color_customizations.map_or_else(
+            |_| ("Roboto".to_string(), None),
+            |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
+        );
         #[allow(clippy::cast_precision_loss)]
-        let next_level = (level_info.level() + 1) as f64;
         match crate::render_card::render(
             state.clone(),
             crate::render_card::Context {
@@ -83,14 +98,12 @@ async fn generate_level_response(
                 rank,
                 name: user.name.clone(),
                 discriminator: user.discriminator().to_string(),
-                width: 40 + (u64::from(level_info.percentage()) * 7),
+                width: get_percentage_bar_as_pixels(level_info.percentage()),
                 current: level_info.xp(),
-                needed: mee6::LevelInfo::xp_to_level(next_level),
+                needed: mee6::xp_needed_for_level(level_info.level() + 1),
                 colors: crate::colors::Colors::for_user(&state.db, user.id).await,
-                font: chosen_font.map_or_else(
-                    |_| "Roboto".to_string(),
-                    |v| v.font.unwrap_or_else(|| "Roboto".to_string()),
-                ),
+                font,
+                icon,
             },
         )
         .await
@@ -105,7 +118,7 @@ async fn generate_level_response(
                             user.discriminator(),
                             level_info.level(),
                             rank,
-                            level_info.percentage(),
+                            (level_info.percentage() * 100.0).round(),
                             level_info.level() + 1
                         )),
                         file: png,
@@ -145,4 +158,24 @@ async fn generate_level_response(
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
         data: None,
     })
+}
+
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+pub fn get_percentage_bar_as_pixels(percentage: f64) -> u64 {
+    percentage.mul_add(700.0, 40.0) as u64
+}
+
+pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
+    let guild_link = format!("https://xp.valk.sh/{guild_id}");
+    let embed = EmbedBuilder::new()
+        .description(format!("[Click to view the leaderboard!]({guild_link})"))
+        .color(crate::THEME_COLOR)
+        .build();
+    let data = InteractionResponseDataBuilder::new()
+        .embeds([embed])
+        .build();
+    InteractionResponse {
+        data: Some(data),
+        kind: InteractionResponseType::ChannelMessageWithSource,
+    }
 }

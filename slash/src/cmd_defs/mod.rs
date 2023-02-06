@@ -10,6 +10,10 @@ use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 pub struct HelpCommand;
 
 #[derive(CommandModel, CreateCommand)]
+#[command(name = "leaderboard", desc = "See the leaderboard for this server")]
+pub struct LeaderboardCommand;
+
+#[derive(CommandModel, CreateCommand)]
 #[command(
     name = "rank",
     desc = "Check someone's rank and level",
@@ -59,10 +63,11 @@ impl XpCommand {
 
 pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
     let cmds = vec![
+        XpCommand::create_command().into(),
         RankCommand::create_command().into(),
         CardCommand::create_command().into(),
         HelpCommand::create_command().into(),
-        XpCommand::create_command().into(),
+        LeaderboardCommand::create_command().into(),
         CommandBuilder::new("Get level", "", CommandType::User).build(),
         CommandBuilder::new("Get author level", "", CommandType::Message).build(),
     ];
