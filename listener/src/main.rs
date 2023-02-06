@@ -7,8 +7,7 @@ use futures::StreamExt;
 use sqlx::PgPool;
 use std::sync::Arc;
 use twilight_gateway::{
-    stream::{ShardEventStream, ShardRef},
-    CloseFrame, Config, Event, Intents, MessageSender, Shard,
+    stream::ShardEventStream, CloseFrame, Config, Event, Intents, MessageSender, Shard,
 };
 
 #[tokio::main]
@@ -39,22 +38,22 @@ async fn main() {
     .expect("Failed to create connection manager");
 
     let client = twilight_http::Client::new(token.clone());
-
     let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
+    let config = Config::new(token, intents);
 
     let mut shards: Vec<Shard> =
         twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
             .await
             .expect("Failed to create reccomended shard count")
             .collect();
-    let shard_closers: Vec<MessageSender> = shards.iter().map(|s| s.sender()).collect();
+    let shard_closers: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
     tokio::spawn(async move {
         tokio::signal::ctrl_c()
             .await
             .expect("Failed to listen to ctrl-c");
         println!("Shutting down...");
         for shard in shard_closers {
-            shard.close(CloseFrame::NORMAL);
+            shard.close(CloseFrame::NORMAL).ok();
         }
     });
     let mut events = ShardEventStream::new(shards.iter_mut());
@@ -66,6 +65,7 @@ async fn main() {
                 let redis = redis.clone();
                 let client = client.clone();
                 let db = db.clone();
+                let shard = shard.sender();
                 tokio::spawn(async move {
                     if let Err(e) = handle_event(event, db, redis, client, shard).await {
                         eprintln!("Handler error: {e}");
@@ -83,19 +83,17 @@ async fn handle_event(
     db: PgPool,
     mut redis: redis::aio::ConnectionManager,
     http: Arc<twilight_http::Client>,
-    mut shard: ShardRef<'_>,
+    shard: MessageSender,
 ) -> Result<(), Error> {
     match event {
         Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
         Event::GuildCreate(guild_add) => {
-            shard
-                .command(
-                    &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
-                        guild_add.id,
-                    )
-                    .query("", None),
+            shard.command(
+                &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
+                    guild_add.id,
                 )
-                .await?;
+                .query("", None),
+            )?;
             user_cache::set_chunk(&mut redis, guild_add.0.members).await
         }
         Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, &member_add.user).await,
