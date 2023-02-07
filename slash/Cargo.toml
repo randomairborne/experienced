@@ -20,7 +20,7 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], de
 redis = { version = "0.22", features = ["aio", "tokio-comp", "connection-manager"] }
 twilight-http = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
 twilight-util = { version = "0.14", features = ["builder"] }
-twilight-model = "0.14"
+twilight-model = "0.15"
 twilight-interactions = "0.14"
 tracing = "0.1"
 axum = "0.6"

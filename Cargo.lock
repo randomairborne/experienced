@@ -677,7 +677,7 @@ dependencies = [
  "tracing-subscriber",
  "twilight-http 0.14.4",
  "twilight-interactions",
- "twilight-model 0.14.5",
+ "twilight-model 0.15.0",
  "twilight-util",
 ]
 
