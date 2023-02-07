@@ -50,7 +50,7 @@ fn do_render(state: &SvgState, context: &tera::Context) -> Result<Vec<u8>, Rende
         ..Default::default()
     };
     let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
-    tree.convert_text(&state.fonts, opt.keep_named_groups);
+    tree.convert_text(&state.fonts);
     let pixmap_size = tree.size.to_screen_size();
     let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
         .ok_or(RenderingError::PixmapCreation)?;
