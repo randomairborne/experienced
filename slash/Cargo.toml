@@ -19,7 +19,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], default-features = false }
 redis = { version = "0.22", features = ["aio", "tokio-comp", "connection-manager"] }
 twilight-http = { version = "0.14", features = ["rustls-native-roots"], default-features = false }
-twilight-util = { version = "0.14", features = ["builder"] }
+twilight-util = { version = "0.15", features = ["builder"] }
 twilight-model = "0.14"
 twilight-interactions = "0.14"
 tracing = "0.1"
