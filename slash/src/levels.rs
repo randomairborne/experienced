@@ -86,7 +86,7 @@ async fn generate_level_response(
         )
         .fetch_one(&state.db)
         .await;
-        let (font, icon) = non_color_customizations.map_or_else(
+        let (font, toy) = non_color_customizations.map_or_else(
             |_| ("Roboto".to_string(), None),
             |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
         );
@@ -98,12 +98,12 @@ async fn generate_level_response(
                 rank,
                 name: user.name.clone(),
                 discriminator: user.discriminator().to_string(),
-                width: get_percentage_bar_as_pixels(level_info.percentage()),
+                percentage: get_percentage_bar_as_pixels(level_info.percentage()),
                 current: level_info.xp(),
                 needed: mee6::xp_needed_for_level(level_info.level() + 1),
                 colors: crate::colors::Colors::for_user(&state.db, user.id).await,
                 font,
-                icon,
+                toy,
             },
         )
         .await
@@ -160,11 +160,6 @@ async fn generate_level_response(
     })
 }
 
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-pub fn get_percentage_bar_as_pixels(percentage: f64) -> u64 {
-    percentage.mul_add(700.0, 40.0) as u64
-}
-
 pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
     let guild_link = format!("https://xp.valk.sh/{guild_id}");
     let embed = EmbedBuilder::new()
@@ -178,4 +173,9 @@ pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
         data: Some(data),
         kind: InteractionResponseType::ChannelMessageWithSource,
     }
+}
+
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+pub fn get_percentage_bar_as_pixels(percentage: f64) -> u64 {
+    percentage.mul_add(700.0, 40.0) as u64
 }

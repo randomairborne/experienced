@@ -13,12 +13,12 @@ pub struct Context {
     pub rank: i64,
     pub name: String,
     pub discriminator: String,
-    pub width: u64,
+    pub percentage: u64,
     pub current: u64,
     pub needed: u64,
     pub font: String,
     pub colors: crate::colors::Colors,
-    pub icon: Option<String>,
+    pub toy: Option<String>,
 }
 
 pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {
@@ -154,18 +154,18 @@ mod tests {
         let state = SvgState::new();
         let xp = rand::thread_rng().gen_range(0..=10_000_000);
         let data = mee6::LevelInfo::new(xp);
-        #[allow(clippy::cast_precision_loss)]
+        #[allow(clippy::cast_precision_loss, clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         let context = Context {
             level: data.level(),
             rank: rand::thread_rng().gen_range(0..=1_000_000),
             name: "Testy McTestington<span>".to_string(),
             discriminator: "0000".to_string(),
-            width: get_percentage_bar_as_pixels(data.percentage()),
+            percentage: get_percentage_bar_as_pixels(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
             font: "Roboto".to_string(),
             colors: Colors::default(),
-            icon: Some("parrot.png".to_string()),
+            toy: Some("parrot.png".to_string()),
         };
         let output = do_render(&state, &tera::Context::from_serialize(context)?)?;
         std::fs::write("renderer_test.png", output).unwrap();

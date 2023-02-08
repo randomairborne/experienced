@@ -38,12 +38,15 @@
     }
   </style>
   <rect width="800" height="200" fill="{{ colors.border }}" />
+  {% if not pfp is none %}
+      <image id="pfp" x="{{ percentage }}" y="138" width="24" height="24" href="{{ pfp }}" />
+  {% endif %}
   <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="{{ colors.background }}" />
   <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_background }}" />
-  {% if not icon is none %}
-    <rect width="{{ width }}" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_foreground }}" />
+  <rect width="{{ percentage }}" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_foreground }}" />
+  {% if not toy is none %}
+  <image id="toy" x="{{ percentage }}" y="138" width="24" height="24" href="{{ toy }}" />
   {% endif %}
-  <image id="toy" x="{{ width }}" y="138" width="24" height="24" href="{{ icon }}" />
   <text x="760" y="75" text-anchor="end">
     <tspan class="stat-name rank">RANK:</tspan>
     <tspan class="stat rank">&#160;#{{ rank }}&#160;&#160;</tspan>
