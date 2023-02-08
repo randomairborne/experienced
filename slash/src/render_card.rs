@@ -154,7 +154,11 @@ mod tests {
         let state = SvgState::new();
         let xp = rand::thread_rng().gen_range(0..=10_000_000);
         let data = mee6::LevelInfo::new(xp);
-        #[allow(clippy::cast_precision_loss, clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation
+        )]
         let context = Context {
             level: data.level(),
             rank: rand::thread_rng().gen_range(0..=1_000_000),
