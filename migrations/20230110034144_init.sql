@@ -1,5 +1,4 @@
 -- Add migration script here
-
 CREATE TABLE levels (
     id BIGINT NOT NULL,
     xp BIGINT NOT NULL,
@@ -7,15 +6,8 @@ CREATE TABLE levels (
     PRIMARY KEY (id, guild)
 );
 
-CREATE TABLE custom_colors (
-    important VARCHAR(7),
-    secondary VARCHAR(7),
-    rank VARCHAR(7),
-    level VARCHAR(7),
-    border VARCHAR(7),
-    background VARCHAR(7),
-    progress_foreground VARCHAR(7),
-    progress_background VARCHAR(7),
+CREATE TABLE card_toy (
+    toy VARCHAR(64) NOT NULL,
     id BIGINT PRIMARY KEY
 );
 

@@ -104,7 +104,6 @@ checksum = "4e246206a63c9830e118d12c894f56a82033da1a2361f5544deeee3df85c99d9"
 dependencies = [
  "async-trait",
  "axum-core",
- "axum-macros",
  "bitflags",
  "bytes",
  "futures-util",
@@ -145,18 +144,6 @@ dependencies = [
  "rustversion",
  "tower-layer",
  "tower-service",
-]
-
-[[package]]
-name = "axum-macros"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fbf955307ff8addb48d2399393c9e2740dd491537ec562b66ab364fc4a38841"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -638,7 +625,7 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "futures",
- "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mee6",
  "rand 0.8.5",
  "redis",
  "serde",
@@ -661,7 +648,7 @@ dependencies = [
  "dotenvy",
  "ed25519-dalek",
  "hex",
- "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mee6",
  "png",
  "rand 0.8.5",
  "redis",
@@ -679,25 +666,6 @@ dependencies = [
  "twilight-interactions",
  "twilight-model",
  "twilight-util",
-]
-
-[[package]]
-name = "experienced-web"
-version = "0.1.0"
-dependencies = [
- "axum",
- "dotenvy",
- "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "redis",
- "serde",
- "serde_json",
- "sqlx",
- "tera",
- "thiserror",
- "tokio",
- "tracing-subscriber",
- "twilight-http",
- "twilight-model",
 ]
 
 [[package]]
@@ -1280,10 +1248,6 @@ checksum = "6365506850d44bff6e2fbcb5176cf63650e48bd45ef2fe2665ae1570e0f4b9ca"
 dependencies = [
  "digest 0.10.6",
 ]
-
-[[package]]
-name = "mee6"
-version = "0.1.0"
 
 [[package]]
 name = "mee6"

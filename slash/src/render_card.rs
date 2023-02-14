@@ -16,8 +16,6 @@ pub struct Context {
     pub percentage: u64,
     pub current: u64,
     pub needed: u64,
-    pub font: String,
-    pub colors: crate::colors::Colors,
     pub toy: Option<String>,
 }
 
@@ -80,9 +78,6 @@ impl Default for SvgState {
     fn default() -> Self {
         let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
         fonts.load_font_data(include_bytes!("resources/fonts/Mojang.ttf").to_vec());
-        fonts.load_font_data(include_bytes!("resources/fonts/Roboto.ttf").to_vec());
-        fonts.load_font_data(include_bytes!("resources/fonts/JetBrainsMono.ttf").to_vec());
-        fonts.load_font_data(include_bytes!("resources/fonts/MontserratAlt1.ttf").to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
         tera.register_tester("none", none_tester);
@@ -145,7 +140,7 @@ pub enum RenderingError {
 mod tests {
     use rand::Rng;
 
-    use crate::{colors::Colors, levels::get_percentage_bar_as_pixels};
+    use crate::levels::get_percentage_bar_as_pixels;
 
     use super::*;
 
@@ -167,8 +162,6 @@ mod tests {
             percentage: get_percentage_bar_as_pixels(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
-            font: "Roboto".to_string(),
-            colors: Colors::default(),
             toy: Some("parrot.png".to_string()),
         };
         let output = do_render(&state, &tera::Context::from_serialize(context)?)?;
