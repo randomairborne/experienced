@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use twilight_interactions::command::{CreateOption, CommandOption};
+use twilight_interactions::command::{CommandOption, CreateOption};
 use twilight_model::{
     channel::message::{Embed, MessageFlags},
     http::interaction::{InteractionResponse, InteractionResponseType},
