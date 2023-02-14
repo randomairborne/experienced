@@ -1,7 +1,6 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 mod message;
-mod user_cache;
 
 use futures::StreamExt;
 use sqlx::PgPool;
@@ -30,15 +29,13 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-
-    let redis = redis::aio::ConnectionManager::new(
-        redis::Client::open(redis_url).expect("Failed to connect to redis"),
-    )
-    .await
-    .expect("Failed to create connection manager");
+    let redis_cfg = deadpool_redis::Config::from_url(redis_url);
+    let redis = redis_cfg
+        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
+        .expect("Failed to connect to redis");
 
     let client = twilight_http::Client::new(token.clone());
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
+    let intents = Intents::GUILD_MESSAGES;
     let config = Config::new(token, intents);
 
     let mut shards: Vec<Shard> =
@@ -59,15 +56,20 @@ async fn main() {
     let mut events = ShardEventStream::new(shards.iter_mut());
     println!("Connecting to discord");
     let client = Arc::new(client);
-    while let Some((shard, event_result)) = events.next().await {
+    while let Some((_shard, event_result)) = events.next().await {
         match event_result {
             Ok(event) => {
-                let redis = redis.clone();
+                let redis = match redis.get().await {
+                    Ok(v) => v,
+                    Err(e) => {
+                        eprintln!("ERROR: Fatal redis error: {e}");
+                        return;
+                    }
+                };
                 let client = client.clone();
                 let db = db.clone();
-                let shard = shard.sender();
                 tokio::spawn(async move {
-                    if let Err(e) = handle_event(event, db, redis, client, shard).await {
+                    if let Err(e) = handle_event(event, db, redis, client).await {
                         eprintln!("Handler error: {e}");
                     }
                 });
@@ -81,29 +83,11 @@ async fn main() {
 async fn handle_event(
     event: Event,
     db: PgPool,
-    mut redis: redis::aio::ConnectionManager,
+    redis: deadpool_redis::Connection,
     http: Arc<twilight_http::Client>,
-    shard: MessageSender,
 ) -> Result<(), Error> {
     match event {
         Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
-        Event::GuildCreate(guild_add) => {
-            shard.command(
-                &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
-                    guild_add.id,
-                )
-                .query("", None),
-            )?;
-            user_cache::set_chunk(&mut redis, guild_add.0.members).await
-        }
-        Event::MemberAdd(member_add) => user_cache::set_user(&mut redis, &member_add.user).await,
-        Event::MemberUpdate(member_update) => {
-            user_cache::set_user(&mut redis, &member_update.user).await
-        }
-        Event::MemberChunk(member_chunk) => {
-            user_cache::set_chunk(&mut redis, member_chunk.members).await
-        }
-        Event::ThreadCreate(thread) => http.join_thread(thread.id).await.map(|_| Ok(()))?,
         _ => Ok(()),
     }
 }

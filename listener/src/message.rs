@@ -7,7 +7,7 @@ use twilight_model::{gateway::payload::incoming::MessageCreate, id::Id};
 pub async fn save(
     msg: MessageCreate,
     db: PgPool,
-    mut redis: redis::aio::ConnectionManager,
+    mut redis: deadpool_redis::Connection,
     http: Arc<twilight_http::Client>,
 ) -> Result<(), crate::Error> {
     if let Some(guild_id) = msg.guild_id {
