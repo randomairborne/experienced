@@ -127,10 +127,18 @@
     },
     "query": "SELECT toy FROM card_toy WHERE id = $1"
   },
-  "952f0d55501faf8037d715df8540bf9f1fb5829590a0c58f0a5bd7fd4776fc86": {
+  "b8ec61035d3276a70083b5492c6437b756d522f5149edc1dbef3d905819b152f": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "xp",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
       "parameters": {
         "Left": [
           "Int8",
@@ -139,7 +147,7 @@
         ]
       }
     },
-    "query": "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp=levels.xp+excluded.xp"
+    "query": "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp=levels.xp+excluded.xp RETURNING xp"
   },
   "ccf6e9fda28aa97c752a64376182184c244dc7b500009e5d2448c10e69c20448": {
     "describe": {
