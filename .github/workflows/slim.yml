@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - slim
   workflow_dispatch:
 
 env:
@@ -18,11 +18,6 @@ jobs:
     steps:
       - name: Check out code into the proper directory
         uses: actions/checkout@v3
-
-      - name: Install cargo
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-unknown-linux-musl
 
       - name: Cache rust
         uses: Swatinem/rust-cache@v2
@@ -40,7 +35,6 @@ jobs:
           path: |
             target/x86_64-unknown-linux-musl/release/experienced-slash
             target/x86_64-unknown-linux-musl/release/experienced-listener
-            target/x86_64-unknown-linux-musl/release/experienced-web
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,7 +42,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        side: [listener, slash, web]
+        side: [slash, web]
     steps:
       - name: Correct env
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
@@ -73,18 +67,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build container
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           file: ${{ matrix.side }}/Dockerfile
           context: .
           push: true
-          tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
+          tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:slim
           platforms: linux/amd64
-
-      - name: Set up flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - run: flyctl deploy --detach
-        working-directory: ./${{ matrix.side }}/
-        env:
-          FLY_ACCESS_TOKEN: ${{ secrets.FLY_ACCESS_TOKEN }}

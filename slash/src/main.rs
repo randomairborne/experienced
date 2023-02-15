@@ -1,16 +1,12 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 mod cmd_defs;
-#[macro_use]
-mod colors;
 mod discord_sig_validation;
 mod handler;
-mod help;
 mod levels;
-mod manage_card;
-mod manager;
 mod processor;
 mod render_card;
+mod toy;
 
 use render_card::SvgState;
 use sqlx::PgPool;
@@ -20,6 +16,8 @@ use twilight_model::id::{marker::ApplicationMarker, Id};
 
 #[macro_use]
 extern crate tracing;
+#[macro_use]
+extern crate sqlx;
 
 const THEME_COLOR: u32 = 0x33_33_66;
 
