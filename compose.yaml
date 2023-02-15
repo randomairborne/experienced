@@ -1,0 +1,46 @@
+version: "3.9"
+services:
+  listener:
+    image: ghcr.io/randomairborne/experienced-listener:latest
+    networks:
+      - database
+      - redis
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DATABASE_URL: "postgres://experienced:experienced@database/experienced"
+      REDIS_URL: "redis://redis/"
+
+  slash:
+    image: ghcr.io/randomairborne/experienced-slash:latest
+    ports:
+      - "5389:8080"
+    networks:
+      - database
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_PUBKEY: ${DISCORD_PUBKEY}
+      DATABASE_URL: "postgres://experienced:experienced@database/experienced"
+
+  database:
+    image: postgres:alpine
+    volumes:
+        - data:/var/lib/mysql/
+    networks:
+      - database
+    environment:
+      POSTGRES_DB: experienced
+      POSTGRES_USER: experienced
+      POSTGRES_PASSWORD: experienced
+
+  redis:
+    image: redis:latest
+    restart: always
+    networks:
+      - redis
+
+networks:
+  database: {}
+  redis: {}
+
+volumes:
+  data: {}

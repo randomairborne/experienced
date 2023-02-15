@@ -70,19 +70,46 @@ async fn process_slash_cmd(
     invoker: User,
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
-    let guild_id = guild_id.ok_or(CommandProcessorError::NoGuildId)?;
     match data.name.as_str() {
+        "help" => Ok(crate::help::help(&invoker)),
         "rank" => {
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user
                 .map_or_else(|| invoker.clone(), |v| v.resolved);
-            crate::levels::get_level(guild_id, target, invoker, token, state).await
+            crate::levels::get_level(
+                guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+                target,
+                invoker,
+                token,
+                state,
+            )
+            .await
         }
-        "leaderboard" => crate::levels::leaderboard(guild_id, state).await,
-        "toy" => {
-            let selected = crate::cmd_defs::ToyCommand::from_interaction(data.into())?.toy_image;
-            crate::toy::modify(selected, guild_id, invoker, state).await
-        }
+        "xp" => Ok(InteractionResponse {
+            data: Some(
+                crate::manager::process_xp(
+                    crate::cmd_defs::XpCommand::from_interaction(data.into())?,
+                    guild_id,
+                    state,
+                )
+                .await?,
+            ),
+            kind: InteractionResponseType::ChannelMessageWithSource,
+        }),
+        "card" => Ok(InteractionResponse {
+            data: Some(
+                crate::manage_card::process_colors(
+                    crate::cmd_defs::CardCommand::from_interaction(data.into())?,
+                    invoker,
+                    state,
+                )
+                .await?,
+            ),
+            kind: InteractionResponseType::ChannelMessageWithSource,
+        }),
+        "leaderboard" => Ok(crate::levels::leaderboard(
+            guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        )),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -160,6 +187,8 @@ pub enum CommandProcessorError {
     NoGuildId,
     #[error("Interaction parser encountered an error: {0}!")]
     Parse(#[from] twilight_interactions::error::ParseError),
+    #[error("Manager command encountered an error: {0}!")]
+    Manager(#[from] crate::manager::Error),
     #[error("SVG renderer encountered an error: {0}!")]
     ImageGenerator(#[from] crate::render_card::RenderingError),
     #[error("SQLx encountered an error: {0}")]

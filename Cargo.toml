@@ -2,4 +2,6 @@
 members = [
     "slash",
     "listener",
+    "web",
+    "mee6",
 ]

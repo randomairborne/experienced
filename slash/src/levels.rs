@@ -1,10 +1,7 @@
 use crate::{processor::CommandProcessorError, AppState};
 use sqlx::query;
 use twilight_model::{
-    channel::message::{
-        component::{Button, ButtonStyle},
-        Component, MessageFlags, ReactionType,
-    },
+    channel::message::MessageFlags,
     http::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
@@ -83,13 +80,16 @@ async fn generate_level_response(
     tokio::task::spawn(async move {
         let interaction_client = state.client.interaction(state.my_id);
         #[allow(clippy::cast_possible_wrap)]
-        let toy = query!(
-            "SELECT toy FROM card_toy WHERE id = $1",
+        let non_color_customizations = query!(
+            "SELECT font, toy_image FROM custom_card WHERE id = $1",
             user.id.get() as i64
         )
-        .fetch_optional(&state.db)
-        .await
-        .map_or(None, |v| v.map(|r| r.toy));
+        .fetch_one(&state.db)
+        .await;
+        let (font, toy) = non_color_customizations.map_or_else(
+            |_| ("Roboto".to_string(), None),
+            |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
+        );
         #[allow(clippy::cast_precision_loss)]
         match crate::render_card::render(
             state.clone(),
@@ -101,6 +101,8 @@ async fn generate_level_response(
                 percentage: get_percentage_bar_as_pixels(level_info.percentage()),
                 current: level_info.xp(),
                 needed: mee6::xp_needed_for_level(level_info.level() + 1),
+                colors: crate::colors::Colors::for_user(&state.db, user.id).await,
+                font,
                 toy,
             },
         )
@@ -158,54 +160,19 @@ async fn generate_level_response(
     })
 }
 
-pub async fn leaderboard(
-    guild_id: Id<GuildMarker>,
-    state: AppState,
-) -> Result<InteractionResponse, CommandProcessorError> {
-    #[allow(clippy::cast_possible_wrap)]
-    let users = query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp LIMIT 10",
-        guild_id.get() as i64
-    )
-    .fetch_all(&state.db)
-    .await?;
-    let mut description = String::with_capacity(users.len() * 128);
-    #[allow(clippy::cast_sign_loss)]
-    for user in users {
-        description += &format!("<@{}>\n", user.id as u64);
-    }
+pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
+    let guild_link = format!("https://xp.valk.sh/{guild_id}");
     let embed = EmbedBuilder::new()
-        .description(description)
+        .description(format!("[Click to view the leaderboard!]({guild_link})"))
         .color(crate::THEME_COLOR)
         .build();
-    let back_button = Component::Button(Button {
-        custom_id: Some("back_button".to_string()),
-        disabled: true,
-        emoji: Some(ReactionType::Unicode {
-            name: "arrow_backward".to_string(),
-        }),
-        label: Some("Previous".to_string()),
-        style: ButtonStyle::Primary,
-        url: None,
-    });
-    let forward_button = Component::Button(Button {
-        custom_id: Some("forward_button".to_string()),
-        disabled: true,
-        emoji: Some(ReactionType::Unicode {
-            name: "arrow_forward".to_string(),
-        }),
-        label: Some("Next".to_string()),
-        style: ButtonStyle::Primary,
-        url: None,
-    });
     let data = InteractionResponseDataBuilder::new()
         .embeds([embed])
-        .components([back_button, forward_button])
         .build();
-    Ok(InteractionResponse {
+    InteractionResponse {
         data: Some(data),
         kind: InteractionResponseType::ChannelMessageWithSource,
-    })
+    }
 }
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
