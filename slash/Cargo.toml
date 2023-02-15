@@ -33,6 +33,8 @@ mee6 = "0.1"
 resvg = "0.29"
 tera = "1"
 png = "0.17"
+csv = "1.2"
+
 
 [dev-dependencies]
 rand = "0.8"
