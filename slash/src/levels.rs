@@ -88,7 +88,9 @@ async fn generate_level_response(
         let embeds = &[embed];
         match interaction_client.create_followup(&token).embeds(embeds) {
             Ok(awaitable) => {
-                awaitable.await;
+                if let Err(e) = awaitable.await {
+                    warn!("{e:#?}");
+                };
             }
             Err(e) => {
                 warn!("{e:#?}");
@@ -155,9 +157,10 @@ async fn add_card(
         id: 0,
     };
     interaction_client
-        .create_followup(&token)
+        .create_followup(token)
         .embeds(&[embed])?
-        .attachments(&[card])?;
+        .attachments(&[card])?
+        .await?;
     Ok(())
 }
 

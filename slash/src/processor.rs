@@ -189,6 +189,8 @@ pub enum CommandProcessorError {
     Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Manager command encountered an error: {0}!")]
     Manager(#[from] crate::manager::Error),
+    #[error("HTTP error: {0}!")]
+    Http(#[from] twilight_http::Error),
     #[error("Invalid constructed message: {0}!")]
     Validate(#[from] twilight_validate::message::MessageValidationError),
     #[error("Invalid message attachment: {0}!")]
