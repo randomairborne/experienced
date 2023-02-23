@@ -1,7 +1,7 @@
 use crate::{processor::CommandProcessorError, AppState};
 use sqlx::query;
 use twilight_model::{
-    channel::message::{AllowedMentions, MessageFlags},
+    channel::message::MessageFlags,
     http::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
