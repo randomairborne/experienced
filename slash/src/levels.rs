@@ -9,7 +9,10 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::{
+    embed::{EmbedBuilder, ImageSource},
+    InteractionResponseDataBuilder,
+};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -109,8 +112,12 @@ async fn generate_level_response(
         .await
         {
             Ok(png) => {
+                let i_embed = EmbedBuilder::new()
+                    .image(ImageSource::attachment("card.png")?)
+                    .build();
                 match interaction_client
                     .create_followup(&token)
+                    .embeds(&[i_embed])?
                     .attachments(&[Attachment {
                         description: Some(format!(
                             "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
