@@ -698,6 +698,7 @@ dependencies = [
  "twilight-interactions",
  "twilight-model",
  "twilight-util",
+ "twilight-validate",
 ]
 
 [[package]]

@@ -189,6 +189,12 @@ pub enum CommandProcessorError {
     Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Manager command encountered an error: {0}!")]
     Manager(#[from] crate::manager::Error),
+    #[error("Invalid constructed message: {0}!")]
+    Validate(#[from] twilight_validate::message::MessageValidationError),
+    #[error("Invalid message attachment: {0}!")]
+    ImageSourceAttachment(
+        #[from] twilight_util::builder::embed::image_source::ImageSourceAttachmentError,
+    ),
     #[error("SVG renderer encountered an error: {0}!")]
     ImageGenerator(#[from] crate::render_card::RenderingError),
     #[error("SQLx encountered an error: {0}")]

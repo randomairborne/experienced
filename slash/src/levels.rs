@@ -1,7 +1,7 @@
 use crate::{processor::CommandProcessorError, AppState};
 use sqlx::query;
 use twilight_model::{
-    channel::message::MessageFlags,
+    channel::message::{AllowedMentions, MessageFlags},
     http::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
@@ -9,7 +9,10 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::{
+    embed::{EmbedBuilder, ImageSource},
+    InteractionResponseDataBuilder,
+};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -78,86 +81,84 @@ async fn generate_level_response(
     rank: i64,
 ) -> Result<InteractionResponse, CommandProcessorError> {
     tokio::task::spawn(async move {
+        let Err(err) = add_card(state.clone(), &token, user, level_info, rank).await else { return; };
+        warn!("{err:#?}");
         let interaction_client = state.client.interaction(state.my_id);
-        #[allow(clippy::cast_possible_wrap)]
-        let non_color_customizations = query!(
-            "SELECT font, toy_image FROM custom_card WHERE id = $1",
-            user.id.get() as i64
-        )
-        .fetch_one(&state.db)
-        .await;
-        let (font, toy) = non_color_customizations.map_or_else(
-            |_| ("Roboto".to_string(), None),
-            |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
-        );
-        #[allow(clippy::cast_precision_loss)]
-        match crate::render_card::render(
-            state.clone(),
-            crate::render_card::Context {
-                level: level_info.level(),
-                rank,
-                name: user.name.clone(),
-                discriminator: user.discriminator().to_string(),
-                percentage: get_percentage_bar_as_pixels(level_info.percentage()),
-                current: level_info.xp(),
-                needed: mee6::xp_needed_for_level(level_info.level() + 1),
-                colors: crate::colors::Colors::for_user(&state.db, user.id).await,
-                font,
-                toy,
-            },
-        )
-        .await
-        {
-            Ok(png) => {
-                match interaction_client
-                    .create_followup(&token)
-                    .attachments(&[Attachment {
-                        description: Some(format!(
-                            "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
-                            user.name,
-                            user.discriminator(),
-                            level_info.level(),
-                            rank,
-                            (level_info.percentage() * 100.0).round(),
-                            level_info.level() + 1
-                        )),
-                        file: png,
-                        filename: "card.png".to_string(),
-                        id: 0,
-                    }]) {
-                    Ok(followup) => followup.await,
-                    Err(e) => {
-                        warn!("{e}");
-                        interaction_client
-                            .create_followup(&token)
-                            .content("Invalid upload, please contact bot administrators")
-                            .unwrap()
-                            .await
-                    }
-                }
+        let embed = EmbedBuilder::new().description(err.to_string()).build();
+        let embeds = &[embed];
+        match interaction_client.create_followup(&token).embeds(embeds) {
+            Ok(awaitable) => {
+                awaitable.await;
             }
-            Err(err) => {
-                match interaction_client
-                    .create_followup(&token)
-                    .content(&format!("Rendering card failed: {err}"))
-                {
-                    Ok(awaitable) => awaitable.await,
-                    Err(e) => {
-                        warn!("{e}");
-                        interaction_client
-                            .create_followup(&token)
-                            .content("Error too long, please contact bot administrators")
-                            .unwrap()
-                            .await
-                    }
-                }
+            Err(e) => {
+                warn!("{e:#?}");
             }
-        }
+        };
     });
     Ok(InteractionResponse {
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
         data: None,
     })
+}
+
+async fn add_card(
+    state: AppState,
+    token: &str,
+    user: User,
+    level_info: mee6::LevelInfo,
+    rank: i64,
+) -> Result<(), CommandProcessorError> {
+    let interaction_client = state.client.interaction(state.my_id);
+    #[allow(clippy::cast_possible_wrap)]
+    let non_color_customizations = query!(
+        "SELECT font, toy_image FROM custom_card WHERE id = $1",
+        user.id.get() as i64
+    )
+    .fetch_one(&state.db)
+    .await;
+    let (font, toy) = non_color_customizations.map_or_else(
+        |_| ("Roboto".to_string(), None),
+        |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
+    );
+    #[allow(clippy::cast_precision_loss)]
+    let png = crate::render_card::render(
+        state.clone(),
+        crate::render_card::Context {
+            level: level_info.level(),
+            rank,
+            name: user.name.clone(),
+            discriminator: user.discriminator().to_string(),
+            percentage: get_percentage_bar_as_pixels(level_info.percentage()),
+            current: level_info.xp(),
+            needed: mee6::xp_needed_for_level(level_info.level() + 1),
+            colors: crate::colors::Colors::for_user(&state.db, user.id).await,
+            font,
+            toy,
+        },
+    )
+    .await?;
+    let embed = EmbedBuilder::new()
+        .image(ImageSource::attachment("card.png")?)
+        .build();
+    let card = Attachment {
+        description: Some(format!(
+            "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
+            user.name,
+            user.discriminator(),
+            level_info.level(),
+            rank,
+            (level_info.percentage() * 100.0).round(),
+            level_info.level() + 1
+        )),
+        file: png,
+        filename: "card.png".to_string(),
+        id: 0,
+    };
+    interaction_client
+        .create_followup(&token)
+        .embeds(&[embed])?
+        .attachments(&[card])?;
+    Ok(())
 }
 
 pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
