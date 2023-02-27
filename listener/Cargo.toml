@@ -13,7 +13,7 @@ keywords = ["discord-bot", "mee6"]
 [dependencies]
 futures = "0.3"
 rand = "0.8"
-deadpool-redis = { version = "0.11", features = ["rt_tokio_1"] }
+deadpool-redis = { version = "0.11" }
 redis = { version = "0.22", default-features = false, features = ["aio"] }
 dotenvy = "0.15"
 twilight-model = "0.15"

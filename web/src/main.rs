@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, Query, State},
     response::{Html, IntoResponse, Redirect},
 };
-use redis::{aio::ConnectionManager, AsyncCommands};
+use redis::AsyncCommands;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
@@ -22,11 +22,10 @@ async fn main() {
     let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
-    let redis = redis::aio::ConnectionManager::new(
-        redis::Client::open(redis_url).expect("Failed to connect to redis"),
-    )
-    .await
-    .expect("Redis connection manager creation failed");
+    let cfg = deadpool_redis::Config::from_url(redis_url);
+    let redis = cfg
+        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
+        .unwrap();
     sqlx::migrate!("../migrations")
         .run(&db)
         .await
@@ -119,7 +118,7 @@ async fn main() {
 #[derive(Clone)]
 struct AppState {
     pub db: PgPool,
-    pub redis: ConnectionManager,
+    pub redis: deadpool_redis::Pool,
     pub tera: Arc<tera::Tera>,
 }
 
@@ -138,7 +137,7 @@ pub struct FetchQuery {
 
 async fn fetch_stats(
     Path(guild_id): Path<u64>,
-    State(mut state): State<AppState>,
+    State(state): State<AppState>,
     Query(query): Query<FetchQuery>,
 ) -> Result<Html<String>, Error> {
     let offset = query.offset.unwrap_or(0);
@@ -166,6 +165,8 @@ async fn fetch_stats(
     let user_strings: Vec<Option<String>> = if !users.is_empty() {
         state
             .redis
+            .get()
+            .await?
             .mget(
                 users
                     .iter()
@@ -205,6 +206,8 @@ enum Error {
     Tera(#[from] tera::Error),
     #[error("Redis error: {0}")]
     Redis(#[from] redis::RedisError),
+    #[error("Redis pool error: {0}")]
+    RedisPool(#[from] deadpool_redis::PoolError),
     #[error("Non-integer value where integer expected: {0}")]
     ParseIntError(#[from] std::num::ParseIntError),
 }
