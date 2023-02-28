@@ -46,19 +46,19 @@ async fn process_app_cmd(
         None => interaction.user,
     }
     .ok_or(CommandProcessorError::NoInvoker)?;
+    let guild_id = interaction
+        .guild_id
+        .ok_or(CommandProcessorError::NoGuildId)?;
     match data.kind {
         CommandType::ChatInput => {
-            process_slash_cmd(
-                data,
-                interaction.token,
-                interaction.guild_id,
-                invoker,
-                state,
-            )
-            .await
+            process_slash_cmd(data, interaction.token, guild_id, invoker, state).await
         }
-        CommandType::User => process_user_cmd(data, interaction.token, invoker, state).await,
-        CommandType::Message => process_msg_cmd(data, interaction.token, invoker, state).await,
+        CommandType::User => {
+            process_user_cmd(data, guild_id, interaction.token, invoker, state).await
+        }
+        CommandType::Message => {
+            process_msg_cmd(data, guild_id, interaction.token, invoker, state).await
+        }
         _ => Err(CommandProcessorError::WrongInteractionData),
     }
 }
@@ -66,7 +66,7 @@ async fn process_app_cmd(
 async fn process_slash_cmd(
     data: CommandData,
     token: String,
-    guild_id: Option<Id<GuildMarker>>,
+    guild_id: Id<GuildMarker>,
     invoker: User,
     state: AppState,
 ) -> Result<InteractionResponse, CommandProcessorError> {
@@ -76,14 +76,7 @@ async fn process_slash_cmd(
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user
                 .map_or_else(|| invoker.clone(), |v| v.resolved);
-            crate::levels::get_level(
-                guild_id.ok_or(CommandProcessorError::NoGuildId)?,
-                target,
-                invoker,
-                token,
-                state,
-            )
-            .await
+            crate::levels::get_level(guild_id, target, invoker, token, state).await
         }
         "xp" => Ok(InteractionResponse {
             data: Some(
@@ -108,7 +101,7 @@ async fn process_slash_cmd(
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
         "leaderboard" => Ok(crate::levels::leaderboard(
-            guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+            guild_id,
         )),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
@@ -116,6 +109,7 @@ async fn process_slash_cmd(
 
 async fn process_user_cmd(
     data: CommandData,
+    guild_id: Id<GuildMarker>,
     token: String,
     invoker: User,
     state: AppState,
@@ -130,18 +124,12 @@ async fn process_user_cmd(
         .users
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?;
-    crate::levels::get_level(
-        data.guild_id.ok_or(CommandProcessorError::NoGuildId)?,
-        user.clone(),
-        invoker,
-        token,
-        state,
-    )
-    .await
+    crate::levels::get_level(guild_id, user.clone(), invoker, token, state).await
 }
 
 async fn process_msg_cmd(
     data: CommandData,
+    guild_id: Id<GuildMarker>,
     token: String,
     invoker: User,
     state: AppState,
@@ -158,7 +146,7 @@ async fn process_msg_cmd(
         .ok_or(CommandProcessorError::NoTarget)?
         .author;
     crate::levels::get_level(
-        data.guild_id.ok_or(CommandProcessorError::NoGuildId)?,
+        guild_id,
         user.clone(),
         invoker,
         token,

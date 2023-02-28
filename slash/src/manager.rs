@@ -37,10 +37,9 @@ struct XpUserGuildLevel {
 
 pub async fn process_xp(
     data: XpCommand,
-    guild_id: Option<Id<GuildMarker>>,
+    guild_id: Id<GuildMarker>,
     state: AppState,
 ) -> Result<InteractionResponseData, Error> {
-    let guild_id = guild_id.ok_or(Error::MissingGuildId)?;
     let contents = match data {
         XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
         XpCommand::Experience(experience) => process_experience(experience, guild_id, state).await,
@@ -222,8 +221,6 @@ async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Res
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Discord did not send a guild ID!")]
-    MissingGuildId,
     #[error("CSV encountered an IntoInner error")]
     CsvIntoInner,
     #[error("Command had wrong number of arguments: {0}!")]

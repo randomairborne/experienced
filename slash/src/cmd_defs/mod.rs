@@ -16,8 +16,7 @@ pub struct LeaderboardCommand;
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "rank",
-    desc = "Check someone's rank and level",
-    dm_permission = false
+    desc = "Check someone's rank and level"
 )]
 pub struct RankCommand {
     #[command(desc = "User to check level of")]
@@ -27,8 +26,7 @@ pub struct RankCommand {
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "card",
-    desc = "Set hex codes for different color schemes in your rank card.",
-    dm_permission = true
+    desc = "Set hex codes for different color schemes in your rank card."
 )]
 #[allow(clippy::large_enum_variant)]
 pub enum CardCommand {
