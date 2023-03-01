@@ -14,10 +14,7 @@ pub struct HelpCommand;
 pub struct LeaderboardCommand;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(
-    name = "rank",
-    desc = "Check someone's rank and level"
-)]
+#[command(name = "rank", desc = "Check someone's rank and level")]
 pub struct RankCommand {
     #[command(desc = "User to check level of")]
     pub user: Option<ResolvedUser>,

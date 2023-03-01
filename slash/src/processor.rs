@@ -100,9 +100,7 @@ async fn process_slash_cmd(
             ),
             kind: InteractionResponseType::ChannelMessageWithSource,
         }),
-        "leaderboard" => Ok(crate::levels::leaderboard(
-            guild_id,
-        )),
+        "leaderboard" => Ok(crate::levels::leaderboard(guild_id)),
         _ => Err(CommandProcessorError::UnrecognizedCommand),
     }
 }
@@ -145,14 +143,7 @@ async fn process_msg_cmd(
         .get(&msg_id.cast())
         .ok_or(CommandProcessorError::NoTarget)?
         .author;
-    crate::levels::get_level(
-        guild_id,
-        user.clone(),
-        invoker,
-        token,
-        state,
-    )
-    .await
+    crate::levels::get_level(guild_id, user.clone(), invoker, token, state).await
 }
 
 #[derive(Debug, thiserror::Error)]
