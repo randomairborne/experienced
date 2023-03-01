@@ -1,7 +1,7 @@
 use crate::{processor::CommandProcessorError, AppState};
 use sqlx::query;
 use twilight_model::{
-    channel::message::MessageFlags,
+    channel::message::{AllowedMentions, MessageFlags},
     http::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
@@ -140,6 +140,14 @@ async fn add_card(
     )
     .await?;
     let embed = EmbedBuilder::new()
+        .description(format!(
+            "<@!{}> is level {} (rank #{}), and is {}% of the way to level {}.",
+            user.id,
+            level_info.level(),
+            rank,
+            (level_info.percentage() * 100.0).round(),
+            level_info.level() + 1
+        ))
         .image(ImageSource::attachment("card.png")?)
         .build();
     let card = Attachment {
@@ -160,6 +168,7 @@ async fn add_card(
         .create_followup(token)
         .embeds(&[embed])?
         .attachments(&[card])?
+        .allowed_mentions(None)
         .await?;
     Ok(())
 }
