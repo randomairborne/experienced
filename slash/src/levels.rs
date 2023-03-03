@@ -1,7 +1,7 @@
 use crate::{processor::CommandProcessorError, AppState};
 use sqlx::query;
 use twilight_model::{
-    channel::message::{AllowedMentions, MessageFlags},
+    channel::message::MessageFlags,
     http::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseType},
@@ -9,10 +9,7 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
 };
-use twilight_util::builder::{
-    embed::{EmbedBuilder, ImageSource},
-    InteractionResponseDataBuilder,
-};
+use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -139,17 +136,6 @@ async fn add_card(
         },
     )
     .await?;
-    let embed = EmbedBuilder::new()
-        .description(format!(
-            "<@!{}> is level {} (rank #{}), and is {}% of the way to level {}.",
-            user.id,
-            level_info.level(),
-            rank,
-            (level_info.percentage() * 100.0).round(),
-            level_info.level() + 1
-        ))
-        .image(ImageSource::attachment("card.png")?)
-        .build();
     let card = Attachment {
         description: Some(format!(
             "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
@@ -166,7 +152,6 @@ async fn add_card(
     };
     interaction_client
         .create_followup(token)
-        .embeds(&[embed])?
         .attachments(&[card])?
         .allowed_mentions(None)
         .await?;
