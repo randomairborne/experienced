@@ -1,6 +1,6 @@
 use crate::{manager::Error, processor::CommandProcessorError, AppState};
-use sqlx::query;
 use base64::Engine;
+use sqlx::query;
 use twilight_model::{
     channel::message::MessageFlags,
     http::{
