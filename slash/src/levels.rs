@@ -129,7 +129,7 @@ async fn add_card(
             rank,
             name: user.name.clone(),
             discriminator: user.discriminator().to_string(),
-            percentage: get_percentage_bar_as_pixels(level_info.percentage()),
+            percentage: (level_info.percentage() * 100.0).round() as u64,
             current: level_info.xp(),
             needed: mee6::xp_needed_for_level(level_info.level() + 1),
             colors: crate::colors::Colors::for_user(&state.db, user.id).await,
@@ -174,11 +174,6 @@ pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
         data: Some(data),
         kind: InteractionResponseType::ChannelMessageWithSource,
     }
-}
-
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-pub fn get_percentage_bar_as_pixels(percentage: f64) -> u64 {
-    percentage.mul_add(700.0, 40.0) as u64
 }
 
 async fn get_avatar(state: &AppState, user: &User) -> Result<String, Error> {

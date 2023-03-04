@@ -169,7 +169,7 @@ mod tests {
             rank: rand::thread_rng().gen_range(0..=1_000_000),
             name: "Testy McTestington<span>".to_string(),
             discriminator: "0000".to_string(),
-            percentage: get_percentage_bar_as_pixels(data.percentage()),
+            percentage: (level_info.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
             font: "Roboto".to_string(),
