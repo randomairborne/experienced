@@ -1,64 +1,67 @@
+{% set_global progress_width = (percentage * 7) + 40 %}
+{% set_global xp_at_end = percentage < 50 %}
 <svg version="1.1"
      width="800" height="200"
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .name {
-      font-family: {{ font }};
-      font-size: 25px;
-      fill: {{ colors.important }};
+      font-family: Mojang;
+      font-size: 30px;
+      fill: #FFFFFF;
     }
     .discriminator {
-      font-family: {{ font }};
-      font-size: 10px;
-      fill: {{ colors.secondary }};
+      font-family: Mojang;
+      font-size: 20px;
+      fill: #CCCCCC;
     }
     .stat {
-      font-family: {{ font }};
+      font-family: Mojang;
       font-size: 40px;
     }
     .stat-name {
-      font-family: {{ font }};
-      font-size: 20px;
+      font-family: Mojang;
+      font-size: 25px;
     }
     .rank {
-      fill: {{ colors.rank }};
+      fill: #FFFFFF;
     }
     .level {
-      fill: {{ colors.level }};
+      fill: #8FCA5C;
     }
     .needed {
-      font-family: {{ font }};
+      font-family: Mojang;
       font-size: 15px;
-      fill: {{ colors.important }};
+      fill: {% if xp_at_end %}#CCCCCC{% else %}#555555{% endif %};
     }
     .current {
-      font-family: {{ font }};
+      font-family: Mojang;
       font-size: 15px;
-      fill: {{ colors.secondary }};
+      fill: {% if xp_at_end %}#FFFFFF{% else %}#000000{% endif %};
     }
   </style>
-  <rect width="800" height="200" fill="{{ colors.border }}" />
-  {% if not pfp is none %}
-      <image id="pfp" x="{{ percentage }}" y="138" width="24" height="24" href="{{ pfp }}" />
-  {% endif %}
-  <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="{{ colors.background }}" />
-  <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_background }}" />
-  <rect width="{{ percentage }}" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_foreground }}" />
+  <rect width="800" height="200" fill="#854F2B" />
+  <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="#61371F" />
+  <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="#477A1E" />
+  <rect width="{{ progress_width }}" height="40" x="30" y="130" rx="20" ry="20" fill="#8fCA5C" />
   {% if not toy is none %}
-  <image id="toy" x="{{ percentage }}" y="138" width="24" height="24" href="{{ toy }}" />
+  <image id="toy" x="{{ progress_width }}" y="138" width="24" height="24" href="{{ toy }}" />
   {% endif %}
-  <text x="760" y="75" text-anchor="end">
+  <clipPath id="clipProfilePic">
+    <circle r="45" cx="75" cy="70"/>
+  </clipPath>
+  <image id="avatar" class="avatar" x="30" y="25" width="90" height="90" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
+  <text x="135" y="60">
+    <tspan class="name">{{ name }}</tspan>
+    <tspan class="discriminator">#{{ discriminator }}</tspan>
+  </text>
+  <text x="135" y="110">
     <tspan class="stat-name rank">RANK:</tspan>
     <tspan class="stat rank">&#160;#{{ rank }}&#160;&#160;</tspan>
     <tspan class="stat-name level">LEVEL:</tspan>
     <tspan class="stat level">&#160;{{ level }}</tspan>
   </text>
-  <text x="760" y="125" text-anchor="end">
+  <text x="{% if xp_at_end %}760{% else %}40{% endif %}" y="155" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
     <tspan class="current">{{ current }}</tspan>
     <tspan class="needed">&#160;/&#160;{{ needed }} xp</tspan>
-  </text>
-  <text x="40" y="120">
-    <tspan class="name">{{ name }}</tspan>
-    <tspan class="discriminator">#{{ discriminator }}</tspan>
   </text>
 </svg>

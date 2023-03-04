@@ -1,0 +1,1 @@
+These files are toy icons. Please see the LICENSE files in each directory for the copyright information.

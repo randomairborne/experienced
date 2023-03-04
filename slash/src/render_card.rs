@@ -19,6 +19,7 @@ pub struct Context {
     pub font: String,
     pub colors: crate::colors::Colors,
     pub toy: Option<String>,
+    pub avatar: String,
 }
 
 pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {
@@ -91,27 +92,31 @@ impl Default for SvgState {
         let images = HashMap::from([
             (
                 "parrot.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/parrot.png").to_vec()),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/parrot.png").to_vec()),
             ),
             (
                 "fox.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/fox.png").to_vec()),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/fox.png").to_vec()),
             ),
             (
                 "grassblock.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/grassblock.png").to_vec()),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/grassblock.png").to_vec()),
             ),
             (
                 "pickaxe.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/pickaxe.png").to_vec()),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/pickaxe.png").to_vec()),
             ),
             (
                 "steveheart.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/steveheart.png").to_vec()),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/steveheart.png").to_vec()),
             ),
             (
                 "tree.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/tree.png").to_vec()),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/tree.png").to_vec()),
+            ),
+            (
+                "airplane.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/valkyrie_pilot/airplane.png").to_vec()),
             ),
         ]);
         Self {
@@ -170,6 +175,7 @@ mod tests {
             font: "Roboto".to_string(),
             colors: Colors::default(),
             toy: Some("parrot.png".to_string()),
+            avatar: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==".to_string(),
         };
         let output = do_render(&state, &tera::Context::from_serialize(context)?)?;
         std::fs::write("renderer_test.png", output).unwrap();

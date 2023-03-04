@@ -1,5 +1,6 @@
-use crate::{processor::CommandProcessorError, AppState};
+use crate::{manager::Error, processor::CommandProcessorError, AppState};
 use sqlx::query;
+use base64::Engine;
 use twilight_model::{
     channel::message::MessageFlags,
     http::{
@@ -119,6 +120,7 @@ async fn add_card(
         |_| ("Roboto".to_string(), None),
         |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
     );
+    let avatar = get_avatar(&state, &user).await?;
     #[allow(clippy::cast_precision_loss)]
     let png = crate::render_card::render(
         state.clone(),
@@ -133,6 +135,7 @@ async fn add_card(
             colors: crate::colors::Colors::for_user(&state.db, user.id).await,
             font,
             toy,
+            avatar,
         },
     )
     .await?;
@@ -177,3 +180,29 @@ pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
 pub fn get_percentage_bar_as_pixels(percentage: f64) -> u64 {
     percentage.mul_add(700.0, 40.0) as u64
 }
+
+async fn get_avatar(state: &AppState, user: &User) -> Result<String, Error> {
+    let url = user.avatar.map_or_else(
+        || {
+            format!(
+                "https://cdn.discordapp.com/embed/avatars/{}/{}.png",
+                user.id,
+                user.discriminator % 5
+            )
+        },
+        |hash| {
+            format!(
+                "https://cdn.discordapp.com/avatars/{}/{}.png",
+                user.id, hash
+            )
+        },
+    );
+    let png = state.http.get(url).send().await?.bytes().await?;
+    let data = format!("data:image/png;base64,{}", BASE64_ENGINE.encode(png));
+    Ok(data)
+}
+
+const BASE64_ENGINE: base64::engine::GeneralPurpose = base64::engine::GeneralPurpose::new(
+    &base64::alphabet::STANDARD,
+    base64::engine::general_purpose::NO_PAD,
+);
