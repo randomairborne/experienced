@@ -121,7 +121,11 @@ async fn add_card(
         |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
     );
     let avatar = get_avatar(&state, &user).await?;
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(
+        clippy::cast_precision_loss,
+        clippy::cast_sign_loss,
+        clippy::cast_possible_truncation
+    )]
     let png = crate::render_card::render(
         state.clone(),
         crate::render_card::Context {
