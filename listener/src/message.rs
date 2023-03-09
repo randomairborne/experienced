@@ -2,7 +2,10 @@ use rand::Rng;
 use redis::AsyncCommands;
 use sqlx::{query, PgPool};
 use std::sync::Arc;
-use twilight_model::{gateway::payload::incoming::MessageCreate, id::Id};
+use twilight_model::{
+    gateway::payload::incoming::MessageCreate,
+    id::{marker::RoleMarker, Id},
+};
 
 pub async fn save(
     msg: MessageCreate,
@@ -27,13 +30,23 @@ pub async fn save(
             redis.set_ex(&has_sent_key, true, 60).await?;
             let level_info = mee6::LevelInfo::new(xp);
             #[allow(clippy::cast_sign_loss, clippy::cast_possible_wrap)]
-            let reward = query!("SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1", guild_id.get() as i64, level_info.level() as i64)
-                .fetch_optional(&db)
-                .await?;
+            let reward = query!(
+                "SELECT id FROM role_rewards
+                    WHERE guild = $1 AND requirement <= $2
+                    ORDER BY requirement DESC LIMIT 1",
+                guild_id.get() as i64,
+                level_info.level() as i64
+            )
+            .fetch_optional(&db)
+            .await?
+            .map(|v| Id::<RoleMarker>::new(v.id as u64));
             if let Some(reward) = reward {
-                #[allow(clippy::cast_sign_loss)]
-                let id = reward.id as u64;
-                http.add_guild_member_role(guild_id, msg.author.id, Id::new(id))
+                if let Some(member) = &msg.member {
+                    if member.roles.contains(&reward) {
+                        return Ok(());
+                    }
+                }
+                http.add_guild_member_role(guild_id, msg.author.id, reward)
                     .await?;
             }
         }
