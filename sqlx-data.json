@@ -183,6 +183,27 @@
     },
     "query": "SELECT xp FROM levels WHERE id = $1 AND guild = $2"
   },
+  "7e8825afc8f74fa973466878ebda396ae47effa738332f7ccdaa883862c3e092": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT id FROM role_rewards\n                    WHERE guild = $1 AND requirement <= $2\n                    ORDER BY requirement DESC LIMIT 1"
+  },
   "8dd31c6b1b5cdc72156b422e3018b95ed94d047a185311c85736e745e30d7df3": {
     "describe": {
       "columns": [
@@ -328,27 +349,6 @@
       }
     },
     "query": "DELETE FROM role_rewards WHERE requirement = $1 AND guild = $2"
-  },
-  "ccf6e9fda28aa97c752a64376182184c244dc7b500009e5d2448c10e69c20448": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT id FROM role_rewards WHERE guild = $1 AND requirement <= $2 ORDER BY requirement DESC LIMIT 1"
   },
   "d08cc8d4067594d92738d0d4723c7956e792bace4b0e68541c79e026cae75d48": {
     "describe": {
