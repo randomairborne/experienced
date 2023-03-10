@@ -5,38 +5,38 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .name {
-      font-family: Mojang;
-      font-size: 30px;
-      fill: #FFFFFF;
+      font-family: {{ font }};
+      font-size: 25px;
+      fill: {{ colors.important }};
     }
     .discriminator {
-      font-family: Mojang;
-      font-size: 20px;
-      fill: #CCCCCC;
+      font-family: {{ font }};
+      font-size: 10px;
+      fill: {{ colors.secondary }};
     }
     .stat {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 40px;
     }
     .stat-name {
-      font-family: Mojang;
-      font-size: 25px;
+      font-family: {{ font }};
+      font-size: 20px;
     }
     .rank {
-      fill: #FFFFFF;
+      fill: {{ colors.rank }};
     }
     .level {
-      fill: #8FCA5C;
+      fill: {{ colors.level }};
     }
     .needed {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 15px;
-      fill: {% if xp_at_end %}#CCCCCC{% else %}#555555{% endif %};
+      fill: {{ colors.important }};
     }
     .current {
-      font-family: Mojang;
+      font-family: {{ font }};
       font-size: 15px;
-      fill: {% if xp_at_end %}#FFFFFF{% else %}#000000{% endif %};
+      fill: {{ colors.secondary }};
     }
   </style>
   <rect width="800" height="200" fill="#854F2B" />
