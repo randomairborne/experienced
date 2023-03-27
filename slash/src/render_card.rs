@@ -1,9 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use resvg::{
-    usvg::{ImageKind, ImageRendering},
-    usvg_text_layout::TreeTextToPath,
-};
+use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
 
 use crate::AppState;
 
@@ -57,7 +54,7 @@ fn do_render(state: &SvgState, context: &tera::Context) -> Result<Vec<u8>, Rende
         .ok_or(RenderingError::PixmapCreation)?;
     resvg::render(
         &tree,
-        resvg::usvg::FitTo::Original,
+        resvg::FitTo::Original,
         resvg::tiny_skia::Transform::default(),
         pixmap.as_mut(),
     );
@@ -66,7 +63,7 @@ fn do_render(state: &SvgState, context: &tera::Context) -> Result<Vec<u8>, Rende
 
 #[derive(Clone)]
 pub struct SvgState {
-    fonts: Arc<resvg::usvg_text_layout::fontdb::Database>,
+    fonts: Arc<resvg::usvg::fontdb::Database>,
     tera: Arc<tera::Tera>,
     images: Arc<HashMap<String, Arc<Vec<u8>>>>,
 }
@@ -79,7 +76,7 @@ impl SvgState {
 
 impl Default for SvgState {
     fn default() -> Self {
-        let mut fonts = resvg::usvg_text_layout::fontdb::Database::new();
+        let mut fonts = resvg::usvg::fontdb::Database::new();
         fonts.load_font_data(include_bytes!("resources/fonts/Mojang.ttf").to_vec());
         fonts.load_font_data(include_bytes!("resources/fonts/Roboto.ttf").to_vec());
         fonts.load_font_data(include_bytes!("resources/fonts/JetBrainsMono.ttf").to_vec());
