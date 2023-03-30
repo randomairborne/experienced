@@ -227,8 +227,8 @@ pub enum Error {
     WrongArgumentCount(&'static str),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
-    #[error("Colors encountered an error: {0}")]
-    Color(#[from] crate::colors::Error),
+    #[error("Image generator encountered an error: {0}")]
+    ImageGenerator(#[from] xpd_rank_card::Error),
     #[error("CSV encountered an error: {0}")]
     Csv(#[from] csv::Error),
     #[error("Rust writeln! returned an error: {0}")]

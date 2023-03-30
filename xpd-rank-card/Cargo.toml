@@ -1,0 +1,22 @@
+[package]
+name = "xpd-rank-card"
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+description = "A library for experienced and minixpd to render SVGs"
+repository = "https://github.com/randomairborne/experienced"
+readme = "README.md"
+keywords = ["svg"]
+categories = ["image-processing"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.27", features = ["rt"] }
+thiserror = "1"
+resvg = "0.30"
+png = "0.17"
+tera = "1"
+
+[dev-dependencies]
+mee6 = { version = "*", path = "../mee6" }
+rand = "0.8"

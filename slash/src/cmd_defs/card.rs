@@ -3,7 +3,7 @@ use twilight_interactions::command::{
     CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
 
-use crate::colors::Color;
+use crate::colors::ColorOption;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your card to defaults")]
@@ -26,21 +26,21 @@ pub struct CardCommandFetch {
 )]
 pub struct CardCommandEdit {
     #[command(desc = "What color to use for the background")]
-    pub background: Option<Color>,
+    pub background: Option<ColorOption>,
     #[command(desc = "What color to use for the border")]
-    pub border: Option<Color>,
+    pub border: Option<ColorOption>,
     #[command(desc = "What color to use for the important informational text")]
-    pub important: Option<Color>,
+    pub important: Option<ColorOption>,
     #[command(desc = "What color to use for the secondary informational text")]
-    pub secondary: Option<Color>,
+    pub secondary: Option<ColorOption>,
     #[command(desc = "What color to use for your rank")]
-    pub rank: Option<Color>,
+    pub rank: Option<ColorOption>,
     #[command(desc = "What color to use for your level")]
-    pub level: Option<Color>,
+    pub level: Option<ColorOption>,
     #[command(desc = "What color to use for the progress bar's filled part")]
-    pub progress_foreground: Option<Color>,
+    pub progress_foreground: Option<ColorOption>,
     #[command(desc = "What color to use for the progress bar's empty part")]
-    pub progress_background: Option<Color>,
+    pub progress_background: Option<ColorOption>,
     #[command(desc = "What font to use in the card")]
     pub font: Option<CardCommandEditFont>,
     #[command(desc = "What toy image to use in the card")]

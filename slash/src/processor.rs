@@ -177,7 +177,7 @@ pub enum CommandProcessorError {
         #[from] twilight_util::builder::embed::image_source::ImageSourceAttachmentError,
     ),
     #[error("SVG renderer encountered an error: {0}!")]
-    ImageGenerator(#[from] crate::render_card::RenderingError),
+    ImageGenerator(#[from] xpd_rank_card::Error),
     #[error("SQLx encountered an error: {0}")]
     Sqlx(#[from] sqlx::Error),
 }

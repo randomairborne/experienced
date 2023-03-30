@@ -1,7 +1,6 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 mod cmd_defs;
-#[macro_use]
 mod colors;
 mod discord_sig_validation;
 mod handler;
@@ -10,13 +9,12 @@ mod levels;
 mod manage_card;
 mod manager;
 mod processor;
-mod render_card;
 
-use render_card::SvgState;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{marker::ApplicationMarker, Id};
+use xpd_rank_card::SvgState;
 
 #[macro_use]
 extern crate tracing;

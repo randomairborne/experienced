@@ -4,4 +4,5 @@ members = [
     "listener",
     "web",
     "mee6",
+    "xpd-rank-card"
 ]

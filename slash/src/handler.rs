@@ -18,7 +18,7 @@ pub async fn handle(
     let interaction: Interaction = serde_json::from_slice(&body)?;
     let response = match crate::processor::process(interaction, state).await {
         Ok(val) => val,
-        Err(CommandProcessorError::Manager(crate::manager::Error::Color(e))) => {
+        Err(CommandProcessorError::Manager(crate::manager::Error::ImageGenerator(e))) => {
             InteractionResponse {
                 kind: InteractionResponseType::ChannelMessageWithSource,
                 data: Some(

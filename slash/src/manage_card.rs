@@ -100,7 +100,7 @@ async fn process_fetch(state: AppState, user: &User) -> Result<String, Error> {
     )
     .fetch_optional(&state.db)
     .await?;
-    Ok(crate::colors::Colors::for_user(&state.db, user.id)
+    Ok(crate::colors::for_user(&state.db, user.id)
         .await
         .to_string()
         + "Font: "

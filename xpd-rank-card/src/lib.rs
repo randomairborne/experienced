@@ -1,8 +1,9 @@
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
+
+pub mod colors;
 use std::{collections::HashMap, sync::Arc};
 
 use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
-
-use crate::AppState;
 
 #[derive(serde::Serialize)]
 pub struct Context {
@@ -19,48 +20,6 @@ pub struct Context {
     pub avatar: String,
 }
 
-pub async fn render(state: AppState, context: Context) -> Result<Vec<u8>, RenderingError> {
-    let context = tera::Context::from_serialize(context)?;
-    tokio::task::spawn_blocking(move || do_render(&state.svg, &context)).await?
-}
-
-fn do_render(state: &SvgState, context: &tera::Context) -> Result<Vec<u8>, RenderingError> {
-    let svg = state.tera.render("svg", context)?;
-    let resolve_data = Box::new(
-        |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
-            "image/png" => Some(ImageKind::PNG(data)),
-            "image/jpg" | "image/jpeg" => Some(ImageKind::JPEG(data)),
-            _ => None,
-        },
-    );
-    let resolve_string_state = state.clone();
-    let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
-        Some(ImageKind::PNG(
-            resolve_string_state.images.get(href)?.clone(),
-        ))
-    });
-    let opt = resvg::usvg::Options {
-        image_href_resolver: resvg::usvg::ImageHrefResolver {
-            resolve_data,
-            resolve_string,
-        },
-        image_rendering: ImageRendering::OptimizeSpeed,
-        ..Default::default()
-    };
-    let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
-    tree.convert_text(&state.fonts);
-    let pixmap_size = tree.size.to_screen_size();
-    let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
-        .ok_or(RenderingError::PixmapCreation)?;
-    resvg::render(
-        &tree,
-        resvg::FitTo::Original,
-        resvg::tiny_skia::Transform::default(),
-        pixmap.as_mut(),
-    );
-    Ok(pixmap.encode_png()?)
-}
-
 #[derive(Clone)]
 pub struct SvgState {
     fonts: Arc<resvg::usvg::fontdb::Database>,
@@ -69,8 +28,52 @@ pub struct SvgState {
 }
 
 impl SvgState {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+    /// # Errors
+    /// Errors on SVG library failure
+    pub async fn render(&self, context: Context) -> Result<Vec<u8>, Error> {
+        let context = tera::Context::from_serialize(context)?;
+        let cloned_self = self.clone();
+        tokio::task::spawn_blocking(move || cloned_self.do_render(&context)).await?
+    }
+    fn do_render(&self, context: &tera::Context) -> Result<Vec<u8>, Error> {
+        let svg = self.tera.render("svg", context)?;
+        let resolve_data = Box::new(
+            |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
+                "image/png" => Some(ImageKind::PNG(data)),
+                "image/jpg" | "image/jpeg" => Some(ImageKind::JPEG(data)),
+                _ => None,
+            },
+        );
+        let resolve_string_state = self.clone();
+        let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
+            Some(ImageKind::PNG(
+                resolve_string_state.images.get(href)?.clone(),
+            ))
+        });
+        let opt = resvg::usvg::Options {
+            image_href_resolver: resvg::usvg::ImageHrefResolver {
+                resolve_data,
+                resolve_string,
+            },
+            image_rendering: ImageRendering::OptimizeSpeed,
+            ..Default::default()
+        };
+        let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
+        tree.convert_text(&self.fonts);
+        let pixmap_size = tree.size.to_screen_size();
+        let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
+            .ok_or(Error::PixmapCreation)?;
+        resvg::render(
+            &tree,
+            resvg::FitTo::Original,
+            resvg::tiny_skia::Transform::default(),
+            pixmap.as_mut(),
+        );
+        Ok(pixmap.encode_png()?)
     }
 }
 
@@ -83,7 +86,6 @@ impl Default for SvgState {
         fonts.load_font_data(include_bytes!("resources/fonts/MontserratAlt1.ttf").to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
-        tera.register_tester("none", none_tester);
         tera.add_raw_template("svg", include_str!("resources/card.svg"))
             .expect("Failed to build card.svg template!");
         let images = HashMap::from([
@@ -124,23 +126,22 @@ impl Default for SvgState {
     }
 }
 
-#[allow(clippy::unnecessary_wraps)]
-fn none_tester(val: Option<&tera::Value>, _args: &[tera::Value]) -> Result<bool, tera::Error> {
-    Ok(val.map_or(true, serde_json::Value::is_null))
-}
-
 #[derive(Debug, thiserror::Error)]
-pub enum RenderingError {
+pub enum Error {
     #[error("Tera error: {0}")]
     Template(#[from] tera::Error),
     #[error("Tokio JoinError: {0}")]
     Join(#[from] tokio::task::JoinError),
     #[error("uSVG error: {0}")]
     Usvg(#[from] resvg::usvg::Error),
+    #[error("Integer parsing error: {0}!")]
+    ParseInt(#[from] std::num::ParseIntError),
     #[error("Pixmap error: {0}")]
     Pixmap(#[from] png::EncodingError),
     #[error("Pixmap Creation error!")]
     PixmapCreation,
+    #[error("Invalid length! Color hex data length must be exactly 6 characters!")]
+    InvalidLength,
 }
 
 #[cfg(test)]
@@ -152,7 +153,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_renderer() -> Result<(), RenderingError> {
+    fn test_renderer() -> Result<(), Error> {
         let state = SvgState::new();
         let xp = rand::thread_rng().gen_range(0..=10_000_000);
         let data = mee6::LevelInfo::new(xp);
@@ -174,7 +175,7 @@ mod tests {
             toy: Some("parrot.png".to_string()),
             avatar: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==".to_string(),
         };
-        let output = do_render(&state, &tera::Context::from_serialize(context)?)?;
+        let output = state.do_render(&tera::Context::from_serialize(context)?)?;
         std::fs::write("renderer_test.png", output).unwrap();
         Ok(())
     }
