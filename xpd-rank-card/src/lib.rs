@@ -137,8 +137,6 @@ impl Default for SvgState {
 pub enum Error {
     #[error("Tera error: {0}")]
     Template(#[from] tera::Error),
-    #[error("Tokio JoinError: {0}")]
-    Join(#[from] tokio::task::JoinError),
     #[error("uSVG error: {0}")]
     Usvg(#[from] resvg::usvg::Error),
     #[error("Integer parsing error: {0}!")]
