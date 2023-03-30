@@ -25,6 +25,7 @@ pub struct SvgState {
     fonts: Arc<resvg::usvg::fontdb::Database>,
     tera: Arc<tera::Tera>,
     images: Arc<HashMap<String, Arc<Vec<u8>>>>,
+    threads: Arc<rayon::ThreadPool>,
 }
 
 impl SvgState {
@@ -37,7 +38,11 @@ impl SvgState {
     pub async fn render(&self, context: Context) -> Result<Vec<u8>, Error> {
         let context = tera::Context::from_serialize(context)?;
         let cloned_self = self.clone();
-        tokio::task::spawn_blocking(move || cloned_self.do_render(&context)).await?
+        let (send, recv) = tokio::sync::oneshot::channel();
+        self.threads.spawn(move || {
+            send.send(cloned_self.do_render(&context)).ok();
+        });
+        recv.await?
     }
     fn do_render(&self, context: &tera::Context) -> Result<Vec<u8>, Error> {
         let svg = self.tera.render("svg", context)?;
@@ -118,10 +123,12 @@ impl Default for SvgState {
                 Arc::new(include_bytes!("resources/icons/valkyrie_pilot/airplane.png").to_vec()),
             ),
         ]);
+        let threads = rayon::ThreadPoolBuilder::new().build().unwrap();
         Self {
             fonts: Arc::new(fonts),
             tera: Arc::new(tera),
             images: Arc::new(images),
+            threads: Arc::new(threads),
         }
     }
 }
@@ -138,6 +145,10 @@ pub enum Error {
     ParseInt(#[from] std::num::ParseIntError),
     #[error("Pixmap error: {0}")]
     Pixmap(#[from] png::EncodingError),
+    #[error("Rayon error: {0}")]
+    Rayon(#[from] rayon::ThreadPoolBuildError),
+    #[error("Render result fetching error: {0}")]
+    Recv(#[from] tokio::sync::oneshot::error::RecvError),
     #[error("Pixmap Creation error!")]
     PixmapCreation,
     #[error("Invalid length! Color hex data length must be exactly 6 characters!")]
