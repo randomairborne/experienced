@@ -7,7 +7,7 @@ description = "A library for experienced and minixpd to render SVGs"
 repository = "https://github.com/randomairborne/experienced"
 readme = "README.md"
 keywords = ["svg"]
-categories = ["image-processing"]
+categories = ["multimedia::images"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
