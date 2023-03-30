@@ -23,7 +23,7 @@ twilight-util = { version = "0.15", features = ["builder"] }
 twilight-interactions = "0.15"
 twilight-validate = "0.15"
 twilight-model = "0.15"
-xpd-rank-card = { path = "../xpd-rank-card/" }
+xpd-rank-card = { path = "../xpd-rank-card/", version = "0.0.1" }
 tracing = "0.1"
 axum = "0.6"
 serde_json = "1"
@@ -32,7 +32,6 @@ hex = "0.4"
 thiserror = "1"
 dotenvy = "0.15"
 mee6 = "0.1"
-png = "0.17"
 csv = "1.2"
 base64 = "0.21"
 

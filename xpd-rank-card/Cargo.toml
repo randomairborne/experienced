@@ -18,5 +18,5 @@ png = "0.17"
 tera = "1"
 
 [dev-dependencies]
-mee6 = { version = "0.1", path = "../mee6" }
+mee6 = { path = "../mee6", version = "0.1" }
 rand = "0.8"
