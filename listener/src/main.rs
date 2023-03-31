@@ -1,13 +1,12 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 mod message;
+mod user_cache;
 
-use futures::StreamExt;
 use sqlx::PgPool;
-use std::sync::Arc;
-use twilight_gateway::{
-    stream::ShardEventStream, CloseFrame, Config, Event, Intents, MessageSender, Shard,
-};
+use std::sync::{atomic::AtomicBool, Arc};
+use tokio::task::JoinSet;
+use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
 
 #[tokio::main]
 async fn main() {
@@ -35,61 +34,95 @@ async fn main() {
         .expect("Failed to connect to redis");
 
     let client = twilight_http::Client::new(token.clone());
-    let intents = Intents::GUILD_MESSAGES;
-    let config = Config::new(token, intents);
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS | Intents::GUILD_MEMBERS;
+    let config = Config::new(token.clone(), intents);
 
-    let mut shards: Vec<Shard> =
+    let shards: Vec<Shard> =
         twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
             .await
             .expect("Failed to create reccomended shard count")
             .collect();
-    let shard_closers: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Failed to listen to ctrl-c");
-        println!("Shutting down...");
-        for shard in shard_closers {
-            shard.close(CloseFrame::NORMAL).ok();
-        }
-    });
-    let mut events = ShardEventStream::new(shards.iter_mut());
+    let senders: Vec<twilight_gateway::MessageSender> =
+        shards.iter().map(twilight_gateway::Shard::sender).collect();
+    let http = Arc::new(twilight_http::Client::new(token));
     println!("Connecting to discord");
-    let client = Arc::new(client);
-    while let Some((_shard, event_result)) = events.next().await {
-        match event_result {
+    let state = AppState { db, redis, http };
+    let should_shutdown = Arc::new(AtomicBool::new(false));
+
+    let mut set = JoinSet::new();
+
+    for shard in shards {
+        set.spawn_local(event_loop(shard, should_shutdown.clone(), state.clone()));
+    }
+
+    tokio::signal::ctrl_c().await.unwrap();
+
+    eprintln!("Shutting down..");
+
+    // Let the shards know not to reconnect
+    should_shutdown.store(true, std::sync::atomic::Ordering::Relaxed);
+
+    // Tell the shards to shut down
+    for sender in senders {
+        sender.close(CloseFrame::NORMAL).ok();
+    }
+
+    // Await all tasks to complete.
+    while set.join_next().await.is_some() {}
+    println!("Done, see ya!");
+}
+
+async fn event_loop(mut shard: Shard, should_shutdown: Arc<AtomicBool>, state: AppState) {
+    let sender = shard.sender();
+    loop {
+        let sender = sender.clone();
+        match shard.next_event().await {
             Ok(event) => {
-                let redis = match redis.get().await {
-                    Ok(v) => v,
-                    Err(e) => {
-                        eprintln!("ERROR: Fatal redis error: {e}");
-                        return;
-                    }
-                };
-                let client = client.clone();
-                let db = db.clone();
+                let state = state.clone();
                 tokio::spawn(async move {
-                    if let Err(e) = handle_event(event, db, redis, client).await {
+                    if let Err(e) = handle_event(event, state, sender).await {
+                        // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         eprintln!("Handler error: {e}");
                     }
                 });
             }
             Err(e) => eprintln!("Shard loop error: {e}"),
         }
+        if should_shutdown.load(std::sync::atomic::Ordering::Relaxed) {
+            break;
+        }
     }
-    println!("Done, see ya!");
 }
 
-async fn handle_event(
-    event: Event,
-    db: PgPool,
-    redis: deadpool_redis::Connection,
-    http: Arc<twilight_http::Client>,
-) -> Result<(), Error> {
+async fn handle_event(event: Event, state: AppState, shard: MessageSender) -> Result<(), Error> {
     match event {
-        Event::MessageCreate(msg) => message::save(*msg, db, redis, http).await,
+        Event::MessageCreate(msg) => message::save(*msg, state).await,
+        Event::GuildCreate(guild_add) => {
+            shard.command(
+                &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
+                    guild_add.id,
+                )
+                .query("", None),
+            )?;
+            user_cache::set_chunk(state.redis, guild_add.0.members).await
+        }
+        Event::MemberAdd(member_add) => user_cache::set_user(state.redis, &member_add.user).await,
+        Event::MemberUpdate(member_update) => {
+            user_cache::set_user(state.redis, &member_update.user).await
+        }
+        Event::MemberChunk(member_chunk) => {
+            user_cache::set_chunk(state.redis, member_chunk.members).await
+        }
+        Event::ThreadCreate(thread) => state.http.join_thread(thread.id).await.map(|_| Ok(()))?,
         _ => Ok(()),
     }
+}
+
+#[derive(Clone)]
+pub struct AppState {
+    db: PgPool,
+    redis: deadpool_redis::Pool,
+    http: Arc<twilight_http::Client>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -98,6 +131,8 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
     #[error("Redis error: {0}")]
     Redis(#[from] redis::RedisError),
+    #[error("Pool error: {0}")]
+    Pool(#[from] deadpool_redis::PoolError),
     #[error("Discord error: {0}")]
     Twilight(#[from] twilight_http::Error),
     #[error("JSON error: {0}")]

@@ -1,21 +1,17 @@
 use rand::Rng;
 use redis::AsyncCommands;
-use sqlx::{query, PgPool};
-use std::sync::Arc;
+use sqlx::query;
 use twilight_model::{
     gateway::payload::incoming::MessageCreate,
     id::{marker::RoleMarker, Id},
 };
 
-pub async fn save(
-    msg: MessageCreate,
-    db: PgPool,
-    mut redis: deadpool_redis::Connection,
-    http: Arc<twilight_http::Client>,
-) -> Result<(), crate::Error> {
+use crate::AppState;
+
+pub async fn save(msg: MessageCreate, state: AppState) -> Result<(), crate::Error> {
     if let Some(guild_id) = msg.guild_id {
         let has_sent_key = format!("cooldown-{guild_id}-{}", msg.author.id);
-        let has_sent: bool = redis.get(&has_sent_key).await?;
+        let has_sent: bool = state.redis.get().await?.get(&has_sent_key).await?;
         if !msg.author.bot && !has_sent {
             let xp_count: i64 = rand::thread_rng().gen_range(15..=25);
             #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
@@ -25,9 +21,14 @@ pub async fn save(
                 xp_count,
                 guild_id.get() as i64
             )
-            .fetch_one(&db)
+            .fetch_one(&state.db)
             .await?.xp as u64;
-            redis.set_ex(&has_sent_key, true, 60).await?;
+            state
+                .redis
+                .get()
+                .await?
+                .set_ex(&has_sent_key, true, 60)
+                .await?;
             let level_info = mee6::LevelInfo::new(xp);
             #[allow(clippy::cast_sign_loss, clippy::cast_possible_wrap)]
             let reward = query!(
@@ -37,7 +38,7 @@ pub async fn save(
                 guild_id.get() as i64,
                 level_info.level() as i64
             )
-            .fetch_optional(&db)
+            .fetch_optional(&state.db)
             .await?
             .map(|v| Id::<RoleMarker>::new(v.id as u64));
             if let Some(reward) = reward {
@@ -46,7 +47,9 @@ pub async fn save(
                         return Ok(());
                     }
                 }
-                http.add_guild_member_role(guild_id, msg.author.id, reward)
+                state
+                    .http
+                    .add_guild_member_role(guild_id, msg.author.id, reward)
                     .await?;
             }
         }
