@@ -24,7 +24,7 @@ services:
   database:
     image: postgres:alpine
     volumes:
-        - data:/var/lib/mysql/
+        - data:/var/lib/postgresql/data
     networks:
       - database
     environment:
