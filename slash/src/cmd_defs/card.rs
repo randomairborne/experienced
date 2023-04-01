@@ -65,16 +65,34 @@ pub enum CardCommandEditFont {
 pub enum CardCommandEditToy {
     #[option(name = "None", value = "None")]
     None,
-    #[option(name = "Parrot", value = "parrot.png")]
-    Parrot,
+    #[option(name = "Bee", value = "bee.png")]
+    Bee,
+    #[option(name = "Biscuit", value = "biscuit.png")]
+    Biscuit,
+    #[option(name = "Chicken", value = "chicken.png")]
+    Chicken,
+    #[option(name = "Cow", value = "cow.png")]
+    Cow,
     #[option(name = "Fox", value = "fox.png")]
     Fox,
-    #[option(name = "Steve heart", value = "steveheart.png")]
-    SteveHeart,
-    #[option(name = "Grass block", value = "grassblock.png")]
+    #[option(name = "Grass Block", value = "grassblock.png")]
     GrassBlock,
-    #[option(name = "Diamond pickaxe", value = "pickaxe.png")]
+    #[option(name = "Parrot", value = "parrot.png")]
+    Parrot,
+    #[option(name = "Pickaxe", value = "pickaxe.png")]
     Pickaxe,
+    #[option(name = "Pig", value = "pig.png")]
+    Pig,
+    #[option(name = "Blue Potion", value = "potion_blue.png")]
+    PotionBlue,
+    #[option(name = "Purple Potion", value = "potion_purple.png")]
+    PotionPurple,
+    #[option(name = "Red Potion", value = "potion_red.png")]
+    PotionRed,
+    #[option(name = "Sheep", value = "sheep.png")]
+    Sheep,
+    #[option(name = "Steve Hug", value = "steveheart.png")]
+    SteveHeart,
     #[option(name = "Tree", value = "tree.png")]
     Tree,
 }
