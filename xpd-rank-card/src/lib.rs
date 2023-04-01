@@ -119,6 +119,42 @@ impl Default for SvgState {
                 Arc::new(include_bytes!("resources/icons/CEa_TIde/tree.png").to_vec()),
             ),
             (
+                "bee.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/bee.png").to_vec()),
+            ),
+            (
+                "biscuit.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/biscuit.png").to_vec()),
+            ),
+            (
+                "chicken.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/chicken.png").to_vec()),
+            ),
+            (
+                "cow.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/cow.png").to_vec()),
+            ),
+            (
+                "pig.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/pig.png").to_vec()),
+            ),
+            (
+                "potion_blue.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/potion_blue.png").to_vec()),
+            ),
+            (
+                "potion_purple.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/potion_purple.png").to_vec()),
+            ),
+            (
+                "potion_red.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/potion_red.png").to_vec()),
+            ),
+            (
+                "sheep.png".to_string(),
+                Arc::new(include_bytes!("resources/icons/CEa_TIde/sheep.png").to_vec()),
+            ),
+            (
                 "airplane.png".to_string(),
                 Arc::new(include_bytes!("resources/icons/valkyrie_pilot/airplane.png").to_vec()),
             ),
