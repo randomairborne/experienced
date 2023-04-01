@@ -65,6 +65,8 @@ pub enum CardCommandEditFont {
 pub enum CardCommandEditToy {
     #[option(name = "None", value = "None")]
     None,
+    #[option(name = "Airplane", value = "bee.png")]
+    Airplane,
     #[option(name = "Bee", value = "bee.png")]
     Bee,
     #[option(name = "Biscuit", value = "biscuit.png")]
