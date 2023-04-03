@@ -33,10 +33,6 @@ async fn process_edit(
     state: AppState,
     user: &User,
 ) -> Result<String, Error> {
-    let toy_image = edit.toy_image.and_then(|v| match v {
-        crate::cmd_defs::card::CardCommandEditToy::None => None,
-        _ => Some(v.value()),
-    });
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO custom_card (
@@ -73,7 +69,7 @@ async fn process_edit(
         edit.progress_foreground.map(|v| v.to_string()),
         edit.progress_background.map(|v| v.to_string()),
         edit.font.map(|v| v.value()),
-        toy_image,
+        edit.toy_image.map(|v| v.value()),
         user.id.get() as i64,
     )
     .execute(&state.db)
