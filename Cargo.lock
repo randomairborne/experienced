@@ -573,7 +573,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b8bde44cbfdf17ae5baa45c9f43073b320f1a19955389315629304a23909ad2"
 dependencies = [
  "deadpool",
- "redis",
+ "redis 0.22.3",
 ]
 
 [[package]]
@@ -692,7 +692,7 @@ dependencies = [
  "dotenvy",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.8.5",
- "redis",
+ "redis 0.23.0",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -715,7 +715,7 @@ dependencies = [
  "hex",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.8.5",
- "redis",
+ "redis 0.23.0",
  "reqwest",
  "serde",
  "serde_json",
@@ -740,7 +740,7 @@ dependencies = [
  "deadpool-redis",
  "dotenvy",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "redis",
+ "redis 0.23.0",
  "serde",
  "serde_json",
  "sqlx",
@@ -1768,6 +1768,25 @@ name = "redis"
 version = "0.22.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa8455fa3621f6b41c514946de66ea0531f57ca017b2e6c7cc368035ea5b46df"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "combine",
+ "futures-util",
+ "itoa",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ea8c51b5dc1d8e5fd3350ec8167f464ec0995e79f2e90a075b63371500d557f"
 dependencies = [
  "arc-swap",
  "async-trait",

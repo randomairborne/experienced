@@ -17,7 +17,7 @@ sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres",
 serde = { version = "1", features = ["derive"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], default-features = false }
-redis = { version = "0.22", features = ["aio", "tokio-comp", "connection-manager"] }
+redis = { version = "0.23", features = ["aio", "tokio-comp", "connection-manager"] }
 twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-features = false }
 twilight-util = { version = "0.15", features = ["builder"] }
 twilight-interactions = "0.15"
