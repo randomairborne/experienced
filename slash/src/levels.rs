@@ -1,4 +1,4 @@
-use crate::{manager::Error, processor::CommandProcessorError, AppState};
+use crate::{AppState, Error};
 use base64::Engine;
 use sqlx::query;
 use twilight_model::{
@@ -16,9 +16,8 @@ pub async fn get_level(
     guild_id: Id<GuildMarker>,
     user: User,
     invoker: User,
-    token: String,
     state: AppState,
-) -> Result<InteractionResponse, CommandProcessorError> {
+) -> Result<InteractionResponse, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
@@ -49,7 +48,7 @@ pub async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(state, token, user, level_info, rank).await;
+            return generate_level_response(state, user, level_info, rank).await;
         }
     } else if xp == 0 {
         format!(
@@ -58,7 +57,7 @@ pub async fn get_level(
             user.discriminator()
         )
     } else {
-        return generate_level_response(state, token, user, level_info, rank).await;
+        return generate_level_response(state, user, level_info, rank).await;
     };
     Ok(InteractionResponse {
         kind: InteractionResponseType::ChannelMessageWithSource,
@@ -73,42 +72,26 @@ pub async fn get_level(
 
 async fn generate_level_response(
     state: AppState,
-    token: String,
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
-) -> Result<InteractionResponse, CommandProcessorError> {
-    tokio::task::spawn(async move {
-        let Err(err) = add_card(state.clone(), &token, user, level_info, rank).await else { return; };
-        warn!("{err:#?}");
-        let interaction_client = state.client.interaction(state.my_id);
-        let embed = EmbedBuilder::new().description(err.to_string()).build();
-        let embeds = &[embed];
-        match interaction_client.create_followup(&token).embeds(embeds) {
-            Ok(awaitable) => {
-                if let Err(e) = awaitable.await {
-                    warn!("{e:#?}");
-                };
-            }
-            Err(e) => {
-                warn!("{e:#?}");
-            }
-        };
-    });
+) -> Result<InteractionResponse, Error> {
+    let card = gen_card(&state, &user, level_info, rank).await?;
     Ok(InteractionResponse {
-        kind: InteractionResponseType::DeferredChannelMessageWithSource,
-        data: None,
+        kind: InteractionResponseType::ChannelMessageWithSource,
+        data: Some(
+            InteractionResponseDataBuilder::new()
+                .attachments([card])
+                .build(),
+        ),
     })
 }
-
-async fn add_card(
-    state: AppState,
-    token: &str,
-    user: User,
+pub async fn gen_card(
+    state: &AppState,
+    user: &User,
     level_info: mee6::LevelInfo,
     rank: i64,
-) -> Result<(), CommandProcessorError> {
-    let interaction_client = state.client.interaction(state.my_id);
+) -> Result<Attachment, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let non_color_customizations = query!(
         "SELECT font, toy_image FROM custom_card WHERE id = $1",
@@ -120,7 +103,7 @@ async fn add_card(
         |_| ("Roboto".to_string(), None),
         |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
     );
-    let avatar = get_avatar(&state, &user).await?;
+    let avatar = get_avatar(state, user).await?;
     #[allow(
         clippy::cast_precision_loss,
         clippy::cast_sign_loss,
@@ -142,7 +125,7 @@ async fn add_card(
             avatar,
         })
         .await?;
-    let card = Attachment {
+    Ok(Attachment {
         description: Some(format!(
             "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
             user.name,
@@ -155,13 +138,7 @@ async fn add_card(
         file: png,
         filename: "card.png".to_string(),
         id: 0,
-    };
-    interaction_client
-        .create_followup(token)
-        .attachments(&[card])?
-        .allowed_mentions(None)
-        .await?;
-    Ok(())
+    })
 }
 
 pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {

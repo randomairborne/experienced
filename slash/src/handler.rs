@@ -6,54 +6,52 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::{processor::CommandProcessorError, AppState};
+use crate::AppState;
 
 pub async fn handle(
     headers: HeaderMap,
     State(state): State<AppState>,
     body: Bytes,
-) -> Result<axum::Json<InteractionResponse>, Error> {
+) -> Result<axum::Json<InteractionResponse>, IncomingInteractionError> {
     let body = body.to_vec();
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
     let interaction: Interaction = serde_json::from_slice(&body)?;
-    let response = match crate::processor::process(interaction, state).await {
-        Ok(val) => val,
-        Err(CommandProcessorError::Manager(crate::manager::Error::ImageGenerator(e))) => {
-            InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(
-                    InteractionResponseDataBuilder::new()
-                        .flags(MessageFlags::EPHEMERAL)
-                        .content(e.to_string())
-                        .build(),
-                ),
+    tokio::spawn(async move {
+        let interaction_token = interaction.token.clone();
+        match crate::processor::process(interaction, state.clone()).await {
+            Ok(val) => val,
+            Err(e) => {
+                error!("{e}");
+                InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(
+                        InteractionResponseDataBuilder::new()
+                            .flags(MessageFlags::EPHEMERAL)
+                            .content(e.to_string())
+                            .build(),
+                    ),
+                }
             }
-        }
-        Err(e) => {
-            error!("{e}");
-            InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(
-                    InteractionResponseDataBuilder::new()
-                        .flags(MessageFlags::EPHEMERAL)
-                        .content(e.to_string())
-                        .build(),
-                ),
-            }
-        }
-    };
-    Ok(Json(response))
+        };
+        let Err(e) = state.client.interaction(state.my_id).create_followup(&interaction_token).await else { return; };
+        warn!("{e:#?}");
+    });
+
+    Ok(Json(InteractionResponse {
+        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+        data: None,
+    }))
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum Error {
+pub enum IncomingInteractionError {
     #[error("Signature validation error: {0}")]
     Validation(#[from] crate::discord_sig_validation::SignatureValidationError),
-    #[error("serde_json validation error: {0}")]
+    #[error("serde_json error: {0}")]
     SerdeJson(#[from] serde_json::Error),
 }
 
-impl IntoResponse for Error {
+impl IntoResponse for IncomingInteractionError {
     fn into_response(self) -> axum::response::Response {
         error!("{self}");
         axum::response::Response::builder()

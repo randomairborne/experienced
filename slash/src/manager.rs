@@ -18,7 +18,7 @@ use crate::{
         },
         XpCommand,
     },
-    AppState,
+    AppState, Error,
 };
 
 #[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
@@ -217,28 +217,4 @@ async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Res
         )?;
     }
     Ok(data)
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("CSV encountered an IntoInner error")]
-    CsvIntoInner,
-    #[error("Command had wrong number of arguments: {0}!")]
-    WrongArgumentCount(&'static str),
-    #[error("SQLx encountered an error: {0}")]
-    Sqlx(#[from] sqlx::Error),
-    #[error("Image generator encountered an error: {0}")]
-    ImageGenerator(#[from] xpd_rank_card::Error),
-    #[error("CSV encountered an error: {0}")]
-    Csv(#[from] csv::Error),
-    #[error("Rust writeln! returned an error: {0}")]
-    Fmt(#[from] std::fmt::Error),
-    #[error("HTTP error: {0}")]
-    Http(#[from] reqwest::Error),
-    #[error("Redis error: {0}")]
-    Redis(#[from] redis::RedisError),
-    #[error("Discord API error: {0}")]
-    DiscordApi(#[from] twilight_http::Error),
-    #[error("Discord API decoding error: {0}")]
-    DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
 }

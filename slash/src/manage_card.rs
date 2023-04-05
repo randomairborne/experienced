@@ -1,36 +1,67 @@
 use sqlx::query;
 use twilight_model::{
-    channel::message::MessageFlags, http::interaction::InteractionResponseData, user::User,
+    channel::message::MessageFlags,
+    http::interaction::InteractionResponseData,
+    id::{marker::GuildMarker, Id},
+    user::User,
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
 
 use crate::{
     cmd_defs::{card::CardCommandEdit, CardCommand},
-    manager::Error,
-    AppState,
+    AppState, Error,
 };
 
 pub async fn process_colors(
     data: CardCommand,
-    invoker: User,
+    user: User,
     state: AppState,
+    guild_id: Id<GuildMarker>,
 ) -> Result<InteractionResponseData, Error> {
+    #[allow(clippy::cast_possible_wrap)]
+    let user_id = user.id.get() as i64;
     let contents = match data {
-        CardCommand::Reset(_reset) => process_reset(state, &invoker).await,
+        CardCommand::Reset(_reset) => process_reset(&state, &user).await?,
         CardCommand::Fetch(fetch) => {
-            process_fetch(state, &fetch.user.map_or_else(|| invoker, |v| v.resolved)).await
+            let user = fetch.user.as_ref().map_or(&user, |user| &user.resolved);
+            process_fetch(&state, user).await?
         }
-        CardCommand::Edit(edit) => process_edit(edit, state, &invoker).await,
-    }?;
+        CardCommand::Edit(edit) => process_edit(edit, &state, &user).await?,
+    };
+    #[allow(clippy::cast_possible_wrap)]
+    let guild_id = guild_id.get() as i64;
+    // Select current XP from the database, return 0 if there is no row
+    let xp = query!(
+        "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
+        user_id,
+        guild_id
+    )
+    .fetch_optional(&state.db)
+    .await?
+    .map_or(0, |v| v.xp);
+    let rank = query!(
+        "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
+        xp,
+        guild_id
+    )
+    .fetch_one(&state.db)
+    .await?
+    .count
+    .unwrap_or(0)
+        + 1;
+    #[allow(clippy::cast_sign_loss)]
+    let level_info = mee6::LevelInfo::new(xp as u64);
+    let card = crate::levels::gen_card(&state, &user, level_info, rank).await?;
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)
         .embeds([EmbedBuilder::new().description(contents).build()])
+        .attachments(vec![card])
         .build())
 }
 
 async fn process_edit(
     edit: CardCommandEdit,
-    state: AppState,
+    state: &AppState,
     user: &User,
 ) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
@@ -74,10 +105,11 @@ async fn process_edit(
     )
     .execute(&state.db)
     .await?;
+
     Ok("Updated card!".to_string())
 }
 
-async fn process_reset(state: AppState, user: &User) -> Result<String, Error> {
+async fn process_reset(state: &AppState, user: &User) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "DELETE FROM custom_card WHERE id = $1",
@@ -88,7 +120,7 @@ async fn process_reset(state: AppState, user: &User) -> Result<String, Error> {
     Ok("Card settings cleared!".to_string())
 }
 
-async fn process_fetch(state: AppState, user: &User) -> Result<String, Error> {
+async fn process_fetch(state: &AppState, user: &User) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let chosen_font = query!(
         "SELECT font FROM custom_card WHERE id = $1",
