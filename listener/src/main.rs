@@ -52,7 +52,7 @@ async fn main() {
     let mut set = JoinSet::new();
 
     for shard in shards {
-        set.spawn_local(event_loop(shard, should_shutdown.clone(), state.clone()));
+        set.spawn(event_loop(shard, should_shutdown.clone(), state.clone()));
     }
 
     tokio::signal::ctrl_c().await.unwrap();

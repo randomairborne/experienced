@@ -100,3 +100,5 @@ pub struct AppState {
     pub http: reqwest::Client,
     pub redis: redis::aio::ConnectionManager,
 }
+
+pub struct ResponseData {}

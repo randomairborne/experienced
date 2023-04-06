@@ -1,32 +1,85 @@
 use sqlx::query;
 use twilight_model::{
     channel::message::MessageFlags,
-    http::interaction::InteractionResponseData,
+    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::GuildMarker, Id},
     user::User,
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::{
+    embed::{EmbedBuilder, ImageSource},
+    InteractionResponseDataBuilder,
+};
 
 use crate::{
     cmd_defs::{card::CardCommandEdit, CardCommand},
     AppState, Error,
 };
 
-pub async fn process_colors(
+#[allow(clippy::unused_async)]
+pub async fn card_update(
     data: CardCommand,
     user: User,
     state: AppState,
     guild_id: Id<GuildMarker>,
-) -> Result<InteractionResponseData, Error> {
+    interaction_token: String,
+) -> Result<InteractionResponse, Error> {
+    tokio::spawn(add_card_to_response(
+        data,
+        user,
+        state,
+        guild_id,
+        interaction_token,
+    ));
+    Ok(InteractionResponse {
+        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+        data: Some(
+            InteractionResponseDataBuilder::new()
+                .flags(MessageFlags::EPHEMERAL)
+                .build(),
+        ),
+    })
+}
+
+async fn add_card_to_response(
+    data: CardCommand,
+    user: User,
+    state: AppState,
+    guild_id: Id<GuildMarker>,
+    interaction_token: String,
+) {
+    if let Err(e) =
+        add_card_to_response_actual(data, user, &state, guild_id, interaction_token.clone()).await
+    {
+        warn!("{e:?}");
+        if let Ok(followup) = state
+            .client
+            .interaction(state.my_id)
+            .create_followup(&interaction_token)
+            .content(&format!("{e:#?}"))
+        {
+            if let Err(e) = followup.await {
+                warn!("{e:?}");
+            }
+        };
+    }
+}
+
+async fn add_card_to_response_actual(
+    data: CardCommand,
+    user: User,
+    state: &AppState,
+    guild_id: Id<GuildMarker>,
+    interaction_token: String,
+) -> Result<(), Error> {
     #[allow(clippy::cast_possible_wrap)]
     let user_id = user.id.get() as i64;
     let contents = match data {
-        CardCommand::Reset(_reset) => process_reset(&state, &user).await?,
+        CardCommand::Reset(_reset) => process_reset(state, &user).await?,
         CardCommand::Fetch(fetch) => {
             let user = fetch.user.as_ref().map_or(&user, |user| &user.resolved);
-            process_fetch(&state, user).await?
+            process_fetch(state, user).await?
         }
-        CardCommand::Edit(edit) => process_edit(edit, &state, &user).await?,
+        CardCommand::Edit(edit) => process_edit(edit, state, &user).await?,
     };
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
@@ -51,12 +104,19 @@ pub async fn process_colors(
         + 1;
     #[allow(clippy::cast_sign_loss)]
     let level_info = mee6::LevelInfo::new(xp as u64);
-    let card = crate::levels::gen_card(&state, &user, level_info, rank).await?;
-    Ok(InteractionResponseDataBuilder::new()
-        .flags(MessageFlags::EPHEMERAL)
-        .embeds([EmbedBuilder::new().description(contents).build()])
-        .attachments(vec![card])
-        .build())
+    let card = crate::levels::gen_card(state, &user, level_info, rank).await?;
+    let embed = EmbedBuilder::new()
+        .title(contents)
+        .thumbnail(ImageSource::attachment("card.png")?)
+        .build();
+    state
+        .client
+        .interaction(state.my_id)
+        .create_followup(&interaction_token)
+        .attachments(&[card])?
+        .embeds(&[embed])?
+        .await?;
+    Ok(())
 }
 
 async fn process_edit(

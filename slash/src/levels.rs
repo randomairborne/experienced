@@ -17,6 +17,7 @@ pub async fn get_level(
     user: User,
     invoker: User,
     state: AppState,
+    interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
@@ -48,7 +49,7 @@ pub async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(state, user, level_info, rank).await;
+            return generate_level_response(state, user, level_info, rank, interaction_token).await;
         }
     } else if xp == 0 {
         format!(
@@ -57,7 +58,7 @@ pub async fn get_level(
             user.discriminator()
         )
     } else {
-        return generate_level_response(state, user, level_info, rank).await;
+        return generate_level_response(state, user, level_info, rank, interaction_token).await;
     };
     Ok(InteractionResponse {
         kind: InteractionResponseType::ChannelMessageWithSource,
@@ -70,22 +71,74 @@ pub async fn get_level(
     })
 }
 
+#[allow(clippy::unused_async)]
 async fn generate_level_response(
     state: AppState,
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
+    interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
-    let card = gen_card(&state, &user, level_info, rank).await?;
+    tokio::spawn(update_interaction_with_card(
+        state,
+        user,
+        level_info,
+        rank,
+        interaction_token,
+    ));
     Ok(InteractionResponse {
-        kind: InteractionResponseType::ChannelMessageWithSource,
-        data: Some(
-            InteractionResponseDataBuilder::new()
-                .attachments([card])
-                .build(),
-        ),
+        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+        data: None,
     })
 }
+
+async fn update_interaction_with_card(
+    state: AppState,
+    user: User,
+    level_info: mee6::LevelInfo,
+    rank: i64,
+    interaction_token: String,
+) {
+    if let Err(e) = update_interaction_with_card_actual(
+        &state,
+        user,
+        level_info,
+        rank,
+        interaction_token.clone(),
+    )
+    .await
+    {
+        warn!("{e:?}");
+        if let Ok(followup) = state
+            .client
+            .interaction(state.my_id)
+            .create_followup(&interaction_token)
+            .content(&format!("{e:#?}"))
+        {
+            if let Err(e) = followup.await {
+                warn!("{e:?}");
+            }
+        };
+    }
+}
+
+async fn update_interaction_with_card_actual(
+    state: &AppState,
+    user: User,
+    level_info: mee6::LevelInfo,
+    rank: i64,
+    interaction_token: String,
+) -> Result<(), Error> {
+    let card = gen_card(state, &user, level_info, rank).await?;
+    state
+        .client
+        .interaction(state.my_id)
+        .create_followup(&interaction_token)
+        .attachments(&[card])?
+        .await?;
+    Ok(())
+}
+
 pub async fn gen_card(
     state: &AppState,
     user: &User,
