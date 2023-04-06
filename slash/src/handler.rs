@@ -1,6 +1,6 @@
 use axum::{body::Bytes, extract::State, http::HeaderMap, response::IntoResponse, Json};
 use twilight_model::{
-    application::interaction::Interaction,
+    application::interaction::{Interaction, InteractionType},
     channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
@@ -16,9 +16,16 @@ pub async fn handle(
     let body = body.to_vec();
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
     let interaction: Interaction = serde_json::from_slice(&body)?;
+    if matches!(interaction.kind, InteractionType::Ping) {
+        return Ok(Json(InteractionResponse {
+            kind: InteractionResponseType::Pong,
+            data: None,
+        }));
+    }
     tokio::spawn(async move {
         let interaction_token = interaction.token.clone();
-        match crate::processor::process(interaction, state.clone()).await {
+        let interaction_id = interaction.id;
+        let resp = match crate::processor::process(interaction, state.clone()).await {
             Ok(val) => val,
             Err(e) => {
                 error!("{e}");
@@ -33,10 +40,15 @@ pub async fn handle(
                 }
             }
         };
-        let Err(e) = state.client.interaction(state.my_id).create_followup(&interaction_token).await else { return; };
-        warn!("{e:#?}");
+        if let Err(e) = state
+            .client
+            .interaction(state.my_id)
+            .create_response(interaction_id, &interaction_token, &resp)
+            .await
+        {
+            warn!("{e:#?}");
+        };
     });
-
     Ok(Json(InteractionResponse {
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
         data: None,
