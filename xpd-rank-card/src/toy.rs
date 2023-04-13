@@ -21,6 +21,7 @@ pub enum Toy {
 }
 
 impl Toy {
+    #[must_use]
     pub const fn png(&self) -> &'static [u8] {
         match self {
             Self::Bee => include_bytes!("resources/icons/CEa_TIde/bee.png"),
@@ -41,6 +42,7 @@ impl Toy {
             Self::Airplane => include_bytes!("resources/icons/valkyrie_pilot/airplane.png"),
         }
     }
+    #[must_use]
     pub const fn filename(&self) -> &'static str {
         match self {
             Self::Bee => "bee.png",
@@ -61,6 +63,7 @@ impl Toy {
             Self::Airplane => "airplane.png",
         }
     }
+    #[must_use]
     pub fn from_filename(data: &str) -> Option<Self> {
         let out = match data {
             "bee.png" => Self::Bee,
@@ -106,5 +109,14 @@ impl Display for Toy {
             Self::Airplane => "Airplane",
         };
         f.write_str(name)
+    }
+}
+
+impl serde::Serialize for Toy {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.filename())
     }
 }

@@ -1,12 +1,14 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
 pub mod colors;
+mod font;
 mod toy;
-use std::sync::Arc;
 
+pub use font::Font;
 pub use toy::Toy;
 
 use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
+use std::sync::Arc;
 use tera::Value;
 
 #[derive(serde::Serialize)]
@@ -174,9 +176,9 @@ mod tests {
             percentage: (data.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
-            font: "Roboto".to_string(),
+            font: Font::Roboto,
             colors: Colors::default(),
-            toy: Some("parrot.png".to_string()),
+            toy: Some(Toy::Parrot),
             avatar: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==".to_string(),
         };
         let output = state.do_render(&tera::Context::from_serialize(context)?)?;

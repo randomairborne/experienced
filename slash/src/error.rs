@@ -18,6 +18,8 @@ pub enum Error {
     NoGuildId,
     #[error("CSV encountered an IntoInner error")]
     CsvIntoInner,
+    #[error("Invalid font")]
+    InvalidFont,
     #[error("Interaction parser encountered an error: {0}!")]
     Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Discord error: {0}!")]

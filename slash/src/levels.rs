@@ -11,6 +11,7 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use xpd_rank_card::{Font, Toy};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -150,12 +151,23 @@ pub async fn gen_card(
         "SELECT font, toy_image FROM custom_card WHERE id = $1",
         user.id.get() as i64
     )
-    .fetch_one(&state.db)
-    .await;
-    let (font, toy) = non_color_customizations.map_or_else(
-        |_| ("Roboto".to_string(), None),
-        |v| (v.font.unwrap_or_else(|| "Roboto".to_string()), v.toy_image),
-    );
+    .fetch_optional(&state.db)
+    .await?;
+    let (font, toy) = if let Some(customizations) = non_color_customizations {
+        let font = {
+            if let Some(strfont) = customizations.font {
+                Font::from_name(&strfont).ok_or(Error::InvalidFont)?
+            } else {
+                Font::Roboto
+            }
+        };
+        let toy = customizations
+            .toy_image
+            .and_then(|v| Toy::from_filename(&v));
+        (font, toy)
+    } else {
+        (Font::Roboto, None)
+    };
     let avatar = get_avatar(state, user).await?;
     #[allow(
         clippy::cast_precision_loss,
