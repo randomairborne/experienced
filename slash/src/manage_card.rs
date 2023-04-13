@@ -107,7 +107,7 @@ async fn add_card_to_response_actual(
     let card = crate::levels::gen_card(state, &user, level_info, rank).await?;
     let embed = EmbedBuilder::new()
         .title(contents)
-        .thumbnail(ImageSource::attachment("card.png")?)
+        .image(ImageSource::attachment("card.png")?)
         .build();
     state
         .client

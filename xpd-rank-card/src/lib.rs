@@ -1,9 +1,13 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
 pub mod colors;
-use std::{collections::HashMap, sync::Arc};
+mod toy;
+use std::sync::Arc;
+
+pub use toy::Toy;
 
 use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
+use tera::Value;
 
 #[derive(serde::Serialize)]
 pub struct Context {
@@ -14,9 +18,9 @@ pub struct Context {
     pub percentage: u64,
     pub current: u64,
     pub needed: u64,
-    pub font: String,
+    pub font: Font,
     pub colors: crate::colors::Colors,
-    pub toy: Option<String>,
+    pub toy: Option<Toy>,
     pub avatar: String,
 }
 
@@ -24,7 +28,6 @@ pub struct Context {
 pub struct SvgState {
     fonts: Arc<resvg::usvg::fontdb::Database>,
     tera: Arc<tera::Tera>,
-    images: Arc<HashMap<String, Arc<Vec<u8>>>>,
     threads: Arc<rayon::ThreadPool>,
 }
 
@@ -53,10 +56,9 @@ impl SvgState {
                 _ => None,
             },
         );
-        let resolve_string_state = self.clone();
         let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
             Some(ImageKind::PNG(
-                resolve_string_state.images.get(href)?.clone(),
+                Toy::from_filename(href)?.png().to_vec().into(),
             ))
         });
         let opt = resvg::usvg::Options {
@@ -93,80 +95,37 @@ impl Default for SvgState {
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
         tera.add_raw_template("svg", include_str!("resources/card.svg"))
             .expect("Failed to build card.svg template!");
-        let images = HashMap::from([
-            (
-                "parrot.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/parrot.png").to_vec()),
-            ),
-            (
-                "fox.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/fox.png").to_vec()),
-            ),
-            (
-                "grassblock.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/grassblock.png").to_vec()),
-            ),
-            (
-                "pickaxe.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/pickaxe.png").to_vec()),
-            ),
-            (
-                "steveheart.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/steveheart.png").to_vec()),
-            ),
-            (
-                "tree.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/tree.png").to_vec()),
-            ),
-            (
-                "bee.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/bee.png").to_vec()),
-            ),
-            (
-                "biscuit.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/biscuit.png").to_vec()),
-            ),
-            (
-                "chicken.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/chicken.png").to_vec()),
-            ),
-            (
-                "cow.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/cow.png").to_vec()),
-            ),
-            (
-                "pig.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/pig.png").to_vec()),
-            ),
-            (
-                "potion_blue.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/potion_blue.png").to_vec()),
-            ),
-            (
-                "potion_purple.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/potion_purple.png").to_vec()),
-            ),
-            (
-                "potion_red.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/potion_red.png").to_vec()),
-            ),
-            (
-                "sheep.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/CEa_TIde/sheep.png").to_vec()),
-            ),
-            (
-                "airplane.png".to_string(),
-                Arc::new(include_bytes!("resources/icons/valkyrie_pilot/airplane.png").to_vec()),
-            ),
-        ]);
+        tera.register_filter("integerhumanize", ihumanize);
         let threads = rayon::ThreadPoolBuilder::new().build().unwrap();
         Self {
             fonts: Arc::new(fonts),
             tera: Arc::new(tera),
-            images: Arc::new(images),
             threads: Arc::new(threads),
         }
     }
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn ihumanize(v: &Value, _hm: &std::collections::HashMap<String, Value>) -> tera::Result<Value> {
+    let num = if let Value::Number(num) = v {
+        if let Some(num) = num.as_f64() {
+            num
+        } else {
+            return Ok(v.clone());
+        }
+    } else {
+        return Ok(v.clone());
+    };
+    let suffix = if (1_000.0..1_000_000.0).contains(&num) {
+        "k"
+    } else if (1_000_000.0..1_000_000_000.0).contains(&num) {
+        "m"
+    } else if (1_000_000_000.0..1_000_000_000_000.0).contains(&num) {
+        "b"
+    } else {
+        ""
+    };
+    Ok(Value::String(format!("{num}{suffix}")))
 }
 
 #[derive(Debug, thiserror::Error)]
