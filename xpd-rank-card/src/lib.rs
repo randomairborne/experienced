@@ -118,16 +118,18 @@ fn ihumanize(v: &Value, _hm: &std::collections::HashMap<String, Value>) -> tera:
     } else {
         return Ok(v.clone());
     };
-    let suffix = if (1_000.0..1_000_000.0).contains(&num) {
-        "k"
+    let (suffix, xp) = if (1_000.0..1_000_000.0).contains(&num) {
+        ("k", num / 1_000.0)
     } else if (1_000_000.0..1_000_000_000.0).contains(&num) {
-        "m"
+        ("m", num / 1_000_000.0)
     } else if (1_000_000_000.0..1_000_000_000_000.0).contains(&num) {
-        "b"
+        ("b", num / 1_000_000_000.0)
     } else {
-        ""
+        ("", num)
     };
-    Ok(Value::String(format!("{num}{suffix}")))
+    let xp_untrim = format!("{xp:.1}");
+    let xp_trim = xp_untrim.trim_end_matches(['.', '0']);
+    Ok(Value::String(format!("{xp_trim}{suffix}")))
 }
 
 #[derive(Debug, thiserror::Error)]
