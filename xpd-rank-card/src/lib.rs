@@ -11,6 +11,8 @@ use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
 use std::sync::Arc;
 use tera::Value;
 
+/// Context is the main argument of [`SvgState::render`], and takes parameters for what to put on
+/// the card.
 #[derive(serde::Serialize)]
 pub struct Context {
     pub level: u64,
@@ -26,6 +28,7 @@ pub struct Context {
     pub avatar: String,
 }
 
+/// This struct should be constructed with [`SvgState::new`] to begin rendering rank cards
 #[derive(Clone)]
 pub struct SvgState {
     fonts: Arc<resvg::usvg::fontdb::Database>,
@@ -34,12 +37,15 @@ pub struct SvgState {
 }
 
 impl SvgState {
+    /// Create a new [`SvgState`]
     #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
+    /// this function renders an SVG on the internal thread pool, and returns PNG-encoded image
+    /// data on completion.
     /// # Errors
-    /// Errors on SVG library failure
+    /// Errors on [`resvg`](https://docs.rs/resvg) library failure. This will almost always be a library bug.
     pub async fn render(&self, context: Context) -> Result<Vec<u8>, Error> {
         let context = tera::Context::from_serialize(context)?;
         let cloned_self = self.clone();
@@ -69,6 +75,7 @@ impl SvgState {
                 resolve_string,
             },
             image_rendering: ImageRendering::OptimizeSpeed,
+            font_family: "Roboto".to_string(),
             ..Default::default()
         };
         let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
