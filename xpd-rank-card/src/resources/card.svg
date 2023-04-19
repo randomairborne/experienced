@@ -4,22 +4,21 @@
      width="800" height="200"
      xmlns="http://www.w3.org/2000/svg">
   <style>
+    .font {
+      font-family: "{{ font }}";
+    }
     .name {
-      font-family: {{ font }};
       font-size: 25px;
       fill: {{ colors.important }};
     }
     .discriminator {
-      font-family: {{ font }};
       font-size: 10px;
       fill: {{ colors.secondary }};
     }
     .stat {
-      font-family: {{ font }};
       font-size: 40px;
     }
     .stat-name {
-      font-family: {{ font }};
       font-size: 20px;
     }
     .rank {
@@ -29,12 +28,10 @@
       fill: {{ colors.level }};
     }
     .needed {
-      font-family: {{ font }};
       font-size: 15px;
       fill: {{ colors.important }};
     }
     .current {
-      font-family: {{ font }};
       font-size: 15px;
       fill: {{ colors.secondary }};
     }
@@ -51,17 +48,17 @@
   </clipPath>
   <image id="avatar" class="avatar" x="30" y="25" width="90" height="90" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
   <text x="135" y="60">
-    <tspan class="name">{{ name }}</tspan>
-    <tspan class="discriminator">#{{ discriminator }}</tspan>
+    <tspan class="name font">{{ name }}</tspan>
+    <tspan class="discriminator font">#{{ discriminator }}</tspan>
   </text>
   <text x="135" y="110">
-    <tspan class="stat-name rank">RANK:</tspan>
-    <tspan class="stat rank">&#160;#{{ rank }}&#160;&#160;</tspan>
-    <tspan class="stat-name level">LEVEL:</tspan>
-    <tspan class="stat level">&#160;{{ level }}</tspan>
+    <tspan class="stat-name rank font">RANK:</tspan>
+    <tspan class="stat rank font">&#160;#{{ rank }}&#160;&#160;</tspan>
+    <tspan class="stat-name level font">LEVEL:</tspan>
+    <tspan class="stat level font">&#160;{{ level }}</tspan>
   </text>
   <text x="{% if xp_at_end %}760{% else %}40{% endif %}" y="155" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
-    <tspan class="current">{{ current | integerhumanize }}</tspan>
-    <tspan class="needed">&#160;/&#160;{{ needed | integerhumanize }} xp</tspan>
+    <tspan class="current font">{{ current | integerhumanize }}</tspan>
+    <tspan class="needed font">&#160;/&#160;{{ needed | integerhumanize }} xp</tspan>
   </text>
 </svg>
