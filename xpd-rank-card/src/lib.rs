@@ -142,7 +142,7 @@ fn ihumanize(v: &Value, _hm: &std::collections::HashMap<String, Value>) -> tera:
         ("", num)
     };
     let xp_untrim = format!("{xp:.1}");
-    let xp_trim = xp_untrim.trim_end_matches(['.', '0']);
+    let xp_trim = xp_untrim.trim_end_matches(".0");
     Ok(Value::String(format!("{xp_trim}{suffix}")))
 }
 
