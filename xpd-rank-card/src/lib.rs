@@ -55,6 +55,13 @@ impl SvgState {
         });
         recv.await?
     }
+    /// This function is very fast. It does not need to be async.
+    /// # Errors
+    /// Errors if tera has a problem
+    pub fn render_svg(&self, context: Context) -> Result<String, Error> {
+        let ctx = tera::Context::from_serialize(context)?;
+        Ok(self.tera.render("svg", &ctx)?)
+    }
     fn do_render(&self, context: &tera::Context) -> Result<Vec<u8>, Error> {
         let svg = self.tera.render("svg", context)?;
         let resolve_data = Box::new(
@@ -96,10 +103,10 @@ impl SvgState {
 impl Default for SvgState {
     fn default() -> Self {
         let mut fonts = resvg::usvg::fontdb::Database::new();
-        fonts.load_font_data(include_bytes!("resources/fonts/Mojang.ttf").to_vec());
-        fonts.load_font_data(include_bytes!("resources/fonts/Roboto.ttf").to_vec());
-        fonts.load_font_data(include_bytes!("resources/fonts/JetBrainsMono.ttf").to_vec());
-        fonts.load_font_data(include_bytes!("resources/fonts/MontserratAlt1.ttf").to_vec());
+        fonts.load_font_data(Font::Mojang.ttf().to_vec());
+        fonts.load_font_data(Font::Roboto.ttf().to_vec());
+        fonts.load_font_data(Font::JetBrainsMono.ttf().to_vec());
+        fonts.load_font_data(Font::MontserratAlt1.ttf().to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
         tera.add_raw_template("svg", include_str!("resources/card.svg"))
