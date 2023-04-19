@@ -5,7 +5,7 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .font {
-      font-family: "{{ font }}";
+      font-family: {{ font }}, sans-serif;
     }
     .name {
       font-size: 25px;
