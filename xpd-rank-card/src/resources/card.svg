@@ -46,19 +46,20 @@
   <clipPath id="clipProfilePic">
     <circle r="45" cx="75" cy="70"/>
   </clipPath>
+  <!-- TSpans cannot have font classes. It must wrap the text element. See https://github.com/RazrFalcon/resvg/issues/614 -->
   <image id="avatar" class="avatar" x="30" y="25" width="90" height="90" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
-  <text x="135" y="60">
-    <tspan class="name font">{{ name }}</tspan>
-    <tspan class="discriminator font">#{{ discriminator }}</tspan>
+  <text x="135" y="60" class="font">
+    <tspan class="name">{{ name }}</tspan>
+    <tspan class="discriminator">#{{ discriminator }}</tspan>
   </text>
-  <text x="135" y="110">
-    <tspan class="stat-name rank font">RANK:</tspan>
-    <tspan class="stat rank font">&#160;#{{ rank }}&#160;&#160;</tspan>
-    <tspan class="stat-name level font">LEVEL:</tspan>
-    <tspan class="stat level font">&#160;{{ level }}</tspan>
+  <text x="135" y="110" class="font">
+    <tspan class="stat-name rank">RANK:</tspan>
+    <tspan class="stat rank">&#160;#{{ rank }}&#160;&#160;</tspan>
+    <tspan class="stat-name level">LEVEL:</tspan>
+    <tspan class="stat level">&#160;{{ level }}</tspan>
   </text>
-  <text x="{% if xp_at_end %}760{% else %}40{% endif %}" y="155" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
-    <tspan class="current font">{{ current | integerhumanize }}</tspan>
-    <tspan class="needed font">&#160;/&#160;{{ needed | integerhumanize }} xp</tspan>
+  <text x="{% if xp_at_end %}760{% else %}40{% endif %}" y="155" class="font" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
+    <tspan class="current">{{ current | integerhumanize }}</tspan>
+    <tspan class="needed">&#160;/&#160;{{ needed | integerhumanize }} xp</tspan>
   </text>
 </svg>
