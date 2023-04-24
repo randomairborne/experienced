@@ -14,7 +14,7 @@ pub async fn set_chunk(redis: deadpool_redis::Pool, chunk: Vec<Member>) -> Resul
     Ok(redis
         .get()
         .await?
-        .set_multiple::<String, String, ()>(user_pairs.as_slice())
+        .mset::<String, String, ()>(user_pairs.as_slice())
         .await?)
 }
 
