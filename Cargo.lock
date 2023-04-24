@@ -577,12 +577,12 @@ dependencies = [
 
 [[package]]
 name = "deadpool-redis"
-version = "0.11.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b8bde44cbfdf17ae5baa45c9f43073b320f1a19955389315629304a23909ad2"
+checksum = "5f1760f60ffc6653b4afd924c5792098d8c00d9a3deb6b3d989eac17949dc422"
 dependencies = [
  "deadpool",
- "redis",
+ "redis 0.23.0",
 ]
 
 [[package]]
@@ -701,7 +701,7 @@ dependencies = [
  "dotenvy",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.8.5",
- "redis",
+ "redis 0.22.3",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -724,7 +724,7 @@ dependencies = [
  "hex",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.8.5",
- "redis",
+ "redis 0.22.3",
  "reqwest",
  "serde",
  "serde_json",
@@ -749,7 +749,7 @@ dependencies = [
  "deadpool-redis",
  "dotenvy",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "redis",
+ "redis 0.22.3",
  "serde",
  "serde_json",
  "sqlx",
@@ -1809,6 +1809,25 @@ dependencies = [
  "pin-project-lite",
  "ryu",
  "sha1_smol",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ea8c51b5dc1d8e5fd3350ec8167f464ec0995e79f2e90a075b63371500d557f"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "combine",
+ "futures-util",
+ "itoa",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
  "tokio",
  "tokio-util",
  "url",
