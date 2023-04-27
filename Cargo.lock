@@ -107,9 +107,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "axum"
-version = "0.6.16"
+version = "0.6.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "113713495a32dd0ab52baf5c10044725aa3aec00b31beda84218e469029b72a3"
+checksum = "b70caf9f1b0c045f7da350636435b775a9733adf2df56e8aa2a29210fbc335d4"
 dependencies = [
  "async-trait",
  "axum-core",
@@ -1259,9 +1259,9 @@ dependencies = [
 
 [[package]]
 name = "kurbo"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28a2d0c1781729f69dbea30f968608cadfaeb6582e5ce903a167a5216b53cd0f"
+checksum = "d676038719d1c892f91e6e85121550143c75880b42f7feff6d413a078cf91fb3"
 dependencies = [
  "arrayvec",
 ]
@@ -1537,9 +1537,9 @@ checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 
 [[package]]
 name = "pest"
-version = "2.5.7"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b1403e8401ad5dedea73c626b99758535b342502f8d1e361f4a2dd952749122"
+checksum = "e68e84bfb01f0507134eac1e9b410a12ba379d064eab48c50ba4ce329a527b70"
 dependencies = [
  "thiserror",
  "ucd-trie",
@@ -1547,9 +1547,9 @@ dependencies = [
 
 [[package]]
 name = "pest_derive"
-version = "2.5.7"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be99c4c1d2fc2769b1d00239431d711d08f6efedcecb8b6e30707160aee99c15"
+checksum = "6b79d4c71c865a25a4322296122e3924d30bc8ee0834c8bfc8b95f7f054afbfb"
 dependencies = [
  "pest",
  "pest_generator",
@@ -1557,9 +1557,9 @@ dependencies = [
 
 [[package]]
 name = "pest_generator"
-version = "2.5.7"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e56094789873daa36164de2e822b3888c6ae4b4f9da555a1103587658c805b1e"
+checksum = "6c435bf1076437b851ebc8edc3a18442796b30f1728ffea6262d59bbe28b077e"
 dependencies = [
  "pest",
  "pest_meta",
@@ -1570,9 +1570,9 @@ dependencies = [
 
 [[package]]
 name = "pest_meta"
-version = "2.5.7"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6733073c7cff3d8459fda0e42f13a047870242aed8b509fe98000928975f359e"
+checksum = "745a452f8eb71e39ffd8ee32b3c5f51d03845f99786fa9b68db6ff509c505411"
 dependencies = [
  "once_cell",
  "pest",
@@ -2626,9 +2626,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.27.0"
+version = "1.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0de47a4eecbe11f498978a9b29d792f0d2692d1dd003650c24c76510e3bc001"
+checksum = "c3c786bf8134e5a3a166db9b29ab8f48134739014a3eca7bc6bfa95d673b136f"
 dependencies = [
  "autocfg",
  "bytes",
@@ -2639,14 +2639,14 @@ dependencies = [
  "signal-hook-registry",
  "socket2",
  "tokio-macros",
- "windows-sys 0.45.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
 name = "tokio-macros"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61a573bdc87985e9d6ddeed1b3d864e8a302c847e40d647746df2f1de209d1ce"
+checksum = "630bdcf245f78637c13ec01ffae6187cca34625e8c63150d424b59e55af2675e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2666,9 +2666,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.12"
+version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fb52b74f05dbf495a8fba459fdc331812b96aa086d9eb78101fa0d4569c3313"
+checksum = "397c988d37662c7dda6d2208364a706264bf3d6138b11d436cbac0ad38832842"
 dependencies = [
  "futures-core",
  "pin-project-lite",
@@ -2693,9 +2693,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.7"
+version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5427d89453009325de0d8f342c9490009f76e999cb7672d77e46267448f7e6b2"
+checksum = "806fe8c2c87eccc8b3267cbae29ed3ab2d0bd37fca70ab622e46aaa9375ddb7d"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2735,11 +2735,10 @@ checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 
 [[package]]
 name = "tracing"
-version = "0.1.37"
+version = "0.1.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ce8c33a8d48bd45d624a6e523445fd21ec13d3653cd51f681abf67418f54eb8"
+checksum = "cf9cf6a813d3f40c88b0b6b6f29a5c95c6cdbf97c1f9cc53fb820200f5ad814d"
 dependencies = [
- "cfg-if",
  "log",
  "pin-project-lite",
  "tracing-attributes",
@@ -2831,9 +2830,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1521b32ec6f04206a0c823087aa1b1473343bba52b3b7b286bae652a09f54959"
+checksum = "4a2b9cb8e04ff1a41650b2ff7b7a74362a50fd09e2f1e371fd4404e8cc807055"
 dependencies = [
  "bitflags",
  "futures-util",
@@ -2852,9 +2851,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway-queue"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81e08b87014090d4528970d838324d96f8e1ad51f40d86a806ab2bfb124d6bdb"
+checksum = "8ecc30711a9effe837488272fb87e3444b278d3850d5022dd9e6f3f2e7b89d7f"
 dependencies = [
  "tokio",
  "tracing",
@@ -2862,9 +2861,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-http"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f317f2005ae917ffa49c7979e62f7df348c6a564908bb1a38ecf202e97542257"
+checksum = "5d96e03cd8bca86770e6b3b644ec3938ea85b2c47048412b8767abe4a1ba2a65"
 dependencies = [
  "brotli",
  "hyper",
@@ -2915,9 +2914,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-model"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a37a73e1bf0c3819c0ebe752245f807a3565b5242454524b527369a79ab3dc33"
+checksum = "962d5e3d770c466c74089df42ba559aa9d7ef429b66108c3cf1bf9e6e0bc2109"
 dependencies = [
  "bitflags",
  "serde",
@@ -2929,9 +2928,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-util"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daea8f367a2c57b351543a0bbaaf366c2439da4b2d9c6fc34a01f0d190ff7301"
+checksum = "3ed941a02e81e2a7d74b1db1d3fbfab9e91cde347ce2779929ee1f159039ab32"
 dependencies = [
  "twilight-model",
  "twilight-validate",
@@ -3386,6 +3385,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75283be5efb2831d37ea142365f009c02ec203cd29a3ebecbc093d52315b66d0"
 dependencies = [
  "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.48.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
+dependencies = [
+ "windows-targets 0.48.0",
 ]
 
 [[package]]
