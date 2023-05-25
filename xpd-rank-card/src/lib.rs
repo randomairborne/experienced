@@ -87,15 +87,11 @@ impl SvgState {
         };
         let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
         tree.convert_text(&self.fonts);
-        let pixmap_size = tree.size.to_screen_size();
+        let pixmap_size = resvg::IntSize::from_usvg(tree.size);
         let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
             .ok_or(Error::PixmapCreation)?;
-        resvg::render(
-            &tree,
-            resvg::FitTo::Original,
-            resvg::tiny_skia::Transform::default(),
-            pixmap.as_mut(),
-        );
+        let retree = resvg::Tree::from_usvg(&tree);
+        retree.render(resvg::tiny_skia::Transform::default(), &mut pixmap.as_mut());
         Ok(pixmap.encode_png()?)
     }
 }

@@ -20,6 +20,8 @@ pub enum Error {
     CsvIntoInner,
     #[error("Invalid font")]
     InvalidFont,
+    #[error("There are too many users to import automatically. Please email valk@randomairborne.dev to set up imports for your server.")]
+    TooManyUsersForImport,
     #[error("Interaction parser encountered an error: {0}!")]
     Parse(#[from] twilight_interactions::error::ParseError),
     #[error("Discord error: {0}!")]

@@ -13,27 +13,13 @@ use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder
 use crate::{
     cmd_defs::{
         manage::{
-            XpCommandExperience, XpCommandExperienceImport, XpCommandRewards, XpCommandRewardsAdd,
+            XpCommandExperience, XpCommandRewards, XpCommandRewardsAdd,
             XpCommandRewardsRemove,
         },
         XpCommand,
     },
     AppState, Error,
 };
-
-#[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
-struct Mee6User {
-    pub id: u64,
-    pub level: i64,
-    pub xp: i64,
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
-struct XpUserGuildLevel {
-    pub id: i64,
-    pub guild: i64,
-    pub xp: i64,
-}
 
 pub async fn process_xp(
     data: XpCommand,
@@ -56,7 +42,7 @@ async fn process_experience(
     state: AppState,
 ) -> Result<String, Error> {
     match data {
-        XpCommandExperience::Import(import) => import_level_data(import, guild_id, state).await,
+        XpCommandExperience::Import(_) => import_level_data(guild_id, state).await,
         XpCommandExperience::Add(add) => {
             modify_user_xp(guild_id, add.user, add.amount, state).await
         }
@@ -94,7 +80,6 @@ async fn modify_user_xp(
 }
 
 async fn import_level_data(
-    data: XpCommandExperienceImport,
     guild_id: Id<GuildMarker>,
     mut state: AppState,
 ) -> Result<String, Error> {
@@ -109,26 +94,12 @@ async fn import_level_data(
             "This guild is being ratelimited. Try again in {time_remaining} seconds."
         ));
     }
-    let mee6_users: Vec<Mee6User> = state.http.get(data.levels.url).send().await?.json().await?;
-    let user_count = mee6_users.len();
-    let mut csv_writer = csv::Writer::from_writer(Vec::new());
-    for user in mee6_users {
-        #[allow(clippy::cast_possible_wrap)]
-        let xp_user = XpUserGuildLevel {
-            id: user.id as i64,
-            #[allow(clippy::cast_possible_wrap)]
-            guild: guild_id.get() as i64,
-            xp: user.xp,
-        };
-        csv_writer.serialize(xp_user)?;
+    let total_users = state.client.guild(guild_id).with_counts(true).await?.model().await?.approximate_member_count;
+    if let Some(total) = total_users {
+        if total > 10_000 {
+            return Err(Error::TooManyUsersForImport)
+        }
     }
-    let csv = csv_writer.into_inner().map_err(|_| Error::CsvIntoInner)?;
-    let mut copier = state
-        .db
-        .copy_in_raw("COPY levels FROM STDIN WITH (FORMAT csv)")
-        .await?;
-    copier.send(csv).await?;
-    copier.finish().await?;
     redis::cmd("SET")
         .arg(ratelimiting_key)
         .arg(3600)
@@ -136,7 +107,7 @@ async fn import_level_data(
         .arg(3600)
         .query_async(&mut state.redis)
         .await?;
-    Ok(format!("Imported {user_count} rows of user leveling data!"))
+    Ok("Importing user data- check back soon!".to_string())
 }
 
 async fn process_rewards<'a>(

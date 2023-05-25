@@ -10,13 +10,21 @@ mod levels;
 mod manage_card;
 mod manager;
 mod processor;
+mod mee6_worker;
 
 pub use error::Error;
 
 use sqlx::PgPool;
-use std::sync::Arc;
+use std::{
+    collections::VecDeque,
+    sync::{Arc},
+};
+use parking_lot::Mutex;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use twilight_model::id::{marker::ApplicationMarker, Id};
+use twilight_model::id::{
+    marker::{ApplicationMarker, GuildMarker},
+    Id,
+};
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -66,6 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     cmd_defs::register(client.interaction(my_id)).await;
     let http = reqwest::Client::new();
     let svg = SvgState::new();
+    let import_queue = ImportQueue::new();
     let state = AppState {
         db,
         pubkey,
@@ -74,6 +83,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         svg,
         http,
         redis,
+        import_queue,
     };
     let route = axum::Router::new()
         .route("/", axum::routing::get(|| async {}).post(handler::handle))
@@ -99,6 +109,17 @@ pub struct AppState {
     pub svg: SvgState,
     pub http: reqwest::Client,
     pub redis: redis::aio::ConnectionManager,
+    pub import_queue: ImportQueue,
 }
 
-pub struct ResponseData {}
+#[derive(Clone, Default)]
+pub struct ImportQueue {
+    pub mee6: Arc<Mutex<VecDeque<Id<GuildMarker>>>>,
+}
+
+impl ImportQueue {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
