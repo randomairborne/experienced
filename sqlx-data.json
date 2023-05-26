@@ -13,6 +13,20 @@
     },
     "query": "DELETE FROM role_rewards WHERE id = $1 AND guild = $2"
   },
+  "2253a02f621aa0735be44f9072e7d86e2c6d2d626a699ce35530e01aea54e6a4": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3)"
+  },
   "2789a4214d7f7b16be1cf8b429e137fc676688ce0359ea70effa283c11ed990f": {
     "describe": {
       "columns": [
