@@ -1,5 +1,4 @@
 use twilight_model::{
-    channel::Attachment,
     guild::Role,
     id::{
         marker::{RoleMarker, UserMarker},
@@ -90,10 +89,7 @@ pub struct XpCommandExperienceRemove {
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "import",
-    desc = "Import a MEE6 levels json (github.com/randomairborne/mee6-scraper)",
+    desc = "Import your server's mee6 leveling data. WARNING: THIS WILL OVERWRITE ANY CURRENT LEVELING DATA!",
     dm_permission = false
 )]
-pub struct XpCommandExperienceImport {
-    #[command(desc = "levels.json file compatible with mee6-scraper")]
-    pub levels: Attachment,
-}
+pub struct XpCommandExperienceImport;

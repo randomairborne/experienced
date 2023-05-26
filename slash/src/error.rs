@@ -40,8 +40,6 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
     #[error("Command had wrong number of arguments: {0}!")]
     WrongArgumentCount(&'static str),
-    #[error("CSV encountered an error: {0}")]
-    Csv(#[from] csv::Error),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
     #[error("Redis error: {0}")]

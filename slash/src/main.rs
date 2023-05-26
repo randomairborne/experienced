@@ -9,17 +9,14 @@ mod help;
 mod levels;
 mod manage_card;
 mod manager;
-mod processor;
 mod mee6_worker;
+mod processor;
 
 pub use error::Error;
 
-use sqlx::PgPool;
-use std::{
-    collections::VecDeque,
-    sync::{Arc},
-};
 use parking_lot::Mutex;
+use sqlx::PgPool;
+use std::{collections::VecDeque, sync::Arc};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{
     marker::{ApplicationMarker, GuildMarker},
@@ -85,6 +82,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         redis,
         import_queue,
     };
+    tokio::spawn(mee6_worker::do_fetches(state.clone()));
     let route = axum::Router::new()
         .route("/", axum::routing::get(|| async {}).post(handler::handle))
         .with_state(state);

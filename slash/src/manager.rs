@@ -13,8 +13,7 @@ use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder
 use crate::{
     cmd_defs::{
         manage::{
-            XpCommandExperience, XpCommandRewards, XpCommandRewardsAdd,
-            XpCommandRewardsRemove,
+            XpCommandExperience, XpCommandRewards, XpCommandRewardsAdd, XpCommandRewardsRemove,
         },
         XpCommand,
     },
@@ -94,10 +93,17 @@ async fn import_level_data(
             "This guild is being ratelimited. Try again in {time_remaining} seconds."
         ));
     }
-    let total_users = state.client.guild(guild_id).with_counts(true).await?.model().await?.approximate_member_count;
+    let total_users = state
+        .client
+        .guild(guild_id)
+        .with_counts(true)
+        .await?
+        .model()
+        .await?
+        .approximate_member_count;
     if let Some(total) = total_users {
         if total > 10_000 {
-            return Err(Error::TooManyUsersForImport)
+            return Err(Error::TooManyUsersForImport);
         }
     }
     redis::cmd("SET")

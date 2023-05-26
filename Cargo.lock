@@ -480,27 +480,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "csv"
-version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b015497079b9a9d69c02ad25de6c0a6edef051ea6360a327d0bd05802ef64ad"
-dependencies = [
- "csv-core",
- "itoa",
- "ryu",
- "serde",
-]
-
-[[package]]
-name = "csv-core"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b2466559f260f48ad25fe6317b3c8dac77b5bdb5763ac7d9d6103530663bc90"
-dependencies = [
- "memchr",
-]
-
-[[package]]
 name = "curve25519-dalek"
 version = "3.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -675,11 +654,11 @@ dependencies = [
  "axum",
  "base64 0.21.2",
  "cargo_metadata",
- "csv",
  "dotenvy",
  "ed25519-dalek",
  "hex",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parking_lot 0.12.1",
  "rand 0.8.5",
  "redis",
  "reqwest",
@@ -3535,7 +3514,6 @@ name = "xpd-rank-card"
 version = "0.1.6"
 dependencies = [
  "mee6 0.1.0",
- "parking_lot 0.12.1",
  "png",
  "rand 0.8.5",
  "rayon",

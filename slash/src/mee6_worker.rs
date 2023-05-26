@@ -1,40 +1,65 @@
-use twilight_model::id::{marker::{GuildMarker, UserMarker}, Id};
+use twilight_model::id::{
+    marker::{GuildMarker, UserMarker},
+    Id,
+};
 
-use crate::{Error, AppState};
+use crate::{AppState, Error};
 
-pub async fn do_fetches(state: &AppState) {
-    state.import_queue.mee6.lock()
+pub async fn do_fetches(state: AppState) {
+    loop {
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        let id = state.import_queue.mee6.lock().pop_front();
+        if let Some(guild_id) = id {
+            if let Err(e) = get_guild(guild_id, &state).await {
+                error!("worker failed to fetch: {e:?}");
+                state.import_queue.mee6.lock().push_back(guild_id);
+            }
+        }
+    }
 }
 
-async fn fetch(guild_id: Id<GuildMarker>, state: &AppState) -> Result<(), Error> {
-    let mee6_users: Vec<Mee6User> = state
+async fn get_guild(guild_id: Id<GuildMarker>, state: &AppState) -> Result<(), Error> {
+    let mut page = 0;
+    while fetch(guild_id, page, state).await? {
+        page += 1;
+    }
+    Ok(())
+}
+
+async fn fetch(guild_id: Id<GuildMarker>, page: usize, state: &AppState) -> Result<bool, Error> {
+    let mee6_data: Mee6ApiResponse = state
         .http
         .get(format!(
-            "https://mee6.xyz/api/plugins/levels/leaderboard/{guild_id}?limit=1000"
+            "https://mee6.xyz/api/plugins/levels/leaderboard/{guild_id}?limit=1000&page={page}"
         ))
         .send()
         .await?
         .json()
         .await?;
-    let user_count = mee6_users.len();
-    let mut csv_writer = csv::Writer::from_writer(Vec::new());
-    for user in mee6_users {
+    let mee6_users = mee6_data.players;
+    let mut trans = state.db.begin().await?;
+    for user in &mee6_users {
         #[allow(clippy::cast_possible_wrap)]
         let xp_user = XpUserGuildLevel {
             id: user.id.get() as i64,
             guild: guild_id.get() as i64,
             xp: user.xp,
         };
-        csv_writer.serialize(xp_user)?;
-    }
-    let csv = csv_writer.into_inner().map_err(|_| Error::CsvIntoInner)?;
-    let mut copier = state
-        .db
-        .copy_in_raw("COPY levels FROM STDIN WITH (FORMAT csv)")
+        sqlx::query!(
+            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3)",
+            xp_user.id,
+            xp_user.xp,
+            xp_user.guild
+        )
+        .execute(&mut trans)
         .await?;
-    copier.send(csv).await?;
-    copier.finish().await?;
-    Ok(())
+    }
+    Ok(mee6_users.is_empty())
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+struct Mee6ApiResponse {
+    pub players: Vec<Mee6User>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Copy, Clone)]
