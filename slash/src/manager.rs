@@ -113,7 +113,7 @@ async fn import_level_data(
         .arg(3600)
         .query_async(&mut state.redis)
         .await?;
-    Ok("Importing user data- check back soon!".to_string())
+    Ok("Importing user data- check back here soon!".to_string())
 }
 
 async fn process_rewards<'a>(

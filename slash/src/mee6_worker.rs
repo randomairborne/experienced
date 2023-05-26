@@ -8,13 +8,40 @@ use crate::{AppState, Error};
 pub async fn do_fetches(state: AppState) {
     loop {
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-        let id = state.import_queue.mee6.lock().pop_front();
-        if let Some(guild_id) = id {
-            if let Err(e) = get_guild(guild_id, &state).await {
-                error!("worker failed to fetch: {e:?}");
-                state.import_queue.mee6.lock().push_back(guild_id);
-            }
+        let Some((guild_id, interaction_token)) = state.import_queue.mee6.lock().pop_front() else { continue; };
+        if let Err(e) = get_guild(guild_id, &state).await {
+            error!("worker failed to fetch: {e:?}");
+            match state
+                .client
+                .interaction(state.my_id)
+                .update_response(&interaction_token)
+                .content(Some(&format!(
+                    "Worker failed to fetch from mee6 api: {e:?}"
+                ))) {
+                Ok(v) => match v.await {
+                    Ok(_m) => {}
+                    Err(e) => error!("worker fialed to update response: {e:?}"),
+                },
+                Err(e) => error!("invalid worker message: {e:?}"),
+            };
+            state
+                .import_queue
+                .mee6
+                .lock()
+                .push_back((guild_id, interaction_token.clone()));
         }
+        match state
+            .client
+            .interaction(state.my_id)
+            .update_response(&interaction_token)
+            .content(Some("Finished updating!"))
+        {
+            Ok(v) => match v.await {
+                Ok(_m) => {}
+                Err(e) => error!("worker failed to update response: {e:?}"),
+            },
+            Err(e) => error!("invalid worker message: {e:?}"),
+        };
     }
 }
 

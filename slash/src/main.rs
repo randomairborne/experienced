@@ -110,9 +110,10 @@ pub struct AppState {
     pub import_queue: ImportQueue,
 }
 
+pub type ImportQueueMember = (Id<GuildMarker>, String);
 #[derive(Clone, Default)]
 pub struct ImportQueue {
-    pub mee6: Arc<Mutex<VecDeque<Id<GuildMarker>>>>,
+    pub mee6: Arc<Mutex<VecDeque<ImportQueueMember>>>,
 }
 
 impl ImportQueue {
