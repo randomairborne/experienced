@@ -64,6 +64,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "android-tzdata"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e999941b234f3131b00bc13c22d06e8c5ff726d1b6318ac7eb276997bbb4fef0"
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -98,7 +104,7 @@ checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -175,7 +181,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -315,12 +321,12 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.24"
+version = "0.4.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e3c5919066adf22df73762e50cffcde3a758f2a848b113b586d1f86728b673b"
+checksum = "fdbc37d37da9e5bce8173f3a41b71d9bf3c674deebbaceacd0ebdabde76efb03"
 dependencies = [
+ "android-tzdata",
  "iana-time-zone",
- "num-integer",
  "num-traits",
  "winapi",
 ]
@@ -826,7 +832,7 @@ checksum = "89ca545a94061b6365f2c7355b4b32bd20df3ff95f02da9329b34ccc3bd6ee72"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -1245,12 +1251,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.17"
+version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
-dependencies = [
- "cfg-if",
-]
+checksum = "518ef76f2f87365916b142844c16d8fefd85039bc5699050210a7778ee1cd1de"
 
 [[package]]
 name = "matchers"
@@ -1334,14 +1337,13 @@ dependencies = [
 
 [[package]]
 name = "mio"
-version = "0.8.6"
+version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b9d9a46eff5b4ff64b45a9e316a6d1e0bc719ef429cbec4dc630684212bfdf9"
+checksum = "eebffdb73fe72e917997fad08bdbf31ac50b0fa91cec93e69a0662e4264d454c"
 dependencies = [
  "libc",
- "log",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "windows-sys 0.45.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -1365,16 +1367,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-integer"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "225d3389fb3509a24c93f5c29eb6bde2586b98d9f016636dff58d7c6f7569cd9"
-dependencies = [
- "autocfg",
- "num-traits",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1395,9 +1387,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.17.1"
+version = "1.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7e5500299e16ebb147ae15a00a942af264cf3688f47923b8fc2cd5858f23ad3"
+checksum = "9670a07f94779e00908f3e686eab508878ebb390ba6e604d3a284c00e8d0487b"
 
 [[package]]
 name = "opaque-debug"
@@ -1525,7 +1517,7 @@ dependencies = [
  "pest_meta",
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -1601,7 +1593,7 @@ checksum = "39407670928234ebc5e6e580247dd567ad73a3578460c5990f9503df207e8f07"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -1867,9 +1859,9 @@ dependencies = [
 
 [[package]]
 name = "resvg"
-version = "0.33.0"
+version = "0.34.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1df5f3de3bb51d8a4766a1ef5d85851f2737716dea899516248d25e313a51b0d"
+checksum = "b0e3d65cea36eefb28a020edb6e66341764e00cd4b426e0c1f0599b1adaa78f5"
 dependencies = [
  "gif",
  "jpeg-decoder",
@@ -1877,7 +1869,6 @@ dependencies = [
  "pico-args",
  "png",
  "rgb",
- "svgfilters",
  "svgtypes",
  "tiny-skia",
  "usvg",
@@ -1911,19 +1902,6 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
-]
-
-[[package]]
-name = "rosvgtree"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad747e7384940e7bf33b15ba433b7bad9f44c0c6d5287a67c2cb22cd1743d497"
-dependencies = [
- "log",
- "roxmltree",
- "simplecss",
- "siphasher",
- "svgtypes",
 ]
 
 [[package]]
@@ -2111,7 +2089,7 @@ checksum = "8c805777e3930c8883389c602315a24224bcc738b63905ef87cd1420353ea93e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -2142,7 +2120,7 @@ checksum = "bcec881020c684085e55a25f7fd888954d56609ef363479dc5a1305eb0d40cab"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -2401,9 +2379,9 @@ dependencies = [
 
 [[package]]
 name = "strict-num"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9df65f20698aeed245efdde3628a6b559ea1239bbb871af1b6e3b58c413b2bd1"
+checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
 dependencies = [
  "float-cmp",
 ]
@@ -2423,16 +2401,6 @@ name = "subtle"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
-
-[[package]]
-name = "svgfilters"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "639abcebc15fdc2df179f37d6f5463d660c1c79cd552c12343a4600827a04bce"
-dependencies = [
- "float-cmp",
- "rgb",
-]
 
 [[package]]
 name = "svgtypes"
@@ -2457,9 +2425,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.17"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45b6ddbb36c5b969c182aec3c4a0bce7df3fbad4b77114706a49aacc80567388"
+checksum = "32d41677bcbe24c20c52e7c70b0d8db04134c5d1066bf98662e2871ad200ea3e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2511,7 +2479,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -2552,9 +2520,9 @@ dependencies = [
 
 [[package]]
 name = "tiny-skia"
-version = "0.9.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce2986c82f77818c7b9144c70818fdde98db15308e329ae2f7204d767808fd3c"
+checksum = "7db11798945fa5c3e5490c794ccca7c6de86d3afdd54b4eb324109939c6f37bc"
 dependencies = [
  "arrayref",
  "arrayvec",
@@ -2567,9 +2535,9 @@ dependencies = [
 
 [[package]]
 name = "tiny-skia-path"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7acb0ccda1ac91084353a56d0b69b0e29c311fd809d2088b1ed2f9ae1841c47"
+checksum = "2f60aa35c89ac2687ace1a2556eaaea68e8c0d47408a2e3e7f5c98a489e7281c"
 dependencies = [
  "arrayref",
  "bytemuck",
@@ -2593,9 +2561,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.28.1"
+version = "1.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0aa32867d44e6f2ce3385e89dceb990188b8bb0fb25b0cf576647a6f98ac5105"
+checksum = "94d7b1cfd2aa4011f2de74c2c4c63665e27a71006b0a192dcd2710272e73dfa2"
 dependencies = [
  "autocfg",
  "bytes",
@@ -2617,7 +2585,7 @@ checksum = "630bdcf245f78637c13ec01ffae6187cca34625e8c63150d424b59e55af2675e"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -2731,7 +2699,7 @@ checksum = "0f57e3ca2a01450b1a921183a9c9cbfda207fd822cef4ccb00a65402cbba7a74"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -2893,7 +2861,7 @@ checksum = "07989bf519347626cdbb1d4bd7fb6d7d616094172a818988342b1f47382a6a55"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -3082,9 +3050,9 @@ dependencies = [
 
 [[package]]
 name = "usvg"
-version = "0.33.0"
+version = "0.34.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae32eb823aab35fc343b19c4d354f70e713b442ce34cdfa8497bf6c39af8a342"
+checksum = "d2304b933107198a910c1f3219acb65246f2b148f862703cffd51c6e62156abe"
 dependencies = [
  "base64 0.21.2",
  "log",
@@ -3097,26 +3065,27 @@ dependencies = [
 
 [[package]]
 name = "usvg-parser"
-version = "0.33.0"
+version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7529174e721c8078d62b08399258469b1d68b4e5f2983b347d6a9d39779366c"
+checksum = "12b940fea80394e3b14cb21c83fa1b8f8a41023c25929bba68bb84a76193ebed"
 dependencies = [
  "data-url",
  "flate2",
  "imagesize",
  "kurbo",
  "log",
- "rosvgtree",
- "strict-num",
+ "roxmltree",
+ "simplecss",
+ "siphasher",
  "svgtypes",
  "usvg-tree",
 ]
 
 [[package]]
 name = "usvg-text-layout"
-version = "0.33.0"
+version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e672fbc19261c6553113cc04ff2ff38ae52fadbd90f2d814040857795fb5c50"
+checksum = "69dfd6119f431aa7e969b4a69f9cc8b9ae37b8ae85bb26780ccfa3beaf8b71eb"
 dependencies = [
  "fontdb",
  "kurbo",
@@ -3130,14 +3099,14 @@ dependencies = [
 
 [[package]]
 name = "usvg-tree"
-version = "0.33.0"
+version = "0.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a56e9cd3be5eb6d6744477e95b82d52d393fc1dba4b5b090912c33af337c20b"
+checksum = "3185eb13b6e3d3cf1817d29612251cc308d5a7e5e6235362e67efe832435c6d9"
 dependencies = [
- "kurbo",
  "rctree",
  "strict-num",
  "svgtypes",
+ "tiny-skia-path",
 ]
 
 [[package]]
@@ -3211,7 +3180,7 @@ dependencies = [
  "once_cell",
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
  "wasm-bindgen-shared",
 ]
 
@@ -3245,7 +3214,7 @@ checksum = "e128beba882dd1eb6200e1dc92ae6c5dbaa4311aa7bb211ca035779e5efc39f8"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -3511,7 +3480,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xpd-rank-card"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "mee6 0.1.0",
  "png",
@@ -3541,5 +3510,5 @@ checksum = "ce36e65b0d2999d2aafac989fb249189a141aee1f53c612c1f37d72631959f69"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.17",
+ "syn 2.0.18",
 ]

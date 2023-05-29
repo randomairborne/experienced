@@ -87,7 +87,7 @@ impl SvgState {
         };
         let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
         tree.convert_text(&self.fonts);
-        let pixmap_size = resvg::IntSize::from_usvg(tree.size);
+        let pixmap_size = tree.size.to_int_size();
         let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
             .ok_or(Error::PixmapCreation)?;
         let retree = resvg::Tree::from_usvg(&tree);
