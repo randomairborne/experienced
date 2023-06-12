@@ -18,7 +18,7 @@ twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-
 redis = { version = "0.23", features = ["aio", "tokio-comp", "connection-manager"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-xpd-rank-card = { path = "../xpd-rank-card/", version = "0.1" }
+xpd-rank-card = { path = "../xpd-rank-card/", version = "0.2" }
 twilight-util = { version = "0.15", features = ["builder"] }
 serde = { version = "1", features = ["derive"] }
 twilight-interactions = "0.15"

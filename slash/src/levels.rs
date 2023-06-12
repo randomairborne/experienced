@@ -169,6 +169,11 @@ pub async fn gen_card(
         (Font::Roboto, None)
     };
     let avatar = get_avatar(state, user).await?;
+    let discriminator = if user.discriminator == 0 {
+        None
+    } else {
+        Some(user.discriminator().to_string())
+    };
     #[allow(
         clippy::cast_precision_loss,
         clippy::cast_sign_loss,
@@ -180,7 +185,7 @@ pub async fn gen_card(
             level: level_info.level(),
             rank,
             name: user.name.clone(),
-            discriminator: Some(user.discriminator().to_string()),
+            discriminator,
             percentage: (level_info.percentage() * 100.0).round() as u64,
             current: level_info.xp(),
             needed: mee6::xp_needed_for_level(level_info.level() + 1),
