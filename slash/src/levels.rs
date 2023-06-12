@@ -180,7 +180,7 @@ pub async fn gen_card(
             level: level_info.level(),
             rank,
             name: user.name.clone(),
-            discriminator: user.discriminator().to_string(),
+            discriminator: Some(user.discriminator().to_string()),
             percentage: (level_info.percentage() * 100.0).round() as u64,
             current: level_info.xp(),
             needed: mee6::xp_needed_for_level(level_info.level() + 1),

@@ -50,7 +50,9 @@
   <image id="avatar" class="avatar" x="30" y="25" width="90" height="90" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
   <text x="135" y="60" class="font">
     <tspan class="name">{{ name }}</tspan>
+    {% if discriminator %}
     <tspan class="discriminator">#{{ discriminator }}</tspan>
+    {% endif %}
   </text>
   <text x="135" y="110" class="font">
     <tspan class="stat-name rank">RANK:</tspan>
