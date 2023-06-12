@@ -41,9 +41,7 @@
       {{ loop.index + offset }}.
       {% if user.name %}
       {{ user.name }}
-      {% if user.discriminator %}
-      #{{ user.discriminator }}
-      {% endif %}
+      {% if user.discriminator %}#{{ user.discriminator }}{% endif %}
       {% else %}
       {{ user.id }}
       {% endif %}
