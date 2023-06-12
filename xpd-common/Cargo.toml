@@ -1,0 +1,13 @@
+[package]
+name = "xpd-common"
+version = "0.0.3"
+edition = "2021"
+description = "Common structures for the experienced discord bot"
+repository = "https://github.com/randomairborne/experienced"
+license = "MS-PL"
+readme = "README.txt"
+categories = ["games"]
+keywords = ["discord-bot", "mee6"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }

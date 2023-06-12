@@ -39,16 +39,20 @@
     {% for user in users %}
     <li class="leaderboard-user">
       {{ loop.index + offset }}.
-      {% if user.name is none or user.discriminator is none %}
-      {{ user.id }}
-      {% else %}
-      {{ user.name }}#{{ user.discriminator }}
+      {% if user.name %}
+      {{ user.name }}
+      {% if user.discriminator %}
+      #{{ user.discriminator }}
       {% endif %}
-      
+      {% else %}
+      {{ user.id }}
+      {% endif %}
+
       {{ user.level }}
     </li>
     {% endfor %}
   </ol>
+  {# TODO next page button #}
 </body>
 
 </html>

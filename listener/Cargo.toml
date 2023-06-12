@@ -17,6 +17,7 @@ redis = { version = "0.23", default-features = false, features = ["aio"] }
 dotenvy = "0.15"
 twilight-model = "0.15"
 twilight-http = "0.15"
+xpd-common = { path = "../xpd-common/", version = "0.0.3" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 twilight-gateway = { version = "0.15", features = ["rustls-native-roots", "twilight-http"], default-features = false }
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }

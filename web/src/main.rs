@@ -1,3 +1,5 @@
+#![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+
 use std::{collections::HashMap, sync::Arc};
 
 use axum::{
@@ -9,6 +11,7 @@ use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
+#[allow(clippy::too_many_lines)]
 async fn main() {
     dotenvy::dotenv().ok();
     tracing_subscriber::registry()
@@ -33,7 +36,6 @@ async fn main() {
     let mut tera = tera::Tera::default();
     tera.add_raw_template("leaderboard.html", include_str!("leaderboard.html"))
         .expect("Failed to add leaderboard");
-    tera.register_tester("none", none_tester);
     let tera = Arc::new(tera);
     let route = axum::Router::new()
         .route(
@@ -103,7 +105,7 @@ async fn main() {
             axum::routing::get(|| async { "User-Agent: *\nAllow: /$\nDisallow: /" }),
         )
         .route("/:id", axum::routing::get(fetch_stats))
-        .with_state(AppState { db, tera, redis });
+        .with_state(AppState { db, redis, tera });
     println!("Server listening on https://0.0.0.0:8000!");
     axum::Server::bind(&([0, 0, 0, 0], 8000).into())
         .serve(route.into_make_service())
@@ -141,6 +143,7 @@ async fn fetch_stats(
     Query(query): Query<FetchQuery>,
 ) -> Result<Html<String>, Error> {
     let offset = query.offset.unwrap_or(0);
+    #[allow(clippy::cast_possible_wrap)]
     let user_rows = sqlx::query!(
         "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2",
         guild_id as i64,
@@ -153,7 +156,9 @@ async fn fetch_stats(
         .into_iter()
         .enumerate()
         .map(|(i, v)| {
+            #[allow(clippy::cast_sign_loss)]
             ids_to_indices.insert(v.id as u64, i);
+            #[allow(clippy::cast_sign_loss)]
             User {
                 id: v.id as u64,
                 level: mee6::LevelInfo::new(v.xp as u64).level(),
@@ -162,7 +167,9 @@ async fn fetch_stats(
             }
         })
         .collect();
-    let user_strings: Vec<Option<String>> = if !users.is_empty() {
+    let user_strings: Vec<Option<String>> = if users.is_empty() {
+        Vec::new()
+    } else {
         state
             .redis
             .get()
@@ -174,26 +181,24 @@ async fn fetch_stats(
                     .collect::<Vec<String>>(),
             )
             .await?
-    } else {
-        Vec::new()
     };
     for user_string in user_strings.into_iter().flatten() {
-        let user: twilight_model::user::User = match serde_json::from_str(&user_string) {
+        let user: xpd_common::RedisUser = match serde_json::from_str(&user_string) {
             Ok(v) => v,
             Err(e) => {
                 eprintln!("{e}");
                 continue;
             }
         };
-        if let Some(i) = ids_to_indices.get(&user.id.get()) {
-            users[*i].discriminator = Some(user.discriminator().to_string());
-            users[*i].name = Some(user.name);
+        if let Some(i) = ids_to_indices.get(&user.id) {
+            users[*i].discriminator = user.discriminator;
+            users[*i].name = user.username;
         }
     }
     let mut context = tera::Context::new();
     context.insert("users", &users);
     context.insert("offset", &offset);
-    context.insert("guild", &offset);
+    context.insert("guild", &guild_id);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
 }
@@ -216,11 +221,4 @@ impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         self.to_string().into_response()
     }
-}
-
-pub fn none_tester(
-    value: Option<&tera::Value>,
-    _args: &[tera::Value],
-) -> Result<bool, tera::Error> {
-    Ok(value.map_or(true, |v| v.is_null()))
 }

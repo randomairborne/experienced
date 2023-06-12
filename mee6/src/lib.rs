@@ -1,4 +1,4 @@
-#![warn(clippy::all, clippy::cargo, clippy::nursery, clippy::pedantic)]
+#![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 // We allow cast precision loss because we will never be messing with integers bigger then 52 bits realistically
 #![allow(
     clippy::cast_precision_loss,
