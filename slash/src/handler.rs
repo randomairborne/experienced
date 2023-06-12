@@ -16,7 +16,7 @@ pub async fn handle(
     let body = body.to_vec();
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
     let interaction: Interaction = serde_json::from_slice(&body)?;
-    let response = match crate::processor::process(interaction, state).await {
+    let response = match Box::pin(crate::processor::process(interaction, state)).await {
         Ok(val) => val,
         Err(e) => {
             error!("{e}");
