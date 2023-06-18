@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        side: [listener, slash, web, lite]
+        module: [xpd-listener, xpd-slash, xpd-web, xpd-lite]
     steps:
       - name: Correct env
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
@@ -77,16 +77,16 @@ jobs:
       - name: Build container
         uses: docker/build-push-action@v4
         with:
-          file: ${{ matrix.side }}/Dockerfile
+          file: ${{ matrix.module }}/Dockerfile
           context: .
           push: true
-          tags: ghcr.io/${{ env.REPO }}-${{ matrix.side }}:latest
+          tags: ghcr.io/${{ env.REPO }}-${{ matrix.module }}:latest
           platforms: linux/amd64
 
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - run: flyctl deploy --detach
-        working-directory: ./${{ matrix.side }}/
+        working-directory: ./${{ matrix.module }}/
         env:
           FLY_ACCESS_TOKEN: ${{ secrets.FLY_ACCESS_TOKEN }}
