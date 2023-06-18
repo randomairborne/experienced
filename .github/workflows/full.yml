@@ -87,6 +87,7 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - run: flyctl deploy --detach
+        if: ${{ matrix.module != 'xpd-lite' }}
         working-directory: ./${{ matrix.module }}/
         env:
           FLY_ACCESS_TOKEN: ${{ secrets.FLY_ACCESS_TOKEN }}
