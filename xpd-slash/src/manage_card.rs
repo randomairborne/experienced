@@ -1,6 +1,5 @@
 use sqlx::query;
 use twilight_model::{
-    channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::GuildMarker, Id},
     user::User,
@@ -12,65 +11,15 @@ use twilight_util::builder::{
 
 use crate::{
     cmd_defs::{card::CardCommandEdit, CardCommand},
-    AppState, Error,
+    Error, SlashState,
 };
 
-#[allow(clippy::unused_async)]
 pub async fn card_update(
     data: CardCommand,
     user: User,
-    state: AppState,
+    state: &SlashState,
     guild_id: Id<GuildMarker>,
-    interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
-    tokio::spawn(add_card_to_response(
-        data,
-        user,
-        state,
-        guild_id,
-        interaction_token,
-    ));
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::DeferredChannelMessageWithSource,
-        data: Some(
-            InteractionResponseDataBuilder::new()
-                .flags(MessageFlags::EPHEMERAL)
-                .build(),
-        ),
-    })
-}
-
-async fn add_card_to_response(
-    data: CardCommand,
-    user: User,
-    state: AppState,
-    guild_id: Id<GuildMarker>,
-    interaction_token: String,
-) {
-    if let Err(e) =
-        add_card_to_response_actual(data, user, &state, guild_id, interaction_token.clone()).await
-    {
-        warn!("{e:?}");
-        if let Ok(followup) = state
-            .client
-            .interaction(state.my_id)
-            .create_followup(&interaction_token)
-            .content(&format!("{e:#?}"))
-        {
-            if let Err(e) = followup.await {
-                warn!("{e:?}");
-            }
-        };
-    }
-}
-
-async fn add_card_to_response_actual(
-    data: CardCommand,
-    user: User,
-    state: &AppState,
-    guild_id: Id<GuildMarker>,
-    interaction_token: String,
-) -> Result<(), Error> {
     #[allow(clippy::cast_possible_wrap)]
     let user_id = user.id.get() as i64;
     let contents = match data {
@@ -109,19 +58,19 @@ async fn add_card_to_response_actual(
         .title(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
-    state
-        .client
-        .interaction(state.my_id)
-        .create_followup(&interaction_token)
-        .attachments(&[card])?
-        .embeds(&[embed])?
-        .await?;
-    Ok(())
+    let interaction_response_data = InteractionResponseDataBuilder::new()
+        .attachments([card])
+        .embeds([embed])
+        .build();
+    Ok(InteractionResponse {
+        kind: InteractionResponseType::ChannelMessageWithSource,
+        data: Some(interaction_response_data),
+    })
 }
 
 async fn process_edit(
     edit: CardCommandEdit,
-    state: &AppState,
+    state: &SlashState,
     user: &User,
 ) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
@@ -169,7 +118,7 @@ async fn process_edit(
     Ok("Updated card!".to_string())
 }
 
-async fn process_reset(state: &AppState, user: &User) -> Result<String, Error> {
+async fn process_reset(state: &SlashState, user: &User) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "DELETE FROM custom_card WHERE id = $1",
@@ -180,7 +129,7 @@ async fn process_reset(state: &AppState, user: &User) -> Result<String, Error> {
     Ok("Card settings cleared!".to_string())
 }
 
-async fn process_fetch(state: &AppState, user: &User) -> Result<String, Error> {
+async fn process_fetch(state: &SlashState, user: &User) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let chosen_font = query!(
         "SELECT font FROM custom_card WHERE id = $1",

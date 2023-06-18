@@ -1,9 +1,10 @@
 [workspace]
 members = [
-    "slash",
-    "listener",
-    "web",
     "mee6",
+    "xpd-slash",
+    "xpd-listener",
+    "xpd-lite",
+    "xpd-web",
     "xpd-common",
     "xpd-rank-card"
 ]

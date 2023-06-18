@@ -1,35 +1,24 @@
 use axum::{body::Bytes, extract::State, http::HeaderMap, response::IntoResponse, Json};
 use twilight_model::{
     application::interaction::Interaction,
-    channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::AppState;
 
+#[allow(clippy::unused_async)]
 pub async fn handle(
     headers: HeaderMap,
     State(state): State<AppState>,
     body: Bytes,
-) -> Result<axum::Json<InteractionResponse>, Error> {
+) -> Result<Json<InteractionResponse>, Error> {
     let body = body.to_vec();
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
     let interaction: Interaction = serde_json::from_slice(&body)?;
-    let response = match Box::pin(crate::processor::process(interaction, state)).await {
-        Ok(val) => val,
-        Err(e) => {
-            error!("{e}");
-            InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(
-                    InteractionResponseDataBuilder::new()
-                        .flags(MessageFlags::EPHEMERAL)
-                        .content(e.to_string())
-                        .build(),
-                ),
-            }
-        }
+    tokio::spawn(state.bot.run(interaction));
+    let response = InteractionResponse {
+        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+        data: None,
     };
     Ok(Json(response))
 }
@@ -44,7 +33,7 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        error!("{self}");
+        tracing::error!("{self}");
         axum::response::Response::builder()
             .body(axum::body::boxed(axum::body::Full::from(self.to_string())))
             .unwrap()

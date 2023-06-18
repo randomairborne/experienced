@@ -1,4 +1,4 @@
-use crate::{AppState, Error};
+use crate::{Error, SlashState};
 use base64::Engine;
 use sqlx::query;
 use twilight_model::{
@@ -17,7 +17,7 @@ pub async fn get_level(
     guild_id: Id<GuildMarker>,
     user: User,
     invoker: User,
-    state: AppState,
+    state: SlashState,
     interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
     #[allow(clippy::cast_possible_wrap)]
@@ -74,7 +74,7 @@ pub async fn get_level(
 
 #[allow(clippy::unused_async)]
 async fn generate_level_response(
-    state: AppState,
+    state: SlashState,
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
@@ -94,7 +94,7 @@ async fn generate_level_response(
 }
 
 async fn update_interaction_with_card(
-    state: AppState,
+    state: SlashState,
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
@@ -124,7 +124,7 @@ async fn update_interaction_with_card(
 }
 
 async fn update_interaction_with_card_actual(
-    state: &AppState,
+    state: &SlashState,
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
@@ -141,7 +141,7 @@ async fn update_interaction_with_card_actual(
 }
 
 pub async fn gen_card(
-    state: &AppState,
+    state: &SlashState,
     user: &User,
     level_info: mee6::LevelInfo,
     rank: i64,
@@ -226,7 +226,7 @@ pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
     }
 }
 
-async fn get_avatar(state: &AppState, user: &User) -> Result<String, Error> {
+async fn get_avatar(state: &SlashState, user: &User) -> Result<String, Error> {
     let url = user.avatar.map_or_else(
         || {
             format!(

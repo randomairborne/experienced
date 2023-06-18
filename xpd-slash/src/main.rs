@@ -1,33 +1,13 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
-mod cmd_defs;
-mod colors;
 mod discord_sig_validation;
-mod error;
 mod handler;
-mod help;
-mod levels;
-mod manage_card;
-mod manager;
-mod mee6_worker;
-mod processor;
 
-pub use error::Error;
-
-use parking_lot::Mutex;
 use sqlx::PgPool;
-use std::{collections::VecDeque, sync::Arc};
+use std::sync::Arc;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use twilight_model::id::{
-    marker::{ApplicationMarker, GuildMarker},
-    Id,
-};
-use xpd_rank_card::SvgState;
 
-#[macro_use]
-extern crate tracing;
-
-const THEME_COLOR: u32 = 0x33_33_66;
+use xpd_slash::Slash;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -59,7 +39,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .await
         .expect("Failed to run database migrations!");
     let client = Arc::new(twilight_http::Client::new(token));
-    println!("Creating commands...");
     let my_id = client
         .current_user_application()
         .await
@@ -68,21 +47,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .await
         .expect("Failed to convert own app ID!")
         .id;
-    cmd_defs::register(client.interaction(my_id)).await;
     let http = reqwest::Client::new();
-    let svg = SvgState::new();
-    let import_queue = ImportQueue::new();
     let state = AppState {
-        db,
         pubkey,
-        client,
-        my_id,
-        svg,
-        http,
-        redis,
-        import_queue,
+        bot: Slash::new(http, client, my_id, db, redis).await,
     };
-    tokio::spawn(mee6_worker::do_fetches(state.clone()));
     let route = axum::Router::new()
         .route("/", axum::routing::get(|| async {}).post(handler::handle))
         .with_state(state);
@@ -100,25 +69,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: PgPool,
     pub pubkey: Arc<String>,
-    pub client: Arc<twilight_http::Client>,
-    pub my_id: Id<ApplicationMarker>,
-    pub svg: SvgState,
-    pub http: reqwest::Client,
-    pub redis: redis::aio::ConnectionManager,
-    pub import_queue: ImportQueue,
-}
-
-pub type ImportQueueMember = (Id<GuildMarker>, String);
-#[derive(Clone, Default)]
-pub struct ImportQueue {
-    pub mee6: Arc<Mutex<VecDeque<ImportQueueMember>>>,
-}
-
-impl ImportQueue {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub bot: Slash,
 }

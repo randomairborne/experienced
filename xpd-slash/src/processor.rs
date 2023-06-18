@@ -1,4 +1,4 @@
-use crate::{AppState, Error};
+use crate::{Error, SlashState};
 use twilight_interactions::command::CommandModel;
 use twilight_model::{
     application::{
@@ -14,7 +14,7 @@ use twilight_model::{
 
 pub async fn process(
     interaction: Interaction,
-    state: AppState,
+    state: SlashState,
 ) -> Result<InteractionResponse, Error> {
     Ok(if interaction.kind == InteractionType::ApplicationCommand {
         process_app_cmd(interaction, state).await?
@@ -28,7 +28,7 @@ pub async fn process(
 
 async fn process_app_cmd(
     interaction: Interaction,
-    state: AppState,
+    state: SlashState,
 ) -> Result<InteractionResponse, Error> {
     #[cfg(debug_assertions)]
     trace!("{interaction:#?}");
@@ -65,7 +65,7 @@ async fn process_slash_cmd(
     data: CommandData,
     guild_id: Id<GuildMarker>,
     invoker: User,
-    state: AppState,
+    state: SlashState,
     interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
     match data.name.as_str() {
@@ -90,9 +90,8 @@ async fn process_slash_cmd(
         "card" => Ok(crate::manage_card::card_update(
             crate::cmd_defs::CardCommand::from_interaction(data.into())?,
             invoker,
-            state,
+            &state,
             guild_id,
-            interaction_token,
         )
         .await?),
         "leaderboard" => Ok(crate::levels::leaderboard(guild_id)),
@@ -104,7 +103,7 @@ async fn process_user_cmd(
     data: CommandData,
     guild_id: Id<GuildMarker>,
     invoker: User,
-    state: AppState,
+    state: SlashState,
     interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
@@ -122,7 +121,7 @@ async fn process_msg_cmd(
     data: CommandData,
     guild_id: Id<GuildMarker>,
     invoker: User,
-    state: AppState,
+    state: SlashState,
     interaction_token: String,
 ) -> Result<InteractionResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;

@@ -1,5 +1,5 @@
 [package]
-name = "experienced-web"
+name = "xpd-web"
 version = "0.1.0"
 edition = "2021"
 description = "A web dashboard for experienced"

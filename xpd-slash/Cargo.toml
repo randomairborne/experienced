@@ -1,5 +1,5 @@
 [package]
-name = "experienced-slash"
+name = "xpd-slash"
 version = "0.1.0"
 edition = "2021"
 description = "A slash command handler for experienced"

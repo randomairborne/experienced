@@ -17,13 +17,13 @@ use crate::{
         },
         XpCommand,
     },
-    AppState, Error,
+    Error, SlashState,
 };
 
 pub async fn process_xp(
     data: XpCommand,
     guild_id: Id<GuildMarker>,
-    state: AppState,
+    state: SlashState,
 ) -> Result<InteractionResponseData, Error> {
     let contents = match data {
         XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
@@ -38,7 +38,7 @@ pub async fn process_xp(
 async fn process_experience(
     data: XpCommandExperience,
     guild_id: Id<GuildMarker>,
-    state: AppState,
+    state: SlashState,
 ) -> Result<String, Error> {
     match data {
         XpCommandExperience::Import(_) => import_level_data(guild_id, state).await,
@@ -55,7 +55,7 @@ async fn modify_user_xp(
     guild_id: Id<GuildMarker>,
     user_id: Id<UserMarker>,
     amount: i64,
-    state: AppState,
+    state: SlashState,
 ) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let xp = query!(
@@ -80,7 +80,7 @@ async fn modify_user_xp(
 
 async fn import_level_data(
     guild_id: Id<GuildMarker>,
-    mut state: AppState,
+    mut state: SlashState,
 ) -> Result<String, Error> {
     let ratelimiting_key = format!("ratelimit-import-mee6-{}", guild_id.get());
     let time_remaining_option: Option<isize> = redis::cmd("TTL")
@@ -119,7 +119,7 @@ async fn import_level_data(
 async fn process_rewards<'a>(
     cmd: XpCommandRewards,
     guild_id: Id<GuildMarker>,
-    state: AppState,
+    state: SlashState,
 ) -> Result<String, Error> {
     match cmd {
         XpCommandRewards::Add(add) => process_rewards_add(add, state, guild_id).await,
@@ -130,7 +130,7 @@ async fn process_rewards<'a>(
 
 async fn process_rewards_add(
     options: XpCommandRewardsAdd,
-    state: AppState,
+    state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
@@ -149,7 +149,7 @@ async fn process_rewards_add(
 }
 async fn process_rewards_rm(
     options: XpCommandRewardsRemove,
-    state: AppState,
+    state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
     if let Some(role) = options.role {
@@ -177,7 +177,10 @@ async fn process_rewards_rm(
         "`/xp rewards remove` requires either a level or a role!",
     ))
 }
-async fn process_rewards_list(state: AppState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
+async fn process_rewards_list(
+    state: SlashState,
+    guild_id: Id<GuildMarker>,
+) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let roles = query!(
         "SELECT * FROM role_rewards WHERE guild = $1",

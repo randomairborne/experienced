@@ -3,9 +3,9 @@ use twilight_model::id::{
     Id,
 };
 
-use crate::{AppState, Error};
+use crate::{Error, SlashState};
 
-pub async fn do_fetches(state: AppState) {
+pub async fn do_fetches(state: SlashState) {
     loop {
         tokio::time::sleep(std::time::Duration::from_secs(3)).await;
         let Some((guild_id, interaction_token)) = state.import_queue.mee6.lock().pop_front() else { continue; };
@@ -45,7 +45,7 @@ pub async fn do_fetches(state: AppState) {
     }
 }
 
-async fn get_guild(guild_id: Id<GuildMarker>, state: &AppState) -> Result<(), Error> {
+async fn get_guild(guild_id: Id<GuildMarker>, state: &SlashState) -> Result<(), Error> {
     let mut page = 0;
     while fetch(guild_id, page, state).await? {
         page += 1;
@@ -53,7 +53,7 @@ async fn get_guild(guild_id: Id<GuildMarker>, state: &AppState) -> Result<(), Er
     Ok(())
 }
 
-async fn fetch(guild_id: Id<GuildMarker>, page: usize, state: &AppState) -> Result<bool, Error> {
+async fn fetch(guild_id: Id<GuildMarker>, page: usize, state: &SlashState) -> Result<bool, Error> {
     let mee6_data: Mee6ApiResponse = state
         .http
         .get(format!(
