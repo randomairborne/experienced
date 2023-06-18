@@ -10,10 +10,14 @@ license = "MS-PL"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
+[features]
+default = ["user-cache"]
+user-cache = ["dep:redis", "dep:deadpool-redis"]
+
 [dependencies]
 rand = "0.8"
-deadpool-redis = { version = "0.12" }
-redis = { version = "0.23", default-features = false, features = ["aio"] }
+deadpool-redis = { version = "0.12", features = ["rt_tokio_1"], optional = true }
+redis = { version = "0.23", default-features = false, features = ["aio"], optional = true }
 dotenvy = "0.15"
 twilight-model = "0.15"
 twilight-http = "0.15"

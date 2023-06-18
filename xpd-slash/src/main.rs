@@ -25,11 +25,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
     println!("Connecting to redis {redis_url}");
-    let redis = redis::aio::ConnectionManager::new(
-        redis::Client::open(redis_url).expect("Failed to connect to redis"),
-    )
-    .await
-    .expect("Failed to connect to redis!");
+    let redis_cfg = deadpool_redis::Config::from_url(redis_url);
+    let redis = redis_cfg
+        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
+        .expect("Failed to connect to redis");
     println!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await

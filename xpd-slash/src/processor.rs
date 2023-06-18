@@ -80,6 +80,7 @@ async fn process_slash_cmd(
             data: Some(
                 crate::manager::process_xp(
                     crate::cmd_defs::XpCommand::from_interaction(data.into())?,
+                    interaction_token,
                     guild_id,
                     state,
                 )

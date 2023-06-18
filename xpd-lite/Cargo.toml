@@ -11,5 +11,5 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
-xpd-listener = { path = "../xpd-listener" }
-xpd-slash = { path = "../xpd-slash" }
+xpd-listener = { path = "../xpd-listener", default-features = false }
+xpd-slash = { path = "../xpd-slash", default-features = false }

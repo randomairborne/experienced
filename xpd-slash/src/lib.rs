@@ -38,7 +38,8 @@ impl Slash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
-        redis: redis::aio::ConnectionManager,
+        #[cfg(feature = "ratelimiting")]
+        redis: deadpool_redis::Pool,
     ) -> Self {
         let svg = SvgState::new();
         let import_queue = ImportQueue::new();
@@ -48,6 +49,7 @@ impl Slash {
             my_id: id,
             svg,
             http,
+            #[cfg(feature = "ratelimiting")]
             redis,
             import_queue,
         };
@@ -99,7 +101,8 @@ pub struct SlashState {
     pub my_id: Id<ApplicationMarker>,
     pub svg: SvgState,
     pub http: reqwest::Client,
-    pub redis: redis::aio::ConnectionManager,
+    #[cfg(feature = "ratelimiting")]
+    pub redis: deadpool_redis::Pool,
     pub import_queue: ImportQueue,
 }
 

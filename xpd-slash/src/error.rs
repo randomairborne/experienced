@@ -44,6 +44,8 @@ pub enum Error {
     Fmt(#[from] std::fmt::Error),
     #[error("Redis error: {0}")]
     Redis(#[from] redis::RedisError),
+    #[error("Deadpool-Redis error: {0}")]
+    DeadpoolRedis(#[from] deadpool_redis::PoolError),
     #[error("Discord API decoding error: {0}")]
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
 }

@@ -22,12 +22,15 @@ use crate::{
 
 pub async fn process_xp(
     data: XpCommand,
+    interaction_token: String,
     guild_id: Id<GuildMarker>,
     state: SlashState,
 ) -> Result<InteractionResponseData, Error> {
     let contents = match data {
         XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
-        XpCommand::Experience(experience) => process_experience(experience, guild_id, state).await,
+        XpCommand::Experience(experience) => {
+            process_experience(experience, guild_id, interaction_token, state).await
+        }
     }?;
     Ok(InteractionResponseDataBuilder::new()
         .flags(MessageFlags::EPHEMERAL)
@@ -38,10 +41,14 @@ pub async fn process_xp(
 async fn process_experience(
     data: XpCommandExperience,
     guild_id: Id<GuildMarker>,
+    interaction_token: String,
+
     state: SlashState,
 ) -> Result<String, Error> {
     match data {
-        XpCommandExperience::Import(_) => import_level_data(guild_id, state).await,
+        XpCommandExperience::Import(_) => {
+            import_level_data(guild_id, interaction_token, state).await
+        }
         XpCommandExperience::Add(add) => {
             modify_user_xp(guild_id, add.user, add.amount, state).await
         }
@@ -80,18 +87,24 @@ async fn modify_user_xp(
 
 async fn import_level_data(
     guild_id: Id<GuildMarker>,
-    mut state: SlashState,
+    interaction_token: String,
+    state: SlashState,
 ) -> Result<String, Error> {
+    #[cfg(feature = "ratelimiting")]
     let ratelimiting_key = format!("ratelimit-import-mee6-{}", guild_id.get());
-    let time_remaining_option: Option<isize> = redis::cmd("TTL")
-        .arg(&ratelimiting_key)
-        .query_async(&mut state.redis)
-        .await?;
-    let time_remaining = time_remaining_option.unwrap_or(0);
-    if time_remaining > 0 {
-        return Ok(format!(
-            "This guild is being ratelimited. Try again in {time_remaining} seconds."
-        ));
+    #[cfg(feature = "ratelimiting")]
+    {
+        let mut redis = state.redis.get().await?;
+        let time_remaining_option: Option<isize> = redis::cmd("TTL")
+            .arg(&ratelimiting_key)
+            .query_async(&mut redis)
+            .await?;
+        let time_remaining = time_remaining_option.unwrap_or(0);
+        if time_remaining > 0 {
+            return Ok(format!(
+                "This guild is being ratelimited. Try again in {time_remaining} seconds."
+            ));
+        }
     }
     let total_users = state
         .client
@@ -106,13 +119,22 @@ async fn import_level_data(
             return Err(Error::TooManyUsersForImport);
         }
     }
-    redis::cmd("SET")
-        .arg(ratelimiting_key)
-        .arg(3600)
-        .arg("EX")
-        .arg(3600)
-        .query_async(&mut state.redis)
-        .await?;
+    state
+        .import_queue
+        .mee6
+        .lock()
+        .push_back((guild_id, interaction_token));
+    #[cfg(feature = "ratelimiting")]
+    {
+        let mut redis = state.redis.get().await?;
+        redis::cmd("SET")
+            .arg(ratelimiting_key)
+            .arg(3600)
+            .arg("EX")
+            .arg(3600)
+            .query_async(&mut redis)
+            .await?;
+    }
     Ok("Importing user data- check back here soon!".to_string())
 }
 
