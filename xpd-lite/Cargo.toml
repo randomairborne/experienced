@@ -2,8 +2,13 @@
 name = "xpd-lite"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
+description = "experienced in one container"
+repository = "https://github.com/randomairborne/experienced"
+readme = "README.txt"
+license = "MS-PL"
+categories = ["games"]
+keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 xpd-listener = { path = "../xpd-listener" }
