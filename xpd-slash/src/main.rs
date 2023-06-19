@@ -7,7 +7,7 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
-use xpd_slash::Slash;
+use xpd_slash::XpdSlash;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let http = reqwest::Client::new();
     let state = AppState {
         pubkey,
-        bot: Slash::new(http, client, my_id, db, redis).await,
+        bot: XpdSlash::new(http, client, my_id, db, redis).await,
     };
     let route = axum::Router::new()
         .route("/", axum::routing::get(|| async {}).post(handler::handle))
@@ -69,5 +69,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 #[derive(Clone)]
 pub struct AppState {
     pub pubkey: Arc<String>,
-    pub bot: Slash,
+    pub bot: XpdSlash,
 }

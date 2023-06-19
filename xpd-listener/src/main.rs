@@ -2,6 +2,7 @@
 
 use std::sync::{atomic::AtomicBool, Arc};
 use tokio::task::JoinSet;
+use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
 use xpd_listener::XpdListener;
 

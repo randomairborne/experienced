@@ -5,6 +5,7 @@ use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, Shard};
 use xpd_listener::XpdListener;
+use xpd_slash::XpdSlash;
 
 #[macro_use]
 extern crate tracing;
@@ -38,6 +39,14 @@ async fn main() {
         .expect("Failed to connect to redis");
     let client = twilight_http::Client::new(token.clone());
     let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
+    let my_id = client
+        .current_user_application()
+        .await
+        .expect("Failed to get own app ID!")
+        .model()
+        .await
+        .expect("Failed to convert own app ID!")
+        .id;
     let config = Config::new(token.clone(), intents);
     let shards: Vec<Shard> =
         twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
@@ -46,20 +55,23 @@ async fn main() {
             .collect();
     let senders: Vec<twilight_gateway::MessageSender> =
         shards.iter().map(twilight_gateway::Shard::sender).collect();
-    let http = Arc::new(twilight_http::Client::new(token));
+    let client = Arc::new(twilight_http::Client::new(token));
     println!("Connecting to discord");
-    let state = XpdListener::new(db, redis, http.clone());
+    let http = reqwest::Client::new();
+    let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
+    let slash = XpdSlash::new(http, client.clone(), my_id, db, redis).await;
     let should_shutdown = Arc::new(AtomicBool::new(false));
 
     let mut set = JoinSet::new();
 
     for shard in shards {
-        let http = http.clone();
+        let client = client.clone();
         set.spawn(event_loop(
             shard,
-            http,
+            client,
             should_shutdown.clone(),
-            state.clone(),
+            listener.clone(),
+            slash.clone(),
         ));
     }
 
@@ -85,14 +97,16 @@ async fn event_loop(
     http: Arc<twilight_http::Client>,
     should_shutdown: Arc<AtomicBool>,
     listener: XpdListener,
+    slash: XpdSlash,
 ) {
     loop {
         match shard.next_event().await {
             Ok(event) => {
                 let listener = listener.clone();
                 let http = http.clone();
+                let slash = slash.clone();
                 tokio::spawn(async move {
-                    if let Err(e) = handle_event(event, http, listener).await {
+                    if let Err(e) = handle_event(event, http, listener, slash).await {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         error!("Handler error: {e}");
                     }
@@ -110,12 +124,14 @@ async fn handle_event(
     event: Event,
     http: Arc<twilight_http::Client>,
     listener: XpdListener,
+    slash: XpdSlash,
 ) -> Result<(), Error> {
     match event {
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::ThreadCreate(thread) => {
             let _ = http.join_thread(thread.id).await;
         }
+        Event::InteractionCreate(interaction_create) => slash.run(interaction_create.0).await,
         _ => {}
     };
     Ok(())

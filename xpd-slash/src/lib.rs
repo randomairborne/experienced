@@ -28,11 +28,11 @@ use twilight_model::{
 use xpd_rank_card::SvgState;
 
 #[derive(Clone)]
-pub struct Slash {
+pub struct XpdSlash {
     state: SlashState,
 }
 
-impl Slash {
+impl XpdSlash {
     pub async fn new(
         http: reqwest::Client,
         client: Arc<twilight_http::Client>,
