@@ -38,8 +38,7 @@ impl Slash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
-        #[cfg(feature = "ratelimiting")]
-        redis: deadpool_redis::Pool,
+        #[cfg(feature = "ratelimiting")] redis: deadpool_redis::Pool,
     ) -> Self {
         let svg = SvgState::new();
         let import_queue = ImportQueue::new();

@@ -11,5 +11,20 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
+twilight-gateway = { version = "0.15", features = ["rustls-native-roots", "twilight-http"], default-features = false }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+redis = { version = "0.23", default-features = false, features = ["aio"] }
 xpd-listener = { path = "../xpd-listener", default-features = false }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+deadpool-redis = { version = "0.12", features = ["rt_tokio_1"] }
 xpd-slash = { path = "../xpd-slash", default-features = false }
+xpd-common = { path = "../xpd-common/", version = "0.0.3" }
+twilight-model = "0.15"
+twilight-http = "0.15"
+serde_json = "1"
+dotenvy = "0.15"
+thiserror = "1"
+rand = "0.8"
+mee6 = "0.1"
+tracing = "0.1.37"

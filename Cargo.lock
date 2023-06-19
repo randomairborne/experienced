@@ -3368,6 +3368,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
+ "tracing-subscriber",
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
@@ -3378,6 +3379,21 @@ dependencies = [
 name = "xpd-lite"
 version = "0.1.0"
 dependencies = [
+ "deadpool-redis",
+ "dotenvy",
+ "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.8.5",
+ "redis",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "twilight-gateway",
+ "twilight-http",
+ "twilight-model",
+ "xpd-common",
  "xpd-listener",
  "xpd-slash",
 ]

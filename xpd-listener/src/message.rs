@@ -3,15 +3,27 @@ use redis::AsyncCommands;
 use sqlx::query;
 use twilight_model::{
     gateway::payload::incoming::MessageCreate,
-    id::{marker::RoleMarker, Id},
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id,
+    },
 };
 
-use crate::AppState;
-
-pub async fn save(msg: MessageCreate, state: AppState) -> Result<(), crate::Error> {
-    if let Some(guild_id) = msg.guild_id {
+use crate::{Error, XpdListener};
+impl XpdListener {
+    pub async fn save(&self, msg: MessageCreate) -> Result<(), Error> {
+        if let Some(guild_id) = msg.guild_id {
+            self.save_msg_send(guild_id, msg).await?;
+        }
+        Ok(())
+    }
+    async fn save_msg_send(
+        &self,
+        guild_id: Id<GuildMarker>,
+        msg: MessageCreate,
+    ) -> Result<(), Error> {
         let has_sent_key = format!("cooldown-{guild_id}-{}", msg.author.id);
-        let has_sent: bool = state.redis.get().await?.get(&has_sent_key).await?;
+        let has_sent: bool = self.redis.get().await?.get(&has_sent_key).await?;
         if !msg.author.bot && !has_sent {
             let xp_count: i64 = rand::thread_rng().gen_range(15..=25);
             #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
@@ -21,10 +33,9 @@ pub async fn save(msg: MessageCreate, state: AppState) -> Result<(), crate::Erro
                 xp_count,
                 guild_id.get() as i64
             )
-            .fetch_one(&state.db)
+            .fetch_one(&self.db)
             .await?.xp as u64;
-            state
-                .redis
+            self.redis
                 .get()
                 .await?
                 .set_ex(&has_sent_key, true, 60)
@@ -38,7 +49,7 @@ pub async fn save(msg: MessageCreate, state: AppState) -> Result<(), crate::Erro
                 guild_id.get() as i64,
                 level_info.level() as i64
             )
-            .fetch_optional(&state.db)
+            .fetch_optional(&self.db)
             .await?
             .map(|v| Id::<RoleMarker>::new(v.id as u64));
             if let Some(reward) = reward {
@@ -47,13 +58,11 @@ pub async fn save(msg: MessageCreate, state: AppState) -> Result<(), crate::Erro
                         return Ok(());
                     }
                 }
-                state
-                    .http
+                self.http
                     .add_guild_member_role(guild_id, msg.author.id, reward)
                     .await?;
             }
         }
+        Ok(())
     }
-
-    Ok(())
 }

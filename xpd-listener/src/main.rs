@@ -1,16 +1,17 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
-mod message;
-mod user_cache;
-
-use sqlx::PgPool;
 use std::sync::{atomic::AtomicBool, Arc};
 use tokio::task::JoinSet;
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
+use xpd_listener::XpdListener;
 
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::EnvFilter::from_env("LOG"))
+        .init();
     let token =
         std::env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
     let redis_url =
@@ -46,13 +47,19 @@ async fn main() {
         shards.iter().map(twilight_gateway::Shard::sender).collect();
     let http = Arc::new(twilight_http::Client::new(token));
     println!("Connecting to discord");
-    let state = AppState { db, redis, http };
+    let state = XpdListener::new(db, redis, http.clone());
     let should_shutdown = Arc::new(AtomicBool::new(false));
 
     let mut set = JoinSet::new();
 
     for shard in shards {
-        set.spawn(event_loop(shard, should_shutdown.clone(), state.clone()));
+        let http = http.clone();
+        set.spawn(event_loop(
+            shard,
+            http,
+            should_shutdown.clone(),
+            state.clone(),
+        ));
     }
 
     tokio::signal::ctrl_c().await.unwrap();
@@ -72,15 +79,21 @@ async fn main() {
     println!("Done, see ya!");
 }
 
-async fn event_loop(mut shard: Shard, should_shutdown: Arc<AtomicBool>, state: AppState) {
+async fn event_loop(
+    mut shard: Shard,
+    http: Arc<twilight_http::Client>,
+    should_shutdown: Arc<AtomicBool>,
+    listener: XpdListener,
+) {
     let sender = shard.sender();
     loop {
         let sender = sender.clone();
         match shard.next_event().await {
             Ok(event) => {
-                let state = state.clone();
+                let listener = listener.clone();
+                let http = http.clone();
                 tokio::spawn(async move {
-                    if let Err(e) = handle_event(event, state, sender).await {
+                    if let Err(e) = handle_event(event, http, listener, sender).await {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         eprintln!("Handler error: {e}");
                     }
@@ -94,9 +107,14 @@ async fn event_loop(mut shard: Shard, should_shutdown: Arc<AtomicBool>, state: A
     }
 }
 
-async fn handle_event(event: Event, state: AppState, shard: MessageSender) -> Result<(), Error> {
+async fn handle_event(
+    event: Event,
+    http: Arc<twilight_http::Client>,
+    listener: XpdListener,
+    shard: MessageSender,
+) -> Result<(), Error> {
     match event {
-        Event::MessageCreate(msg) => message::save(*msg, state).await,
+        Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::GuildCreate(guild_add) => {
             shard.command(
                 &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
@@ -104,39 +122,23 @@ async fn handle_event(event: Event, state: AppState, shard: MessageSender) -> Re
                 )
                 .query("", None),
             )?;
-            user_cache::set_chunk(state.redis, guild_add.0.members).await
+            listener.set_chunk(guild_add.0.members).await?;
         }
-        Event::MemberAdd(member_add) => user_cache::set_user(state.redis, &member_add.user).await,
-        Event::MemberUpdate(member_update) => {
-            user_cache::set_user(state.redis, &member_update.user).await
+        Event::MemberAdd(member_add) => listener.set_user(&member_add.user).await?,
+        Event::MemberUpdate(member_update) => listener.set_user(&member_update.user).await?,
+        Event::MemberChunk(member_chunk) => listener.set_chunk(member_chunk.members).await?,
+        Event::ThreadCreate(thread) => {
+            let _ = http.join_thread(thread.id).await;
         }
-        Event::MemberChunk(member_chunk) => {
-            user_cache::set_chunk(state.redis, member_chunk.members).await
-        }
-        Event::ThreadCreate(thread) => state.http.join_thread(thread.id).await.map(|_| Ok(()))?,
-        _ => Ok(()),
-    }
-}
-
-#[derive(Clone)]
-pub struct AppState {
-    db: PgPool,
-    redis: deadpool_redis::Pool,
-    http: Arc<twilight_http::Client>,
+        _ => {}
+    };
+    Ok(())
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("SQL error: {0}")]
-    Sqlx(#[from] sqlx::Error),
-    #[error("Redis error: {0}")]
-    Redis(#[from] redis::RedisError),
-    #[error("Pool error: {0}")]
-    Pool(#[from] deadpool_redis::PoolError),
-    #[error("Discord error: {0}")]
-    Twilight(#[from] twilight_http::Error),
-    #[error("JSON error: {0}")]
-    SerdeJson(#[from] serde_json::Error),
-    #[error("Send error: {0}")]
-    TwilightCommand(#[from] twilight_gateway::error::SendError),
+    #[error("listener-library error: {0}")]
+    Listener(#[from] xpd_listener::Error),
+    #[error("Twilight-Gateway error: {0}")]
+    Send(#[from] twilight_gateway::error::SendError),
 }
