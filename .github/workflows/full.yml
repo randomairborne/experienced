@@ -80,7 +80,7 @@ jobs:
           file: ${{ matrix.module }}/Dockerfile
           context: .
           push: true
-          tags: ghcr.io/${{ env.REPO }}-${{ matrix.module }}:latest
+          tags: ghcr.io/${{ matrix.module }}:latest
           platforms: linux/amd64
 
       - name: Set up flyctl

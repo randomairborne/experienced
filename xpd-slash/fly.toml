@@ -12,7 +12,7 @@ kill_timeout = "5s"
   auto_rollback = true
 
 [build]
-  image = "ghcr.io/randomairborne/experienced-slash:latest"
+  image = "ghcr.io/randomairborne/xpd-slash:latest"
 
 [[services]]
   protocol = "tcp"
