@@ -38,7 +38,7 @@ impl XpdSlash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
-        #[cfg(feature = "ratelimiting")] redis: deadpool_redis::Pool,
+        redis: deadpool_redis::Pool,
     ) -> Self {
         let svg = SvgState::new();
         let import_queue = ImportQueue::new();
@@ -48,7 +48,6 @@ impl XpdSlash {
             my_id: id,
             svg,
             http,
-            #[cfg(feature = "ratelimiting")]
             redis,
             import_queue,
         };
@@ -100,7 +99,6 @@ pub struct SlashState {
     pub my_id: Id<ApplicationMarker>,
     pub svg: SvgState,
     pub http: reqwest::Client,
-    #[cfg(feature = "ratelimiting")]
     pub redis: deadpool_redis::Pool,
     pub import_queue: ImportQueue,
 }

@@ -90,21 +90,17 @@ async fn import_level_data(
     interaction_token: String,
     state: SlashState,
 ) -> Result<String, Error> {
-    #[cfg(feature = "ratelimiting")]
     let ratelimiting_key = format!("ratelimit-import-mee6-{}", guild_id.get());
-    #[cfg(feature = "ratelimiting")]
-    {
-        let mut redis = state.redis.get().await?;
-        let time_remaining_option: Option<isize> = redis::cmd("TTL")
-            .arg(&ratelimiting_key)
-            .query_async(&mut redis)
-            .await?;
-        let time_remaining = time_remaining_option.unwrap_or(0);
-        if time_remaining > 0 {
-            return Ok(format!(
-                "This guild is being ratelimited. Try again in {time_remaining} seconds."
-            ));
-        }
+    let mut redis = state.redis.get().await?;
+    let time_remaining_option: Option<isize> = redis::cmd("TTL")
+        .arg(&ratelimiting_key)
+        .query_async(&mut redis)
+        .await?;
+    let time_remaining = time_remaining_option.unwrap_or(0);
+    if time_remaining > 0 {
+        return Ok(format!(
+            "This guild is being ratelimited. Try again in {time_remaining} seconds."
+        ));
     }
     let total_users = state
         .client
@@ -124,7 +120,6 @@ async fn import_level_data(
         .mee6
         .lock()
         .push_back((guild_id, interaction_token));
-    #[cfg(feature = "ratelimiting")]
     {
         let mut redis = state.redis.get().await?;
         redis::cmd("SET")
