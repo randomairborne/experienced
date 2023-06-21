@@ -18,7 +18,6 @@ use sqlx::PgPool;
 use std::{collections::VecDeque, sync::Arc};
 use twilight_model::{
     application::interaction::Interaction,
-    channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
         marker::{ApplicationMarker, GuildMarker},
@@ -26,6 +25,9 @@ use twilight_model::{
     },
 };
 use xpd_rank_card::SvgState;
+
+#[macro_use]
+extern crate tracing;
 
 #[derive(Clone)]
 pub struct XpdSlash {
@@ -51,44 +53,36 @@ impl XpdSlash {
             redis,
             import_queue,
         };
-        debug!("Creating commands...");
+        info!("Creating commands...");
         cmd_defs::register(state.client.interaction(state.my_id)).await;
         tokio::spawn(mee6_worker::do_fetches(state.clone()));
         Self { state }
     }
-    pub async fn run(self, interaction: Interaction) {
-        let interaction_token = interaction.token.clone();
-        let interaction_id = interaction.id;
-        let response =
-            match Box::pin(crate::processor::process(interaction, self.state.clone())).await {
-                Ok(val) => val,
-                Err(e) => {
-                    error!("{e}");
-                    InteractionResponse {
-                        kind: InteractionResponseType::ChannelMessageWithSource,
-                        data: Some(
-                            InteractionResponseDataBuilder::new()
-                                .flags(MessageFlags::EPHEMERAL)
-                                .content(e.to_string())
-                                .build(),
-                        ),
-                    }
+    pub async fn run(self, interaction: Interaction) -> InteractionResponse {
+        match Box::pin(crate::processor::process(interaction, self.state.clone())).await {
+            Ok(val) => val,
+            Err(e) => {
+                error!("{e}");
+                InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(
+                        InteractionResponseDataBuilder::new()
+                            .content(e.to_string())
+                            .build(),
+                    ),
                 }
-            };
-        if let Err(e) = self
-            .state
-            .client
-            .interaction(self.state.my_id)
-            .create_response(interaction_id, &interaction_token, &response)
-            .await
-        {
-            error!("Error responding to interaction: {e}");
+            }
         }
     }
+    #[must_use]
+    pub fn client(&self) -> Arc<twilight_http::Client> {
+        self.state.client.clone()
+    }
+    #[must_use]
+    pub const fn id(&self) -> Id<ApplicationMarker> {
+        self.state.my_id
+    }
 }
-
-#[macro_use]
-extern crate tracing;
 
 const THEME_COLOR: u32 = 0x33_33_66;
 
