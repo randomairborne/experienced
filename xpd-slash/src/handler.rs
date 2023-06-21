@@ -1,8 +1,9 @@
 use axum::{body::Bytes, extract::State, http::HeaderMap, response::IntoResponse, Json};
 use twilight_model::{
     application::interaction::Interaction,
-    http::interaction::{InteractionResponse, InteractionResponseType},
+    http::interaction::{InteractionResponse, InteractionResponseType}, channel::message::MessageFlags,
 };
+use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::AppState;
 
@@ -18,7 +19,7 @@ pub async fn handle(
     tokio::spawn(state.bot.run(interaction));
     let response = InteractionResponse {
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
-        data: None,
+        data: Some(InteractionResponseDataBuilder::new().flags(MessageFlags::EPHEMERAL).build()),
     };
     Ok(Json(response))
 }
