@@ -80,6 +80,31 @@ impl XpdSlash {
     pub const fn id(&self) -> Id<ApplicationMarker> {
         self.state.my_id
     }
+    /// # Errors
+    /// Errors if the message could not be validated
+    /// this is stupid
+    /// twilight_http validation is supposed to be OPTIONAL
+    pub async fn send_followup(
+        &self,
+        response: XpdSlashResponse,
+        token: &str,
+    ) -> Result<(), Error> {
+        if let Err(source) = self
+            .client()
+            .interaction(self.id())
+            .create_followup(token)
+            .allowed_mentions(response.allowed_mentions.as_ref())
+            .attachments(&response.attachments.unwrap_or_default())?
+            .components(&response.components.unwrap_or_default())?
+            .content(&response.content.unwrap_or_default())?
+            .embeds(&response.embeds.unwrap_or_default())?
+            .tts(response.tts.unwrap_or(false))
+            .await
+        {
+            error!(?source, "Failed to respond to interaction");
+        }
+        Ok(())
+    }
 }
 
 const THEME_COLOR: u32 = 0x33_33_66;

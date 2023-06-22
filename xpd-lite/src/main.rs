@@ -140,16 +140,9 @@ async fn handle_event(
             }).await {
                 error!(?error, "error creating initial ack");
             };
-            let out = slash.clone().run(interaction_create.0).await;
-
-            if let Err(error) = slash
-                .client()
-                .interaction(slash.id())
-                .create_followup(&interaction_token)
-                .attachments(o)
-                .await
-            {
-                error!(?error, "error creating initial ack");
+            let response = slash.clone().run(interaction_create.0).await;
+            if let Err(error) = slash.send_followup(response, &interaction_token).await {
+                error!(?error, "error creating real response");
             };
         }
         _ => {}
@@ -163,4 +156,6 @@ pub enum Error {
     Listener(#[from] xpd_listener::Error),
     #[error("Twilight-Gateway error: {0}")]
     Send(#[from] twilight_gateway::error::SendError),
+    #[error("Twilight-Validate error: {0}")]
+    Validate(#[from] twilight_validate::message::MessageValidationError),
 }

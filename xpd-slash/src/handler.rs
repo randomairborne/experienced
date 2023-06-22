@@ -69,59 +69,14 @@ async fn respond_to_discord_later(
 ) {
     let response = match handle.await {
         Ok(v) => v,
-        Err(e) => {
-            error!("Handler panicked with {e}");
-            XpdSlashResponse::new().content(format!("Handler panicked with {e}"))
+        Err(source) => {
+            error!(?source, "Handler panicked");
+            XpdSlashResponse::new().content(format!("Handler panicked: {source}"))
         }
     };
-    let client = state.client().clone();
-    let iclient = client.interaction(state.id());
-    let followup = iclient.create_followup(&token);
-    match build_followup(followup, response) {
-        Ok(v) => {
-            if let Err(e) = v.await {
-                error!(?e, "Failed to create true response");
-            }
-        }
-        Err(e) => {
-            error!(?e, "Failed to build followup");
-            state
-                .client()
-                .interaction(state.id())
-                .create_followup(&token)
-                .content(&format!("failed to build followup message: {e}"))
-                .unwrap()
-                .await;
-        }
+    if let Err(source) = state.send_followup(response, &token).await {
+        error!(?source, "Followup validate failed");
     }
-}
-
-fn build_followup(
-    mut followup: CreateFollowup,
-    response: XpdSlashResponse,
-) -> Result<CreateFollowup, twilight_validate::message::MessageValidationError> {
-    if let Some(option) = response.allowed_mentions {
-        followup = followup.allowed_mentions(Some(&option));
-    }
-    if let Some(option) = response.attachments {
-        followup = followup.attachments(&option)?;
-    }
-    if let Some(option) = response.components {
-        followup = followup.components(&option)?;
-    }
-    if let Some(option) = response.content {
-        followup = followup.content(option)?;
-    }
-    if let Some(option) = response.embeds {
-        followup = followup.embeds(&option)?;
-    }
-    if let Some(option) = response.flags {
-        followup = followup.flags(option);
-    }
-    if let Some(option) = response.tts {
-        followup = followup.tts(option);
-    }
-    Ok(followup)
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -130,6 +85,8 @@ pub enum Error {
     Validation(#[from] crate::discord_sig_validation::SignatureValidationError),
     #[error("serde_json error: {0}")]
     SerdeJson(#[from] serde_json::Error),
+    #[error("twilight_validate error: {0}")]
+    TwilightValidateMessage(#[from] twilight_validate::message::MessageValidationError),
 }
 
 impl IntoResponse for Error {

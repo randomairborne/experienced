@@ -3393,6 +3393,7 @@ dependencies = [
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
+ "twilight-validate",
  "xpd-common",
  "xpd-listener",
  "xpd-slash",
