@@ -4,14 +4,11 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
 };
-use twilight_util::builder::{
-    embed::{EmbedBuilder, ImageSource},
-    InteractionResponseDataBuilder,
-};
+use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{
     cmd_defs::{card::CardCommandEdit, CardCommand},
-    Error, SlashState,
+    Error, SlashState, XpdSlashResponse,
 };
 
 pub async fn card_update(
@@ -19,7 +16,7 @@ pub async fn card_update(
     user: User,
     state: &SlashState,
     guild_id: Id<GuildMarker>,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdSlashResponse, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let user_id = user.id.get() as i64;
     let contents = match data {
@@ -58,14 +55,7 @@ pub async fn card_update(
         .title(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
-    let interaction_response_data = InteractionResponseDataBuilder::new()
-        .attachments([card])
-        .embeds([embed])
-        .build();
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::ChannelMessageWithSource,
-        data: Some(interaction_response_data),
-    })
+    Ok(XpdSlashResponse::new().attachments([card]).embeds([embed]))
 }
 
 async fn process_edit(

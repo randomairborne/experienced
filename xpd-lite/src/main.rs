@@ -4,6 +4,7 @@ use std::sync::{atomic::AtomicBool, Arc};
 use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, Shard};
+use twilight_model::http::interaction::InteractionResponse;
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 
@@ -106,13 +107,13 @@ async fn event_loop(
                 let http = http.clone();
                 let slash = slash.clone();
                 tokio::spawn(async move {
-                    if let Err(e) = handle_event(event, http, listener, slash).await {
+                    if let Err(error) = handle_event(event, http, listener, slash).await {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
-                        error!("Handler error: {e}");
+                        error!(?error, "Handler error");
                     }
                 });
             }
-            Err(e) => error!("Shard loop error: {e}"),
+            Err(error) => error!(?error, "Shard loop error"),
         }
         if should_shutdown.load(std::sync::atomic::Ordering::Relaxed) {
             break;
@@ -131,7 +132,26 @@ async fn handle_event(
         Event::ThreadCreate(thread) => {
             let _ = http.join_thread(thread.id).await;
         }
-        Event::InteractionCreate(interaction_create) => slash.run(interaction_create.0).await,
+        Event::InteractionCreate(interaction_create) => {
+            let interaction_token = interaction_create.token.clone();
+            if let Err(error) = slash.client().interaction(slash.id()).create_response(interaction_create.id, &interaction_create.token, &InteractionResponse {
+                kind: twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource,
+                data: None
+            }).await {
+                error!(?error, "error creating initial ack");
+            };
+            let out = slash.clone().run(interaction_create.0).await;
+
+            if let Err(error) = slash
+                .client()
+                .interaction(slash.id())
+                .create_followup(&interaction_token)
+                .attachments(o)
+                .await
+            {
+                error!(?error, "error creating initial ack");
+            };
+        }
         _ => {}
     };
     Ok(())

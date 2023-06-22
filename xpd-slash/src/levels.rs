@@ -1,4 +1,4 @@
-use crate::{Error, SlashState};
+use crate::{Error, SlashState, XpdSlashResponse};
 use base64::Engine;
 use sqlx::query;
 use twilight_model::{
@@ -10,7 +10,7 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::embed::EmbedBuilder;
 use xpd_rank_card::{Font, Toy};
 
 pub async fn get_level(
@@ -19,7 +19,7 @@ pub async fn get_level(
     invoker: User,
     state: SlashState,
     interaction_token: String,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdSlashResponse, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
@@ -50,7 +50,8 @@ pub async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(state, user, level_info, rank, interaction_token).await;
+            return generate_level_response(&state, user, level_info, rank, interaction_token)
+                .await;
         }
     } else if xp == 0 {
         format!(
@@ -59,85 +60,20 @@ pub async fn get_level(
             user.discriminator()
         )
     } else {
-        return generate_level_response(state, user, level_info, rank, interaction_token).await;
+        return generate_level_response(&state, user, level_info, rank, interaction_token).await;
     };
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::ChannelMessageWithSource,
-        data: Some(
-            InteractionResponseDataBuilder::new()
-                .flags(MessageFlags::EPHEMERAL)
-                .embeds([EmbedBuilder::new().description(content).build()])
-                .build(),
-        ),
-    })
+    Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(content).build()]))
 }
 
-#[allow(clippy::unused_async)]
 async fn generate_level_response(
-    state: SlashState,
-    user: User,
-    level_info: mee6::LevelInfo,
-    rank: i64,
-    interaction_token: String,
-) -> Result<InteractionResponse, Error> {
-    tokio::spawn(update_interaction_with_card(
-        state,
-        user,
-        level_info,
-        rank,
-        interaction_token,
-    ));
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::DeferredChannelMessageWithSource,
-        data: None,
-    })
-}
-
-async fn update_interaction_with_card(
-    state: SlashState,
-    user: User,
-    level_info: mee6::LevelInfo,
-    rank: i64,
-    interaction_token: String,
-) {
-    if let Err(e) = update_interaction_with_card_actual(
-        &state,
-        user,
-        level_info,
-        rank,
-        interaction_token.clone(),
-    )
-    .await
-    {
-        warn!("{e:?}");
-        if let Ok(followup) = state
-            .client
-            .interaction(state.my_id)
-            .create_followup(&interaction_token)
-            .content(&format!("{e:#?}"))
-        {
-            if let Err(e) = followup.await {
-                warn!("{e:?}");
-            }
-        };
-    }
-}
-
-async fn update_interaction_with_card_actual(
     state: &SlashState,
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
     interaction_token: String,
-) -> Result<(), Error> {
+) -> Result<XpdSlashResponse, Error> {
     let card = gen_card(state, &user, level_info, rank).await?;
-    state
-        .client
-        .interaction(state.my_id)
-        .create_followup(&interaction_token)
-        .attachments(&[card])?
-        .await?;
-    Ok(())
+    Ok(XpdSlashResponse::new().attachments([card]))
 }
 
 pub async fn gen_card(
@@ -211,19 +147,13 @@ pub async fn gen_card(
     })
 }
 
-pub fn leaderboard(guild_id: Id<GuildMarker>) -> InteractionResponse {
+pub fn leaderboard(guild_id: Id<GuildMarker>) -> XpdSlashResponse {
     let guild_link = format!("https://xp.valk.sh/{guild_id}");
     let embed = EmbedBuilder::new()
         .description(format!("[Click to view the leaderboard!]({guild_link})"))
         .color(crate::THEME_COLOR)
         .build();
-    let data = InteractionResponseDataBuilder::new()
-        .embeds([embed])
-        .build();
-    InteractionResponse {
-        data: Some(data),
-        kind: InteractionResponseType::ChannelMessageWithSource,
-    }
+    XpdSlashResponse::new().embeds([embed])
 }
 
 async fn get_avatar(state: &SlashState, user: &User) -> Result<String, Error> {

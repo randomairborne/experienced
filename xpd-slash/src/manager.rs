@@ -8,7 +8,7 @@ use twilight_model::{
         Id,
     },
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{
     cmd_defs::{
@@ -17,7 +17,7 @@ use crate::{
         },
         XpCommand,
     },
-    Error, SlashState,
+    Error, SlashState, XpdSlashResponse,
 };
 
 pub async fn process_xp(
@@ -25,17 +25,14 @@ pub async fn process_xp(
     interaction_token: String,
     guild_id: Id<GuildMarker>,
     state: SlashState,
-) -> Result<InteractionResponseData, Error> {
+) -> Result<XpdSlashResponse, Error> {
     let contents = match data {
         XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
         XpCommand::Experience(experience) => {
             process_experience(experience, guild_id, interaction_token, state).await
         }
     }?;
-    Ok(InteractionResponseDataBuilder::new()
-        .flags(MessageFlags::EPHEMERAL)
-        .embeds([EmbedBuilder::new().description(contents).build()])
-        .build())
+    Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(contents).build()]))
 }
 
 async fn process_experience(

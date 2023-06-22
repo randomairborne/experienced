@@ -9,16 +9,21 @@ mod manage_card;
 mod manager;
 mod mee6_worker;
 mod processor;
+mod response;
 
 pub use error::Error;
-use twilight_util::builder::InteractionResponseDataBuilder;
+pub use response::XpdSlashResponse;
 
 use parking_lot::Mutex;
 use sqlx::PgPool;
 use std::{collections::VecDeque, sync::Arc};
 use twilight_model::{
-    application::interaction::Interaction,
-    http::interaction::{InteractionResponse, InteractionResponseType},
+    application::{command::CommandOptionChoice, interaction::Interaction},
+    channel::message::{AllowedMentions, Component, Embed, MessageFlags},
+    http::{
+        attachment::Attachment,
+        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    },
     id::{
         marker::{ApplicationMarker, GuildMarker},
         Id,
@@ -58,19 +63,12 @@ impl XpdSlash {
         tokio::spawn(mee6_worker::do_fetches(state.clone()));
         Self { state }
     }
-    pub async fn run(self, interaction: Interaction) -> InteractionResponse {
+    pub async fn run(self, interaction: Interaction) -> XpdSlashResponse {
         match Box::pin(crate::processor::process(interaction, self.state.clone())).await {
             Ok(val) => val,
             Err(e) => {
                 error!("{e}");
-                InteractionResponse {
-                    kind: InteractionResponseType::ChannelMessageWithSource,
-                    data: Some(
-                        InteractionResponseDataBuilder::new()
-                            .content(e.to_string())
-                            .build(),
-                    ),
-                }
+                XpdSlashResponse::new().content(e.to_string())
             }
         }
     }

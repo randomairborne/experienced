@@ -1,10 +1,9 @@
-use twilight_model::{http::interaction::InteractionResponse, user::User};
-use twilight_util::builder::{
-    embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
-    InteractionResponseDataBuilder,
-};
+use twilight_model::user::User;
+use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder};
 
-pub fn help(invoker: &User) -> InteractionResponse {
+use crate::XpdSlashResponse;
+
+pub fn help(invoker: &User) -> XpdSlashResponse {
     let help_help = EmbedFieldBuilder::new("/help", "This command! Takes no arguments.")
         .inline()
         .build();
@@ -36,12 +35,5 @@ pub fn help(invoker: &User) -> InteractionResponse {
             .build(),
         )
         .build();
-    let data = InteractionResponseDataBuilder::new()
-        .embeds([help_embed])
-        .build();
-    let data = Some(data);
-    InteractionResponse {
-        kind: twilight_model::http::interaction::InteractionResponseType::ChannelMessageWithSource,
-        data,
-    }
+    XpdSlashResponse::new().embeds([help_embed])
 }

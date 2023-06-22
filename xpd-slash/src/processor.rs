@@ -1,4 +1,4 @@
-use crate::{Error, SlashState};
+use crate::{Error, SlashState, XpdSlashResponse};
 use twilight_interactions::command::CommandModel;
 use twilight_model::{
     application::{
@@ -15,21 +15,14 @@ use twilight_model::{
 pub async fn process(
     interaction: Interaction,
     state: SlashState,
-) -> Result<InteractionResponse, Error> {
-    Ok(if interaction.kind == InteractionType::ApplicationCommand {
-        process_app_cmd(interaction, state).await?
-    } else {
-        InteractionResponse {
-            kind: InteractionResponseType::Pong,
-            data: None,
-        }
-    })
+) -> Result<XpdSlashResponse, Error> {
+    process_app_cmd(interaction, state).await
 }
 
 async fn process_app_cmd(
     interaction: Interaction,
     state: SlashState,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdSlashResponse, Error> {
     #[cfg(debug_assertions)]
     trace!("{interaction:#?}");
     let data = if let Some(data) = interaction.data {
@@ -67,7 +60,7 @@ async fn process_slash_cmd(
     invoker: User,
     state: SlashState,
     interaction_token: String,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdSlashResponse, Error> {
     match data.name.as_str() {
         "help" => Ok(crate::help::help(&invoker)),
         "rank" => {
@@ -76,18 +69,15 @@ async fn process_slash_cmd(
                 .map_or_else(|| invoker.clone(), |v| v.resolved);
             crate::levels::get_level(guild_id, target, invoker, state, interaction_token).await
         }
-        "xp" => Ok(InteractionResponse {
-            data: Some(
-                crate::manager::process_xp(
-                    crate::cmd_defs::XpCommand::from_interaction(data.into())?,
-                    interaction_token,
-                    guild_id,
-                    state,
-                )
-                .await?,
-            ),
-            kind: InteractionResponseType::ChannelMessageWithSource,
-        }),
+        "xp" => {
+            crate::manager::process_xp(
+                crate::cmd_defs::XpCommand::from_interaction(data.into())?,
+                interaction_token,
+                guild_id,
+                state,
+            )
+            .await
+        }
         "card" => Ok(crate::manage_card::card_update(
             crate::cmd_defs::CardCommand::from_interaction(data.into())?,
             invoker,
@@ -106,7 +96,7 @@ async fn process_user_cmd(
     invoker: User,
     state: SlashState,
     interaction_token: String,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdSlashResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
     let user = data
         .resolved
@@ -124,7 +114,7 @@ async fn process_msg_cmd(
     invoker: User,
     state: SlashState,
     interaction_token: String,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdSlashResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
     let user = &data
         .resolved

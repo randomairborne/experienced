@@ -10,7 +10,7 @@ use twilight_model::{
     },
     user::User,
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::{embed::EmbedBuilder, XpdSlashResponse};
 
 use crate::{AppState, Error};
 
@@ -29,7 +29,7 @@ pub async fn modify(
                     "You need to be on the allow-list of the bot to use this icon!".to_string(),
                 )
                 .build();
-            return Ok(ephemeral_embed_response(embed));
+            return Ok(embed_response(embed));
         }
     }
     #[allow(clippy::cast_possible_wrap)]
@@ -43,7 +43,7 @@ pub async fn modify(
     let embed = EmbedBuilder::new()
         .description(format!("Set your toy to {toy}!"))
         .build();
-    Ok(ephemeral_embed_response(embed))
+    Ok(embed_response(embed))
 }
 
 #[derive(Clone, Copy, Debug, CreateOption, CommandOption)]
@@ -91,13 +91,12 @@ impl Display for Toy {
     }
 }
 
-fn ephemeral_embed_response(embed: Embed) -> InteractionResponse {
+fn embed_response(embed: Embed) -> InteractionResponse {
     InteractionResponse {
         kind: InteractionResponseType::ChannelMessageWithSource,
         data: Some(
-            InteractionResponseDataBuilder::new()
+            XpdSlashResponse::new()
                 .embeds([embed])
-                .flags(MessageFlags::EPHEMERAL)
                 .build(),
         ),
     }
