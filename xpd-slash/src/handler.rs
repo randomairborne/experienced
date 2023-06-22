@@ -72,7 +72,6 @@ async fn respond_to_discord_later(
     token: String,
     handle: JoinHandle<XpdSlashResponse>,
 ) {
-    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     let response = match handle.await {
         Ok(v) => v,
         Err(source) => {
