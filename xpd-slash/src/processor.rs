@@ -3,11 +3,8 @@ use twilight_interactions::command::CommandModel;
 use twilight_model::{
     application::{
         command::CommandType,
-        interaction::{
-            application_command::CommandData, Interaction, InteractionData, InteractionType,
-        },
+        interaction::{application_command::CommandData, Interaction, InteractionData},
     },
-    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::GuildMarker, Id},
     user::User,
 };

@@ -20,81 +20,110 @@ pub struct XpdSlashResponse {
 }
 
 impl XpdSlashResponse {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn allowed_mentions_o(self, allowed_mentions: Option<AllowedMentions>) -> Self {
         Self {
             allowed_mentions,
             ..self
         }
     }
+    #[must_use]
     pub fn attachments_o(self, attachments: Option<impl Into<Vec<Attachment>>>) -> Self {
         Self {
             attachments: attachments.map(std::convert::Into::into),
             ..self
         }
     }
+    #[must_use]
     pub fn choices_o(self, choices: Option<impl Into<Vec<CommandOptionChoice>>>) -> Self {
         Self {
-            choices: choices.map(|v| v.into()),
+            choices: choices.map(Into::into),
             ..self
         }
     }
+    #[must_use]
     pub fn components_o(self, components: Option<impl Into<Vec<Component>>>) -> Self {
         Self {
-            components: components.map(|v| v.into()),
+            components: components.map(Into::into),
             ..self
         }
     }
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
+
     pub fn content_o(self, content: Option<String>) -> Self {
         Self { content, ..self }
     }
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
+
     pub fn custom_id_o(self, custom_id: Option<String>) -> Self {
         Self { custom_id, ..self }
     }
+    #[must_use]
     pub fn embeds_o(self, embeds: Option<impl Into<Vec<Embed>>>) -> Self {
         Self {
-            embeds: embeds.map(|v| v.into()),
+            embeds: embeds.map(Into::into),
             ..self
         }
     }
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn flags_o(self, flags: Option<MessageFlags>) -> Self {
         Self { flags, ..self }
     }
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn title_o(self, title: Option<String>) -> Self {
         Self { title, ..self }
     }
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn tts_o(self, tts: Option<bool>) -> Self {
         Self { tts, ..self }
     }
+    #[must_use]
     pub fn allowed_mentions(self, allowed_mentions: AllowedMentions) -> Self {
         self.allowed_mentions_o(Some(allowed_mentions))
     }
+    #[must_use]
     pub fn attachments(self, attachments: impl Into<Vec<Attachment>>) -> Self {
         self.attachments_o(Some(attachments))
     }
+    #[must_use]
     pub fn choices(self, choices: impl Into<Vec<CommandOptionChoice>>) -> Self {
         self.choices_o(Some(choices))
     }
+    #[must_use]
     pub fn components(self, components: impl Into<Vec<Component>>) -> Self {
         self.components_o(Some(components))
     }
+    #[must_use]
     pub fn content(self, content: String) -> Self {
         self.content_o(Some(content))
     }
+    #[must_use]
     pub fn custom_id(self, custom_id: String) -> Self {
         self.custom_id_o(Some(custom_id))
     }
+    #[must_use]
     pub fn embeds(self, embeds: impl Into<Vec<Embed>>) -> Self {
         self.embeds_o(Some(embeds))
     }
+    #[must_use]
     pub fn flags(self, flags: MessageFlags) -> Self {
         self.flags_o(Some(flags))
     }
+    #[must_use]
     pub fn title(self, title: String) -> Self {
         self.title_o(Some(title))
     }
+    #[must_use]
     pub fn tts(self, tts: bool) -> Self {
         self.tts_o(Some(tts))
     }

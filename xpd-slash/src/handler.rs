@@ -1,12 +1,11 @@
 use crate::AppState;
 use axum::{body::Bytes, extract::State, http::HeaderMap, response::IntoResponse, Json};
 use tokio::task::JoinHandle;
-use twilight_http::request::application::interaction::CreateFollowup;
+
 use twilight_model::{
     application::interaction::{Interaction, InteractionType},
     channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseType},
-    id::{marker::InteractionMarker, Id},
 };
 use xpd_slash::{XpdSlash, XpdSlashResponse};
 

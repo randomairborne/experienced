@@ -2,11 +2,7 @@ use crate::{Error, SlashState, XpdSlashResponse};
 use base64::Engine;
 use sqlx::query;
 use twilight_model::{
-    channel::message::MessageFlags,
-    http::{
-        attachment::Attachment,
-        interaction::{InteractionResponse, InteractionResponseType},
-    },
+    http::attachment::Attachment,
     id::{marker::GuildMarker, Id},
     user::User,
 };
@@ -70,7 +66,7 @@ async fn generate_level_response(
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
-    interaction_token: String,
+    _interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
     let card = gen_card(state, &user, level_info, rank).await?;
     Ok(XpdSlashResponse::new().attachments([card]))

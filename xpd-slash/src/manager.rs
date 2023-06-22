@@ -1,12 +1,8 @@
 use sqlx::query;
 use std::fmt::Write;
-use twilight_model::{
-    channel::message::MessageFlags,
-    http::interaction::InteractionResponseData,
-    id::{
-        marker::{GuildMarker, UserMarker},
-        Id,
-    },
+use twilight_model::id::{
+    marker::{GuildMarker, UserMarker},
+    Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
 

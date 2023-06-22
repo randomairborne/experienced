@@ -18,12 +18,7 @@ use parking_lot::Mutex;
 use sqlx::PgPool;
 use std::{collections::VecDeque, sync::Arc};
 use twilight_model::{
-    application::{command::CommandOptionChoice, interaction::Interaction},
-    channel::message::{AllowedMentions, Component, Embed, MessageFlags},
-    http::{
-        attachment::Attachment,
-        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    },
+    application::interaction::Interaction,
     id::{
         marker::{ApplicationMarker, GuildMarker},
         Id,
@@ -83,7 +78,7 @@ impl XpdSlash {
     /// # Errors
     /// Errors if the message could not be validated
     /// this is stupid
-    /// twilight_http validation is supposed to be OPTIONAL
+    /// [`twilight_http`] validation is supposed to be OPTIONAL
     pub async fn send_followup(
         &self,
         response: XpdSlashResponse,

@@ -1,6 +1,5 @@
 use sqlx::query;
 use twilight_model::{
-    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::GuildMarker, Id},
     user::User,
 };
