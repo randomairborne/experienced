@@ -11,6 +11,9 @@ kill_timeout = "5s"
 [experimental]
   auto_rollback = true
 
+[env]
+  LOG = "debug"
+
 [build]
   image = "ghcr.io/randomairborne/xpd-slash:latest"
 
