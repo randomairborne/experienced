@@ -59,7 +59,7 @@ async fn process_slash_cmd(
     interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
     match data.name.as_str() {
-        "help" => Ok(crate::help::help(&invoker)),
+        "help" => Ok(crate::help::help()),
         "rank" => {
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user

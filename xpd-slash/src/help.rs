@@ -1,9 +1,8 @@
-use twilight_model::user::User;
-use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder};
+use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 use crate::XpdSlashResponse;
 
-pub fn help(invoker: &User) -> XpdSlashResponse {
+pub fn help() -> XpdSlashResponse {
     let help_help = EmbedFieldBuilder::new("/help", "This command! Takes no arguments.")
         .inline()
         .build();
@@ -26,14 +25,6 @@ pub fn help(invoker: &User) -> XpdSlashResponse {
         .field(rank_help)
         .field(card_help)
         .field(xp_help)
-        .footer(
-            EmbedFooterBuilder::new(format!(
-                "Requested by {}#{}",
-                invoker.name,
-                invoker.discriminator()
-            ))
-            .build(),
-        )
         .build();
     XpdSlashResponse::new().embeds([help_embed])
 }
