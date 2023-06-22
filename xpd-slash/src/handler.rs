@@ -17,6 +17,7 @@ pub async fn handle(
 ) -> Result<Json<InteractionResponse>, Error> {
     let body = body.to_vec();
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
+    trace!("deserializing interaction");
     let interaction: Interaction = serde_json::from_slice(&body)?;
     let interaction_token = interaction.token.clone();
     if interaction.kind == InteractionType::Ping {
@@ -25,8 +26,10 @@ pub async fn handle(
             data: None,
         }));
     }
+    trace!("beginning response");
     let responder_handle = tokio::spawn(state.bot.clone().run(interaction));
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    trace!("checking if processing has completed");
     if responder_handle.is_finished() {
         match responder_handle.await {
             Ok(v) => {
