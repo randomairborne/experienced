@@ -30,6 +30,7 @@ pub async fn handle(
     if responder_handle.is_finished() {
         match responder_handle.await {
             Ok(v) => {
+                trace!("responding directly");
                 return Ok(Json(InteractionResponse {
                     kind: InteractionResponseType::ChannelMessageWithSource,
                     data: Some(v.into()),
@@ -49,11 +50,13 @@ pub async fn handle(
             }
         }
     }
+    trace!("Spawning follow-up task");
     tokio::spawn(respond_to_discord_later(
         state.bot,
         interaction_token,
         responder_handle,
     ));
+    trace!("responding with DCMWS");
     let response = InteractionResponse {
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
         data: None,
@@ -66,6 +69,7 @@ async fn respond_to_discord_later(
     token: String,
     handle: JoinHandle<XpdSlashResponse>,
 ) {
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     let response = match handle.await {
         Ok(v) => v,
         Err(source) => {

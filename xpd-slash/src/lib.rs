@@ -84,6 +84,7 @@ impl XpdSlash {
         response: XpdSlashResponse,
         token: &str,
     ) -> Result<(), Error> {
+        trace!(?response, "sending followup message");
         if let Err(source) = self
             .client()
             .interaction(self.id())
