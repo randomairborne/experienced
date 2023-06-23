@@ -1,10 +1,7 @@
 use crate::AppState;
 use axum::{body::Bytes, extract::State, http::HeaderMap, response::IntoResponse, Json};
-use tokio::task::JoinHandle;
-
 use twilight_model::{
     application::interaction::{Interaction, InteractionType},
-    channel::message::MessageFlags,
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use xpd_slash::{XpdSlash, XpdSlashResponse};
@@ -19,7 +16,7 @@ pub async fn handle(
     crate::discord_sig_validation::validate_discord_sig(&headers, &body, &state.pubkey)?;
     trace!("deserializing interaction");
     let interaction: Interaction = serde_json::from_slice(&body)?;
-    let interaction_token = interaction.token.clone();
+    let token = interaction.token.clone();
     if interaction.kind == InteractionType::Ping {
         return Ok(Json(InteractionResponse {
             kind: InteractionResponseType::Pong,
@@ -27,39 +24,21 @@ pub async fn handle(
         }));
     }
     trace!("beginning response");
-    let responder_handle = tokio::spawn(state.bot.clone().run(interaction));
-    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-    trace!("checking if processing has completed");
-    if responder_handle.is_finished() {
-        match responder_handle.await {
-            Ok(v) => {
-                trace!("responding directly");
-                return Ok(Json(InteractionResponse {
-                    kind: InteractionResponseType::ChannelMessageWithSource,
-                    data: Some(v.into()),
-                }));
-            }
-            Err(e) => {
-                error!("Handler panicked with {e}");
-                return Ok(Json(InteractionResponse {
-                    kind: InteractionResponseType::ChannelMessageWithSource,
-                    data: Some(
-                        XpdSlashResponse::new()
-                            .content(format!("Handler panicked with {e}"))
-                            .flags(MessageFlags::EPHEMERAL)
-                            .into(),
-                    ),
-                }));
-            }
-        }
+    let mut responder_handle = tokio::spawn(state.bot.clone().run(interaction));
+    tokio::select! {
+        _ = tokio::time::sleep(std::time::Duration::from_secs(1)) => {},
+        v = &mut responder_handle => return Ok(Json(
+            build_response_now(state.bot, v.unwrap_or_else(handler_panicked), token).await
+        )),
     }
-    trace!("Spawning follow-up task");
-    tokio::spawn(respond_to_discord_later(
-        state.bot,
-        interaction_token,
-        responder_handle,
-    ));
-    trace!("responding with DCMWS");
+    trace!("Spawning long-running follow-up task");
+    tokio::spawn(async move {
+        let response = responder_handle.await.unwrap_or_else(handler_panicked);
+        if let Err(source) = state.bot.send_followup(response, &token).await {
+            error!(?source, "Followup validate failed");
+        };
+    });
+    trace!("responding with slowDCMWS");
     let response = InteractionResponse {
         kind: InteractionResponseType::DeferredChannelMessageWithSource,
         data: None,
@@ -67,21 +46,35 @@ pub async fn handle(
     Ok(Json(response))
 }
 
-async fn respond_to_discord_later(
+async fn build_response_now(
     state: XpdSlash,
+    response: XpdSlashResponse,
     token: String,
-    handle: JoinHandle<XpdSlashResponse>,
-) {
-    let response = match handle.await {
-        Ok(v) => v,
-        Err(source) => {
-            error!(?source, "Handler panicked");
-            XpdSlashResponse::new().content(format!("Handler panicked: {source}"))
-        }
-    };
-    if let Err(source) = state.send_followup(response, &token).await {
-        error!(?source, "Followup validate failed");
+) -> InteractionResponse {
+    trace!("responding directly");
+    if response.attachments.is_none() || response.attachments.as_ref().is_some_and(Vec::is_empty) {
+        return InteractionResponse {
+            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: Some(response.into()),
+        };
     }
+    trace!("Spawning short-running follow-up task");
+    tokio::spawn(async move {
+        if let Err(source) = state.send_followup(response, &token).await {
+            error!(?source, "Followup validate failed");
+        }
+    });
+    trace!("responding with quickDCMWS");
+    InteractionResponse {
+        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+        data: None,
+    }
+}
+
+/// This method just takes a source, outputs an error, and returns that error in a response
+fn handler_panicked(source: impl std::error::Error) -> XpdSlashResponse {
+    error!(?source, "Handler panicked");
+    XpdSlashResponse::new().content(format!("Handler panicked with {source}"))
 }
 
 #[derive(thiserror::Error, Debug)]
