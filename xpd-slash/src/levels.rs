@@ -158,7 +158,7 @@ async fn get_avatar(state: &SlashState, user: &User) -> Result<String, Error> {
             format!(
                 "https://cdn.discordapp.com/embed/avatars/{}/{}.png",
                 user.id,
-                user.discriminator % 5
+                (user.id.get() >> 22) % 5
             )
         },
         |hash| {
