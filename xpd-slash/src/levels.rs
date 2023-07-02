@@ -156,14 +156,13 @@ async fn get_avatar(state: &SlashState, user: &User) -> Result<String, Error> {
     let url = user.avatar.map_or_else(
         || {
             format!(
-                "https://cdn.discordapp.com/embed/avatars/{}/{}.png",
-                user.id,
+                "https://cdn.discordapp.com/embed/avatars/{}.png?size=512",
                 (user.id.get() >> 22) % 5
             )
         },
         |hash| {
             format!(
-                "https://cdn.discordapp.com/avatars/{}/{}.png",
+                "https://cdn.discordapp.com/avatars/{}/{}.png?size=512",
                 user.id, hash
             )
         },
