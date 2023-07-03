@@ -7,8 +7,8 @@ pub const DEFAULT_BORDER: Color = Color::new(133, 79, 43);
 pub const DEFAULT_BACKGROUND: Color = Color::new(97, 55, 31);
 pub const DEFAULT_PROGRESS_FOREGROUND: Color = Color::new(71, 122, 30);
 pub const DEFAULT_PROGRESS_BACKGROUND: Color = Color::new(143, 202, 92);
-pub const DEFAULT_BACKGROUND_XP_COUNT: Color = Color::new(204, 204, 204);
-pub const DEFAULT_FOREGROUND_XP_COUNT: Color = Color::new(204, 204, 204);
+pub const DEFAULT_BACKGROUND_XP_COUNT: Color = Color::new(0, 0, 0);
+pub const DEFAULT_FOREGROUND_XP_COUNT: Color = Color::new(255, 255, 255);
 
 #[derive(serde::Serialize, Debug, Clone, Copy)]
 pub struct Colors {
