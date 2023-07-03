@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM custom_card WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "background_xp_count",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "rank",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "level",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "border",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "background",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "progress_foreground",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "progress_background",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "font",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "toy_image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "foreground_xp_count",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "2789a4214d7f7b16be1cf8b429e137fc676688ce0359ea70effa283c11ed990f"
+}

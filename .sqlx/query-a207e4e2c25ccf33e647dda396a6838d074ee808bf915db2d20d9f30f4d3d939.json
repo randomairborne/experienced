@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT font, toy_image FROM custom_card WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "font",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "toy_image",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "a207e4e2c25ccf33e647dda396a6838d074ee808bf915db2d20d9f30f4d3d939"
+}
