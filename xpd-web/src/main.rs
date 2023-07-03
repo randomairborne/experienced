@@ -129,7 +129,7 @@ struct User {
     id: u64,
     level: u64,
     name: Option<String>,
-    discriminator: Option<String>,
+    discriminator: Option<u16>,
 }
 
 #[derive(serde::Deserialize)]

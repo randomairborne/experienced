@@ -1,6 +1,6 @@
 [package]
 name = "xpd-common"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 description = "Common structures for the experienced discord bot"
 repository = "https://github.com/randomairborne/experienced"
@@ -11,3 +11,4 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
+twilight-model = "0.15"

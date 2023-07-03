@@ -9,7 +9,7 @@ impl crate::XpdListener {
             let discriminator = if member.user.discriminator == 0 {
                 None
             } else {
-                Some(member.user.discriminator().to_string())
+                Some(member.user.discriminator)
             };
             let user = xpd_common::RedisUser {
                 id: member.user.id.into(),

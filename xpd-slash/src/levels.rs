@@ -7,6 +7,7 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_common::Tag;
 use xpd_rank_card::{Font, Toy};
 
 pub async fn get_level(
@@ -51,9 +52,8 @@ pub async fn get_level(
         }
     } else if xp == 0 {
         format!(
-            "{}#{} isn't ranked yet, because they haven't sent any messages!",
-            user.name,
-            user.discriminator()
+            "{} isn't ranked yet, because they haven't sent any messages!",
+            user.tag()
         )
     } else {
         return generate_level_response(&state, user, level_info, rank, interaction_token).await;
@@ -129,9 +129,8 @@ pub async fn gen_card(
         .await?;
     Ok(Attachment {
         description: Some(format!(
-            "{}#{} is level {} (rank #{}), and is {}% of the way to level {}.",
-            user.name,
-            user.discriminator(),
+            "{} is level {} (rank #{}), and is {}% of the way to level {}.",
+            user.tag(),
             level_info.level(),
             rank,
             (level_info.percentage() * 100.0).round(),

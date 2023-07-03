@@ -3349,9 +3349,10 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xpd-common"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "serde",
+ "twilight-model",
 ]
 
 [[package]]
@@ -3442,6 +3443,7 @@ dependencies = [
  "twilight-model",
  "twilight-util",
  "twilight-validate",
+ "xpd-common",
  "xpd-rank-card",
 ]
 
