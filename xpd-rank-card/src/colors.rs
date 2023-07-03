@@ -1,30 +1,31 @@
 use crate::Error;
 
-pub const DEFAULT_IMPORTANT: Color = Color::new(255, 255, 255);
-pub const DEFAULT_SECONDARY: Color = Color::new(204, 204, 204);
+pub const DEFAULT_USERNAME: Color = Color::new(255, 255, 255);
 pub const DEFAULT_RANK: Color = Color::new(255, 255, 255);
 pub const DEFAULT_LEVEL: Color = Color::new(143, 202, 92);
 pub const DEFAULT_BORDER: Color = Color::new(133, 79, 43);
 pub const DEFAULT_BACKGROUND: Color = Color::new(97, 55, 31);
 pub const DEFAULT_PROGRESS_FOREGROUND: Color = Color::new(71, 122, 30);
 pub const DEFAULT_PROGRESS_BACKGROUND: Color = Color::new(143, 202, 92);
+pub const DEFAULT_BACKGROUND_XP_COUNT: Color = Color::new(204, 204, 204);
+pub const DEFAULT_FOREGROUND_XP_COUNT: Color = Color::new(204, 204, 204);
 
 #[derive(serde::Serialize, Debug, Clone, Copy)]
 pub struct Colors {
-    pub important: Color,
-    pub secondary: Color,
+    pub username: Color,
     pub rank: Color,
     pub level: Color,
     pub border: Color,
     pub background: Color,
     pub progress_foreground: Color,
     pub progress_background: Color,
+    pub background_xp_count: Color,
+    pub foreground_xp_count: Color,
 }
 
 impl std::fmt::Display for Colors {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        crate::add_output!(f, "Important text", self.important, DEFAULT_IMPORTANT);
-        crate::add_output!(f, "Secondary text", self.secondary, DEFAULT_SECONDARY);
+        crate::add_output!(f, "Important text", self.username, DEFAULT_USERNAME);
         crate::add_output!(f, "Rank", self.rank, DEFAULT_RANK);
         crate::add_output!(f, "Level", self.level, DEFAULT_LEVEL);
         crate::add_output!(f, "Border", self.border, DEFAULT_BORDER);
@@ -40,6 +41,18 @@ impl std::fmt::Display for Colors {
             "Progress bar remaining",
             self.progress_background,
             DEFAULT_PROGRESS_BACKGROUND
+        );
+        crate::add_output!(
+            f,
+            "Progress bar foreground overlay",
+            self.foreground_xp_count,
+            DEFAULT_FOREGROUND_XP_COUNT
+        );
+        crate::add_output!(
+            f,
+            "Progress bar background overlay",
+            self.background_xp_count,
+            DEFAULT_BACKGROUND_XP_COUNT
         );
         Ok(())
     }
@@ -69,14 +82,15 @@ macro_rules! from_maybe_hex {
 impl Default for Colors {
     fn default() -> Self {
         Self {
-            important: DEFAULT_IMPORTANT,
-            secondary: DEFAULT_SECONDARY,
+            username: DEFAULT_USERNAME,
             rank: DEFAULT_RANK,
             level: DEFAULT_LEVEL,
             border: DEFAULT_BORDER,
             background: DEFAULT_BACKGROUND,
             progress_foreground: DEFAULT_PROGRESS_FOREGROUND,
             progress_background: DEFAULT_PROGRESS_BACKGROUND,
+            background_xp_count: DEFAULT_BACKGROUND_XP_COUNT,
+            foreground_xp_count: DEFAULT_FOREGROUND_XP_COUNT,
         }
     }
 }
