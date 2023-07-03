@@ -3,8 +3,9 @@ use std::ops::Deref;
 use twilight_interactions::command::CommandOption;
 use twilight_interactions::command::CreateOption;
 use xpd_rank_card::colors::{
-    Color, Colors, DEFAULT_BACKGROUND, DEFAULT_BORDER, DEFAULT_IMPORTANT, DEFAULT_LEVEL,
-    DEFAULT_PROGRESS_BACKGROUND, DEFAULT_PROGRESS_FOREGROUND, DEFAULT_RANK, DEFAULT_SECONDARY,
+    Color, Colors, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_XP_COUNT, DEFAULT_BORDER,
+    DEFAULT_FOREGROUND_XP_COUNT, DEFAULT_LEVEL, DEFAULT_PROGRESS_BACKGROUND,
+    DEFAULT_PROGRESS_FOREGROUND, DEFAULT_RANK, DEFAULT_USERNAME,
 };
 use xpd_rank_card::from_maybe_hex;
 pub async fn for_user(
@@ -19,8 +20,7 @@ pub async fn for_user(
         return Colors::default();
     };
     Colors {
-        important: from_maybe_hex!(colors.important, DEFAULT_IMPORTANT),
-        secondary: from_maybe_hex!(colors.secondary, DEFAULT_SECONDARY),
+        username: from_maybe_hex!(colors.username, DEFAULT_USERNAME),
         rank: from_maybe_hex!(colors.rank, DEFAULT_RANK),
         level: from_maybe_hex!(colors.level, DEFAULT_LEVEL),
         border: from_maybe_hex!(colors.border, DEFAULT_BORDER),
@@ -32,6 +32,14 @@ pub async fn for_user(
         progress_background: from_maybe_hex!(
             colors.progress_background,
             DEFAULT_PROGRESS_BACKGROUND
+        ),
+        foreground_xp_count: from_maybe_hex!(
+            colors.foreground_xp_count,
+            DEFAULT_FOREGROUND_XP_COUNT
+        ),
+        background_xp_count: from_maybe_hex!(
+            colors.background_xp_count,
+            DEFAULT_BACKGROUND_XP_COUNT
         ),
     }
 }

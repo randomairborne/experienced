@@ -78,7 +78,7 @@ async fn fetch(guild_id: Id<GuildMarker>, page: usize, state: &SlashState) -> Re
             xp_user.xp,
             xp_user.guild
         )
-        .execute(&mut trans)
+        .execute(trans.as_mut())
         .await?;
     }
     Ok(mee6_users.is_empty())

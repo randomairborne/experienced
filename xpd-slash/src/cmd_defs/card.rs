@@ -29,10 +29,8 @@ pub struct CardCommandEdit {
     pub background: Option<ColorOption>,
     #[command(desc = "What color to use for the border")]
     pub border: Option<ColorOption>,
-    #[command(desc = "What color to use for the important informational text")]
-    pub important: Option<ColorOption>,
-    #[command(desc = "What color to use for the secondary informational text")]
-    pub secondary: Option<ColorOption>,
+    #[command(desc = "What color to use for your username")]
+    pub username: Option<ColorOption>,
     #[command(desc = "What color to use for your rank")]
     pub rank: Option<ColorOption>,
     #[command(desc = "What color to use for your level")]
@@ -41,6 +39,10 @@ pub struct CardCommandEdit {
     pub progress_foreground: Option<ColorOption>,
     #[command(desc = "What color to use for the progress bar's empty part")]
     pub progress_background: Option<ColorOption>,
+    #[command(desc = "What color to use for the xp count when in the progress bar's filled part")]
+    pub foreground_xp_count: Option<ColorOption>,
+    #[command(desc = "What color to use for the xp count when in the progress bar's empty part")]
+    pub background_xp_count: Option<ColorOption>,
     #[command(desc = "What font to use in the card")]
     pub font: Option<CardCommandEditFont>,
     #[command(desc = "What toy image to use in the card")]

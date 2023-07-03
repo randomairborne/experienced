@@ -65,22 +65,22 @@ async fn process_edit(
     #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO custom_card (
-            important,
-            secondary,
+            username,
             rank,
             level,
             border,
             background,
             progress_foreground,
             progress_background,
+            foreground_xp_count,
+            background_xp_count,
             font,
             toy_image,
             id
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
         ) ON CONFLICT (id) DO UPDATE SET
-            important = COALESCE(excluded.important, custom_card.important),
-            secondary = COALESCE(excluded.secondary, custom_card.secondary),
+            username = COALESCE(excluded.username, custom_card.username),
             rank = COALESCE(excluded.rank, custom_card.rank),
             level = COALESCE(excluded.level, custom_card.level),
             border = COALESCE(excluded.border, custom_card.border),
@@ -89,14 +89,15 @@ async fn process_edit(
             progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),
             font = COALESCE(excluded.font, custom_card.font),
             toy_image = COALESCE(excluded.toy_image, custom_card.toy_image)",
-        edit.important.map(|v| v.to_string()),
-        edit.secondary.map(|v| v.to_string()),
+        edit.username.map(|v| v.to_string()),
         edit.rank.map(|v| v.to_string()),
         edit.level.map(|v| v.to_string()),
         edit.border.map(|v| v.to_string()),
         edit.background.map(|v| v.to_string()),
         edit.progress_foreground.map(|v| v.to_string()),
         edit.progress_background.map(|v| v.to_string()),
+        edit.foreground_xp_count.map(|v| v.to_string()),
+        edit.background_xp_count.map(|v| v.to_string()),
         edit.font.map(|v| v.value()),
         edit.toy_image.map(|v| v.value()),
         user.id.get() as i64,

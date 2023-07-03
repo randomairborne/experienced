@@ -13,12 +13,12 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], default-features = false }
-sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "tls", "postgres", "macros", "offline"] }
+sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-features = false }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 deadpool-redis = { version = "0.12", features = ["rt_tokio_1"] }
-xpd-rank-card = { path = "../xpd-rank-card/", version = "0.2" }
+xpd-rank-card = { path = "../xpd-rank-card/", version = "0.3" }
 redis = { version = "0.23", features = ["aio", "tokio-comp"] }
 xpd-common = { path = "../xpd-common/", version = "0.0.4" }
 twilight-util = { version = "0.15", features = ["builder"] }
