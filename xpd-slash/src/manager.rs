@@ -206,5 +206,8 @@ async fn process_rewards_list(
             role.id, role.requirement
         )?;
     }
+    if data.is_empty() {
+        data = "No role rewards set for this server".to_string();
+    }
     Ok(data)
 }
