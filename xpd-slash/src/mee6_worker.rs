@@ -16,19 +16,15 @@ pub async fn do_fetches(state: SlashState) {
                 .interaction(state.my_id)
                 .update_response(&interaction_token)
                 .content(Some(&format!(
-                    "Worker failed to fetch from mee6 api: {e:?}"
+                    "Worker failed to fetch from mee6 api: {e:?}\nPlease join our support server: https://valk.sh/discord"
                 ))) {
                 Ok(v) => match v.await {
                     Ok(_m) => {}
-                    Err(e) => error!("worker fialed to update response: {e:?}"),
+                    Err(e) => error!("worker failed to update response: {e:?}"),
                 },
                 Err(e) => error!("invalid worker message: {e:?}"),
             };
-            state
-                .import_queue
-                .mee6
-                .lock()
-                .push_back((guild_id, interaction_token.clone()));
+            continue;
         }
         match state
             .client
