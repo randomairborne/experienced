@@ -2,6 +2,7 @@ use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,
 };
+use twilight_util::builder::embed::EmbedBuilder;
 
 use crate::{Error, SlashState};
 
@@ -11,13 +12,19 @@ pub async fn do_fetches(state: SlashState) {
         let Some((guild_id, interaction_token)) = state.import_queue.mee6.lock().pop_front() else { continue; };
         if let Err(e) = get_guild(guild_id, &state).await {
             error!("worker failed to fetch: {e:?}");
+            let embed = EmbedBuilder::new()
+                .description(format!(
+                    "{}`{e:?}`{}",
+                    "Worker failed to fetch from mee6 api: ",
+                    "\nPlease join our [support server](https://valk.sh/discord)"
+                ))
+                .build();
             match state
                 .client
                 .interaction(state.my_id)
                 .update_response(&interaction_token)
-                .content(Some(&format!(
-                    "Worker failed to fetch from mee6 api: {e:?}\nPlease join our support server: https://valk.sh/discord"
-                ))) {
+                .embeds(Some(&[embed]))
+            {
                 Ok(v) => match v.await {
                     Ok(_m) => {}
                     Err(e) => error!("worker failed to update response: {e:?}"),
