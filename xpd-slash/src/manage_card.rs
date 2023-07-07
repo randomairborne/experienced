@@ -51,7 +51,7 @@ pub async fn card_update(
     let level_info = mee6::LevelInfo::new(xp as u64);
     let card = crate::levels::gen_card(state, &user, level_info, rank).await?;
     let embed = EmbedBuilder::new()
-        .title(contents)
+        .description(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
     Ok(XpdSlashResponse::new().attachments([card]).embeds([embed]))

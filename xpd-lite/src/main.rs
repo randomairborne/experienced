@@ -138,11 +138,11 @@ async fn handle_event(
                 kind: twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource,
                 data: None
             }).await {
-                error!(?error, "error creating initial ack");
+                error!(?error, "Failed to ack discord gateway message");
             };
             let response = slash.clone().run(interaction_create.0).await;
             if let Err(error) = slash.send_followup(response, &interaction_token).await {
-                error!(?error, "error creating real response");
+                error!(?error, "Failed to send real response");
             };
         }
         _ => {}
