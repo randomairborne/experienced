@@ -10,28 +10,28 @@ use crate::{
     Error, SlashState, XpdSlashResponse,
 };
 
-pub async fn card_update(
-    data: CardCommand,
-    user: User,
+pub async fn card_update<'a>(
+    command: CardCommand,
+    invoker: User,
     state: &SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<XpdSlashResponse, Error> {
     #[allow(clippy::cast_possible_wrap)]
-    let user_id = user.id.get() as i64;
-    let contents = match data {
-        CardCommand::Reset(_reset) => process_reset(state, &user).await?,
+    let invoker_id = invoker.id.get() as i64;
+    let (contents, referenced_user) = match command {
+        CardCommand::Reset(_reset) => (process_reset(state, &invoker).await?, invoker),
         CardCommand::Fetch(fetch) => {
-            let user = fetch.user.as_ref().map_or(&user, |user| &user.resolved);
-            process_fetch(state, user).await?
+            let fetch_user = fetch.user.map_or(invoker, |user| user.resolved);
+            (process_fetch(state, &fetch_user).await?, fetch_user)
         }
-        CardCommand::Edit(edit) => process_edit(edit, state, &user).await?,
+        CardCommand::Edit(edit) => (process_edit(edit, state, &invoker).await?, invoker),
     };
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-        user_id,
+        invoker_id,
         guild_id
     )
     .fetch_optional(&state.db)
@@ -49,7 +49,7 @@ pub async fn card_update(
         + 1;
     #[allow(clippy::cast_sign_loss)]
     let level_info = mee6::LevelInfo::new(xp as u64);
-    let card = crate::levels::gen_card(state, &user, level_info, rank).await?;
+    let card = crate::levels::gen_card(state, &referenced_user, level_info, rank).await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
