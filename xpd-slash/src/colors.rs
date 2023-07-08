@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use twilight_interactions::command::CommandOption;
 use twilight_interactions::command::CreateOption;
-use xpd_rank_card::colors::{
+use xpd_rank_card::customizations::{
     Color, Colors, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_XP_COUNT, DEFAULT_BORDER,
     DEFAULT_FOREGROUND_XP_COUNT, DEFAULT_LEVEL, DEFAULT_PROGRESS_BACKGROUND,
     DEFAULT_PROGRESS_FOREGROUND, DEFAULT_RANK, DEFAULT_USERNAME,

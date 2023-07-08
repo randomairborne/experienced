@@ -3739,7 +3739,7 @@ dependencies = [
 
 [[package]]
 name = "xpd-rank-card"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "mee6 0.1.0",
  "png",

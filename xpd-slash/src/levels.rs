@@ -80,7 +80,7 @@ pub async fn gen_card(
 ) -> Result<Attachment, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let non_color_customizations = query!(
-        "SELECT font, toy_image FROM custom_card WHERE id = $1",
+        "SELECT * FROM custom_card WHERE id = $1",
         user.id.get() as i64
     )
     .fetch_optional(&state.db)
@@ -125,7 +125,7 @@ pub async fn gen_card(
             font,
             toy,
             avatar,
-        })
+        }, )
         .await?;
     Ok(Attachment {
         description: Some(format!(
