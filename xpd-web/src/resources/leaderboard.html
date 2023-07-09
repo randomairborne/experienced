@@ -39,7 +39,7 @@
     {% for user in users %}
     <tr class="leaderboard-user">
       <td>{{ loop.index + offset }}.<td>
-      <td>
+      <td class="leaderboard-user-name">
         {% if user.name %}
         {{ user.name }}
         {% if user.discriminator %}#{{ user.discriminator }}{% endif %}
@@ -47,7 +47,7 @@
         {{ user.id }}
         {% endif %}
       </td>
-      <td class="user-level">{{ user.level }}</td>
+      <td class="leaderboard-user-level">{{ user.level }}</td>
     </tr>
     {% endfor %}
   </table>
