@@ -34,36 +34,36 @@ async fn main() {
         .await
         .expect("Failed to run database migrations!");
     let mut tera = tera::Tera::default();
-    tera.add_raw_template("leaderboard.html", include_str!("leaderboard.html"))
-        .expect("Failed to add leaderboard");
+    tera.add_raw_templates([
+        ("base.html", include_str!("resources/base.html")),
+        ("index.html", include_str!("resources/index.html")),
+        (
+            "leaderboard.html",
+            include_str!("resources/leaderboard.html"),
+        ),
+        ("terms.html", include_str!("resources/terms.html")),
+        ("privacy.html", include_str!("resources/privacy.html")),
+    ])
+    .expect("Failed to add templates");
     let tera = Arc::new(tera);
     let route = axum::Router::new()
-        .route(
-            "/",
-            axum::routing::get(|| async { Html(include_bytes!("index.html").as_slice()) }),
-        )
+        .route("/", axum::routing::get(serve_index))
+        .route("/privacy/", axum::routing::get(serve_privacy))
+        .route("/terms/", axum::routing::get(serve_terms))
         .route(
             "/privacy",
             axum::routing::get(|| async { Redirect::to("/privacy/") }),
-        )
-        .route(
-            "/privacy/",
-            axum::routing::get(|| async { Html(include_bytes!("privacy.html").as_slice()) }),
         )
         .route(
             "/terms",
             axum::routing::get(|| async { Redirect::to("/terms/") }),
         )
         .route(
-            "/terms/",
-            axum::routing::get(|| async { Html(include_bytes!("terms.html").as_slice()) }),
-        )
-        .route(
             "/main.css",
             axum::routing::get(|| async {
                 (
                     [("Content-Type", "text/css")],
-                    include_bytes!("main.css").as_slice(),
+                    include_bytes!("resources/main.css").as_slice(),
                 )
             }),
         )
@@ -75,7 +75,7 @@ async fn main() {
                         ("Content-Type", "font/woff"),
                         ("Cache-Control", "max-age=31536000"),
                     ],
-                    include_bytes!("MontserratAlt1.woff").as_slice(),
+                    include_bytes!("resources/MontserratAlt1.woff").as_slice(),
                 )
             }),
         )
@@ -87,7 +87,7 @@ async fn main() {
                         ("Content-Type", "font/woff2"),
                         ("Cache-Control", "max-age=31536000"),
                     ],
-                    include_bytes!("MontserratAlt1.woff2").as_slice(),
+                    include_bytes!("resources/MontserratAlt1.woff2").as_slice(),
                 )
             }),
         )
@@ -96,7 +96,7 @@ async fn main() {
             axum::routing::get(|| async {
                 (
                     [("Content-Type", "image/png")],
-                    include_bytes!("favicon.png").as_slice(),
+                    include_bytes!("resources/favicon.png").as_slice(),
                 )
             }),
         )
@@ -201,6 +201,21 @@ async fn fetch_stats(
     context.insert("guild", &guild_id);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
+}
+
+#[allow(clippy::unused_async)]
+async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, Error> {
+    Ok(Html(state.tera.render("index.html", &tera::Context::new())?))
+}
+
+#[allow(clippy::unused_async)]
+async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, Error> {
+    Ok(Html(state.tera.render("privacy.html", &tera::Context::new())?))
+}
+
+#[allow(clippy::unused_async)]
+async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, Error> {
+    Ok(Html(state.tera.render("terms.html", &tera::Context::new())?))
 }
 
 #[derive(Debug, thiserror::Error)]
