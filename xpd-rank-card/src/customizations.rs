@@ -48,6 +48,7 @@ impl std::fmt::Display for Customizations {
             self.background_xp_count,
             defaults.background_xp_count
         );
+        crate::add_output!(f, "Font", self.font, defaults.font);
         Ok(())
     }
 }

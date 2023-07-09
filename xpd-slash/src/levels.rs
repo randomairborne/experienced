@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{Error, SlashState, XpdSlashResponse};
 use base64::Engine;
 use twilight_model::{
@@ -7,7 +9,11 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::Tag;
-use xpd_rank_card::{customizations::Customizations, Font, Toy};
+use xpd_rank_card::{
+    cards::Card,
+    customizations::{Color, Customizations},
+    Font, Toy,
+};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -67,42 +73,20 @@ async fn generate_level_response(
     rank: i64,
     _interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
-    let card = gen_card(state, &user, level_info, rank).await?;
+    let card = gen_card(state.clone(), Arc::new(user), level_info, rank).await?;
     Ok(XpdSlashResponse::new().attachments([card]))
 }
 
 pub async fn gen_card(
-    state: &SlashState,
-    user: &User,
+    state: SlashState,
+    user: Arc<User>,
     level_info: mee6::LevelInfo,
     rank: i64,
 ) -> Result<Attachment, Error> {
-    // MUSTFIX use get_customizations function, fill in
-    #[allow(clippy::cast_possible_wrap)]
-    let customizations = query!(
-        "SELECT * FROM custom_card WHERE id = $1",
-        user.id.get() as i64
-    )
-    .fetch_optional(&state.db)
-    .await?;
-    customizations
-        .unwrap_or_else(|| xpd_rank_card::cards::Card::default().default_customizations());
-    let (font, toy) = if let Some(customizations) = non_color_customizations {
-        let font = {
-            if let Some(strfont) = customizations.font {
-                Font::from_name(&strfont).ok_or(Error::InvalidFont)?
-            } else {
-                Font::Roboto
-            }
-        };
-        let toy = customizations
-            .toy_image
-            .and_then(|v| Toy::from_filename(&v));
-        (font, toy)
-    } else {
-        (Font::Roboto, None)
-    };
-    let avatar = get_avatar(state, user).await?;
+    let customizations_future = tokio::spawn(get_customizations(state.clone(), user.clone()));
+    let avatar_future = tokio::spawn(get_avatar(state.clone(), user.clone()));
+    let customizations = customizations_future.await??;
+    let avatar = avatar_future.await??;
     let discriminator = if user.discriminator == 0 {
         None
     } else {
@@ -143,11 +127,71 @@ pub async fn gen_card(
 }
 
 pub async fn get_customizations(
-    state: &SlashState,
-    user: &User,
-    level_info: mee6::LevelInfo,
-    rank: i64,
+    state: SlashState,
+    user: Arc<User>,
 ) -> Result<Customizations, Error> {
+    #[allow(clippy::cast_possible_wrap)]
+    let customizations = query!(
+        "SELECT * FROM custom_card WHERE id = $1",
+        user.id.get() as i64
+    )
+    .fetch_optional(&state.db)
+    .await?;
+    let Some(customizations) = customizations else {
+        return Ok(Card::default().default_customizations())
+    };
+    let card = Card::from_name(&customizations.card_layout).ok_or(Error::InvalidCard)?;
+    let defaults = card.default_customizations();
+    Ok(Customizations {
+        username: color_or_default(&customizations.username, defaults.username)?,
+        rank: color_or_default(&customizations.rank, defaults.rank)?,
+        level: color_or_default(&customizations.level, defaults.level)?,
+        border: color_or_default(&customizations.border, defaults.border)?,
+        background: color_or_default(&customizations.background, defaults.background)?,
+        progress_foreground: color_or_default(
+            &customizations.progress_foreground,
+            defaults.progress_foreground,
+        )?,
+        progress_background: color_or_default(
+            &customizations.progress_background,
+            defaults.progress_background,
+        )?,
+        background_xp_count: color_or_default(
+            &customizations.background_xp_count,
+            defaults.background_xp_count,
+        )?,
+        foreground_xp_count: color_or_default(
+            &customizations.foreground_xp_count,
+            defaults.foreground_xp_count,
+        )?,
+        font: font_or_default(&customizations.font, defaults.font).ok_or(Error::InvalidFont)?,
+        toy: toy_or_none(&customizations.toy_image),
+        card: Card::from_name(&customizations.card_layout).ok_or(Error::InvalidCard)?,
+    })
+}
+
+fn color_or_default(color: &Option<String>, default: Color) -> Result<Color, Error> {
+    if let Some(color) = &color {
+        Ok(Color::from_hex(color)?)
+    } else {
+        Ok(default)
+    }
+}
+
+fn font_or_default(font: &Option<String>, default: Font) -> Option<Font> {
+    if let Some(font) = font {
+        Some(Font::from_name(font)?)
+    } else {
+        Some(default)
+    }
+}
+
+fn toy_or_none(toy: &Option<String>) -> Option<Toy> {
+    if let Some(toy) = toy {
+        Some(Toy::from_filename(toy)?)
+    } else {
+        None
+    }
 }
 
 pub fn leaderboard(guild_id: Id<GuildMarker>) -> XpdSlashResponse {
@@ -159,7 +203,7 @@ pub fn leaderboard(guild_id: Id<GuildMarker>) -> XpdSlashResponse {
     XpdSlashResponse::new().embeds([embed])
 }
 
-async fn get_avatar(state: &SlashState, user: &User) -> Result<String, Error> {
+async fn get_avatar(state: SlashState, user: Arc<User>) -> Result<String, Error> {
     let url = user.avatar.map_or_else(
         || {
             format!(

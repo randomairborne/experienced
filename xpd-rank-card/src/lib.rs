@@ -71,7 +71,10 @@ impl SvgState {
         Ok(self.tera.render("svg", &ctx)?)
     }
     fn do_render(&self, context: &Context) -> Result<Vec<u8>, Error> {
-        let svg = self.tera.render(context.customizations.card.name(), &tera::Context::from_serialize(context)?)?;
+        let svg = self.tera.render(
+            context.customizations.card.name(),
+            &tera::Context::from_serialize(context)?,
+        )?;
         let resolve_data = Box::new(
             |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
                 "image/png" => Some(ImageKind::PNG(data)),
@@ -113,11 +116,8 @@ impl Default for SvgState {
         fonts.load_font_data(Font::MontserratAlt1.ttf().to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
-        tera.add_raw_templates([(
-            Card::Classic.name(),
-            Card::Classic.template(),
-        )])
-        .expect("Failed to build template");
+        tera.add_raw_templates([(Card::Classic.name(), Card::Classic.template())])
+            .expect("Failed to build template");
         tera.register_filter("integerhumanize", ihumanize);
         let threads = rayon::ThreadPoolBuilder::new().build().unwrap();
         Self {

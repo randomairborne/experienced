@@ -2,8 +2,7 @@
 use twilight_interactions::command::{
     CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
-
-use crate::colors::ColorOption;
+use xpd_rank_card::customizations::Color;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your card to defaults")]
@@ -99,4 +98,51 @@ pub enum CardCommandEditToy {
     SteveHeart,
     #[option(name = "Tree", value = "tree.png")]
     Tree,
+}
+
+pub struct ColorOption(Color);
+
+impl std::ops::Deref for ColorOption {
+    type Target = Color;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl CommandOption for ColorOption {
+    fn from_option(
+        value: twilight_model::application::interaction::application_command::CommandOptionValue,
+        _data: twilight_interactions::command::internal::CommandOptionData,
+        _resolved: Option<&twilight_model::application::interaction::application_command::CommandInteractionDataResolved>,
+    ) -> Result<Self, twilight_interactions::error::ParseOptionErrorType> {
+        if let twilight_model::application::interaction::application_command::CommandOptionValue::String(string) = value {
+            Ok(Self(Color::from_hex(&string).map_err(|e| twilight_interactions::error::ParseOptionErrorType::InvalidChoice(format!("{e}")))?))
+        } else {
+            Err(twilight_interactions::error::ParseOptionErrorType::InvalidType(value.kind()))
+        }
+    }
+}
+
+impl CreateOption for ColorOption {
+    fn create_option(
+        data: twilight_interactions::command::internal::CreateOptionData,
+    ) -> twilight_model::application::command::CommandOption {
+        twilight_model::application::command::CommandOption {
+            autocomplete: Some(data.autocomplete),
+            channel_types: None,
+            choices: None,
+            description: data.description,
+            description_localizations: data.description_localizations,
+            kind: twilight_model::application::command::CommandOptionType::String,
+            max_length: Some(7),
+            max_value: None,
+            min_length: Some(6),
+            min_value: None,
+            name: data.name,
+            name_localizations: data.name_localizations,
+            options: None,
+            required: data.required,
+        }
+    }
 }

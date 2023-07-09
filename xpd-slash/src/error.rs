@@ -20,10 +20,14 @@ pub enum Error {
     CsvIntoInner,
     #[error("Invalid font")]
     InvalidFont,
+    #[error("Invalid card")]
+    InvalidCard,
     #[error("There are too many users to import automatically. Please email valk@randomairborne.dev to set up imports for your server.")]
     TooManyUsersForImport,
     #[error("Interaction parser encountered an error: {0}!")]
     Parse(#[from] twilight_interactions::error::ParseError),
+    #[error("Processing task panicked: {0}!")]
+    TaskPanicked(#[from] tokio::task::JoinError),
     #[error("Discord error: {0}!")]
     TwilightHttp(#[from] twilight_http::Error),
     #[error("HTTP error: {0}!")]

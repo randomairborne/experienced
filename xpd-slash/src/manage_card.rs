@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
@@ -18,12 +20,15 @@ pub async fn card_update<'a>(
     #[allow(clippy::cast_possible_wrap)]
     let invoker_id = invoker.id.get() as i64;
     let (contents, referenced_user) = match command {
-        CardCommand::Reset(_reset) => (process_reset(state, &invoker).await?, invoker),
+        CardCommand::Reset(_reset) => (process_reset(state, &invoker).await?, Arc::new(invoker)),
         CardCommand::Fetch(fetch) => {
-            let fetch_user = fetch.user.map_or(invoker, |user| user.resolved);
-            (process_fetch(state, &fetch_user).await?, fetch_user)
+            let fetch_user = Arc::new(fetch.user.map_or(invoker, |user| user.resolved));
+            (process_fetch(state, fetch_user.clone()).await?, fetch_user)
         }
-        CardCommand::Edit(edit) => (process_edit(edit, state, &invoker).await?, invoker),
+        CardCommand::Edit(edit) => (
+            process_edit(edit, state, &invoker).await?,
+            Arc::new(invoker),
+        ),
     };
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
@@ -48,7 +53,7 @@ pub async fn card_update<'a>(
         + 1;
     #[allow(clippy::cast_sign_loss)]
     let level_info = mee6::LevelInfo::new(xp as u64);
-    let card = crate::levels::gen_card(state, &referenced_user, level_info, rank).await?;
+    let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, rank).await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
@@ -118,20 +123,8 @@ async fn process_reset(state: &SlashState, user: &User) -> Result<String, Error>
     Ok("Card settings cleared!".to_string())
 }
 
-async fn process_fetch(state: &SlashState, user: &User) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    let chosen_font = query!(
-        "SELECT * FROM custom_card WHERE id = $1",
-        user.id.get() as i64
-    )
-    .fetch_optional(&state.db)
-    .await?;
-    Ok(crate::colors::for_user(&state.db, user.id)
-        .await
-        .to_string()
-        + "Font: "
-        + &chosen_font.map_or_else(
-            || "`Roboto` (default)\n".to_string(),
-            |v| v.font.map_or("`Roboto` (default)\n".to_string(), |v| v),
-        ))
+async fn process_fetch(state: &SlashState, user: Arc<User>) -> Result<String, Error> {
+    Ok(crate::levels::get_customizations(state.clone(), user)
+        .await?
+        .to_string())
 }
