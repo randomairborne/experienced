@@ -35,21 +35,22 @@
       href="https://github.com/randomairborne/experienced/blob/main/SELFHOSTING.md">Selfhost</a>
   </nav>
   </div>
-  <ol class="leaderboard">
+  <table class="leaderboard">
     {% for user in users %}
-    <li class="leaderboard-user">
-      {{ loop.index + offset }}.
-      {% if user.name %}
-      {{ user.name }}
-      {% if user.discriminator %}#{{ user.discriminator }}{% endif %}
-      {% else %}
-      {{ user.id }}
-      {% endif %}
-
-      {{ user.level }}
-    </li>
+    <tr class="leaderboard-user">
+      <td>{{ loop.index + offset }}.<td>
+      <td>
+        {% if user.name %}
+        {{ user.name }}
+        {% if user.discriminator %}#{{ user.discriminator }}{% endif %}
+        {% else %}
+        {{ user.id }}
+        {% endif %}
+      </td>
+      <td class="user-level">{{ user.level }}</td>
+    </tr>
     {% endfor %}
-  </ol>
+  </table>
   {# TODO next page button #}
 </body>
 

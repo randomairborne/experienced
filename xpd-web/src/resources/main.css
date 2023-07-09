@@ -129,3 +129,8 @@ body {
 .leaderboard-user {
     font-size: xx-large;
 }
+
+.leaderboard-user-level {
+    font-size: large;
+    color: aqua;
+}
