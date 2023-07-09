@@ -1,7 +1,6 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 mod cmd_defs;
-mod colors;
 mod error;
 mod help;
 mod levels;
@@ -28,6 +27,9 @@ use xpd_rank_card::SvgState;
 
 #[macro_use]
 extern crate tracing;
+
+#[macro_use]
+extern crate sqlx;
 
 #[derive(Clone)]
 pub struct XpdSlash {

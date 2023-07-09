@@ -1,4 +1,3 @@
-use sqlx::query;
 use std::fmt::Write;
 use twilight_model::id::{
     marker::{GuildMarker, UserMarker},

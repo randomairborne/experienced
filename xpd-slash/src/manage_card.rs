@@ -1,4 +1,3 @@
-use sqlx::query;
 use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
@@ -122,7 +121,7 @@ async fn process_reset(state: &SlashState, user: &User) -> Result<String, Error>
 async fn process_fetch(state: &SlashState, user: &User) -> Result<String, Error> {
     #[allow(clippy::cast_possible_wrap)]
     let chosen_font = query!(
-        "SELECT font FROM custom_card WHERE id = $1",
+        "SELECT * FROM custom_card WHERE id = $1",
         user.id.get() as i64
     )
     .fetch_optional(&state.db)

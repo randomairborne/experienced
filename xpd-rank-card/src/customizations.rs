@@ -1,17 +1,7 @@
-use crate::Error;
-
-pub const DEFAULT_USERNAME: Color = Color::new(255, 255, 255);
-pub const DEFAULT_RANK: Color = Color::new(255, 255, 255);
-pub const DEFAULT_LEVEL: Color = Color::new(143, 202, 92);
-pub const DEFAULT_BORDER: Color = Color::new(133, 79, 43);
-pub const DEFAULT_BACKGROUND: Color = Color::new(97, 55, 31);
-pub const DEFAULT_PROGRESS_FOREGROUND: Color = Color::new(71, 122, 30);
-pub const DEFAULT_PROGRESS_BACKGROUND: Color = Color::new(143, 202, 92);
-pub const DEFAULT_BACKGROUND_XP_COUNT: Color = Color::new(0, 0, 0);
-pub const DEFAULT_FOREGROUND_XP_COUNT: Color = Color::new(255, 255, 255);
+use crate::{cards::Card, Error, Font, Toy};
 
 #[derive(serde::Serialize, Debug, Clone, Copy)]
-pub struct Colors {
+pub struct Customizations {
     pub username: Color,
     pub rank: Color,
     pub level: Color,
@@ -21,38 +11,42 @@ pub struct Colors {
     pub progress_background: Color,
     pub background_xp_count: Color,
     pub foreground_xp_count: Color,
+    pub font: Font,
+    pub toy: Option<Toy>,
+    pub card: Card,
 }
 
-impl std::fmt::Display for Colors {
+impl std::fmt::Display for Customizations {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        crate::add_output!(f, "Important text", self.username, DEFAULT_USERNAME);
-        crate::add_output!(f, "Rank", self.rank, DEFAULT_RANK);
-        crate::add_output!(f, "Level", self.level, DEFAULT_LEVEL);
-        crate::add_output!(f, "Border", self.border, DEFAULT_BORDER);
-        crate::add_output!(f, "Background", self.background, DEFAULT_BACKGROUND);
+        let defaults = self.card.default_customizations();
+        crate::add_output!(f, "Important text", self.username, defaults.username);
+        crate::add_output!(f, "Rank", self.rank, defaults.rank);
+        crate::add_output!(f, "Level", self.level, defaults.level);
+        crate::add_output!(f, "Border", self.border, defaults.border);
+        crate::add_output!(f, "Background", self.background, defaults.background);
         crate::add_output!(
             f,
             "Progress bar completed",
             self.progress_foreground,
-            DEFAULT_PROGRESS_FOREGROUND
+            defaults.progress_foreground
         );
         crate::add_output!(
             f,
             "Progress bar remaining",
             self.progress_background,
-            DEFAULT_PROGRESS_BACKGROUND
+            defaults.progress_background
         );
         crate::add_output!(
             f,
             "Progress bar foreground overlay",
             self.foreground_xp_count,
-            DEFAULT_FOREGROUND_XP_COUNT
+            defaults.foreground_xp_count
         );
         crate::add_output!(
             f,
             "Progress bar background overlay",
             self.background_xp_count,
-            DEFAULT_BACKGROUND_XP_COUNT
+            defaults.background_xp_count
         );
         Ok(())
     }
@@ -77,22 +71,6 @@ macro_rules! from_maybe_hex {
             Color::from_hex(&color).unwrap_or($default)
         })
     };
-}
-
-impl Default for Colors {
-    fn default() -> Self {
-        Self {
-            username: DEFAULT_USERNAME,
-            rank: DEFAULT_RANK,
-            level: DEFAULT_LEVEL,
-            border: DEFAULT_BORDER,
-            background: DEFAULT_BACKGROUND,
-            progress_foreground: DEFAULT_PROGRESS_FOREGROUND,
-            progress_background: DEFAULT_PROGRESS_BACKGROUND,
-            background_xp_count: DEFAULT_BACKGROUND_XP_COUNT,
-            foreground_xp_count: DEFAULT_FOREGROUND_XP_COUNT,
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

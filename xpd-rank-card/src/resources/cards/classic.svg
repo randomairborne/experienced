@@ -5,15 +5,15 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .font {
-      font-family: {{ font }}, sans-serif;
+      font-family: {{ customizations.font }}, sans-serif;
     }
     .name {
       font-size: 25px;
-      fill: {{ colors.username }};
+      fill: {{ customizations.username }};
     }
     .discriminator {
       font-size: 10px;
-      fill: {{ colors.username }};
+      fill: {{ customizations.username }};
     }
     .stat {
       font-size: 40px;
@@ -22,22 +22,22 @@
       font-size: 20px;
     }
     .rank {
-      fill: {{ colors.rank }};
+      fill: {{ customizations.rank }};
     }
     .level {
-      fill: {{ colors.level }};
+      fill: {{ customizations.level }};
     }
     .xp_overlay {
       font-size: 15px;
-      fill: {% if xp_at_end %}{{ colors.background_xp_count }}{% else %}{{ colors.foreground_xp_count }}{% endif %};
+      fill: {% if xp_at_end %}{{ customizations.background_xp_count }}{% else %}{{ customizations.foreground_xp_count }}{% endif %};
     }
   </style>
-  <rect width="800" height="200" fill="{{ colors.border }}" />
-  <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="{{ colors.background }}" />
-  <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_background }}" />
-  <rect width="{{ progress_width }}" height="40" x="30" y="130" rx="20" ry="20" fill="{{ colors.progress_foreground }}" />
-  {% if toy %}
-  <image id="toy" x="{{ progress_width }}" y="138" width="24" height="24" href="{{ toy }}" />
+  <rect width="800" height="200" fill="{{ customizations.border }}" />
+  <rect width="780" height="180" x="10" y="10" rx="10" ry="10" fill="{{ customizations.background }}" />
+  <rect width="740" height="40" x="30" y="130" rx="20" ry="20" fill="{{ customizations.progress_background }}" />
+  <rect width="{{ progress_width }}" height="40" x="30" y="130" rx="20" ry="20" fill="{{ customizations.progress_foreground }}" />
+  {% if customizations.toy %}
+  <image id="toy" x="{{ progress_width }}" y="138" width="24" height="24" href="{{ customizations.toy }}" />
   {% endif %}
   <clipPath id="clipProfilePic">
     <circle r="45" cx="75" cy="70"/>

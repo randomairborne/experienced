@@ -1,6 +1,5 @@
 use crate::{Error, SlashState, XpdSlashResponse};
 use base64::Engine;
-use sqlx::query;
 use twilight_model::{
     http::attachment::Attachment,
     id::{marker::GuildMarker, Id},
@@ -8,7 +7,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::Tag;
-use xpd_rank_card::{Font, Toy};
+use xpd_rank_card::{customizations::Customizations, Font, Toy};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -78,13 +77,16 @@ pub async fn gen_card(
     level_info: mee6::LevelInfo,
     rank: i64,
 ) -> Result<Attachment, Error> {
+    // MUSTFIX use get_customizations function, fill in
     #[allow(clippy::cast_possible_wrap)]
-    let non_color_customizations = query!(
+    let customizations = query!(
         "SELECT * FROM custom_card WHERE id = $1",
         user.id.get() as i64
     )
     .fetch_optional(&state.db)
     .await?;
+    customizations
+        .unwrap_or_else(|| xpd_rank_card::cards::Card::default().default_customizations());
     let (font, toy) = if let Some(customizations) = non_color_customizations {
         let font = {
             if let Some(strfont) = customizations.font {
@@ -121,11 +123,9 @@ pub async fn gen_card(
             percentage: (level_info.percentage() * 100.0).round() as u64,
             current: level_info.xp(),
             needed: mee6::xp_needed_for_level(level_info.level() + 1),
-            colors: crate::colors::for_user(&state.db, user.id).await,
-            font,
-            toy,
+            customizations,
             avatar,
-        }, )
+        })
         .await?;
     Ok(Attachment {
         description: Some(format!(
@@ -140,6 +140,14 @@ pub async fn gen_card(
         filename: "card.png".to_string(),
         id: 0,
     })
+}
+
+pub async fn get_customizations(
+    state: &SlashState,
+    user: &User,
+    level_info: mee6::LevelInfo,
+    rank: i64,
+) -> Result<Customizations, Error> {
 }
 
 pub fn leaderboard(guild_id: Id<GuildMarker>) -> XpdSlashResponse {

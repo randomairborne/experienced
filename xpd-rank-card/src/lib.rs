@@ -31,12 +31,8 @@ pub struct Context {
     pub current: u64,
     /// Total XP needed to complete this level
     pub needed: u64,
-    /// Font to use for templated text
-    pub font: Font,
-    /// Color data for the template
-    pub colors: crate::customizations::Colors,
-    /// Optional toy image
-    pub toy: Option<Toy>,
+    /// Customization data
+    pub customizations: crate::customizations::Customizations,
     /// Base64-encoded PNG string.
     pub avatar: String,
 }
@@ -59,11 +55,11 @@ impl SvgState {
     /// data on completion.
     /// # Errors
     /// Errors on [`resvg`](https://docs.rs/resvg) library failure. This will almost always be a library bug.
-    pub async fn render(&self, data: Context, card: Card) -> Result<Vec<u8>, Error> {
+    pub async fn render(&self, data: Context) -> Result<Vec<u8>, Error> {
         let cloned_self = self.clone();
         let (send, recv) = tokio::sync::oneshot::channel();
         self.threads.spawn(move || {
-            send.send(cloned_self.do_render(&data, card)).ok();
+            send.send(cloned_self.do_render(&data)).ok();
         });
         recv.await?
     }
@@ -74,8 +70,8 @@ impl SvgState {
         let ctx = tera::Context::from_serialize(context)?;
         Ok(self.tera.render("svg", &ctx)?)
     }
-    fn do_render(&self, context: &Context, card: Card) -> Result<Vec<u8>, Error> {
-        let svg = self.tera.render(card.name(), &tera::Context::from_serialize(context)?)?;
+    fn do_render(&self, context: &Context) -> Result<Vec<u8>, Error> {
+        let svg = self.tera.render(context.customizations.card.name(), &tera::Context::from_serialize(context)?)?;
         let resolve_data = Box::new(
             |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
                 "image/png" => Some(ImageKind::PNG(data)),
@@ -94,7 +90,7 @@ impl SvgState {
                 resolve_string,
             },
             image_rendering: ImageRendering::OptimizeSpeed,
-            font_family: context.font.to_string(),
+            font_family: context.customizations.font.to_string(),
             ..Default::default()
         };
         let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
@@ -181,8 +177,6 @@ pub enum Error {
 mod tests {
     use rand::Rng;
 
-    use crate::customizations::Colors;
-
     use super::*;
 
     #[test]
@@ -203,12 +197,10 @@ mod tests {
             percentage: (data.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
-            font: Font::Roboto,
-            colors: Colors::default(),
-            toy: Some(Toy::Parrot),
+            customizations: Card::Classic.default_customizations(),
             avatar: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==".to_string(),
         };
-        let output = state.do_render(&context, Card::Classic)?;
+        let output = state.do_render(&context)?;
         std::fs::write("renderer_test.png", output).unwrap();
         Ok(())
     }

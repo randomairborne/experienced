@@ -75,7 +75,7 @@ async fn fetch(guild_id: Id<GuildMarker>, page: usize, state: &SlashState) -> Re
             guild: guild_id.get() as i64,
             xp: user.xp,
         };
-        sqlx::query!(
+        query!(
             "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3)",
             xp_user.id,
             xp_user.xp,
