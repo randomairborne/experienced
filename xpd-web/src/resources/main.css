@@ -131,6 +131,9 @@ body {
 }
 
 .leaderboard-user-level {
-    font-size: large;
     color: aqua;
+}
+
+.leaderboard-user-name {
+    text-align: start;
 }
