@@ -205,17 +205,23 @@ async fn fetch_stats(
 
 #[allow(clippy::unused_async)]
 async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, Error> {
-    Ok(Html(state.tera.render("index.html", &tera::Context::new())?))
+    Ok(Html(
+        state.tera.render("index.html", &tera::Context::new())?,
+    ))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, Error> {
-    Ok(Html(state.tera.render("privacy.html", &tera::Context::new())?))
+    Ok(Html(
+        state.tera.render("privacy.html", &tera::Context::new())?,
+    ))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, Error> {
-    Ok(Html(state.tera.render("terms.html", &tera::Context::new())?))
+    Ok(Html(
+        state.tera.render("terms.html", &tera::Context::new())?,
+    ))
 }
 
 #[derive(Debug, thiserror::Error)]
