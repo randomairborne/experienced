@@ -62,6 +62,11 @@
         "ordinal": 11,
         "name": "foreground_xp_count",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "card_layout",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -81,7 +86,8 @@
       false,
       true,
       true,
-      true
+      true,
+      false
     ]
   },
   "hash": "2789a4214d7f7b16be1cf8b429e137fc676688ce0359ea70effa283c11ed990f"
