@@ -4,6 +4,6 @@ FROM alpine
 
 COPY /executables/xpd-web /usr/bin/
 
-EXPOSE 8000
+EXPOSE 8080
 
 ENTRYPOINT "/usr/bin/xpd-web"
