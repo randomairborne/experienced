@@ -17,8 +17,6 @@ pub async fn card_update<'a>(
     state: &SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<XpdSlashResponse, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    let invoker_id = invoker.id.get() as i64;
     let (contents, referenced_user) = match command {
         CardCommand::Reset(_reset) => (process_reset(state, &invoker).await?, Arc::new(invoker)),
         CardCommand::Fetch(fetch) => {
@@ -32,10 +30,12 @@ pub async fn card_update<'a>(
     };
     #[allow(clippy::cast_possible_wrap)]
     let guild_id = guild_id.get() as i64;
+    #[allow(clippy::cast_possible_wrap)]
+    let referenced_user_id = referenced_user.id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-        invoker_id,
+        referenced_user_id,
         guild_id
     )
     .fetch_optional(&state.db)
