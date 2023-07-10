@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - prod
+      - main
   workflow_dispatch:
 
 env:
@@ -74,13 +75,24 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build container
+      - name: Build production container
+        if: ${{ github.ref_name == 'prod' }}
         uses: docker/build-push-action@v4
         with:
           file: ${{ matrix.module }}/Dockerfile
           context: .
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.module }}:latest
+          platforms: linux/amd64
+
+      - name: Build container
+        if: ${{ github.ref_name != 'prod' }}
+        uses: docker/build-push-action@v4
+        with:
+          file: ${{ matrix.module }}/Dockerfile
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.module }}:unstable
           platforms: linux/amd64
 
       - name: Set up flyctl
