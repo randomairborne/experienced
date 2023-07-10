@@ -106,8 +106,8 @@ async fn main() {
         )
         .route("/:id", axum::routing::get(fetch_stats))
         .with_state(AppState { db, redis, tera });
-    println!("Server listening on https://0.0.0.0:8000!");
-    axum::Server::bind(&([0, 0, 0, 0], 8000).into())
+    println!("Server listening on https://0.0.0.0:8080!");
+    axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c().await.ok();

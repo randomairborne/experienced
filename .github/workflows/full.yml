@@ -45,7 +45,7 @@ jobs:
             target/x86_64-unknown-linux-musl/release/xpd-lite
 
 
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     needs: [build]
     strategy:
@@ -85,7 +85,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.module }}:latest
           platforms: linux/amd64
 
-      - name: Build container
+      - name: Build unstable container
         if: ${{ github.ref_name != 'prod' }}
         uses: docker/build-push-action@v4
         with:
@@ -99,7 +99,14 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - run: flyctl deploy --detach
-        if: ${{ matrix.module != 'xpd-lite' }}
+        if: ${{ matrix.module != 'xpd-lite' && github.ref_name == 'prod' }}
         working-directory: ./${{ matrix.module }}/
         env:
           FLY_ACCESS_TOKEN: ${{ secrets.FLY_ACCESS_TOKEN }}
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [publish]
+    steps:
+      - name: Notify bot of updates
+        run: "curl -X POST -H 'Authorization: Bearer ${{ env.RESTART_TOKEN }}' https://xpd-hooks.valk.sh/${{ github.ref_name }}/update"
+
