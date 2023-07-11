@@ -21,8 +21,8 @@ async fn main() {
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
-    let root_url =
-        Arc::new(std::env::var("ROOT_URL").expect("Expected environment variable ROOT_URL"));
+    let raw_root_url = std::env::var("ROOT_URL").expect("Expected environment variable ROOT_URL");
+    let root_url = Arc::new(raw_root_url.trim_end_matches('/').to_string());
     println!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await
@@ -219,27 +219,21 @@ async fn fetch_stats(
 async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, Error> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(
-        state.tera.render("index.html", &context)?,
-    ))
+    Ok(Html(state.tera.render("index.html", &context)?))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, Error> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(
-        state.tera.render("privacy.html", &context)?,
-    ))
+    Ok(Html(state.tera.render("privacy.html", &context)?))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, Error> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(
-        state.tera.render("terms.html", &context)?,
-    ))
+    Ok(Html(state.tera.render("terms.html", &context)?))
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -24,12 +24,12 @@ efficient way. View your server leaderboard here. {% endblock description %}
   </table>
   <a
     class="selfhost-button"
-    href="https://xp.valk.sh/">
+    href="{{ root_url }}/{{ guild_id }}?page={{ page - 1 }}">
     Last page
     </a>
   <a
     class="invite-button"
-    href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands">
+    href="{{ root_url }}/{{ guild_id }}?page={{ page + 1 }}">
     Next page
     </a>
 {% endblock body %}

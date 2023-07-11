@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <title>Experienced - {% block title %}{% endblock title %}</title>
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/main.css" />
+    <link rel="icon" type="image/png" href="{{ root_url }}/favicon.png" />
+    <link rel="stylesheet" href="{{ root_url }}/main.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta property="og:title" content="Experienced discord bot" />
-    <meta property="og:url" content="https://xp.valk.sh/" />
+    <meta property="og:url" content="{{ root_url }}/" />
     <meta
       property="og:description"
       content="{% block description %}{% endblock description %}"
@@ -24,14 +24,14 @@
   <body>
     <nav class="navbar">
       <a class="navbar" href="/">
-        <img src="favicon.png" width="50" height="50" />
+        <img src="{{ root_url }}/favicon.png" width="50" height="50" />
         <div class="tiny-spacer"></div>
         <div class="bot-name navbar-name">EXPERIENCED</div>
       </a>
       <div class="flex-grow"></div>
-      <a class="selfhost-button" href="/terms/">Terms</a>
+      <a class="selfhost-button" href="{{ root_url }}/terms/">Terms</a>
       <div class="tiny-spacer"></div>
-      <a class="selfhost-button" href="/privacy/">Privacy</a>
+      <a class="selfhost-button" href="{{ root_url }}/privacy/">Privacy</a>
       <div class="tiny-spacer"></div>
       <a
         class="invite-button"
