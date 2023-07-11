@@ -108,5 +108,5 @@ jobs:
     needs: [publish]
     steps:
       - name: Notify bot of updates
-        run: "curl -X POST -H 'Authorization: Bearer ${{ secrets.RESTART_TOKEN }}' https://xpd-hooks.valk.sh/${{ github.ref_name }}/update"
+        run: "curl -f -X POST -H 'Authorization: Bearer ${{ secrets.RESTART_TOKEN }}' https://xpd-hooks.valk.sh/update/${{ github.ref_name }}"
 

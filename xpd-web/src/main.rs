@@ -21,6 +21,8 @@ async fn main() {
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
+    let root_url =
+        Arc::new(std::env::var("ROOT_URL").expect("Expected environment variable ROOT_URL"));
     println!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await
@@ -102,10 +104,15 @@ async fn main() {
         )
         .route(
             "/robots.txt",
-            axum::routing::get(|| async { "User-Agent: *\nAllow: /$\nDisallow: /" }),
+            axum::routing::get(|| async { "User-Agent: *\nAllow: /" }),
         )
         .route("/:id", axum::routing::get(fetch_stats))
-        .with_state(AppState { db, redis, tera });
+        .with_state(AppState {
+            db,
+            redis,
+            tera,
+            root_url,
+        });
     println!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
@@ -122,6 +129,7 @@ struct AppState {
     pub db: PgPool,
     pub redis: deadpool_redis::Pool,
     pub tera: Arc<tera::Tera>,
+    pub root_url: Arc<String>,
 }
 
 #[derive(serde::Serialize, Debug)]
@@ -134,7 +142,7 @@ struct User {
 
 #[derive(serde::Deserialize)]
 pub struct FetchQuery {
-    offset: Option<i64>,
+    page: Option<i64>,
 }
 
 async fn fetch_stats(
@@ -142,12 +150,14 @@ async fn fetch_stats(
     State(state): State<AppState>,
     Query(query): Query<FetchQuery>,
 ) -> Result<Html<String>, Error> {
-    let offset = query.offset.unwrap_or(0);
+    const PAGE_SIZE: i64 = 50;
+    let page = query.page.unwrap_or(0);
+    let offset = page * PAGE_SIZE;
     #[allow(clippy::cast_possible_wrap)]
     let user_rows = sqlx::query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 100 OFFSET $2",
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 50 OFFSET $2",
         guild_id as i64,
-        offset * 100
+        offset
     )
     .fetch_all(&state.db)
     .await?;
@@ -198,29 +208,37 @@ async fn fetch_stats(
     let mut context = tera::Context::new();
     context.insert("users", &users);
     context.insert("offset", &offset);
+    context.insert("page", &page);
     context.insert("guild", &guild_id);
+    context.insert("root_url", &state.root_url);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, Error> {
+    let mut context = tera::Context::new();
+    context.insert("root_url", &state.root_url);
     Ok(Html(
-        state.tera.render("index.html", &tera::Context::new())?,
+        state.tera.render("index.html", &context)?,
     ))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, Error> {
+    let mut context = tera::Context::new();
+    context.insert("root_url", &state.root_url);
     Ok(Html(
-        state.tera.render("privacy.html", &tera::Context::new())?,
+        state.tera.render("privacy.html", &context)?,
     ))
 }
 
 #[allow(clippy::unused_async)]
 async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, Error> {
+    let mut context = tera::Context::new();
+    context.insert("root_url", &state.root_url);
     Ok(Html(
-        state.tera.render("terms.html", &tera::Context::new())?,
+        state.tera.render("terms.html", &context)?,
     ))
 }
 
