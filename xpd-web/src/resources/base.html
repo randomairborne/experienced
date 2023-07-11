@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Experienced - {% block title %}{% endblock title %}</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/main.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="Experienced discord bot" />
+    <meta property="og:url" content="https://xp.valk.sh/" />
+    <meta
+      property="og:description"
+      content="{% block description %}{% endblock description %}"
+    />
+    <meta property="og:determiner" content="the" />
+    <meta property="og:site_name" content="Experienced" />
+    <meta
+      name="description"
+      content="{% block description %}{% endblock description %}"
+    />
+    {% block extraheaders %}{% endblock extraheaders %}
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <a class="navbar" href="/">
+        <img src="favicon.png" width="50" height="50" />
+        <div class="tiny-spacer"></div>
+        <div class="bot-name navbar-name">EXPERIENCED</div>
+      </a>
+      <div class="flex-grow"></div>
+      <a class="selfhost-button" href="/terms/">Terms</a>
+      <div class="tiny-spacer"></div>
+      <a class="selfhost-button" href="/privacy/">Privacy</a>
+      <div class="tiny-spacer"></div>
+      <a
+        class="invite-button"
+        href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
+        >Add to Discord</a
+      >
+      <div class="tiny-spacer"></div>
+      <a
+        class="selfhost-button"
+        href="https://github.com/randomairborne/experienced/tree/prod#how-to-self-host-experienced"
+        >Selfhost</a
+      >
+    </nav>
+    {% block body %}{% endblock body %}
+  </body>
+</html>
