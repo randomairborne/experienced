@@ -138,7 +138,7 @@ pub async fn get_customizations(
     .fetch_optional(&state.db)
     .await?;
     let Some(customizations) = customizations else {
-        return Ok(Card::default().default_customizations())
+        return Ok(Card::default().default_customizations());
     };
     let card = Card::from_name(&customizations.card_layout).ok_or(Error::InvalidCard)?;
     let defaults = card.default_customizations();
