@@ -6,7 +6,7 @@ A powerful, flexible discord leveling bot
 
 The easisest way to self-host experienced is on Debian or Ubuntu Linux. Thus, this is how this tutorial will set up Experienced.
 
-If you'd rather just have a hosted bot, that's fine! (I also appreciate the CLOUT) [Click here to invite it.](https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands)
+If you'd rather just have a hosted bot, that's fine! I really appreciate it. [Click here to invite the official instance.](https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands)
 
 ### Creating a Discord application
 
