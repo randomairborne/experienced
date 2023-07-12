@@ -1,5 +1,8 @@
 use redis::AsyncCommands;
-use twilight_model::{guild::Member, user::User};
+use twilight_model::{
+    guild::{Guild, Member},
+    user::User,
+};
 
 use crate::Error;
 impl crate::XpdListener {
@@ -12,9 +15,11 @@ impl crate::XpdListener {
                 Some(member.user.discriminator)
             };
             let user = xpd_common::RedisUser {
-                id: member.user.id.into(),
+                id: member.user.id,
                 username: Some(member.user.name),
                 discriminator,
+                avatar_hash: member.user.avatar,
+                banner_hash: member.user.banner,
             };
             user_pairs.push((
                 format!("cache-user-{}", member.user.id.get()),
@@ -25,6 +30,25 @@ impl crate::XpdListener {
             .get()
             .await?
             .mset::<String, String, ()>(user_pairs.as_slice())
+            .await?;
+        Ok(())
+    }
+
+    pub async fn set_guild(&self, guild: Guild) -> Result<(), Error> {
+        let interop_guild = xpd_common::RedisGuild {
+            id: guild.id,
+            name: guild.name,
+            banner_hash: guild.banner,
+            icon_hash: guild.icon,
+        };
+        self.set_chunk(guild.members).await?;
+        self.redis
+            .get()
+            .await?
+            .set(
+                format!("cache-guild-{}", guild.id),
+                serde_json::to_string(&interop_guild)?,
+            )
             .await?;
         Ok(())
     }

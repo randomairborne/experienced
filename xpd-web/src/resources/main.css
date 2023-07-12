@@ -56,7 +56,7 @@ body {
 
 .title {
     width: 100%;
-    font-size: 3.8vh;
+    font-size: xx-large;
     padding: 1vw;
 }
 
@@ -127,7 +127,7 @@ body {
 }
 
 .leaderboard-user {
-    font-size: xx-large;
+    font-size: x-large;
 }
 
 .leaderboard-user-level {
@@ -136,4 +136,5 @@ body {
 
 .leaderboard-user-name {
     text-align: start;
+    min-width: 20ch;
 }
