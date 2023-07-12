@@ -5,7 +5,7 @@ edition = "2021"
 description = "A web dashboard for experienced"
 repository = "https://github.com/randomairborne/experienced"
 readme = "README.txt"
-license = "MS-PL"
+license = "EUPL"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 

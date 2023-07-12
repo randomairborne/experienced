@@ -6,7 +6,7 @@ authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 description = "experienced in one container"
 repository = "https://github.com/randomairborne/experienced"
 readme = "README.txt"
-license = "MS-PL"
+license = "EUPL"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
