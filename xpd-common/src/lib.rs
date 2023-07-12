@@ -12,7 +12,6 @@ use twilight_model::{
 pub struct RedisUser {
     pub id: Id<UserMarker>,
     pub username: Option<String>,
-    pub display_name: Option<String>,
     pub discriminator: Option<u16>,
     pub avatar_hash: Option<ImageHash>,
     pub banner_hash: Option<ImageHash>,
