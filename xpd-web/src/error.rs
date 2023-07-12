@@ -25,11 +25,7 @@ impl HttpError {
 
 impl std::fmt::Debug for HttpError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if f.alternate() {
-            write!(f, "{:#?}", self.inner)
-        } else {
-            write!(f, "{:?}", self.inner)
-        }
+        self.inner.fmt(f)
     }
 }
 
