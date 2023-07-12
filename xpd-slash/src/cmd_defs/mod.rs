@@ -5,6 +5,8 @@ use twilight_util::builder::command::CommandBuilder;
 
 use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 
+use crate::SlashState;
+
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "help", desc = "Learn about how to use experienced")]
 pub struct HelpCommand;
@@ -56,17 +58,23 @@ impl XpCommand {
     }
 }
 
-pub async fn register(http: twilight_http::client::InteractionClient<'_>) {
-    let cmds = vec![
-        XpCommand::create_command().into(),
-        RankCommand::create_command().into(),
-        CardCommand::create_command().into(),
-        HelpCommand::create_command().into(),
-        LeaderboardCommand::create_command().into(),
-        CommandBuilder::new("Get level", "", CommandType::User).build(),
-        CommandBuilder::new("Get author level", "", CommandType::Message).build(),
-    ];
-    http.set_global_commands(&cmds)
-        .await
-        .expect("Failed to set global commands for bot!");
+impl SlashState {
+    pub async fn register_slashes(&self) {
+        let mut cmds = vec![
+            XpCommand::create_command().into(),
+            RankCommand::create_command().into(),
+            CardCommand::create_command().into(),
+            HelpCommand::create_command().into(),
+            CommandBuilder::new("Get level", "", CommandType::User).build(),
+            CommandBuilder::new("Get author level", "", CommandType::Message).build(),
+        ];
+        if self.root_url.is_some() {
+            cmds.push(LeaderboardCommand::create_command().into());
+        }
+        self.client
+            .interaction(self.my_id)
+            .set_global_commands(&cmds)
+            .await
+            .expect("Failed to set global commands for bot!");
+    }
 }
