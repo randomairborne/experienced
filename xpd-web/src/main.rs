@@ -20,6 +20,9 @@ use twilight_model::id::{
 
 pub use error::Error;
 
+#[macro_use]
+extern crate tracing;
+
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() {
@@ -33,7 +36,7 @@ async fn main() {
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
     let raw_root_url = std::env::var("ROOT_URL").expect("Expected environment variable ROOT_URL");
     let root_url = Arc::new(raw_root_url.trim_end_matches('/').to_string());
-    println!("Connecting to database {database_url}");
+    info!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await
         .expect("Failed to connect to the database!");
@@ -60,6 +63,7 @@ async fn main() {
     ])
     .expect("Failed to add templates");
     let tera = Arc::new(tera);
+    error::ERROR_TERA.set(tera.clone()).unwrap();
     let route = axum::Router::new()
         .route("/", get(files::serve_index))
         .route("/privacy/", get(files::serve_privacy))
@@ -78,12 +82,12 @@ async fn main() {
             tera,
             root_url,
         });
-    println!("Server listening on https://0.0.0.0:8080!");
+    info!("Server listening on https://0.0.0.0:8080!");
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
         .with_graceful_shutdown(async {
             tokio::signal::ctrl_c().await.ok();
-            println!("Shutting down...");
+            warn!("Shutting down...");
         })
         .await
         .expect("failed to run server!");
@@ -185,8 +189,8 @@ async fn fetch_stats(
     for user_string in user_strings.into_iter().flatten() {
         let user: xpd_common::RedisUser = match serde_json::from_str(&user_string) {
             Ok(v) => v,
-            Err(e) => {
-                eprintln!("{e}");
+            Err(source) => {
+                error!(?source, "Failed to deserialize user from redis");
                 continue;
             }
         };

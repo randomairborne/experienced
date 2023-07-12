@@ -42,8 +42,12 @@ impl Tag for twilight_model::user::User {
 
 impl Tag for RedisUser {
     fn tag(&self) -> String {
-        let Some(discriminator) = self.discriminator else { return self.id.to_string(); };
-        let Some(name) = &self.username else { return self.id.to_string(); };
+        let Some(discriminator) = self.discriminator else {
+            return self.id.to_string();
+        };
+        let Some(name) = &self.username else {
+            return self.id.to_string();
+        };
         name_discrim_to_tag(name, discriminator)
     }
 }
