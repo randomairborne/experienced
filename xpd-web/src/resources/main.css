@@ -28,6 +28,14 @@ body {
     -moz-text-fill-color: transparent;
 }
 
+a {
+    color: aqua;
+}
+
+a:visited {
+    color: aqua;
+}
+
 .big {
     width: 100%;
     margin-top: 10vh;
@@ -98,6 +106,10 @@ body {
     font-size: 120%;
 }
 
+.invite-button:visited {
+    color: #000000;
+}
+
 .tiny-spacer {
     width: 8px;
 }
@@ -110,6 +122,10 @@ body {
     text-decoration: none;
     border-radius: 10px;
     font-size: 120%;
+}
+
+.selfhost-button:visited {
+    color: #FFFFFF;
 }
 
 .selfhost-button:hover {
@@ -138,4 +154,13 @@ body {
 .leaderboard-user-name {
     text-align: start;
     min-width: 20ch;
+}
+
+.why-title {
+    font-size: x-large;
+}
+
+.why-paragraph {
+    max-width: 100ch;
+    padding: 1.5ch;
 }

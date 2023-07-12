@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+Disallow: /leaderboard/*
+
+Sitemap: {{ root_url }}/sitemap.txt

@@ -50,6 +50,26 @@ pub async fn serve_404(State(state): State<AppState>) -> Result<Html<String>, Ht
 }
 
 #[allow(clippy::unused_async)]
+pub async fn serve_robots(State(state): State<AppState>) -> Result<String, HttpError> {
+    let mut context = tera::Context::new();
+    context.insert("root_url", &state.root_url);
+    state
+        .tera
+        .render("robots.txt", &context)
+        .map_err(|e| HttpError::new(e.into(), state))
+}
+
+#[allow(clippy::unused_async)]
+pub async fn serve_sitemap(State(state): State<AppState>) -> Result<String, HttpError> {
+    let mut context = tera::Context::new();
+    context.insert("root_url", &state.root_url);
+    state
+        .tera
+        .render("sitemap.txt", &context)
+        .map_err(|e| HttpError::new(e.into(), state))
+}
+
+#[allow(clippy::unused_async)]
 pub async fn serve_css() -> ([(&'static str, &'static str); 1], &'static [u8]) {
     (
         [("Content-Type", "text/css")],

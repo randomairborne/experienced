@@ -62,6 +62,8 @@ async fn main() {
         ),
         ("terms.html", include_str!("resources/terms.html")),
         ("privacy.html", include_str!("resources/privacy.html")),
+        ("sitemap.txt", include_str!("resources/sitemap.txt")),
+        ("robots.txt", include_str!("resources/robots.txt"))
     ])
     .expect("Failed to add templates");
     let tera = Arc::new(tera);
@@ -74,7 +76,8 @@ async fn main() {
         .route("/main.css", get(files::serve_css))
         .route("/MontserratAlt1.woff2", get(files::serve_font))
         .route("/favicon.png", get(files::serve_icon))
-        .route("/robots.txt", get(|| async { "User-Agent: *\nAllow: /" }))
+        .route("/robots.txt", get(files::serve_robots))
+        .route("/sitemap.txt", get(files::serve_sitemap))
         .route("/leaderboard/:id", get(fetch_stats))
         .fallback(files::serve_404)
         .with_state(AppState {

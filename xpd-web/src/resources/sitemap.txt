@@ -1,0 +1,3 @@
+{{ root_url }}/
+{{ root_url }}/privacy/
+{{ root_url }}/terms/
