@@ -1,7 +1,37 @@
-use std::sync::{Arc, OnceLock};
-
+use crate::AppState;
 use axum::{http::StatusCode, response::Html};
-use tera::Tera;
+
+#[allow(clippy::module_name_repetitions)]
+pub struct HttpError {
+    inner: Error,
+    state: AppState,
+}
+
+impl HttpError {
+    pub const fn new(inner: Error, state: AppState) -> Self {
+        Self { inner, state }
+    }
+    pub const fn status(&self) -> StatusCode {
+        match self.inner {
+            Error::Sqlx(_)
+            | Error::Tera(_)
+            | Error::Redis(_)
+            | Error::RedisPool(_)
+            | Error::SerdeJson(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NoLeveling => StatusCode::NOT_FOUND,
+        }
+    }
+}
+
+impl std::fmt::Debug for HttpError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            write!(f, "{:#?}", self.inner)
+        } else {
+            write!(f, "{:?}", self.inner)
+        }
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -19,7 +49,6 @@ pub enum Error {
     NoLeveling,
 }
 
-pub static ERROR_TERA: OnceLock<Arc<Tera>> = OnceLock::new();
 const TERA_ERROR: &str = "
 <!DOCTYPE html>
 <html lang=\"en-US\">
@@ -35,34 +64,21 @@ This error has been logged. We are sorry for the inconvenience.
 </p>
 <body>";
 
-impl axum::response::IntoResponse for Error {
+impl axum::response::IntoResponse for HttpError {
     fn into_response(self) -> axum::response::Response {
-        let status = match self {
-            Self::Sqlx(_)
-            | Self::Tera(_)
-            | Self::Redis(_)
-            | Self::RedisPool(_)
-            | Self::SerdeJson(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::NoLeveling => StatusCode::NOT_FOUND,
-        };
+        let status = self.status();
         if status == StatusCode::INTERNAL_SERVER_ERROR {
-            error!("{self:?}");
+            error!(?self.inner, "Internal server error");
         } else {
-            trace!("{self:?}");
+            trace!(?self.inner, "Application error");
         }
-        let Some(tera) = ERROR_TERA.get() else {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Tera not initialized, this should be impossible",
-            )
-                .into_response();
-        };
         let mut context = tera::Context::new();
-        context.insert("error", &self.to_string());
+        context.insert("error", &self.inner.to_string());
+        context.insert("root_url", &self.state.root_url);
         let render = if status == StatusCode::NOT_FOUND {
-            tera.render("404.html", &context)
+            self.state.tera.render("404.html", &context)
         } else {
-            tera.render("5xx.html", &context)
+            self.state.tera.render("5xx.html", &context)
         };
         let html = match render {
             Ok(v) => v,

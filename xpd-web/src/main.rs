@@ -10,6 +10,7 @@ use axum::{
     response::{Html, Redirect},
     routing::get,
 };
+use error::HttpError;
 use redis::AsyncCommands;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
@@ -19,6 +20,7 @@ use twilight_model::id::{
 };
 
 pub use error::Error;
+use xpd_common::{RedisGuild, RedisUser};
 
 #[macro_use]
 extern crate tracing;
@@ -63,7 +65,6 @@ async fn main() {
     ])
     .expect("Failed to add templates");
     let tera = Arc::new(tera);
-    error::ERROR_TERA.set(tera.clone()).unwrap();
     let route = axum::Router::new()
         .route("/", get(files::serve_index))
         .route("/privacy/", get(files::serve_privacy))
@@ -109,50 +110,45 @@ pub struct User {
     discriminator: Option<u16>,
 }
 
+const PAGE_SIZE: i64 = 50;
+
 #[derive(serde::Deserialize)]
 pub struct FetchQuery {
-    page: Option<i64>,
+    #[serde(default = "get_0")]
+    page: i64,
+}
+
+const fn get_0() -> i64 {
+    0
 }
 
 async fn fetch_stats(
     weird_guild_id: Option<Path<Id<GuildMarker>>>,
     State(state): State<AppState>,
     Query(query): Query<FetchQuery>,
-) -> Result<Html<String>, Error> {
-    const PAGE_SIZE: i64 = 50;
+) -> Result<Html<String>, HttpError> {
     let Some(Path(guild_id)) = weird_guild_id else {
-        return Err(Error::NoLeveling);
+        return Err(HttpError::new(Error::NoLeveling, state));
     };
-    let page = query.page.unwrap_or(0);
-    let offset = page * PAGE_SIZE;
+    let offset = query.page * PAGE_SIZE;
+    let guild = get_redis_guild(&state, guild_id)
+        .await
+        .map_err(|e| HttpError::new(e, state.clone()))?;
     #[allow(clippy::cast_possible_wrap)]
     let user_rows = sqlx::query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 51 OFFSET $2",
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
         guild_id.get() as i64,
+        PAGE_SIZE + 1,
         offset
     )
     .fetch_all(&state.db)
-    .await?;
+    .await
+    .map_err(|e| HttpError::new(e.into(), state.clone()))?;
     if user_rows.is_empty() {
-        return Err(Error::NoLeveling);
+        return Err(HttpError::new(Error::NoLeveling, state));
     }
-    let has_next_page = user_rows.len() >= 51;
-    let maybe_guild_string: Option<String> = state
-        .redis
-        .get()
-        .await?
-        .get(format!("cache-guild-{guild_id}"))
-        .await?;
-    let guild: xpd_common::RedisGuild = if let Some(guild_string) = maybe_guild_string {
-        serde_json::from_str(&guild_string)?
-    } else {
-        xpd_common::RedisGuild {
-            id: guild_id,
-            name: "(name not in cache)".to_string(),
-            banner_hash: None,
-            icon_hash: None,
-        }
-    };
+    #[allow(clippy::cast_possible_truncation)]
+    let has_next_page = user_rows.len() > PAGE_SIZE as usize;
     let mut ids_to_indices: HashMap<Id<UserMarker>, usize> =
         HashMap::with_capacity(user_rows.len());
     let mut users: Vec<User> = user_rows
@@ -176,21 +172,23 @@ async fn fetch_stats(
         state
             .redis
             .get()
-            .await?
+            .await
+            .map_err(|e| HttpError::new(e.into(), state.clone()))?
             .mget(
                 users
                     .iter()
                     .map(|v| format!("cache-user-{}", v.id))
                     .collect::<Vec<String>>(),
             )
-            .await?
+            .await
+            .map_err(|e| HttpError::new(e.into(), state.clone()))?
     };
     // if we have 51 users, the 51st user is the first user on the next page
     if has_next_page {
         users.pop();
     }
     for user_string in user_strings.into_iter().flatten() {
-        let user: xpd_common::RedisUser = match serde_json::from_str(&user_string) {
+        let user: RedisUser = match serde_json::from_str(&user_string) {
             Ok(v) => v,
             Err(source) => {
                 error!(?source, "Failed to deserialize user from redis");
@@ -205,10 +203,32 @@ async fn fetch_stats(
     let mut context = tera::Context::new();
     context.insert("users", &users);
     context.insert("offset", &offset);
-    context.insert("page", &page);
+    context.insert("page", &query.page);
     context.insert("guild", &guild);
     context.insert("root_url", &state.root_url);
     context.insert("has_next_page", &has_next_page);
-    let rendered = state.tera.render("leaderboard.html", &context)?;
+    let rendered = state
+        .tera
+        .render("leaderboard.html", &context)
+        .map_err(|e| HttpError::new(e.into(), state))?;
     Ok(Html(rendered))
+}
+
+async fn get_redis_guild(state: &AppState, guild: Id<GuildMarker>) -> Result<RedisGuild, Error> {
+    let maybe_guild_string: Option<String> = state
+        .redis
+        .get()
+        .await?
+        .get(format!("cache-guild-{guild}"))
+        .await?;
+    Ok(if let Some(guild_string) = maybe_guild_string {
+        serde_json::from_str(&guild_string)?
+    } else {
+        RedisGuild {
+            id: guild,
+            name: "(name not in cache)".to_string(),
+            banner_hash: None,
+            icon_hash: None,
+        }
+    })
 }
