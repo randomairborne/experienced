@@ -27,6 +27,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
     let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
+    let root_url = std::env::var("ROOT_URL")
+        .expect("Expected environment variable REDIS_URL")
+        .trim_end_matches('/')
+        .to_string();
     println!("Connecting to redis {redis_url}");
     let redis_cfg = deadpool_redis::Config::from_url(redis_url);
     let redis = redis_cfg
@@ -52,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let http = reqwest::Client::new();
     let state = AppState {
         pubkey,
-        bot: XpdSlash::new(http, client, my_id, db, redis).await,
+        bot: XpdSlash::new(http, client, my_id, db, redis, Some(root_url)).await,
     };
     let route = axum::Router::new()
         .route("/", axum::routing::get(|| async {}).post(handler::handle))

@@ -37,7 +37,19 @@ This error has been logged. We are sorry for the inconvenience.
 
 impl axum::response::IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        eprintln!("{self:?}");
+        let status = match self {
+            Self::Sqlx(_)
+            | Self::Tera(_)
+            | Self::Redis(_)
+            | Self::RedisPool(_)
+            | Self::SerdeJson(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::NoLeveling => StatusCode::NOT_FOUND,
+        };
+        if status == StatusCode::INTERNAL_SERVER_ERROR {
+            error!("{self:?}");
+        } else {
+            trace!("{self:?}");
+        }
         let Some(tera) = ERROR_TERA.get() else {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -47,14 +59,6 @@ impl axum::response::IntoResponse for Error {
         };
         let mut context = tera::Context::new();
         context.insert("error", &self.to_string());
-        let status = match self {
-            Self::Sqlx(_)
-            | Self::Tera(_)
-            | Self::Redis(_)
-            | Self::RedisPool(_)
-            | Self::SerdeJson(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::NoLeveling => StatusCode::NOT_FOUND,
-        };
         let render = if status == StatusCode::NOT_FOUND {
             tera.render("404.html", &context)
         } else {

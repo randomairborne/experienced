@@ -37,12 +37,14 @@ pub struct XpdSlash {
 }
 
 impl XpdSlash {
+    /// Make sure to trim your ``root_url`` trailing slash.
     pub async fn new(
         http: reqwest::Client,
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
         redis: deadpool_redis::Pool,
+        root_url: Option<String>,
     ) -> Self {
         let svg = SvgState::new();
         let import_queue = ImportQueue::new();
@@ -54,9 +56,10 @@ impl XpdSlash {
             http,
             redis,
             import_queue,
+            root_url: Arc::new(root_url),
         };
         info!("Creating commands...");
-        cmd_defs::register(state.client.interaction(state.my_id)).await;
+        state.register_slashes().await;
         tokio::spawn(mee6_worker::do_fetches(state.clone()));
         Self { state }
     }
@@ -116,6 +119,7 @@ pub struct SlashState {
     pub http: reqwest::Client,
     pub redis: deadpool_redis::Pool,
     pub import_queue: ImportQueue,
+    pub root_url: Arc<Option<String>>,
 }
 
 pub type ImportQueueMember = (Id<GuildMarker>, String);

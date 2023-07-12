@@ -82,7 +82,7 @@ async fn process_slash_cmd(
             guild_id,
         )
         .await?),
-        "leaderboard" => Ok(crate::levels::leaderboard(guild_id)),
+        "leaderboard" => Ok(crate::levels::leaderboard(&state.root_url, guild_id)),
         _ => Err(Error::UnrecognizedCommand),
     }
 }

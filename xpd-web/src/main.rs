@@ -74,7 +74,7 @@ async fn main() {
         .route("/MontserratAlt1.woff2", get(files::serve_font))
         .route("/favicon.png", get(files::serve_icon))
         .route("/robots.txt", get(|| async { "User-Agent: *\nAllow: /" }))
-        .route("/:id", get(fetch_stats))
+        .route("/leaderboard/:id", get(fetch_stats))
         .fallback(files::serve_404)
         .with_state(AppState {
             db,
@@ -115,11 +115,14 @@ pub struct FetchQuery {
 }
 
 async fn fetch_stats(
-    Path(guild_id): Path<Id<GuildMarker>>,
+    weird_guild_id: Option<Path<Id<GuildMarker>>>,
     State(state): State<AppState>,
     Query(query): Query<FetchQuery>,
 ) -> Result<Html<String>, Error> {
     const PAGE_SIZE: i64 = 50;
+    let Some(Path(guild_id)) = weird_guild_id else {
+        return Err(Error::NoLeveling);
+    };
     let page = query.page.unwrap_or(0);
     let offset = page * PAGE_SIZE;
     #[allow(clippy::cast_possible_wrap)]
