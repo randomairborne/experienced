@@ -76,9 +76,9 @@ async fn main() {
         ));
     }
 
-    tokio::signal::ctrl_c().await.unwrap();
+    xpd_common::wait_for_shutdown().await;
 
-    eprintln!("Shutting down..");
+    warn!("Shutting down..");
 
     // Let the shards know not to reconnect
     should_shutdown.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -90,7 +90,7 @@ async fn main() {
 
     // Await all tasks to complete.
     while set.join_next().await.is_some() {}
-    println!("Done, see ya!");
+    info!("Done, see ya!");
 }
 
 async fn event_loop(

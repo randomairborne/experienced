@@ -84,10 +84,11 @@ async fn main() {
             root_url,
         });
     info!("Server listening on https://0.0.0.0:8080!");
+    #[allow(clippy::redundant_pub_crate)]
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
         .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c().await.ok();
+            xpd_common::wait_for_shutdown().await;
             warn!("Shutting down...");
         })
         .await
