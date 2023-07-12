@@ -2,8 +2,7 @@
     font-family: "Montserrat-Alt1";
     font-weight: 400;
     font-style: normal;
-    src: url("/MontserratAlt1.woff2") format("woff2"),
-        url("/MontserratAlt1.woff") format("woff");
+    src: url("/MontserratAlt1.woff2") format("woff2");
     font-display: swap;
 }
 
@@ -93,9 +92,10 @@ body {
     background-color: #7289DA;
     border-color: #7289DA;
     border-style: solid;
-    padding: 0.7vh;
+    padding: 1vh;
     text-decoration: none;
     border-radius: 10px;
+    font-size: 120%;
 }
 
 .tiny-spacer {
@@ -106,9 +106,10 @@ body {
     color: #FFFFFF;
     border-color: #7289DA;
     border-style: solid;
-    padding: 0.7vh;
+    padding: 1vh;
     text-decoration: none;
     border-radius: 10px;
+    font-size: 120%;
 }
 
 .selfhost-button:hover {

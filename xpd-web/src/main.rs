@@ -1,10 +1,14 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
+mod error;
+mod files;
+
 use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Path, Query, State},
-    response::{Html, IntoResponse, Redirect},
+    response::{Html, Redirect},
+    routing::get,
 };
 use redis::AsyncCommands;
 use sqlx::PgPool;
@@ -13,6 +17,8 @@ use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,
 };
+
+pub use error::Error;
 
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
@@ -43,6 +49,8 @@ async fn main() {
     tera.add_raw_templates([
         ("base.html", include_str!("resources/base.html")),
         ("index.html", include_str!("resources/index.html")),
+        ("404.html", include_str!("resources/404.html")),
+        ("5xx.html", include_str!("resources/5xx.html")),
         (
             "leaderboard.html",
             include_str!("resources/leaderboard.html"),
@@ -53,64 +61,17 @@ async fn main() {
     .expect("Failed to add templates");
     let tera = Arc::new(tera);
     let route = axum::Router::new()
-        .route("/", axum::routing::get(serve_index))
-        .route("/privacy/", axum::routing::get(serve_privacy))
-        .route("/terms/", axum::routing::get(serve_terms))
-        .route(
-            "/privacy",
-            axum::routing::get(|| async { Redirect::to("/privacy/") }),
-        )
-        .route(
-            "/terms",
-            axum::routing::get(|| async { Redirect::to("/terms/") }),
-        )
-        .route(
-            "/main.css",
-            axum::routing::get(|| async {
-                (
-                    [("Content-Type", "text/css")],
-                    include_bytes!("resources/main.css").as_slice(),
-                )
-            }),
-        )
-        .route(
-            "/MontserratAlt1.woff",
-            axum::routing::get(|| async {
-                (
-                    [
-                        ("Content-Type", "font/woff"),
-                        ("Cache-Control", "max-age=31536000"),
-                    ],
-                    include_bytes!("resources/MontserratAlt1.woff").as_slice(),
-                )
-            }),
-        )
-        .route(
-            "/MontserratAlt1.woff2",
-            axum::routing::get(|| async {
-                (
-                    [
-                        ("Content-Type", "font/woff2"),
-                        ("Cache-Control", "max-age=31536000"),
-                    ],
-                    include_bytes!("resources/MontserratAlt1.woff2").as_slice(),
-                )
-            }),
-        )
-        .route(
-            "/favicon.png",
-            axum::routing::get(|| async {
-                (
-                    [("Content-Type", "image/png")],
-                    include_bytes!("resources/favicon.png").as_slice(),
-                )
-            }),
-        )
-        .route(
-            "/robots.txt",
-            axum::routing::get(|| async { "User-Agent: *\nAllow: /" }),
-        )
-        .route("/:id", axum::routing::get(fetch_stats))
+        .route("/", get(files::serve_index))
+        .route("/privacy/", get(files::serve_privacy))
+        .route("/terms/", get(files::serve_terms))
+        .route("/privacy", get(|| async { Redirect::to("/privacy/") }))
+        .route("/terms", get(|| async { Redirect::to("/terms/") }))
+        .route("/main.css", get(files::serve_css))
+        .route("/MontserratAlt1.woff2", get(files::serve_font))
+        .route("/favicon.png", get(files::serve_icon))
+        .route("/robots.txt", get(|| async { "User-Agent: *\nAllow: /" }))
+        .route("/:id", get(fetch_stats))
+        .fallback(files::serve_404)
         .with_state(AppState {
             db,
             redis,
@@ -129,7 +90,7 @@ async fn main() {
 }
 
 #[derive(Clone)]
-struct AppState {
+pub struct AppState {
     pub db: PgPool,
     pub redis: deadpool_redis::Pool,
     pub tera: Arc<tera::Tera>,
@@ -137,7 +98,7 @@ struct AppState {
 }
 
 #[derive(serde::Serialize, Debug)]
-struct User {
+pub struct User {
     id: u64,
     level: u64,
     name: Option<String>,
@@ -243,50 +204,4 @@ async fn fetch_stats(
     context.insert("has_next_page", &has_next_page);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
-}
-
-#[allow(clippy::unused_async)]
-async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, Error> {
-    let mut context = tera::Context::new();
-    context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("index.html", &context)?))
-}
-
-#[allow(clippy::unused_async)]
-async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, Error> {
-    let mut context = tera::Context::new();
-    context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("privacy.html", &context)?))
-}
-
-#[allow(clippy::unused_async)]
-async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, Error> {
-    let mut context = tera::Context::new();
-    context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("terms.html", &context)?))
-}
-
-#[derive(Debug, thiserror::Error)]
-enum Error {
-    #[error("SQLx error: {0}")]
-    Sqlx(#[from] sqlx::Error),
-    #[error("Templating error: {0}")]
-    Tera(#[from] tera::Error),
-    #[error("Redis error: {0}")]
-    Redis(#[from] redis::RedisError),
-    #[error("Redis pool error: {0}")]
-    RedisPool(#[from] deadpool_redis::PoolError),
-    #[error("Non-integer value where integer expected: {0}")]
-    ParseInt(#[from] std::num::ParseIntError),
-    #[error("JSON deserialization failed: {0}")]
-    SerdeJson(#[from] serde_json::Error),
-    #[error("This server does not have Experienced, or no users have leveled up.")]
-    NoLeveling,
-}
-
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
-        eprintln!("{self:?}");
-        self.to_string().into_response()
-    }
 }
