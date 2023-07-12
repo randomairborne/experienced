@@ -1,10 +1,28 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
+use twilight_model::{
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
+    util::ImageHash,
+};
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct RedisUser {
-    pub id: u64,
+    pub id: Id<UserMarker>,
     pub username: Option<String>,
     pub discriminator: Option<u16>,
+    pub avatar_hash: Option<ImageHash>,
+    pub banner_hash: Option<ImageHash>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct RedisGuild {
+    pub id: Id<GuildMarker>,
+    pub name: String,
+    pub banner_hash: Option<ImageHash>,
+    pub icon_hash: Option<ImageHash>,
 }
 
 pub trait Tag {

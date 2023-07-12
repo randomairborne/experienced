@@ -6,6 +6,8 @@ efficient way. View your server leaderboard here. {% endblock description %}
 <meta name="robots" content="noindex">
 {% endblock extraheaders %}
 {% block body %}
+  <div class="title">
+    {{ guild.name }}
   </div>
   <table class="leaderboard">
     {% for user in users %}
@@ -13,8 +15,7 @@ efficient way. View your server leaderboard here. {% endblock description %}
       <td>{{ loop.index + offset }}.<td>
       <td class="leaderboard-user-name">
         {% if user.name %}
-        {{ user.name }}
-        {% if user.discriminator %}#{{ user.discriminator }}{% endif %}
+        {{ user.name }}{% if user.discriminator %}#{{ user.discriminator }}{% endif %}
         {% else %}
         {{ user.id }}
         {% endif %}
@@ -23,14 +24,18 @@ efficient way. View your server leaderboard here. {% endblock description %}
     </tr>
     {% endfor %}
   </table>
+  {% if page > 0 %}
   <a
     class="selfhost-button"
-    href="{{ root_url }}/{{ guild_id }}?page={{ page - 1 }}">
+    href="{{ root_url }}/{{ guild.id }}?page={{ page - 1 }}">
     Last page
-    </a>
+  </a>
+  {% endif %}
+  {% if has_next_page %}
   <a
     class="invite-button"
-    href="{{ root_url }}/{{ guild_id }}?page={{ page + 1 }}">
+    href="{{ root_url }}/{{ guild.id }}?page={{ page + 1 }}">
     Next page
-    </a>
+  </a>
+  {% endif %}
 {% endblock body %}

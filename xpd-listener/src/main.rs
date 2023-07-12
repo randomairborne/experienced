@@ -123,7 +123,7 @@ async fn handle_event(
                 )
                 .query("", None),
             )?;
-            listener.set_chunk(guild_add.0.members).await?;
+            listener.set_guild(guild_add.0).await?;
         }
         Event::MemberAdd(member_add) => listener.set_user(&member_add.user).await?,
         Event::MemberUpdate(member_update) => listener.set_user(&member_update.user).await?,

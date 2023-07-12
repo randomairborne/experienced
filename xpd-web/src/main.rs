@@ -9,6 +9,10 @@ use axum::{
 use redis::AsyncCommands;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+use twilight_model::id::{
+    marker::{GuildMarker, UserMarker},
+    Id,
+};
 
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
@@ -146,7 +150,7 @@ pub struct FetchQuery {
 }
 
 async fn fetch_stats(
-    Path(guild_id): Path<u64>,
+    Path(guild_id): Path<Id<GuildMarker>>,
     State(state): State<AppState>,
     Query(query): Query<FetchQuery>,
 ) -> Result<Html<String>, Error> {
@@ -155,19 +159,40 @@ async fn fetch_stats(
     let offset = page * PAGE_SIZE;
     #[allow(clippy::cast_possible_wrap)]
     let user_rows = sqlx::query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 50 OFFSET $2",
-        guild_id as i64,
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 51 OFFSET $2",
+        guild_id.get() as i64,
         offset
     )
     .fetch_all(&state.db)
     .await?;
-    let mut ids_to_indices: HashMap<u64, usize> = HashMap::with_capacity(user_rows.len());
+    if user_rows.is_empty() {
+        return Err(Error::NoLeveling);
+    }
+    let has_next_page = user_rows.len() >= 51;
+    let maybe_guild_string: Option<String> = state
+        .redis
+        .get()
+        .await?
+        .get(format!("cache-guild-{guild_id}"))
+        .await?;
+    let guild: xpd_common::RedisGuild = if let Some(guild_string) = maybe_guild_string {
+        serde_json::from_str(&guild_string)?
+    } else {
+        xpd_common::RedisGuild {
+            id: guild_id,
+            name: "(name not in cache)".to_string(),
+            banner_hash: None,
+            icon_hash: None,
+        }
+    };
+    let mut ids_to_indices: HashMap<Id<UserMarker>, usize> =
+        HashMap::with_capacity(user_rows.len());
     let mut users: Vec<User> = user_rows
         .into_iter()
         .enumerate()
         .map(|(i, v)| {
             #[allow(clippy::cast_sign_loss)]
-            ids_to_indices.insert(v.id as u64, i);
+            ids_to_indices.insert(Id::new(v.id as u64), i);
             #[allow(clippy::cast_sign_loss)]
             User {
                 id: v.id as u64,
@@ -192,6 +217,10 @@ async fn fetch_stats(
             )
             .await?
     };
+    // if we have 51 users, the 51st user is the first user on the next page
+    if has_next_page {
+        users.pop();
+    }
     for user_string in user_strings.into_iter().flatten() {
         let user: xpd_common::RedisUser = match serde_json::from_str(&user_string) {
             Ok(v) => v,
@@ -209,8 +238,9 @@ async fn fetch_stats(
     context.insert("users", &users);
     context.insert("offset", &offset);
     context.insert("page", &page);
-    context.insert("guild", &guild_id);
+    context.insert("guild", &guild);
     context.insert("root_url", &state.root_url);
+    context.insert("has_next_page", &has_next_page);
     let rendered = state.tera.render("leaderboard.html", &context)?;
     Ok(Html(rendered))
 }
@@ -247,11 +277,16 @@ enum Error {
     #[error("Redis pool error: {0}")]
     RedisPool(#[from] deadpool_redis::PoolError),
     #[error("Non-integer value where integer expected: {0}")]
-    ParseIntError(#[from] std::num::ParseIntError),
+    ParseInt(#[from] std::num::ParseIntError),
+    #[error("JSON deserialization failed: {0}")]
+    SerdeJson(#[from] serde_json::Error),
+    #[error("This server does not have Experienced, or no users have leveled up.")]
+    NoLeveling,
 }
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
+        eprintln!("{self:?}");
         self.to_string().into_response()
     }
 }
