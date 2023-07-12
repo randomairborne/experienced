@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 50 OFFSET $2",
+  "query": "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 51 OFFSET $2",
   "describe": {
     "columns": [
       {
@@ -31,5 +31,5 @@
       false
     ]
   },
-  "hash": "c30d6fbf5cc6f0d2eaf15da690f347bac0b7b292643967cd377d32783d38b153"
+  "hash": "61829ee0cfd6e05358cfcaa2ce18ad6018b5ba94609a4d4f9696579688e5482d"
 }
