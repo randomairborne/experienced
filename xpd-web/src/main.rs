@@ -63,7 +63,7 @@ async fn main() {
         ("terms.html", include_str!("resources/terms.html")),
         ("privacy.html", include_str!("resources/privacy.html")),
         ("sitemap.txt", include_str!("resources/sitemap.txt")),
-        ("robots.txt", include_str!("resources/robots.txt"))
+        ("robots.txt", include_str!("resources/robots.txt")),
     ])
     .expect("Failed to add templates");
     let tera = Arc::new(tera);
