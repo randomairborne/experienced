@@ -63,7 +63,7 @@ async fn main() {
         ));
     }
 
-    tokio::signal::ctrl_c().await.unwrap();
+    xpd_common::wait_for_shutdown().await;
 
     eprintln!("Shutting down..");
 

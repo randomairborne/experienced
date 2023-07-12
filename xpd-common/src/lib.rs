@@ -63,3 +63,24 @@ fn name_discrim_to_tag(name: &str, discriminator: u16) -> String {
         )
     }
 }
+
+/// A simple function that waits until we are told to stop.
+/// # Panics
+/// If the system fails to set up a unix signal handler
+#[cfg(target_family = "unix")]
+#[allow(clippy::redundant_pub_crate)]
+pub async fn wait_for_shutdown() {
+    let mut term_handler =
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).unwrap();
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {},
+        _ = term_handler.recv() => {}
+    }
+}
+
+/// A simple function that waits until we are told to stop.
+#[cfg(not(target_family = "unix"))]
+#[allow(clippy::redundant_pub_crate)]
+pub async fn wait_for_shutdown() {
+    tokio::signal::ctrl_c().await.ok();
+}

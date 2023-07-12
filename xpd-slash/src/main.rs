@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
         .serve(route.into_make_service())
         .with_graceful_shutdown(async {
-            tokio::signal::ctrl_c().await.ok();
+            xpd_common::wait_for_shutdown().await;
             println!("Shutting down...");
         })
         .await
