@@ -1,32 +1,52 @@
-use crate::{AppState, Error};
+use crate::{error::HttpError, AppState};
 use axum::{extract::State, response::Html};
 
 #[allow(clippy::unused_async)]
-pub async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, Error> {
+pub async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, HttpError> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("index.html", &context)?))
+    Ok(Html(
+        state
+            .tera
+            .render("index.html", &context)
+            .map_err(|e| HttpError::new(e.into(), state))?,
+    ))
 }
 
 #[allow(clippy::unused_async)]
-pub async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, Error> {
+pub async fn serve_privacy(State(state): State<AppState>) -> Result<Html<String>, HttpError> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("privacy.html", &context)?))
+    Ok(Html(
+        state
+            .tera
+            .render("privacy.html", &context)
+            .map_err(|e| HttpError::new(e.into(), state))?,
+    ))
 }
 
 #[allow(clippy::unused_async)]
-pub async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, Error> {
+pub async fn serve_terms(State(state): State<AppState>) -> Result<Html<String>, HttpError> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("terms.html", &context)?))
+    Ok(Html(
+        state
+            .tera
+            .render("terms.html", &context)
+            .map_err(|e| HttpError::new(e.into(), state))?,
+    ))
 }
 
 #[allow(clippy::unused_async)]
-pub async fn serve_404(State(state): State<AppState>) -> Result<Html<String>, Error> {
+pub async fn serve_404(State(state): State<AppState>) -> Result<Html<String>, HttpError> {
     let mut context = tera::Context::new();
     context.insert("root_url", &state.root_url);
-    Ok(Html(state.tera.render("404.html", &context)?))
+    Ok(Html(
+        state
+            .tera
+            .render("404.html", &context)
+            .map_err(|e| HttpError::new(e.into(), state))?,
+    ))
 }
 
 #[allow(clippy::unused_async)]
