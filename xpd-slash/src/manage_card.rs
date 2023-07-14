@@ -91,6 +91,8 @@ async fn process_edit(
             background = COALESCE(excluded.background, custom_card.background),
             progress_foreground = COALESCE(excluded.progress_foreground, custom_card.progress_foreground),
             progress_background = COALESCE(excluded.progress_background, custom_card.progress_background),
+            foreground_xp_count = COALESCE(excluded.foreground_xp_count, custom_card.foreground_xp_count),
+            background_xp_count = COALESCE(excluded.background_xp_count, custom_card.background_xp_count),
             font = COALESCE(excluded.font, custom_card.font),
             toy_image = COALESCE(excluded.toy_image, custom_card.toy_image)",
         edit.username.map(|v| v.to_string()),
