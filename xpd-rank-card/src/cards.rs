@@ -4,7 +4,7 @@ use crate::customizations::{Color, Customizations};
 pub enum Card {
     #[default]
     Classic,
-    Vertical
+    Vertical,
 }
 
 impl Card {
@@ -35,7 +35,7 @@ impl Card {
     pub const fn default_customizations(&self) -> Customizations {
         match *self {
             Self::Classic => CLASSIC_CUSTOMIZATIONS,
-            Self::Vertical => VERTICAL_CUSTOMIZATIONS
+            Self::Vertical => VERTICAL_CUSTOMIZATIONS,
         }
     }
 }
