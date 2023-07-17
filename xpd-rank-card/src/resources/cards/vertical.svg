@@ -1,0 +1,63 @@
+{% set_global progress_height = (percentage * 9) + 80 %}
+<svg version="1.1"
+     width="600" height="1200"
+     xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .font {
+      font-family: {{ customizations.font }}, sans-serif;
+    }
+    .name {
+      font-size: 50px;
+      fill: {{ customizations.username }};
+    }
+    .discriminator {
+      font-size: 20px;
+      fill: {{ customizations.username }};
+    }
+    .stat {
+      font-size: 60px;
+    }
+    .stat-name {
+      font-size: 30px;
+    }
+    .rank {
+      fill: {{ customizations.rank }};
+    }
+    .level {
+      fill: {{ customizations.level }};
+    }
+    .xp_overlay {
+      font-size: 30px;
+      fill: {% if xp_at_end %}{{ customizations.background_xp_count }}{% else %}{{ customizations.foreground_xp_count }}{% endif %};
+    }
+  </style>
+  <rect width="600" height="1200" fill="{{ customizations.border }}" />
+  <rect width="560" height="1160" x="20" y="20" rx="20" ry="20" fill="{{ customizations.background }}" />
+  <rect width="80" height="900" x="400" y="260" rx="40" ry="40" fill="{{ customizations.progress_background }}" />
+  <rect width="80" height="{{ progress_height }}" x="400" y="260" rx="40" ry="40" fill="{{ customizations.progress_foreground }}" />
+  {% if customizations.toy %}
+  <image id="toy" x="{{ progress_height }}" y="276" width="48" height="48" href="{{ customizations.toy }}" />
+  {% endif %}
+  <clipPath id="clipProfilePic">
+    <circle r="90" cx="150" cy="190"/>
+  </clipPath>
+  <!-- TSpans cannot have font classes. It must wrap the text element. See https://github.com/RazrFalcon/resvg/issues/614 -->
+  <image id="avatar" class="avatar" x="60" y="100" width="180" height="180" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
+  <text x="300" y="80" class="font" text-anchor="middle">
+    <tspan class="name">{{ name }}</tspan>
+    {% if discriminator %}
+    <tspan class="discriminator">#{{ discriminator }}</tspan>
+    {% endif %}
+  </text>
+  <text x="60" y="350" class="font">
+    <tspan class="stat-name rank">RANK:&#160;</tspan>
+    <tspan class="stat rank">#{{ rank }}</tspan>
+  </text>
+  <text x="60" y="420" class="font">
+    <tspan class="stat-name level">LEVEL:&#160;</tspan>
+    <tspan class="stat level">{{ level }}</tspan>
+  </text>
+  <!-- <text x="{% if xp_at_end %}1520{% else %}80{% endif %}" y="310" class="font xp_overlay" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
+    {{ current | integerhumanize }} / {{ needed | integerhumanize }} xp
+  </text> -->
+</svg>

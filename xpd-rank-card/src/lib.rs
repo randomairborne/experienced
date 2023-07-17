@@ -59,7 +59,7 @@ impl SvgState {
         let cloned_self = self.clone();
         let (send, recv) = tokio::sync::oneshot::channel();
         self.threads.spawn(move || {
-            send.send(cloned_self.do_render(&data)).ok();
+            send.send(cloned_self.sync_render(&data)).ok();
         });
         recv.await?
     }
@@ -70,7 +70,10 @@ impl SvgState {
         let ctx = tera::Context::from_serialize(context)?;
         Ok(self.tera.render("svg", &ctx)?)
     }
-    fn do_render(&self, context: &Context) -> Result<Vec<u8>, Error> {
+    /// Render the PNG for a card.
+    /// # Errors
+    /// Errors if tera has a problem, or resvg does.
+    pub fn sync_render(&self, context: &Context) -> Result<Vec<u8>, Error> {
         let svg = self.tera.render(
             context.customizations.card.name(),
             &tera::Context::from_serialize(context)?,
@@ -116,8 +119,11 @@ impl Default for SvgState {
         fonts.load_font_data(Font::MontserratAlt1.ttf().to_vec());
         let mut tera = tera::Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
-        tera.add_raw_templates([(Card::Classic.name(), Card::Classic.template())])
-            .expect("Failed to build template");
+        tera.add_raw_templates([
+            (Card::Classic.name(), Card::Classic.template()),
+            (Card::Vertical.name(), Card::Vertical.template()),
+        ])
+        .expect("Failed to build template");
         tera.register_filter("integerhumanize", ihumanize);
         let threads = rayon::ThreadPoolBuilder::new().build().unwrap();
         Self {
@@ -175,14 +181,13 @@ pub enum Error {
 
 #[cfg(test)]
 mod tests {
-    use rand::Rng;
-
+    const VALK_PFP: &str = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==";
     use super::*;
 
     #[test]
-    fn test_renderer() -> Result<(), Error> {
+    fn test_classic_l() -> Result<(), Error> {
         let state = SvgState::new();
-        let xp = rand::thread_rng().gen_range(0..=10_000_000);
+        let xp = 49;
         let data = mee6::LevelInfo::new(xp);
         #[allow(
             clippy::cast_precision_loss,
@@ -191,17 +196,67 @@ mod tests {
         )]
         let context = Context {
             level: data.level(),
-            rank: rand::thread_rng().gen_range(0..=1_000_000),
-            name: "Testy McTestington<span>".to_string(),
-            discriminator: Some("0000".to_string()),
+            rank: 1,
+            name: "Testy McTestington".to_string(),
+            discriminator: None,
             percentage: (data.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
             customizations: Card::Classic.default_customizations(),
-            avatar: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==".to_string(),
+            avatar: VALK_PFP.to_string(),
         };
-        let output = state.do_render(&context)?;
-        std::fs::write("renderer_test.png", output).unwrap();
+        let output = state.sync_render(&context)?;
+        std::fs::write("renderer_test_classic_l.png", output).unwrap();
+        Ok(())
+    }
+    #[test]
+    fn test_classic_r() -> Result<(), Error> {
+        let state = SvgState::new();
+        let xp = 51;
+        let data = mee6::LevelInfo::new(xp);
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation
+        )]
+        let context = Context {
+            level: data.level(),
+            rank: 1,
+            name: "Testy McTestington".to_string(),
+            discriminator: None,
+            percentage: (data.percentage() * 100.0).round() as u64,
+            current: xp,
+            needed: mee6::xp_needed_for_level(data.level() + 1),
+            customizations: Card::Classic.default_customizations(),
+            avatar: VALK_PFP.to_string(),
+        };
+        let output = state.sync_render(&context)?;
+        std::fs::write("renderer_test_classic_r.png", output).unwrap();
+        Ok(())
+    }
+    #[test]
+    fn test_vertical() -> Result<(), Error> {
+        let state = SvgState::new();
+        let xp = 51;
+        let data = mee6::LevelInfo::new(xp);
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation
+        )]
+        let context = Context {
+            level: data.level(),
+            rank: 1,
+            name: "Testy McTestington".to_string(),
+            discriminator: None,
+            percentage: (data.percentage() * 100.0).round() as u64,
+            current: xp,
+            needed: mee6::xp_needed_for_level(data.level() + 1),
+            customizations: Card::Vertical.default_customizations(),
+            avatar: VALK_PFP.to_string(),
+        };
+        let output = state.sync_render(&context)?;
+        std::fs::write("renderer_test_vertical.png", output).unwrap();
         Ok(())
     }
 }
