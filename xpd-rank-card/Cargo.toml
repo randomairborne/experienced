@@ -1,6 +1,6 @@
 [package]
 name = "xpd-rank-card"
-version = "0.4.2"
+version = "0.5.0"
 edition = "2021"
 license = "EUPL"
 description = "A library for experienced and minixpd to render SVGs"

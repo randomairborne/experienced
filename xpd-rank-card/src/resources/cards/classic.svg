@@ -27,7 +27,7 @@
     .level {
       fill: {{ customizations.level }};
     }
-    .xp_overlay {
+    .xp-overlay {
       font-size: 30px;
       fill: {% if xp_at_end %}{{ customizations.background_xp_count }}{% else %}{{ customizations.foreground_xp_count }}{% endif %};
     }
@@ -56,7 +56,7 @@
     <tspan class="stat-name level">LEVEL:</tspan>
     <tspan class="stat level">&#160;{{ level }}</tspan>
   </text>
-  <text x="{% if xp_at_end %}1520{% else %}80{% endif %}" y="310" class="font xp_overlay" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
+  <text x="{% if xp_at_end %}1520{% else %}80{% endif %}" y="310" class="font xp-overlay" text-anchor="{% if xp_at_end %}end{% else %}start{% endif %}">
     {{ current | integerhumanize }} / {{ needed | integerhumanize }} xp
   </text>
 </svg>

@@ -46,6 +46,8 @@ pub struct CardCommandEdit {
     pub font: Option<CardCommandEditFont>,
     #[command(desc = "What toy image to use in the card")]
     pub toy_image: Option<CardCommandEditToy>,
+    #[command(desc = "What layout to use for the card")]
+    pub card_layout: Option<CardCommandEditLayout>,
 }
 
 #[derive(CommandOption, CreateOption)]
@@ -58,6 +60,14 @@ pub enum CardCommandEditFont {
     JetBrainsMono,
     #[option(name = "Montserrat Alt1", value = "Montserrat Alt1")]
     MontserratAlt1,
+}
+
+#[derive(CommandOption, CreateOption)]
+pub enum CardCommandEditLayout {
+    #[option(name = "Classic", value = "classic.svg")]
+    Classic,
+    #[option(name = "Vertical", value = "vertical.svg")]
+    Vertical,
 }
 
 #[derive(

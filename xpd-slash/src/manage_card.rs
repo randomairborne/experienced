@@ -80,9 +80,10 @@ async fn process_edit(
             background_xp_count,
             font,
             toy_image,
+            card_layout,
             id
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
         ) ON CONFLICT (id) DO UPDATE SET
             username = COALESCE(excluded.username, custom_card.username),
             rank = COALESCE(excluded.rank, custom_card.rank),
@@ -94,7 +95,8 @@ async fn process_edit(
             foreground_xp_count = COALESCE(excluded.foreground_xp_count, custom_card.foreground_xp_count),
             background_xp_count = COALESCE(excluded.background_xp_count, custom_card.background_xp_count),
             font = COALESCE(excluded.font, custom_card.font),
-            toy_image = COALESCE(excluded.toy_image, custom_card.toy_image)",
+            toy_image = COALESCE(excluded.toy_image, custom_card.toy_image),
+            card_layout = COALESCE(excluded.card_layout, custom_card.card_layout)",
         edit.username.map(|v| v.to_string()),
         edit.rank.map(|v| v.to_string()),
         edit.level.map(|v| v.to_string()),
@@ -106,6 +108,7 @@ async fn process_edit(
         edit.background_xp_count.map(|v| v.to_string()),
         edit.font.map(|v| v.value()),
         edit.toy_image.map(|v| v.value()),
+        edit.card_layout.map(|v| v.value()),
         user.id.get() as i64,
     )
     .execute(&state.db)

@@ -189,6 +189,8 @@ mod tests {
         let state = SvgState::new();
         let xp = 49;
         let data = mee6::LevelInfo::new(xp);
+        let mut customizations = Card::Vertical.default_customizations();
+        customizations.toy = Some(Toy::Bee);
         #[allow(
             clippy::cast_precision_loss,
             clippy::cast_sign_loss,
@@ -202,7 +204,7 @@ mod tests {
             percentage: (data.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
-            customizations: Card::Classic.default_customizations(),
+            customizations,
             avatar: VALK_PFP.to_string(),
         };
         let output = state.sync_render(&context)?;
@@ -214,6 +216,8 @@ mod tests {
         let state = SvgState::new();
         let xp = 51;
         let data = mee6::LevelInfo::new(xp);
+        let mut customizations = Card::Vertical.default_customizations();
+        customizations.toy = Some(Toy::Bee);
         #[allow(
             clippy::cast_precision_loss,
             clippy::cast_sign_loss,
@@ -227,7 +231,7 @@ mod tests {
             percentage: (data.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
-            customizations: Card::Classic.default_customizations(),
+            customizations,
             avatar: VALK_PFP.to_string(),
         };
         let output = state.sync_render(&context)?;
@@ -237,7 +241,7 @@ mod tests {
     #[test]
     fn test_vertical() -> Result<(), Error> {
         let state = SvgState::new();
-        let xp = 51;
+        let xp = 495_395;
         let data = mee6::LevelInfo::new(xp);
         #[allow(
             clippy::cast_precision_loss,
@@ -246,7 +250,7 @@ mod tests {
         )]
         let context = Context {
             level: data.level(),
-            rank: 1,
+            rank: 1_000_000,
             name: "Testy McTestington".to_string(),
             discriminator: None,
             percentage: (data.percentage() * 100.0).round() as u64,
