@@ -2,7 +2,7 @@
 name = "xpd-rank-card"
 version = "0.5.0"
 edition = "2021"
-license = "EUPL"
+license = "EUPL-1.2"
 description = "A library for experienced and minixpd to render SVGs"
 repository = "https://github.com/randomairborne/experienced"
 readme = "README.md"

@@ -6,7 +6,7 @@ authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 description = "A websocket listener for experienced"
 repository = "https://github.com/randomairborne/experienced"
 readme = "README.txt"
-license = "EUPL"
+license = "EUPL-1.2"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 

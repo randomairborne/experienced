@@ -5,7 +5,7 @@ edition = "2021"
 description = "A slash command handler for experienced"
 repository = "https://github.com/randomairborne/experienced"
 readme = "README.txt"
-license = "EUPL"
+license = "EUPL-1.2"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
