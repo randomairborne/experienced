@@ -20,8 +20,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 deadpool-redis = { version = "0.12", features = ["rt_tokio_1"] }
 xpd-rank-card = { path = "../xpd-rank-card/", version = "0.5" }
 redis = { version = "0.23", features = ["aio", "tokio-comp"] }
-xpd-common = { path = "../xpd-common/", version = "0.0.6" }
 twilight-util = { version = "0.15", features = ["builder"] }
+xpd-common = { path = "../xpd-common/", version = "0.0.6" }
 serde = { version = "1", features = ["derive"] }
 twilight-interactions = "0.15"
 twilight-validate = "0.15"
@@ -40,4 +40,4 @@ hex = "0.4"
 
 [dev-dependencies]
 rand = "0.8"
-cargo_metadata = "0.15"
+cargo_metadata = "0.17"

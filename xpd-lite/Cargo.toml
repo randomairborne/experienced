@@ -15,7 +15,6 @@ twilight-gateway = { version = "0.15", features = ["rustls-native-roots", "twili
 reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], default-features = false }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-redis = { version = "0.23", default-features = false, features = ["aio"] }
 xpd-listener = { path = "../xpd-listener", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 deadpool-redis = { version = "0.12", features = ["rt_tokio_1"] }
@@ -24,9 +23,6 @@ xpd-common = { path = "../xpd-common/", version = "0.0.6" }
 twilight-validate = "0.15"
 twilight-model = "0.15"
 twilight-http = "0.15"
-serde_json = "1"
 dotenvy = "0.15"
 thiserror = "1"
 tracing = "0.1"
-rand = "0.8"
-mee6 = "0.1"
