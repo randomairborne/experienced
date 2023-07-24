@@ -40,4 +40,4 @@ hex = "0.4"
 
 [dev-dependencies]
 rand = "0.8"
-cargo_metadata = "0.15"
+cargo_metadata = "0.17"
