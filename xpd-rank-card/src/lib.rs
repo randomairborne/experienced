@@ -263,4 +263,30 @@ mod tests {
         std::fs::write("renderer_test_vertical.png", output).unwrap();
         Ok(())
     }
+    #[test]
+    fn test_vertical_growth() -> Result<(), Error> {
+        std::fs::create_dir_all("./test-procedural/")?;
+        let state = SvgState::new();
+        let xp = 495_395;
+        let data = mee6::LevelInfo::new(xp);
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation
+        )]
+        let context = Context {
+            level: data.level(),
+            rank: 1_000_000,
+            name: "Testy McTestington".to_string(),
+            discriminator: None,
+            percentage: (data.percentage() * 100.0).round() as u64,
+            current: xp,
+            needed: mee6::xp_needed_for_level(data.level() + 1),
+            customizations: Card::Vertical.default_customizations(),
+            avatar: VALK_PFP.to_string(),
+        };
+        let output = state.sync_render(&context)?;
+        std::fs::write("renderer_test_vertical.png", output).unwrap();
+        Ok(())
+    }
 }

@@ -1,4 +1,4 @@
-{% set_global progress_height = (percentage * 9.6) + 80 %}
+{% set_global progress_height = ((percentage * -9.6) + 80) %}
 <svg version="1.1"
      width="600" height="1200"
      xmlns="http://www.w3.org/2000/svg">
