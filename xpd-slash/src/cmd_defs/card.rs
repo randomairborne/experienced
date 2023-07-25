@@ -62,8 +62,9 @@ pub enum CardCommandEditFont {
     MontserratAlt1,
 }
 
-#[derive(CommandOption, CreateOption)]
+#[derive(CommandOption, CreateOption, Default)]
 pub enum CardCommandEditLayout {
+    #[default]
     #[option(name = "Classic", value = "classic.svg")]
     Classic,
     #[option(name = "Vertical", value = "vertical.svg")]

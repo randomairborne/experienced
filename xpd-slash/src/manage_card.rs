@@ -108,7 +108,7 @@ async fn process_edit(
         edit.background_xp_count.map(|v| v.to_string()),
         edit.font.map(|v| v.value()),
         edit.toy_image.map(|v| v.value()),
-        edit.card_layout.map(|v| v.value()),
+        edit.card_layout.map(|v| v.value()).unwrap_or_default(),
         user.id.get() as i64,
     )
     .execute(&state.db)
