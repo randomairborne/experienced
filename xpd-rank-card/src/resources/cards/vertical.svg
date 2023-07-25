@@ -27,7 +27,7 @@
       fill: {{ customizations.level }};
     }
     .xp-specifics {
-      font-size: 75px;
+      font-size: 40px;
       fill: {{ customizations.foreground_xp_count }};
     }
   </style>
@@ -62,11 +62,15 @@
   <text x="40" y="670" class="stat level">
     {{ level }}
   </text>
-  <text x="180" y="800" class="font xp-specifics" text-anchor="middle">
-    {{ current | integerhumanize }}
+  <text x="440" y="160" class="font xp-specifics" text-anchor="middle">
+    {{ needed | integerhumanize }} xp
   </text>
-  <line x1="60" y1="820" x2="300" y2="820" stroke="{{ customizations.foreground_xp_count }}" stroke-width="10px" />
-  <text x="180" y="890" class="font xp-specifics" text-anchor="middle">
-    {{ needed | integerhumanize }}
+  {% if progress_height > 1000 %}
+  {% set clamped_progress_height = 1000 %}
+  {% else %}
+  {% set clamped_progress_height = progress_height %}
+  {% endif %}
+  <text x="440" y="{{ 1200 - clamped_progress_height }}" class="font xp-specifics" text-anchor="middle">
+    {{ current | integerhumanize }} xp
   </text>
 </svg>

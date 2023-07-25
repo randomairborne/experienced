@@ -54,7 +54,7 @@ impl crate::XpdListener {
         Ok(())
     }
 
-    pub async fn set_user(&self, user: &User) -> Result<(), Error> {
+    pub async fn set_user(&self, user: User) -> Result<(), Error> {
         let discriminator = if user.discriminator == 0 {
             None
         } else {
@@ -65,7 +65,7 @@ impl crate::XpdListener {
             discriminator,
             banner_hash: user.banner,
             avatar_hash: user.avatar,
-            username: Some(user.name.clone()),
+            username: Some(user.name),
         };
         self.redis
             .get()

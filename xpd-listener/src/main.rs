@@ -125,8 +125,8 @@ async fn handle_event(
             )?;
             listener.set_guild(guild_add.0).await?;
         }
-        Event::MemberAdd(member_add) => listener.set_user(&member_add.user).await?,
-        Event::MemberUpdate(member_update) => listener.set_user(&member_update.user).await?,
+        Event::MemberAdd(member_add) => listener.set_user(member_add.member.user).await?,
+        Event::MemberUpdate(member_update) => listener.set_user(member_update.user).await?,
         Event::MemberChunk(member_chunk) => listener.set_chunk(member_chunk.members).await?,
         Event::ThreadCreate(thread) => {
             let _ = http.join_thread(thread.id).await;

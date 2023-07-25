@@ -83,7 +83,7 @@ async fn process_edit(
             card_layout,
             id
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, COALESCE($12, 'classic.svg'), $13
         ) ON CONFLICT (id) DO UPDATE SET
             username = COALESCE($1, custom_card.username),
             rank = COALESCE($2, custom_card.rank),
@@ -108,7 +108,7 @@ async fn process_edit(
         edit.background_xp_count.map(|v| v.to_string()),
         edit.font.map(|v| v.value()),
         edit.toy_image.map(|v| v.value()),
-        edit.card_layout.map(|v| v.value()).unwrap_or_default(),
+        edit.card_layout.map(|v| v.value()),
         user.id.get() as i64,
     )
     .execute(&state.db)

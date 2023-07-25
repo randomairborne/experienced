@@ -182,6 +182,8 @@ pub enum Error {
 #[cfg(test)]
 mod tests {
     const VALK_PFP: &str = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==";
+    use std::thread::JoinHandle;
+
     use super::*;
 
     #[test]
@@ -189,7 +191,7 @@ mod tests {
         let state = SvgState::new();
         let xp = 49;
         let data = mee6::LevelInfo::new(xp);
-        let mut customizations = Card::Vertical.default_customizations();
+        let mut customizations = Card::Classic.default_customizations();
         customizations.toy = Some(Toy::Bee);
         #[allow(
             clippy::cast_precision_loss,
@@ -216,7 +218,7 @@ mod tests {
         let state = SvgState::new();
         let xp = 51;
         let data = mee6::LevelInfo::new(xp);
-        let mut customizations = Card::Vertical.default_customizations();
+        let mut customizations = Card::Classic.default_customizations();
         customizations.toy = Some(Toy::Bee);
         #[allow(
             clippy::cast_precision_loss,
@@ -241,7 +243,7 @@ mod tests {
     #[test]
     fn test_vertical() -> Result<(), Error> {
         let state = SvgState::new();
-        let xp = 495_395;
+        let xp = 99;
         let data = mee6::LevelInfo::new(xp);
         #[allow(
             clippy::cast_precision_loss,
@@ -264,34 +266,41 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn test_vertical_growth() -> Result<(), Error> {
-        for xp in (1..500).step_by(25) {
-            std::fs::create_dir_all("./test-procedural/").unwrap();
-            let state = SvgState::new();
-            let data = mee6::LevelInfo::new(xp);
-            #[allow(
-                clippy::cast_precision_loss,
-                clippy::cast_sign_loss,
-                clippy::cast_possible_truncation
-            )]
-            let context = Context {
-                level: data.level(),
-                rank: 1_000_000,
-                name: "Testy McTestington".to_string(),
-                discriminator: None,
-                percentage: (data.percentage() * 100.0).round() as u64,
-                current: xp,
-                needed: mee6::xp_needed_for_level(data.level() + 1),
-                customizations: Card::Vertical.default_customizations(),
-                avatar: VALK_PFP.to_string(),
-            };
-            let output = state.sync_render(&context)?;
-            std::fs::write(
-                format!("./test-procedural/renderer_test_vertical_{xp}xp.png"),
-                output,
-            )
-            .unwrap();
+    #[ignore]
+    fn test_vertical_procedural() {
+        let mut handles: Vec<JoinHandle<()>> = Vec::with_capacity(100);
+        std::fs::create_dir_all("./test-procedural/").unwrap();
+        for xp in (1..=100).step_by(2) {
+            let spawn = std::thread::spawn(move || {
+                let state = SvgState::new();
+                let data = mee6::LevelInfo::new(xp);
+                #[allow(
+                    clippy::cast_precision_loss,
+                    clippy::cast_sign_loss,
+                    clippy::cast_possible_truncation
+                )]
+                let context = Context {
+                    level: data.level(),
+                    rank: 1_000_000,
+                    name: "Testy McTestington".to_string(),
+                    discriminator: None,
+                    percentage: (data.percentage() * 100.0).round() as u64,
+                    current: xp,
+                    needed: mee6::xp_needed_for_level(data.level() + 1),
+                    customizations: Card::Vertical.default_customizations(),
+                    avatar: VALK_PFP.to_string(),
+                };
+                let output = state.sync_render(&context).unwrap();
+                std::fs::write(
+                    format!("./test-procedural/renderer_test_vertical_{xp:0>3}xp.png"),
+                    output,
+                )
+                .unwrap();
+            });
+            handles.push(spawn);
         }
-        Ok(())
+        for handle in handles {
+            handle.join().unwrap();
+        }
     }
 }
