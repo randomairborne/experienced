@@ -1,10 +1,11 @@
+use crate::Error;
 use redis::AsyncCommands;
 use twilight_model::{
     guild::{Guild, Member},
     user::User,
 };
+use xpd_common::RedisUser;
 
-use crate::Error;
 impl crate::XpdListener {
     pub async fn set_chunk(&self, chunk: Vec<Member>) -> Result<(), Error> {
         let mut user_pairs: Vec<(String, String)> = Vec::with_capacity(chunk.len());
@@ -54,12 +55,24 @@ impl crate::XpdListener {
     }
 
     pub async fn set_user(&self, user: &User) -> Result<(), Error> {
+        let discriminator = if user.discriminator == 0 {
+            None
+        } else {
+            Some(user.discriminator)
+        };
+        let redis_user = RedisUser {
+            id: user.id,
+            discriminator,
+            banner_hash: user.banner,
+            avatar_hash: user.avatar,
+            username: Some(user.name.clone()),
+        };
         self.redis
             .get()
             .await?
             .set::<String, String, ()>(
                 format!("cache-user-{}", user.id.get()),
-                serde_json::to_string(user)?,
+                serde_json::to_string(&redis_user)?,
             )
             .await?;
         Ok(())
