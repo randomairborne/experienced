@@ -15,10 +15,10 @@
       fill: {{ customizations.username }};
     }
     .stat {
-      font-size: 60px;
+      font-size: 100px;
     }
     .stat-name {
-      font-size: 50px;
+      font-size: 75px;
     }
     .rank {
       fill: {{ customizations.rank }};
@@ -36,7 +36,7 @@
   <rect width="160" height="1040" x="360" y="120" rx="15" ry="15" fill="{{ customizations.progress_background }}" />
   <rect width="160" height="{{ progress_height }}" x="360" y="1160" rx="15" ry="15" transform="rotate(180, 440, 1160)" fill="{{ customizations.progress_foreground }}" />
   {% if customizations.toy %}
-  <image id="toy" x="80" y="950" width="200" height="200" href="{{ customizations.toy }}" />
+  <image id="toy" x="90" y="900" width="200" height="200" href="{{ customizations.toy }}" />
   {% endif %}
   <!-- TSpans cannot have font classes. It must wrap the text element. See https://github.com/RazrFalcon/resvg/issues/614 -->
   <text x="300" y="80" class="font" text-anchor="middle">
@@ -50,16 +50,16 @@
     <circle r="150" cx="190" cy="270"/>
   </clipPath>
   <image id="avatar" class="avatar" x="40" y="120" width="300" height="300" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
-  <text x="40" y="480" class="font stat-name rank">
+  <text x="190" y="500" class="font stat-name rank" text-anchor="middle">
     RANK:
   </text>
-  <text x="40" y="540" class="stat rank">
-    #{{ rank }}
+  <text x="190" y="600" class="stat rank" text-anchor="middle">
+    {{ rank }}
   </text>
-  <text x="40" y="610" class="stat-name level">
+  <text x="190" y="700" class="stat-name level" text-anchor="middle">
     LEVEL:
   </text>
-  <text x="40" y="670" class="stat level">
+  <text x="190" y="800" class="stat level" text-anchor="middle">
     {{ level }}
   </text>
   <text x="440" y="160" class="font xp-specifics" text-anchor="middle">

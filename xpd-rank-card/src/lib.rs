@@ -252,7 +252,7 @@ mod tests {
         )]
         let context = Context {
             level: data.level(),
-            rank: 1_000_000,
+            rank: 100_000,
             name: "Testy McTestington".to_string(),
             discriminator: None,
             percentage: (data.percentage() * 100.0).round() as u64,
