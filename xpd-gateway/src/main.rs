@@ -24,6 +24,7 @@ async fn main() {
         std::env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
     let pg =
         std::env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
+    let root_url = std::env::var("ROOT_URL").ok();
     println!("Connecting to database {pg}");
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
@@ -60,7 +61,7 @@ async fn main() {
     println!("Connecting to discord");
     let http = reqwest::Client::new();
     let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
-    let slash = XpdSlash::new(http, client.clone(), my_id, db, redis, None).await;
+    let slash = XpdSlash::new(http, client.clone(), my_id, db, redis, root_url).await;
     let should_shutdown = Arc::new(AtomicBool::new(false));
 
     let mut set = JoinSet::new();
