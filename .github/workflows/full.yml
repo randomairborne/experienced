@@ -40,9 +40,7 @@ jobs:
           name: executables
           path: |
             target/x86_64-unknown-linux-musl/release/xpd-slash
-            target/x86_64-unknown-linux-musl/release/xpd-listener
-            target/x86_64-unknown-linux-musl/release/xpd-web
-            target/x86_64-unknown-linux-musl/release/xpd-lite
+            target/x86_64-unknown-linux-musl/release/xpd-gateway
 
 
   publish:
@@ -51,7 +49,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        module: [xpd-listener, xpd-slash, xpd-web, xpd-lite]
+        module: [xpd-web, xpd-gateway]
     steps:
       - name: Correct env
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
@@ -82,7 +80,7 @@ jobs:
           file: ${{ matrix.module }}/Dockerfile
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.module }}:latest
+          tags: ghcr.io/${{ env.REPO }}:latest
           platforms: linux/amd64
 
       - name: Build unstable container

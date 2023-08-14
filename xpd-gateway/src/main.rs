@@ -4,7 +4,12 @@ use std::sync::{atomic::AtomicBool, Arc};
 use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
+use twilight_model::http::interaction::InteractionResponse;
 use xpd_listener::XpdListener;
+use xpd_slash::XpdSlash;
+
+#[macro_use]
+extern crate tracing;
 
 #[tokio::main]
 async fn main() {
@@ -25,7 +30,6 @@ async fn main() {
         .connect(&pg)
         .await
         .expect("Failed to connect to database");
-
     sqlx::migrate!("../migrations")
         .run(&db)
         .await
@@ -34,11 +38,17 @@ async fn main() {
     let redis = redis_cfg
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))
         .expect("Failed to connect to redis");
-
     let client = twilight_http::Client::new(token.clone());
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS | Intents::GUILD_MEMBERS;
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
+    let my_id = client
+        .current_user_application()
+        .await
+        .expect("Failed to get own app ID!")
+        .model()
+        .await
+        .expect("Failed to convert own app ID!")
+        .id;
     let config = Config::new(token.clone(), intents);
-
     let shards: Vec<Shard> =
         twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
             .await
@@ -46,26 +56,29 @@ async fn main() {
             .collect();
     let senders: Vec<twilight_gateway::MessageSender> =
         shards.iter().map(twilight_gateway::Shard::sender).collect();
-    let http = Arc::new(twilight_http::Client::new(token));
+    let client = Arc::new(twilight_http::Client::new(token));
     println!("Connecting to discord");
-    let state = XpdListener::new(db, redis, http.clone());
+    let http = reqwest::Client::new();
+    let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
+    let slash = XpdSlash::new(http, client.clone(), my_id, db, redis, None).await;
     let should_shutdown = Arc::new(AtomicBool::new(false));
 
     let mut set = JoinSet::new();
 
     for shard in shards {
-        let http = http.clone();
+        let client = client.clone();
         set.spawn(event_loop(
             shard,
-            http,
+            client,
             should_shutdown.clone(),
-            state.clone(),
+            listener.clone(),
+            slash.clone(),
         ));
     }
 
     xpd_common::wait_for_shutdown().await;
 
-    eprintln!("Shutting down..");
+    warn!("Shutting down..");
 
     // Let the shards know not to reconnect
     should_shutdown.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -77,7 +90,7 @@ async fn main() {
 
     // Await all tasks to complete.
     while set.join_next().await.is_some() {}
-    println!("Done, see ya!");
+    info!("Done, see ya!");
 }
 
 async fn event_loop(
@@ -85,22 +98,23 @@ async fn event_loop(
     http: Arc<twilight_http::Client>,
     should_shutdown: Arc<AtomicBool>,
     listener: XpdListener,
+    slash: XpdSlash,
 ) {
-    let sender = shard.sender();
     loop {
-        let sender = sender.clone();
         match shard.next_event().await {
             Ok(event) => {
                 let listener = listener.clone();
                 let http = http.clone();
+                let slash = slash.clone();
+                let sender = shard.sender();
                 tokio::spawn(async move {
-                    if let Err(e) = handle_event(event, http, listener, sender).await {
+                    if let Err(error) = handle_event(event, http, listener, slash, sender).await {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
-                        eprintln!("Handler error: {e}");
+                        error!(?error, "Handler error");
                     }
                 });
             }
-            Err(e) => eprintln!("Shard loop error: {e}"),
+            Err(error) => error!(?error, "Shard loop error"),
         }
         if should_shutdown.load(std::sync::atomic::Ordering::Relaxed) {
             break;
@@ -112,10 +126,14 @@ async fn handle_event(
     event: Event,
     http: Arc<twilight_http::Client>,
     listener: XpdListener,
+    slash: XpdSlash,
     shard: MessageSender,
 ) -> Result<(), Error> {
     match event {
         Event::MessageCreate(msg) => listener.save(*msg).await?,
+        Event::ThreadCreate(thread) => {
+            let _ = http.join_thread(thread.id).await;
+        }
         Event::GuildCreate(guild_add) => {
             shard.command(
                 &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
@@ -128,8 +146,18 @@ async fn handle_event(
         Event::MemberAdd(member_add) => listener.set_user(member_add.member.user).await?,
         Event::MemberUpdate(member_update) => listener.set_user(member_update.user).await?,
         Event::MemberChunk(member_chunk) => listener.set_chunk(member_chunk.members).await?,
-        Event::ThreadCreate(thread) => {
-            let _ = http.join_thread(thread.id).await;
+        Event::InteractionCreate(interaction_create) => {
+            let interaction_token = interaction_create.token.clone();
+            if let Err(error) = slash.client().interaction(slash.id()).create_response(interaction_create.id, &interaction_create.token, &InteractionResponse {
+                kind: twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource,
+                data: None
+            }).await {
+                error!(?error, "Failed to ack discord gateway message");
+            };
+            let response = slash.clone().run(interaction_create.0).await;
+            if let Err(error) = slash.send_followup(response, &interaction_token).await {
+                error!(?error, "Failed to send real response");
+            };
         }
         _ => {}
     };
@@ -142,4 +170,6 @@ pub enum Error {
     Listener(#[from] xpd_listener::Error),
     #[error("Twilight-Gateway error: {0}")]
     Send(#[from] twilight_gateway::error::SendError),
+    #[error("Twilight-Validate error: {0}")]
+    Validate(#[from] twilight_validate::message::MessageValidationError),
 }

@@ -3,7 +3,7 @@ members = [
     "mee6",
     "xpd-slash",
     "xpd-listener",
-    "xpd-lite",
+    "xpd-gateway",
     "xpd-web",
     "xpd-common",
     "xpd-rank-card"
