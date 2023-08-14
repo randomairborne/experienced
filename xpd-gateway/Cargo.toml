@@ -1,5 +1,5 @@
 [package]
-name = "xpd-lite"
+name = "xpd-gateway"
 version = "0.1.0"
 edition = "2021"
 authors = ["valkyrie_pilot <valk@randomairborne.dev>"]

@@ -3555,23 +3555,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "xpd-listener"
-version = "0.1.0"
-dependencies = [
- "deadpool-redis",
- "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand",
- "redis",
- "serde_json",
- "sqlx",
- "thiserror",
- "twilight-http",
- "twilight-model",
- "xpd-common",
-]
-
-[[package]]
-name = "xpd-lite"
+name = "xpd-gateway"
 version = "0.1.0"
 dependencies = [
  "deadpool-redis",
@@ -3589,6 +3573,22 @@ dependencies = [
  "xpd-common",
  "xpd-listener",
  "xpd-slash",
+]
+
+[[package]]
+name = "xpd-listener"
+version = "0.1.0"
+dependencies = [
+ "deadpool-redis",
+ "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand",
+ "redis",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "twilight-http",
+ "twilight-model",
+ "xpd-common",
 ]
 
 [[package]]
