@@ -24,7 +24,9 @@ async fn main() {
         std::env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
     let pg =
         std::env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
-    let root_url = std::env::var("ROOT_URL").ok();
+    let root_url = std::env::var("ROOT_URL")
+        .ok()
+        .map(|v| v.trim_end_matches('/').to_string());
     println!("Connecting to database {pg}");
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
