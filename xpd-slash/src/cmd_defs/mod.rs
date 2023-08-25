@@ -59,6 +59,8 @@ impl XpCommand {
 }
 
 impl SlashState {
+    /// # Panics
+    /// Can panic if setting the global commands fails
     pub async fn register_slashes(&self) {
         let mut cmds = vec![
             XpCommand::create_command().into(),

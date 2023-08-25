@@ -8,3 +8,4 @@ members = [
     "xpd-common",
     "xpd-rank-card"
 ]
+resolver = "2"
