@@ -42,6 +42,10 @@ a:visited {
     font-size: 10vw;
 }
 
+.flex {
+    display: flex;
+}
+
 .navbar {
     display: flex;
     align-items: center;

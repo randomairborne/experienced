@@ -9,6 +9,7 @@ efficient way. View your server leaderboard here. {% endblock description %}
   <div class="title">
     {{ guild.name }}
   </div>
+  <div class="flex">
   <table class="leaderboard">
     {% for user in users %}
     <tr class="leaderboard-user">
@@ -27,15 +28,16 @@ efficient way. View your server leaderboard here. {% endblock description %}
   {% if page > 0 %}
   <a
     class="selfhost-button"
-    href="{{ root_url }}/{{ guild.id }}?page={{ page - 1 }}">
+    href="{{ root_url }}/leaderboard/{{ guild.id }}?page={{ page - 1 }}">
     Last page
   </a>
   {% endif %}
   {% if has_next_page %}
   <a
     class="invite-button"
-    href="{{ root_url }}/{{ guild.id }}?page={{ page + 1 }}">
+    href="{{ root_url }}/leaderboard/{{ guild.id }}?page={{ page + 1 }}">
     Next page
   </a>
   {% endif %}
+  </div>
 {% endblock body %}
