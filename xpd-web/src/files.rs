@@ -98,3 +98,14 @@ pub async fn serve_icon() -> ([(&'static str, &'static str); 2], &'static [u8]) 
         include_bytes!("resources/favicon.png").as_slice(),
     )
 }
+
+#[allow(clippy::unused_async)]
+pub async fn serve_logo() -> ([(&'static str, &'static str); 2], &'static [u8]) {
+    (
+        [
+            ("Content-Type", "image/png"),
+            ("Cache-Control", "max-age=86400"),
+        ],
+        include_bytes!("resources/logo.png").as_slice(),
+    )
+}

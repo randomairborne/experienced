@@ -76,6 +76,7 @@ async fn main() {
         .route("/main.css", get(files::serve_css))
         .route("/MontserratAlt1.woff2", get(files::serve_font))
         .route("/favicon.png", get(files::serve_icon))
+        .route("/logo.png", get(files::serve_logo))
         .route("/robots.txt", get(files::serve_robots))
         .route("/sitemap.txt", get(files::serve_sitemap))
         .route("/leaderboard/:id", get(fetch_stats))
