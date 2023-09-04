@@ -18,7 +18,7 @@ jobs:
     needs: [check]
     steps:
       - name: Check out code into the proper directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install cargo
         uses: dtolnay/rust-toolchain@stable
@@ -52,7 +52,7 @@ jobs:
         module: [xpd-web, xpd-gateway]
     steps:
       - name: Check out code into the proper directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download executables
         uses: actions/download-artifact@v3
