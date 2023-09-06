@@ -15,7 +15,7 @@ use tera::Value;
 
 /// Context is the main argument of [`SvgState::render`], and takes parameters for what to put on
 /// the card.
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct Context {
     /// Level of the user for display
     pub level: u64,
@@ -67,8 +67,9 @@ impl SvgState {
     /// # Errors
     /// Errors if tera has a problem
     pub fn render_svg(&self, context: Context) -> Result<String, Error> {
+        let name = context.customizations.card.name();
         let ctx = tera::Context::from_serialize(context)?;
-        Ok(self.tera.render("svg", &ctx)?)
+        Ok(self.tera.render(name, &ctx)?)
     }
     /// Render the PNG for a card.
     /// # Errors
@@ -245,6 +246,8 @@ mod tests {
         let state = SvgState::new();
         let xp = 99;
         let data = mee6::LevelInfo::new(xp);
+        let mut customizations = Card::Vertical.default_customizations();
+        customizations.font = Font::MontserratAlt1;
         #[allow(
             clippy::cast_precision_loss,
             clippy::cast_sign_loss,
@@ -258,11 +261,13 @@ mod tests {
             percentage: (data.percentage() * 100.0).round() as u64,
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
-            customizations: Card::Vertical.default_customizations(),
+            customizations,
             avatar: VALK_PFP.to_string(),
         };
-        let output = state.sync_render(&context)?;
-        std::fs::write("renderer_test_vertical.png", output).unwrap();
+        let svg = state.render_svg(context.clone())?;
+        let png = state.sync_render(&context)?;
+        std::fs::write("renderer_test_vertical.svg", svg).unwrap();
+        std::fs::write("renderer_test_vertical.png", png).unwrap();
         Ok(())
     }
     #[test]

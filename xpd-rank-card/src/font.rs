@@ -33,6 +33,15 @@ impl Font {
         };
         Some(out)
     }
+    #[must_use]
+    pub(crate) const fn family(self) -> &'static str {
+        match self {
+            Self::JetBrainsMono => "'JetBrains Mono'",
+            Self::Mojang => "Mojang",
+            Self::MontserratAlt1 => "'Montserrat-Alt1'",
+            Self::Roboto => "Roboto",
+        }
+    }
 }
 
 impl Display for Font {
@@ -52,6 +61,6 @@ impl serde::Serialize for Font {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(self.family())
     }
 }

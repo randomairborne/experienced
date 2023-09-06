@@ -4,7 +4,7 @@
      xmlns="http://www.w3.org/2000/svg">
   <style>
     .font {
-      font-family: '{{ customizations.font }}', sans-serif;
+      font-family: {{ customizations.font }}, sans-serif;
     }
     .name {
       font-size: 50px;
@@ -53,13 +53,13 @@
   <text x="190" y="500" class="font stat-name rank" text-anchor="middle">
     RANK:
   </text>
-  <text x="190" y="600" class="stat rank" text-anchor="middle">
+  <text x="190" y="600" class="font stat rank" text-anchor="middle">
     {{ rank }}
   </text>
-  <text x="190" y="700" class="stat-name level" text-anchor="middle">
+  <text x="190" y="700" class="font stat-name level" text-anchor="middle">
     LEVEL:
   </text>
-  <text x="190" y="800" class="stat level" text-anchor="middle">
+  <text x="190" y="800" class="font stat level" text-anchor="middle">
     {{ level }}
   </text>
   <text x="440" y="160" class="font xp-specifics" text-anchor="middle">
