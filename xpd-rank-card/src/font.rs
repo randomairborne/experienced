@@ -9,6 +9,10 @@ pub enum Font {
 }
 
 impl Font {
+    pub const JETBRAINS_MONO_STR: &str = "JetBrains Mono";
+    pub const MOJANG_STR: &str = "Mojang";
+    pub const MONTSERRAT_ALT_1_STR: &str = "Montserrat Alt1";
+    pub const ROBOTO_STR: &str = "Roboto";
     #[must_use]
     pub const fn ttf(&self) -> &'static [u8] {
         match self {
@@ -21,10 +25,10 @@ impl Font {
     #[must_use]
     pub fn from_name(data: &str) -> Option<Self> {
         let out = match data {
-            "JetBrains Mono" => Self::JetBrainsMono,
-            "Mojang" => Self::Mojang,
-            "Monsterrat Alt1" => Self::MontserratAlt1,
-            "Roboto" => Self::Roboto,
+            Self::JETBRAINS_MONO_STR => Self::JetBrainsMono,
+            Self::MOJANG_STR => Self::Mojang,
+            Self::MONTSERRAT_ALT_1_STR => Self::MontserratAlt1,
+            Self::ROBOTO_STR => Self::Roboto,
             _ => return None,
         };
         Some(out)
@@ -34,10 +38,10 @@ impl Font {
 impl Display for Font {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
-            Self::JetBrainsMono => "JetBrains Mono",
-            Self::Mojang => "Mojang",
-            Self::MontserratAlt1 => "Montserrat Alt1",
-            Self::Roboto => "Roboto",
+            Self::JetBrainsMono => Self::JETBRAINS_MONO_STR,
+            Self::Mojang => Self::MOJANG_STR,
+            Self::MontserratAlt1 => Self::MONTSERRAT_ALT_1_STR,
+            Self::Roboto => Self::ROBOTO_STR,
         };
         f.write_str(name)
     }

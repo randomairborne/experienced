@@ -2,7 +2,7 @@
 use twilight_interactions::command::{
     CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
-use xpd_rank_card::customizations::Color;
+use xpd_rank_card::{customizations::Color, Font};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your card to defaults")]
@@ -52,14 +52,25 @@ pub struct CardCommandEdit {
 
 #[derive(CommandOption, CreateOption)]
 pub enum CardCommandEditFont {
-    #[option(name = "Mojangles", value = "Mojang")]
+    #[option(name = "Mojangles", value = 0)]
     Mojang,
-    #[option(name = "Roboto", value = "Roboto")]
+    #[option(name = "Roboto", value = 1)]
     Roboto,
-    #[option(name = "JetBrains Mono", value = "JetBrains Mono")]
+    #[option(name = "JetBrains Mono", value = 2)]
     JetBrainsMono,
-    #[option(name = "Montserrat Alt1", value = "Montserrat Alt1")]
+    #[option(name = "Montserrat Alt1", value = 3)]
     MontserratAlt1,
+}
+
+impl CardCommandEditFont {
+    pub const fn as_xpd_rank_card(&self) -> Font {
+        match self {
+            Self::Mojang => Font::Mojang,
+            Self::Roboto => Font::Roboto,
+            Self::JetBrainsMono => Font::JetBrainsMono,
+            Self::MontserratAlt1 => Font::MontserratAlt1,
+        }
+    }
 }
 
 #[derive(CommandOption, CreateOption, Default)]

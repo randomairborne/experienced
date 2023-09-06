@@ -7,7 +7,10 @@ use twilight_model::{
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 
 use crate::{
-    cmd_defs::{card::CardCommandEdit, CardCommand},
+    cmd_defs::{
+        card::{CardCommandEdit, CardCommandEditFont},
+        CardCommand,
+    },
     Error, SlashState, XpdSlashResponse,
 };
 
@@ -106,7 +109,10 @@ async fn process_edit(
         edit.progress_background.map(|v| v.to_string()),
         edit.foreground_xp_count.map(|v| v.to_string()),
         edit.background_xp_count.map(|v| v.to_string()),
-        edit.font.map(|v| v.value()),
+        edit.font
+            .unwrap_or(CardCommandEditFont::Roboto)
+            .as_xpd_rank_card()
+            .to_string(),
         edit.toy_image.map(|v| v.value()),
         edit.card_layout.map(|v| v.value()),
         user.id.get() as i64,
