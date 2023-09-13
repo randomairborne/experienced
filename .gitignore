@@ -2,3 +2,6 @@ target
 .env
 .DS_Store
 *test*
+
+/.vscode/
+/.idea/
