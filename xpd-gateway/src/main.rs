@@ -5,6 +5,8 @@ use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
 use twilight_model::http::interaction::InteractionResponse;
+use twilight_model::id::marker::UserMarker;
+use twilight_model::id::Id;
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 
@@ -24,6 +26,12 @@ async fn main() {
         std::env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
     let pg =
         std::env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
+    let control_guild =
+        std::env::var("CONTROL_GUILD").expect("Failed to get CONTROL_GUILD environment variable");
+    let owners: Vec<Id<UserMarker>> = std::env::var("OWNERS")
+        .expect("Failed to get OWNERS environment variable")
+        .parse()
+        .expect("OWNERS environment variable was not a valid Vec");
     let root_url = std::env::var("ROOT_URL")
         .ok()
         .map(|v| v.trim_end_matches('/').to_string());

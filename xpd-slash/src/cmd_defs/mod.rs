@@ -1,11 +1,12 @@
-pub mod card;
-pub mod manage;
+use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::CommandBuilder;
 
-use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
-
 use crate::SlashState;
+
+pub mod admin;
+pub mod card;
+pub mod manage;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "help", desc = "Learn about how to use experienced")]
@@ -20,6 +21,24 @@ pub struct LeaderboardCommand;
 pub struct RankCommand {
     #[command(desc = "User to check level of")]
     pub user: Option<ResolvedUser>,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "admin", desc = "Globally manage the bot")]
+#[allow(clippy::large_enum_variant)]
+pub enum AdminCommand {
+    #[command(name = "leave")]
+    Leave(admin::AdminCommandLeave),
+    #[command(name = "resetguild")]
+    ResetGuild(admin::AdminCommandResetGuild),
+    #[command(name = "resetuser")]
+    ResetUser(admin::AdminCommandResetUser),
+    #[command(name = "setnick")]
+    SetNick(admin::AdminCommandSetNick),
+    #[command(name = "banuser")]
+    BanUser(admin::AdminCommandBanUser),
+    #[command(name = "banguild")]
+    BanGuild(admin::AdminCommandBanGuild),
 }
 
 #[derive(CommandModel, CreateCommand)]
@@ -78,5 +97,13 @@ impl SlashState {
             .set_global_commands(&cmds)
             .await
             .expect("Failed to set global commands for bot!");
+        self.client
+            .interaction(self.my_id)
+            .set_guild_commands(
+                self.control_guild,
+                &[AdminCommand::create_command().into()],
+            )
+            .await
+            .expect("Failed to set admin commands");
     }
 }

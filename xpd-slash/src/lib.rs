@@ -16,6 +16,7 @@ pub use response::XpdSlashResponse;
 use parking_lot::Mutex;
 use sqlx::PgPool;
 use std::{collections::VecDeque, sync::Arc};
+use twilight_model::id::marker::UserMarker;
 use twilight_model::{
     application::interaction::Interaction,
     id::{
@@ -45,6 +46,8 @@ impl XpdSlash {
         db: PgPool,
         redis: deadpool_redis::Pool,
         root_url: Option<String>,
+        control_guild: Id<GuildMarker>,
+        owners: Vec<Id<UserMarker>>,
     ) -> Self {
         let svg = SvgState::new();
         let import_queue = ImportQueue::new();
@@ -57,6 +60,8 @@ impl XpdSlash {
             redis,
             import_queue,
             root_url: Arc::new(root_url),
+            control_guild,
+            owners: owners.into(),
         };
         info!("Creating commands...");
         state.register_slashes().await;
@@ -120,6 +125,8 @@ pub struct SlashState {
     pub redis: deadpool_redis::Pool,
     pub import_queue: ImportQueue,
     pub root_url: Arc<Option<String>>,
+    pub owners: Arc<[Id<UserMarker>]>,
+    pub control_guild: Id<GuildMarker>,
 }
 
 pub type ImportQueueMember = (Id<GuildMarker>, String);
