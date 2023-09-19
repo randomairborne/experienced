@@ -1,17 +1,20 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
+#[macro_use]
+extern crate tracing;
+
 use std::sync::{atomic::AtomicBool, Arc};
+
 use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
+use twilight_model::gateway::ShardId;
 use twilight_model::http::interaction::InteractionResponse;
-use twilight_model::id::marker::UserMarker;
+use twilight_model::id::marker::{GuildMarker, UserMarker};
 use twilight_model::id::Id;
+
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
-
-#[macro_use]
-extern crate tracing;
 
 #[tokio::main]
 async fn main() {
@@ -26,12 +29,19 @@ async fn main() {
         std::env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
     let pg =
         std::env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
-    let control_guild =
-        std::env::var("CONTROL_GUILD").expect("Failed to get CONTROL_GUILD environment variable");
+    let control_guild: Id<GuildMarker> = std::env::var("CONTROL_GUILD")
+        .expect("Failed to get CONTROL_GUILD environment variable")
+        .parse()
+        .expect("CONTROL_GUILD must be a valid Discord Snowflake!");
     let owners: Vec<Id<UserMarker>> = std::env::var("OWNERS")
         .expect("Failed to get OWNERS environment variable")
-        .parse()
-        .expect("OWNERS environment variable was not a valid Vec");
+        .split(',')
+        .map(|v| {
+            v.trim()
+                .parse::<Id<UserMarker>>()
+                .expect("One of the values in OWNERS was not a valid ID!")
+        })
+        .collect();
     let root_url = std::env::var("ROOT_URL")
         .ok()
         .map(|v| v.trim_end_matches('/').to_string());
@@ -71,7 +81,17 @@ async fn main() {
     println!("Connecting to discord");
     let http = reqwest::Client::new();
     let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
-    let slash = XpdSlash::new(http, client.clone(), my_id, db, redis, root_url).await;
+    let slash = XpdSlash::new(
+        http,
+        client.clone(),
+        my_id,
+        db,
+        redis,
+        root_url,
+        control_guild,
+        owners,
+    )
+    .await;
     let should_shutdown = Arc::new(AtomicBool::new(false));
 
     let mut set = JoinSet::new();
@@ -141,6 +161,7 @@ async fn handle_event(
     shard: MessageSender,
 ) -> Result<(), Error> {
     match event {
+        Event::Ready(ready) => println!("shard {} on {} got ready (id {})", ready.shard.unwrap_or(ShardId::ONE), ready.user.name, ready.user.id),
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::ThreadCreate(thread) => {
             let _ = http.join_thread(thread.id).await;
@@ -161,7 +182,7 @@ async fn handle_event(
             let interaction_token = interaction_create.token.clone();
             if let Err(error) = slash.client().interaction(slash.id()).create_response(interaction_create.id, &interaction_create.token, &InteractionResponse {
                 kind: twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource,
-                data: None
+                data: None,
             }).await {
                 error!(?error, "Failed to ack discord gateway message");
             };

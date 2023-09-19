@@ -20,7 +20,6 @@ async fn process_app_cmd(
     interaction: Interaction,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
-    #[cfg(debug_assertions)]
     trace!("{interaction:#?}");
     let data = if let Some(data) = interaction.data {
         if let InteractionData::ApplicationCommand(cmd) = data {
@@ -74,6 +73,15 @@ async fn process_slash_cmd(
                 state,
             )
             .await
+        }
+        "admin" => {
+            crate::admin::process_admin(
+                crate::cmd_defs::AdminCommand::from_interaction(data.into())?,
+                interaction_token,
+                guild_id,
+                state,
+            )
+                .await
         }
         "card" => Ok(crate::manage_card::card_update(
             crate::cmd_defs::CardCommand::from_interaction(data.into())?,

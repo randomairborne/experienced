@@ -99,10 +99,7 @@ impl SlashState {
             .expect("Failed to set global commands for bot!");
         self.client
             .interaction(self.my_id)
-            .set_guild_commands(
-                self.control_guild,
-                &[AdminCommand::create_command().into()],
-            )
+            .set_guild_commands(self.control_guild, &[AdminCommand::create_command().into()])
             .await
             .expect("Failed to set admin commands");
     }

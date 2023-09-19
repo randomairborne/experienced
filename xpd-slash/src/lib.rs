@@ -9,6 +9,7 @@ mod manager;
 mod mee6_worker;
 mod processor;
 mod response;
+mod admin;
 
 pub use error::Error;
 pub use response::XpdSlashResponse;
