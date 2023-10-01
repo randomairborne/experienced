@@ -501,19 +501,6 @@ checksum = "8d7439c3735f405729d52c3fbbe4de140eaf938a1fe47d227c27f8254d4302a5"
 
 [[package]]
 name = "deadpool"
-version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "421fe0f90f2ab22016f32a9881be5134fdd71c65298917084b0c7477cbc3856e"
-dependencies = [
- "async-trait",
- "deadpool-runtime",
- "num_cpus",
- "retain_mut",
- "tokio",
-]
-
-[[package]]
-name = "deadpool"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb84100978c1c7b37f09ed3ce3e5f843af02c2a2c431bae5b19230dad2c1b490"
@@ -526,21 +513,11 @@ dependencies = [
 
 [[package]]
 name = "deadpool-redis"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f1760f60ffc6653b4afd924c5792098d8c00d9a3deb6b3d989eac17949dc422"
-dependencies = [
- "deadpool 0.9.5",
- "redis",
-]
-
-[[package]]
-name = "deadpool-redis"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84930e585871d35b8e06d3e03d03e3a8a4c5dc71afa4376c7cd5f9223e1da1ea"
 dependencies = [
- "deadpool 0.10.0",
+ "deadpool",
  "redis",
 ]
 
@@ -1878,12 +1855,6 @@ dependencies = [
  "tiny-skia",
  "usvg",
 ]
-
-[[package]]
-name = "retain_mut"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4389f1d5789befaf6029ebd9f7dac4af7f7e3d61b69d4f30e2ac02b57e7712b0"
 
 [[package]]
 name = "rgb"
@@ -3569,7 +3540,7 @@ dependencies = [
 name = "xpd-gateway"
 version = "0.1.0"
 dependencies = [
- "deadpool-redis 0.13.0",
+ "deadpool-redis",
  "dotenvy",
  "reqwest",
  "sqlx",
@@ -3591,7 +3562,7 @@ dependencies = [
 name = "xpd-listener"
 version = "0.1.0"
 dependencies = [
- "deadpool-redis 0.13.0",
+ "deadpool-redis",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
  "redis",
@@ -3623,7 +3594,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.21.4",
  "cargo_metadata",
- "deadpool-redis 0.13.0",
+ "deadpool-redis",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot",
  "rand",
@@ -3648,7 +3619,7 @@ name = "xpd-web"
 version = "0.1.0"
 dependencies = [
  "axum",
- "deadpool-redis 0.12.0",
+ "deadpool-redis",
  "dotenvy",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "redis",
