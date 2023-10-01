@@ -5,14 +5,18 @@ extern crate tracing;
 
 use std::sync::{atomic::AtomicBool, Arc};
 
+use sqlx::PgPool;
 use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
-use twilight_model::gateway::ShardId;
-use twilight_model::http::interaction::InteractionResponse;
-use twilight_model::id::marker::{GuildMarker, UserMarker};
-use twilight_model::id::Id;
-
+use twilight_model::{
+    gateway::ShardId,
+    http::interaction::{InteractionResponse, InteractionResponseType},
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
+};
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 
@@ -85,7 +89,7 @@ async fn main() {
         http,
         client.clone(),
         my_id,
-        db,
+        db.clone(),
         redis,
         root_url,
         control_guild,
@@ -104,6 +108,7 @@ async fn main() {
             should_shutdown.clone(),
             listener.clone(),
             slash.clone(),
+            db.clone(),
         ));
     }
 
@@ -130,6 +135,7 @@ async fn event_loop(
     should_shutdown: Arc<AtomicBool>,
     listener: XpdListener,
     slash: XpdSlash,
+    db: PgPool,
 ) {
     loop {
         match shard.next_event().await {
@@ -138,8 +144,10 @@ async fn event_loop(
                 let http = http.clone();
                 let slash = slash.clone();
                 let sender = shard.sender();
+                let db = db.clone();
                 tokio::spawn(async move {
-                    if let Err(error) = handle_event(event, http, listener, slash, sender).await {
+                    if let Err(error) = handle_event(event, http, listener, slash, sender, db).await
+                    {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         error!(?error, "Handler error");
                     }
@@ -159,14 +167,28 @@ async fn handle_event(
     listener: XpdListener,
     slash: XpdSlash,
     shard: MessageSender,
+    db: PgPool,
 ) -> Result<(), Error> {
     match event {
-        Event::Ready(ready) => println!("shard {} on {} got ready (id {})", ready.shard.unwrap_or(ShardId::ONE), ready.user.name, ready.user.id),
+        Event::Ready(ready) => println!(
+            "shard {} on {} got ready (id {})",
+            ready.shard.unwrap_or(ShardId::ONE),
+            ready.user.name,
+            ready.user.id
+        ),
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::ThreadCreate(thread) => {
             let _ = http.join_thread(thread.id).await;
         }
         Event::GuildCreate(guild_add) => {
+            if sqlx::query!("SELECT id FROM guild_bans WHERE expires > NOW()")
+                .fetch_optional(&db)
+                .await?
+                .is_some()
+            {
+                http.leave_guild(guild_add.id).await?;
+                return Ok(());
+            }
             shard.command(
                 &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
                     guild_add.id,
@@ -180,10 +202,19 @@ async fn handle_event(
         Event::MemberChunk(member_chunk) => listener.set_chunk(member_chunk.members).await?,
         Event::InteractionCreate(interaction_create) => {
             let interaction_token = interaction_create.token.clone();
-            if let Err(error) = slash.client().interaction(slash.id()).create_response(interaction_create.id, &interaction_create.token, &InteractionResponse {
-                kind: twilight_model::http::interaction::InteractionResponseType::DeferredChannelMessageWithSource,
-                data: None,
-            }).await {
+            if let Err(error) = slash
+                .client()
+                .interaction(slash.id())
+                .create_response(
+                    interaction_create.id,
+                    &interaction_create.token,
+                    &InteractionResponse {
+                        kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                        data: None,
+                    },
+                )
+                .await
+            {
                 error!(?error, "Failed to ack discord gateway message");
             };
             let response = slash.clone().run(interaction_create.0).await;
@@ -204,4 +235,8 @@ pub enum Error {
     Send(#[from] twilight_gateway::error::SendError),
     #[error("Twilight-Validate error: {0}")]
     Validate(#[from] twilight_validate::message::MessageValidationError),
+    #[error("Twilight-Http error: {0}")]
+    Api(#[from] twilight_http::Error),
+    #[error("Postgres error: {0}")]
+    Postgres(#[from] sqlx::Error),
 }

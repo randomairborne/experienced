@@ -1,4 +1,3 @@
-use crate::{Error, SlashState, XpdSlashResponse};
 use twilight_interactions::command::CommandModel;
 use twilight_model::{
     application::{
@@ -8,6 +7,8 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
     user::User,
 };
+
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn process(
     interaction: Interaction,
@@ -77,11 +78,11 @@ async fn process_slash_cmd(
         "admin" => {
             crate::admin::process_admin(
                 crate::cmd_defs::AdminCommand::from_interaction(data.into())?,
-                interaction_token,
                 guild_id,
+                invoker.id,
                 state,
             )
-                .await
+            .await
         }
         "card" => Ok(crate::manage_card::card_update(
             crate::cmd_defs::CardCommand::from_interaction(data.into())?,

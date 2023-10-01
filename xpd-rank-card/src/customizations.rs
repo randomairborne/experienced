@@ -97,6 +97,7 @@ impl Color {
             blue: u8::from_str_radix(&hex[4..=5], 16)?,
         })
     }
+
     #[must_use]
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }

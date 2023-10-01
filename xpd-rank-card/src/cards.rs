@@ -15,6 +15,7 @@ impl Card {
             Self::Vertical => "vertical.svg",
         }
     }
+
     #[must_use]
     pub const fn template(&self) -> &'static str {
         match *self {
@@ -22,6 +23,7 @@ impl Card {
             Self::Vertical => include_str!("resources/cards/vertical.svg"),
         }
     }
+
     #[must_use]
     pub fn from_name(data: &str) -> Option<Self> {
         let out = match data {
@@ -31,6 +33,7 @@ impl Card {
         };
         Some(out)
     }
+
     #[must_use]
     pub const fn default_customizations(&self) -> Customizations {
         match *self {

@@ -1,3 +1,4 @@
+use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     guild::Role,
     id::{
@@ -5,8 +6,6 @@ use twilight_model::{
         Id,
     },
 };
-
-use twilight_interactions::command::{CommandModel, CreateCommand};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(

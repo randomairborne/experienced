@@ -5,13 +5,13 @@ pub mod customizations;
 mod font;
 mod toy;
 
+use std::sync::Arc;
+
 use cards::Card;
 pub use font::Font;
-pub use toy::Toy;
-
 use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
-use std::sync::Arc;
 use tera::Value;
+pub use toy::Toy;
 
 /// Context is the main argument of [`SvgState::render`], and takes parameters for what to put on
 /// the card.
@@ -51,6 +51,7 @@ impl SvgState {
     pub fn new() -> Self {
         Self::default()
     }
+
     /// this function renders an SVG on the internal thread pool, and returns PNG-encoded image
     /// data on completion.
     /// # Errors
@@ -63,6 +64,7 @@ impl SvgState {
         });
         recv.await?
     }
+
     /// This function is very fast. It does not need to be async.
     /// # Errors
     /// Errors if tera has a problem
@@ -71,6 +73,7 @@ impl SvgState {
         let ctx = tera::Context::from_serialize(context)?;
         Ok(self.tera.render(name, &ctx)?)
     }
+
     /// Render the PNG for a card.
     /// # Errors
     /// Errors if tera has a problem, or resvg does.

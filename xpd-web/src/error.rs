@@ -1,5 +1,6 @@
-use crate::AppState;
 use axum::{http::StatusCode, response::Html};
+
+use crate::AppState;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct HttpError {
@@ -11,6 +12,7 @@ impl HttpError {
     pub const fn new(inner: Error, state: AppState) -> Self {
         Self { inner, state }
     }
+
     pub const fn status(&self) -> StatusCode {
         match self.inner {
             Error::Sqlx(_)

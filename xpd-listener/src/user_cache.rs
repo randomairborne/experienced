@@ -1,10 +1,11 @@
-use crate::Error;
 use redis::AsyncCommands;
 use twilight_model::{
     guild::{Guild, Member},
     user::User,
 };
 use xpd_common::RedisUser;
+
+use crate::Error;
 
 impl crate::XpdListener {
     pub async fn set_chunk(&self, chunk: Vec<Member>) -> Result<(), Error> {

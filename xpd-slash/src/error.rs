@@ -22,6 +22,10 @@ pub enum Error {
     InvalidFont,
     #[error("Invalid card")]
     InvalidCard,
+    #[error("This command only works in the control guild!")]
+    NotControlGuild,
+    #[error("This command only works as a control user!")]
+    NotControlUser,
     #[error("There are too many users to import automatically. Please email valk@randomairborne.dev to set up imports for your server.")]
     TooManyUsersForImport,
     #[error("Interaction parser encountered an error: {0}!")]
@@ -30,6 +34,8 @@ pub enum Error {
     TaskPanicked(#[from] tokio::task::JoinError),
     #[error("Discord error: {0}!")]
     TwilightHttp(#[from] twilight_http::Error),
+    #[error("Theoretical discord error: {0}!")]
+    InvalidApiRequest(#[from] twilight_validate::request::ValidationError),
     #[error("HTTP error: {0}!")]
     ReqwestHttp(#[from] reqwest::Error),
     #[error("Invalid constructed message: {0}!")]
@@ -46,6 +52,8 @@ pub enum Error {
     WrongArgumentCount(&'static str),
     #[error("Rust writeln! returned an error: {0}")]
     Fmt(#[from] std::fmt::Error),
+    #[error("Could not convert string to int: {0}")]
+    StrToInt(#[from] std::num::ParseIntError),
     #[error("Redis error: {0}")]
     Redis(#[from] redis::RedisError),
     #[error("Deadpool-Redis error: {0}")]

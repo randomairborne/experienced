@@ -19,7 +19,8 @@ xpd-listener = { path = "../xpd-listener", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 deadpool-redis = { version = "0.12", features = ["rt_tokio_1"] }
 xpd-slash = { path = "../xpd-slash", default-features = false }
-xpd-common = { path = "../xpd-common/", version = "0.0.6" }
+xpd-common = { path = "../xpd-common", version = "0.0.6" }
+twilight-util = { version = "0.15", features = ["builder"] }
 twilight-validate = "0.15"
 twilight-model = "0.15"
 twilight-http = "0.15"

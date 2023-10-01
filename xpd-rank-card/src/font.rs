@@ -9,10 +9,11 @@ pub enum Font {
 }
 
 impl Font {
-    pub const JETBRAINS_MONO_STR: &str = "JetBrains Mono";
-    pub const MOJANG_STR: &str = "Mojang";
-    pub const MONTSERRAT_ALT_1_STR: &str = "Montserrat Alt1";
-    pub const ROBOTO_STR: &str = "Roboto";
+    pub const JETBRAINS_MONO_STR: &'static str = "JetBrains Mono";
+    pub const MOJANG_STR: &'static str = "Mojang";
+    pub const MONTSERRAT_ALT_1_STR: &'static str = "Montserrat Alt1";
+    pub const ROBOTO_STR: &'static str = "Roboto";
+
     #[must_use]
     pub const fn ttf(&self) -> &'static [u8] {
         match self {
@@ -22,6 +23,7 @@ impl Font {
             Self::Roboto => include_bytes!("resources/fonts/Roboto.ttf"),
         }
     }
+
     #[must_use]
     pub fn from_name(data: &str) -> Option<Self> {
         let out = match data {
@@ -33,6 +35,7 @@ impl Font {
         };
         Some(out)
     }
+
     #[must_use]
     pub(crate) const fn family(self) -> &'static str {
         match self {

@@ -17,6 +17,7 @@ impl XpdListener {
         }
         Ok(())
     }
+
     async fn save_msg_send(
         &self,
         guild_id: Id<GuildMarker>,

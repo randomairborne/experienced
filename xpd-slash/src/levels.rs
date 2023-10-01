@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use crate::{Error, SlashState, XpdSlashResponse};
 use base64::Engine;
 use twilight_model::{
     http::attachment::Attachment,
@@ -14,6 +13,8 @@ use xpd_rank_card::{
     customizations::{Color, Customizations},
     Font, Toy,
 };
+
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,

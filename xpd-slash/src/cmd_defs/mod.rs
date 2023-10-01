@@ -35,10 +35,10 @@ pub enum AdminCommand {
     ResetUser(admin::AdminCommandResetUser),
     #[command(name = "setnick")]
     SetNick(admin::AdminCommandSetNick),
-    #[command(name = "banuser")]
-    BanUser(admin::AdminCommandBanUser),
     #[command(name = "banguild")]
     BanGuild(admin::AdminCommandBanGuild),
+    #[command(name = "pardonguild")]
+    PardonGuild(admin::AdminCommandPardonGuild),
 }
 
 #[derive(CommandModel, CreateCommand)]

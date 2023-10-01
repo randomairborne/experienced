@@ -42,6 +42,7 @@ impl Toy {
             Self::Airplane => include_bytes!("resources/icons/valkyrie_pilot/airplane.png"),
         }
     }
+
     #[must_use]
     pub const fn filename(&self) -> &'static str {
         match self {
@@ -63,6 +64,7 @@ impl Toy {
             Self::Airplane => "airplane.png",
         }
     }
+
     #[must_use]
     pub fn from_filename(data: &str) -> Option<Self> {
         let out = match data {

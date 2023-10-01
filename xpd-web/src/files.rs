@@ -1,5 +1,6 @@
-use crate::{error::HttpError, AppState};
 use axum::{extract::State, response::Html};
+
+use crate::{error::HttpError, AppState};
 
 #[allow(clippy::unused_async)]
 pub async fn serve_index(State(state): State<AppState>) -> Result<Html<String>, HttpError> {

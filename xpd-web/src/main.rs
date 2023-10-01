@@ -10,6 +10,7 @@ use axum::{
     response::{Html, Redirect},
     routing::get,
 };
+pub use error::Error;
 use error::HttpError;
 use redis::AsyncCommands;
 use sqlx::PgPool;
@@ -18,8 +19,6 @@ use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,
 };
-
-pub use error::Error;
 use xpd_common::{RedisGuild, RedisUser};
 
 #[macro_use]

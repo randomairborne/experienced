@@ -1,5 +1,7 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
+#![allow(clippy::module_name_repetitions)]
 
+mod admin;
 mod cmd_defs;
 mod error;
 mod help;
@@ -9,19 +11,17 @@ mod manager;
 mod mee6_worker;
 mod processor;
 mod response;
-mod admin;
+
+use std::{collections::VecDeque, sync::Arc};
 
 pub use error::Error;
-pub use response::XpdSlashResponse;
-
 use parking_lot::Mutex;
+pub use response::XpdSlashResponse;
 use sqlx::PgPool;
-use std::{collections::VecDeque, sync::Arc};
-use twilight_model::id::marker::UserMarker;
 use twilight_model::{
     application::interaction::Interaction,
     id::{
-        marker::{ApplicationMarker, GuildMarker},
+        marker::{ApplicationMarker, GuildMarker, UserMarker},
         Id,
     },
 };
@@ -40,6 +40,7 @@ pub struct XpdSlash {
 
 impl XpdSlash {
     /// Make sure to trim your ``root_url`` trailing slash.
+    #[allow(clippy::too_many_arguments)]
     pub async fn new(
         http: reqwest::Client,
         client: Arc<twilight_http::Client>,
@@ -69,6 +70,7 @@ impl XpdSlash {
         tokio::spawn(mee6_worker::do_fetches(state.clone()));
         Self { state }
     }
+
     pub async fn run(self, interaction: Interaction) -> XpdSlashResponse {
         match Box::pin(crate::processor::process(interaction, self.state.clone())).await {
             Ok(val) => val,
@@ -78,14 +80,17 @@ impl XpdSlash {
             }
         }
     }
+
     #[must_use]
     pub fn client(&self) -> Arc<twilight_http::Client> {
         self.state.client.clone()
     }
+
     #[must_use]
     pub const fn id(&self) -> Id<ApplicationMarker> {
         self.state.my_id
     }
+
     /// # Errors
     /// Errors if the message could not be validated
     /// this is stupid
