@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO guild_bans (id, expires) VALUES ($1, CASE WHEN $3 THEN NULL ELSE NOW() + interval '1' day * $2 END)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Float8",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4bcb94ba7053b48b95dd5c4035792e3b4424986e2a3e1b4f9bb7164ff42c8fb9"
+}
