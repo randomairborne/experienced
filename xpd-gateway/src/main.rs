@@ -64,7 +64,7 @@ async fn main() {
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))
         .expect("Failed to connect to redis");
     let client = twilight_http::Client::new(token.clone());
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
     let my_id = client
         .current_user_application()
         .await
@@ -79,8 +79,8 @@ async fn main() {
             .await
             .expect("Failed to create reccomended shard count")
             .collect();
-    let senders: Vec<twilight_gateway::MessageSender> =
-        shards.iter().map(twilight_gateway::Shard::sender).collect();
+    let senders: Vec<MessageSender> =
+        shards.iter().map(Shard::sender).collect();
     let client = Arc::new(twilight_http::Client::new(token));
     println!("Connecting to discord");
     let http = reqwest::Client::new();

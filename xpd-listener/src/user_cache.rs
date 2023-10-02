@@ -16,7 +16,7 @@ impl crate::XpdListener {
             } else {
                 Some(member.user.discriminator)
             };
-            let user = xpd_common::RedisUser {
+            let user = RedisUser {
                 id: member.user.id,
                 username: Some(member.user.name),
                 discriminator,
