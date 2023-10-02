@@ -1,10 +1,22 @@
+use std::fmt::Formatter;
+
 use crate::customizations::{Color, Customizations};
 
-#[derive(Clone, Copy, Debug, Default, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize)]
 pub enum Card {
     #[default]
     Classic,
     Vertical,
+}
+
+impl std::fmt::Display for Card {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let data = match self {
+            Self::Classic => "Classic",
+            Self::Vertical => "Vertical",
+        };
+        f.write_str(data)
+    }
 }
 
 impl Card {

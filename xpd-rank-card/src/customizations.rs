@@ -1,6 +1,6 @@
 use crate::{cards::Card, Error, Font, Toy};
 
-#[derive(serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Serialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Customizations {
     pub username: Color,
     pub rank: Color,
@@ -49,6 +49,13 @@ impl std::fmt::Display for Customizations {
             defaults.background_xp_count
         );
         crate::add_output!(f, "Font", self.font, defaults.font);
+        write!(
+            f,
+            "Toy: `{}`",
+            self.toy
+                .map_or_else(|| "None".to_owned(), |v| v.to_string())
+        )?;
+        crate::add_output!(f, "Card", self.card, defaults.card);
         Ok(())
     }
 }

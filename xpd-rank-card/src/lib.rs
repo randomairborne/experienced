@@ -15,7 +15,7 @@ pub use toy::Toy;
 
 /// Context is the main argument of [`SvgState::render`], and takes parameters for what to put on
 /// the card.
-#[derive(serde::Serialize, Debug, Clone)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Context {
     /// Level of the user for display
     pub level: u64,
@@ -32,7 +32,7 @@ pub struct Context {
     /// Total XP needed to complete this level
     pub needed: u64,
     /// Customization data
-    pub customizations: crate::customizations::Customizations,
+    pub customizations: customizations::Customizations,
     /// Base64-encoded PNG string.
     pub avatar: String,
 }
