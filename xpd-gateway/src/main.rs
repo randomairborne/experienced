@@ -6,9 +6,10 @@ extern crate tracing;
 use std::sync::{atomic::AtomicBool, Arc};
 
 use sqlx::PgPool;
-use tokio::task::JoinSet;
+use tokio::{sync::watch::Receiver, task::JoinSet};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
+use twilight_http::Client as DiscordClient;
 use twilight_model::{
     gateway::ShardId,
     http::interaction::{InteractionResponse, InteractionResponseType},
@@ -17,7 +18,6 @@ use twilight_model::{
         Id,
     },
 };
-use twilight_http::Client as DiscordClient;
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 
@@ -98,17 +98,21 @@ async fn main() {
     )
     .await;
 
-    let (shutdown_trigger, should_shutdown) = tokio::sync::broadcast::channel::<()>(1);
+    let (shutdown_trigger, should_shutdown) = tokio::sync::watch::channel::<bool>(false);
 
     let mut set = JoinSet::new();
 
     for shard in shards {
-        tokio::spawn(cache_refresh_loop(shard.sender(), listener.clone(), client.clone(), should_shutdown.clone()));
+        tokio::spawn(cache_refresh_loop(
+            shard.sender(),
+            client.clone(),
+            shutdown_trigger.subscribe(),
+        ));
         let client = client.clone();
         set.spawn(event_loop(
             shard,
             client,
-            should_shutdown.,
+            should_shutdown,
             listener.clone(),
             slash.clone(),
             db.clone(),
@@ -120,7 +124,7 @@ async fn main() {
     warn!("Shutting down..");
 
     // Let the shards know not to reconnect
-    should_shutdown.store(true, std::sync::atomic::Ordering::Release);
+    shutdown_trigger.send(true).unwrap();
 
     // Tell the shards to shut down
     for sender in senders {
@@ -135,13 +139,17 @@ async fn main() {
 async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
-    should_shutdown: Arc<AtomicBool>,
+    mut should_shutdown: Receiver<()>,
     listener: XpdListener,
     slash: XpdSlash,
     db: PgPool,
 ) {
     loop {
-        match shard.next_event().await {
+        let next_event = tokio::select! {
+            event = shard.next_event() => event,
+            _ = should_shutdown.changed() => break,
+        };
+        match next_event {
             Ok(event) => {
                 let listener = listener.clone();
                 let http = http.clone();
@@ -157,9 +165,6 @@ async fn event_loop(
                 });
             }
             Err(error) => error!(?error, "Shard loop error"),
-        }
-        if should_shutdown.load(std::sync::atomic::Ordering::Acquire) {
-            break;
         }
     }
 }
@@ -239,25 +244,45 @@ async fn handle_event(
 
 const MIN_ID: Id<GuildMarker> = Id::new(1);
 
-async fn cache_refresh_loop(shard: MessageSender, client: Arc<DiscordClient>, should_shutdown: Arc<AtomicBool>) {
+async fn cache_refresh_loop(
+    shard: MessageSender,
+    client: Arc<DiscordClient>,
+    mut should_shutdown: Receiver<()>,
+) {
     let mut current_id = MIN_ID;
     loop {
-        match refresh_cache(shard.clone(),  client.clone(), should_shutdown.clone(), current_id).await {
+        let refresh_result = tokio::select! {
+            result = refresh_cache(
+                shard.clone(),
+                client.clone(),
+                current_id,
+            ) => result,
+            _ = should_shutdown.recv() => break,
+        };
+        match refresh_result {
             Ok(v) => current_id = v,
-            Err(source) => error!(?source, "Failed to update cache")
+            Err(source) => error!(?source, "Failed to update cache"),
         }
     }
 }
 
-async fn refresh_cache(shard: MessageSender, client: Arc<DiscordClient>, should_shutdown: Arc<AtomicBool>, id: Id<GuildMarker>) -> Result<Id<GuildMarker>, Error> {
-    let guilds = client.current_user_guilds().after(id).await?.model().await?;
+async fn refresh_cache(
+    shard: MessageSender,
+    client: Arc<DiscordClient>,
+    id: Id<GuildMarker>,
+) -> Result<Id<GuildMarker>, Error> {
+    let guilds = client
+        .current_user_guilds()
+        .after(id)
+        .await?
+        .model()
+        .await?;
     for guild in &guilds {
         shard.command(
-            &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
-                guild.id,
-            )
+            &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(guild.id)
                 .query("", None),
         )?;
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
     Ok(guilds.last().map_or(MIN_ID, |v| v.id))
 }

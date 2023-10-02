@@ -29,9 +29,7 @@ impl crate::XpdListener {
                 86400,
             );
         }
-        pipe
-            .query_async(&mut self.redis.get().await?)
-            .await?;
+        pipe.query_async(&mut self.redis.get().await?).await?;
         Ok(())
     }
 
