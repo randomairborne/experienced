@@ -9,7 +9,7 @@ use crate::Error;
 
 impl crate::XpdListener {
     pub async fn set_chunk(&self, chunk: Vec<Member>) -> Result<(), Error> {
-        let mut user_pairs: Vec<(String, String)> = Vec::with_capacity(chunk.len());
+        let mut pipe = redis::pipe();
         for member in chunk {
             let discriminator = if member.user.discriminator == 0 {
                 None
@@ -23,15 +23,14 @@ impl crate::XpdListener {
                 avatar_hash: member.user.avatar,
                 banner_hash: member.user.banner,
             };
-            user_pairs.push((
+            pipe.set_ex(
                 format!("cache-user-{}", member.user.id.get()),
                 serde_json::to_string(&user)?,
-            ));
+                86400,
+            );
         }
-        self.redis
-            .get()
-            .await?
-            .mset::<String, String, ()>(user_pairs.as_slice())
+        pipe
+            .query_async(&mut self.redis.get().await?)
             .await?;
         Ok(())
     }

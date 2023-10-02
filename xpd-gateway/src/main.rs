@@ -17,6 +17,7 @@ use twilight_model::{
         Id,
     },
 };
+use twilight_http::Client as DiscordClient;
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 
@@ -84,6 +85,7 @@ async fn main() {
     println!("Connecting to discord");
     let http = reqwest::Client::new();
     let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
+
     let slash = XpdSlash::new(
         http,
         client.clone(),
@@ -95,16 +97,18 @@ async fn main() {
         owners,
     )
     .await;
-    let should_shutdown = Arc::new(AtomicBool::new(false));
+
+    let (shutdown_trigger, should_shutdown) = tokio::sync::broadcast::channel::<()>(1);
 
     let mut set = JoinSet::new();
 
     for shard in shards {
+        tokio::spawn(cache_refresh_loop(shard.sender(), listener.clone(), client.clone(), should_shutdown.clone()));
         let client = client.clone();
         set.spawn(event_loop(
             shard,
             client,
-            should_shutdown.clone(),
+            should_shutdown.,
             listener.clone(),
             slash.clone(),
             db.clone(),
@@ -116,7 +120,7 @@ async fn main() {
     warn!("Shutting down..");
 
     // Let the shards know not to reconnect
-    should_shutdown.store(true, std::sync::atomic::Ordering::Relaxed);
+    should_shutdown.store(true, std::sync::atomic::Ordering::Release);
 
     // Tell the shards to shut down
     for sender in senders {
@@ -130,7 +134,7 @@ async fn main() {
 
 async fn event_loop(
     mut shard: Shard,
-    http: Arc<twilight_http::Client>,
+    http: Arc<DiscordClient>,
     should_shutdown: Arc<AtomicBool>,
     listener: XpdListener,
     slash: XpdSlash,
@@ -154,7 +158,7 @@ async fn event_loop(
             }
             Err(error) => error!(?error, "Shard loop error"),
         }
-        if should_shutdown.load(std::sync::atomic::Ordering::Relaxed) {
+        if should_shutdown.load(std::sync::atomic::Ordering::Acquire) {
             break;
         }
     }
@@ -162,7 +166,7 @@ async fn event_loop(
 
 async fn handle_event(
     event: Event,
-    http: Arc<twilight_http::Client>,
+    http: Arc<DiscordClient>,
     listener: XpdListener,
     slash: XpdSlash,
     shard: MessageSender,
@@ -233,6 +237,31 @@ async fn handle_event(
     Ok(())
 }
 
+const MIN_ID: Id<GuildMarker> = Id::new(1);
+
+async fn cache_refresh_loop(shard: MessageSender, client: Arc<DiscordClient>, should_shutdown: Arc<AtomicBool>) {
+    let mut current_id = MIN_ID;
+    loop {
+        match refresh_cache(shard.clone(),  client.clone(), should_shutdown.clone(), current_id).await {
+            Ok(v) => current_id = v,
+            Err(source) => error!(?source, "Failed to update cache")
+        }
+    }
+}
+
+async fn refresh_cache(shard: MessageSender, client: Arc<DiscordClient>, should_shutdown: Arc<AtomicBool>, id: Id<GuildMarker>) -> Result<Id<GuildMarker>, Error> {
+    let guilds = client.current_user_guilds().after(id).await?.model().await?;
+    for guild in &guilds {
+        shard.command(
+            &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
+                guild.id,
+            )
+                .query("", None),
+        )?;
+    }
+    Ok(guilds.last().map_or(MIN_ID, |v| v.id))
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("listener-library error: {0}")]
@@ -243,6 +272,8 @@ pub enum Error {
     Validate(#[from] twilight_validate::message::MessageValidationError),
     #[error("Twilight-Http error: {0}")]
     Api(#[from] twilight_http::Error),
+    #[error("Twilight-Http deserialization error: {0}")]
+    DeserializeBody(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Postgres error: {0}")]
     Postgres(#[from] sqlx::Error),
 }
