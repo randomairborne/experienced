@@ -79,8 +79,7 @@ async fn main() {
             .await
             .expect("Failed to create reccomended shard count")
             .collect();
-    let senders: Vec<MessageSender> =
-        shards.iter().map(Shard::sender).collect();
+    let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
     let client = Arc::new(twilight_http::Client::new(token));
     println!("Connecting to discord");
     let http = reqwest::Client::new();
