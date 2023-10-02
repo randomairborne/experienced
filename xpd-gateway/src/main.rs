@@ -181,7 +181,7 @@ async fn handle_event(
             let _ = http.join_thread(thread.id).await;
         }
         Event::GuildCreate(guild_add) => {
-            if sqlx::query!("SELECT id FROM guild_bans WHERE expires > NOW()")
+            if sqlx::query!("SELECT id FROM guild_bans WHERE (expires > NOW()) OR (expires IS NULL)")
                 .fetch_optional(&db)
                 .await?
                 .is_some()
