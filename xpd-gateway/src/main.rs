@@ -181,6 +181,7 @@ async fn handle_event(
             let _ = http.join_thread(thread.id).await;
         }
         Event::GuildCreate(guild_add) => {
+            #[allow(clippy::cast_possible_wrap)]
             let db_guild_id = guild_add.id.get() as i64;
             if sqlx::query!(
                 "SELECT id FROM guild_bans WHERE
