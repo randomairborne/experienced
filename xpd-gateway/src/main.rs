@@ -66,6 +66,7 @@ async fn main() {
     let redis = redis_cfg
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))
         .expect("Failed to connect to redis");
+    redis.get().await.expect("Failed to connect to redis");
     let client = twilight_http::Client::new(token.clone());
     let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
     let my_id = client
@@ -154,6 +155,7 @@ async fn event_loop(
             event = shard.next_event() => event,
             _ = should_shutdown.changed() => break,
         };
+        trace!(?next_event, "event");
         match next_event {
             Ok(event) => {
                 let listener = listener.clone();
@@ -187,11 +189,11 @@ async fn handle_event(
 ) -> Result<(), Error> {
     match event {
         Event::Ready(ready) => {
-            println!(
-                "shard {} on {} got ready (id {})",
-                ready.shard.unwrap_or(ShardId::ONE),
-                ready.user.name,
-                ready.user.id,
+            info!(
+                shard_id = ?ready.shard.unwrap_or(ShardId::ONE),
+                name = ready.user.name,
+                id = ready.user.id.get(),
+                "shard got ready",
             );
             let mut guilds = guilds.lock();
             for guild in ready.guilds {
@@ -290,6 +292,7 @@ async fn refresh_cache(
     guilds: AHashSet<Id<GuildMarker>>,
 ) -> Result<(), Error> {
     for guild in &guilds {
+        trace!(guild_id = guild.get(), "Requesting users for guild");
         shard.command(
             &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(*guild)
                 .query("", None),
