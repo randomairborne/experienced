@@ -3562,8 +3562,10 @@ dependencies = [
 name = "xpd-gateway"
 version = "0.1.0"
 dependencies = [
+ "ahash",
  "deadpool-redis",
  "dotenvy",
+ "parking_lot",
  "reqwest",
  "sqlx",
  "thiserror",

@@ -24,6 +24,8 @@ twilight-util = { version = "0.15", features = ["builder"] }
 twilight-validate = "0.15"
 twilight-model = "0.15"
 twilight-http = "0.15"
+parking_lot = "0.12"
 dotenvy = "0.15"
 thiserror = "1"
 tracing = "0.1"
+ahash = "0.8"

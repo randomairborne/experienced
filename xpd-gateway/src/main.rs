@@ -3,8 +3,10 @@
 #[macro_use]
 extern crate tracing;
 
-use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::Arc;
 
+use ahash::AHashSet;
+use parking_lot::Mutex;
 use sqlx::PgPool;
 use tokio::{sync::watch::Receiver, task::JoinSet};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
@@ -98,21 +100,23 @@ async fn main() {
     )
     .await;
 
-    let (shutdown_trigger, should_shutdown) = tokio::sync::watch::channel::<bool>(false);
+    let (shutdown_trigger, should_shutdown) = tokio::sync::watch::channel::<()>(());
 
     let mut set = JoinSet::new();
 
     for shard in shards {
-        tokio::spawn(cache_refresh_loop(
+        let guilds: GuildList = Arc::new(Mutex::new(AHashSet::with_capacity(3000)));
+        set.spawn(cache_refresh_loop(
             shard.sender(),
-            client.clone(),
-            shutdown_trigger.subscribe(),
+            guilds.clone(),
+            should_shutdown.clone(),
         ));
         let client = client.clone();
         set.spawn(event_loop(
             shard,
             client,
-            should_shutdown,
+            guilds,
+            should_shutdown.clone(),
             listener.clone(),
             slash.clone(),
             db.clone(),
@@ -124,7 +128,7 @@ async fn main() {
     warn!("Shutting down..");
 
     // Let the shards know not to reconnect
-    shutdown_trigger.send(true).unwrap();
+    shutdown_trigger.send(()).unwrap();
 
     // Tell the shards to shut down
     for sender in senders {
@@ -139,6 +143,7 @@ async fn main() {
 async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
+    guilds: GuildList,
     mut should_shutdown: Receiver<()>,
     listener: XpdListener,
     slash: XpdSlash,
@@ -156,8 +161,10 @@ async fn event_loop(
                 let slash = slash.clone();
                 let sender = shard.sender();
                 let db = db.clone();
+                let guilds = guilds.clone();
                 tokio::spawn(async move {
-                    if let Err(error) = handle_event(event, http, listener, slash, sender, db).await
+                    if let Err(error) =
+                        handle_event(event, http, guilds, listener, slash, sender, db).await
                     {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         error!(?error, "Handler error");
@@ -172,18 +179,25 @@ async fn event_loop(
 async fn handle_event(
     event: Event,
     http: Arc<DiscordClient>,
+    guilds: GuildList,
     listener: XpdListener,
     slash: XpdSlash,
     shard: MessageSender,
     db: PgPool,
 ) -> Result<(), Error> {
     match event {
-        Event::Ready(ready) => println!(
-            "shard {} on {} got ready (id {})",
-            ready.shard.unwrap_or(ShardId::ONE),
-            ready.user.name,
-            ready.user.id
-        ),
+        Event::Ready(ready) => {
+            println!(
+                "shard {} on {} got ready (id {})",
+                ready.shard.unwrap_or(ShardId::ONE),
+                ready.user.name,
+                ready.user.id,
+            );
+            let mut guilds = guilds.lock();
+            for guild in ready.guilds {
+                guilds.insert(guild.id);
+            }
+        }
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::ThreadCreate(thread) => {
             let _ = http.join_thread(thread.id).await;
@@ -201,9 +215,14 @@ async fn handle_event(
             .await?
             .is_some()
             {
+                trace!(
+                    id = guild_add.id.get(),
+                    "Leaving guild because it is banned"
+                );
                 http.leave_guild(guild_add.id).await?;
                 return Ok(());
             }
+            guilds.lock().insert(guild_add.id);
             shard.command(
                 &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
                     guild_add.id,
@@ -211,6 +230,9 @@ async fn handle_event(
                 .query("", None),
             )?;
             listener.set_guild(guild_add.0).await?;
+        }
+        Event::GuildDelete(guild_delete) => {
+            guilds.lock().remove(&guild_delete.id);
         }
         Event::MemberAdd(member_add) => listener.set_user(member_add.member.user).await?,
         Event::MemberUpdate(member_update) => listener.set_user(member_update.user).await?,
@@ -242,49 +264,39 @@ async fn handle_event(
     Ok(())
 }
 
-const MIN_ID: Id<GuildMarker> = Id::new(1);
+type GuildList = Arc<Mutex<AHashSet<Id<GuildMarker>>>>;
 
 async fn cache_refresh_loop(
     shard: MessageSender,
-    client: Arc<DiscordClient>,
+    guilds: GuildList,
     mut should_shutdown: Receiver<()>,
 ) {
-    let mut current_id = MIN_ID;
     loop {
         let refresh_result = tokio::select! {
             result = refresh_cache(
                 shard.clone(),
-                client.clone(),
-                current_id,
+                guilds.lock().clone()
             ) => result,
-            _ = should_shutdown.recv() => break,
+            _ = should_shutdown.changed() => break,
         };
-        match refresh_result {
-            Ok(v) => current_id = v,
-            Err(source) => error!(?source, "Failed to update cache"),
+        if let Err(source) = refresh_result {
+            error!(?source, "Failed to update cache");
         }
     }
 }
 
 async fn refresh_cache(
     shard: MessageSender,
-    client: Arc<DiscordClient>,
-    id: Id<GuildMarker>,
-) -> Result<Id<GuildMarker>, Error> {
-    let guilds = client
-        .current_user_guilds()
-        .after(id)
-        .await?
-        .model()
-        .await?;
+    guilds: AHashSet<Id<GuildMarker>>,
+) -> Result<(), Error> {
     for guild in &guilds {
         shard.command(
-            &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(guild.id)
+            &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(*guild)
                 .query("", None),
         )?;
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
-    Ok(guilds.last().map_or(MIN_ID, |v| v.id))
+    Ok(())
 }
 
 #[derive(Debug, thiserror::Error)]
