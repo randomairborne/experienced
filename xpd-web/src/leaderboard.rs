@@ -1,15 +1,10 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use axum::{
     extract::{Path, Query, State},
-    handler::{Handler, HandlerWithoutStateExt},
     response::Html,
-    routing::get,
 };
-use axum_extra::routing::RouterExt;
 use redis::AsyncCommands;
-use sqlx::PgPool;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,

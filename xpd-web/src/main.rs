@@ -3,25 +3,14 @@
 mod error;
 mod leaderboard;
 
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
-use axum::{
-    extract::{Path, Query, State},
-    handler::{Handler, HandlerWithoutStateExt},
-    response::Html,
-    routing::get,
-};
+use axum::{handler::Handler, response::Html, routing::get};
 use axum_extra::routing::RouterExt;
 pub use error::Error;
 use error::HttpError;
-use redis::AsyncCommands;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use twilight_model::id::{
-    marker::{GuildMarker, UserMarker},
-    Id,
-};
-use xpd_common::{RedisGuild, RedisUser};
 
 #[macro_use]
 extern crate tracing;
