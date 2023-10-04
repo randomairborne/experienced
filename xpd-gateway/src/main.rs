@@ -8,7 +8,7 @@ use std::sync::Arc;
 use ahash::AHashSet;
 use parking_lot::Mutex;
 use sqlx::PgPool;
-use tokio::{sync::watch::Receiver, task::JoinSet};
+use tokio::{sync::watch::Receiver, task::JoinSet, time::MissedTickBehavior};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
 use twilight_http::Client as DiscordClient;
@@ -269,7 +269,13 @@ async fn cache_refresh_loop(
     guilds: GuildList,
     mut should_shutdown: Receiver<()>,
 ) {
+    let mut timer = tokio::time::interval(std::time::Duration::from_secs(3600));
+    timer.set_missed_tick_behavior(MissedTickBehavior::Delay);
     loop {
+        tokio::select! {
+            _ = should_shutdown.changed() => break,
+            _ = timer.tick() => {}
+        }
         let refresh_result = tokio::select! {
             result = refresh_cache(
                 shard.clone(),
@@ -287,13 +293,15 @@ async fn refresh_cache(
     shard: MessageSender,
     guilds: AHashSet<Id<GuildMarker>>,
 ) -> Result<(), Error> {
+    let mut timer = tokio::time::interval(std::time::Duration::from_secs(1));
+    timer.set_missed_tick_behavior(MissedTickBehavior::Delay);
     for guild in &guilds {
         debug!(guild_id = guild.get(), "Requesting users for guild");
         shard.command(
             &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(*guild)
                 .query("", None),
         )?;
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        timer.tick().await;
     }
     Ok(())
 }
