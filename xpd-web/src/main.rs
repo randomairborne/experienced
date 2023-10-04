@@ -6,6 +6,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Path, Query, State},
+    handler::{Handler, HandlerWithoutStateExt},
     response::Html,
     routing::get,
 };
@@ -56,22 +57,19 @@ async fn main() {
         tera,
         root_url,
     };
-let serve_dir = tower_http::services::ServeDir::new("./static/")
-.append_index_html_on_directories(false)
-.not_found_service(axum::middleware::from_fn_with_state(
-    state.clone(),
-    crate::basic_handler!("404.html"),
-));
-let route = axum::Router::new()
-.route("/", get(crate::basic_handler!("index.html")))
-.route_with_tsr("/privacy/", get(crate::basic_handler!("privacy.html")))
-.route_with_tsr("/terms/", get(crate::basic_handler!("terms.html")))
-.route_with_tsr("/leaderboard/:id", get(fetch_stats))
-.route("/robots.txt", get(crate::basic_handler!("robots.txt")))
-.route("/sitemap.txt", get(crate::basic_handler!("sitemap.txt")))
-.fallback_service(serve_dir)
-.layer(tower_http::compression::CompressionLayer::new())
-.with_state(state);
+    let serve_dir = tower_http::services::ServeDir::new("./static/")
+        .append_index_html_on_directories(false)
+        .not_found_service(crate::basic_handler!("404.html").with_state(state.clone()));
+    let route = axum::Router::new()
+        .route("/", get(crate::basic_handler!("index.html")))
+        .route_with_tsr("/privacy/", get(crate::basic_handler!("privacy.html")))
+        .route_with_tsr("/terms/", get(crate::basic_handler!("terms.html")))
+        .route_with_tsr("/leaderboard/:id", get(fetch_stats))
+        .route("/robots.txt", get(crate::basic_handler!("robots.txt")))
+        .route("/sitemap.txt", get(crate::basic_handler!("sitemap.txt")))
+        .fallback_service(serve_dir)
+        .layer(tower_http::compression::CompressionLayer::new())
+        .with_state(state);
     info!("Server listening on https://0.0.0.0:8080!");
     #[allow(clippy::redundant_pub_crate)]
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
@@ -225,22 +223,20 @@ async fn get_redis_guild(state: &AppState, guild: Id<GuildMarker>) -> Result<Red
 
 #[macro_export]
 macro_rules! basic_handler {
-    ($template:expr) => {
-        {
-            #[allow(clippy::unused_async)]
-            async fn __basic_generated_handler(
-                ::axum::extract::State(state): ::axum::extract::State<AppState>,
-            ) -> Result<Html<String>, HttpError> {
-                let mut context = ::tera::Context::new();
-                context.insert("root_url", &state.root_url);
-                Ok(Html(
-                    state
-                        .tera
-                        .render($template, &context)
-                        .map_err(|e| HttpError::new(e.into(), state))?,
-                ))
-            }
-            __basic_generated_handler
+    ($template:expr) => {{
+        #[allow(clippy::unused_async)]
+        async fn __basic_generated_handler(
+            ::axum::extract::State(state): ::axum::extract::State<AppState>,
+        ) -> Result<Html<String>, HttpError> {
+            let mut context = ::tera::Context::new();
+            context.insert("root_url", &state.root_url);
+            Ok(Html(
+                state
+                    .tera
+                    .render($template, &context)
+                    .map_err(|e| HttpError::new(e.into(), state))?,
+            ))
         }
-    }
+        __basic_generated_handler
+    }};
 }
