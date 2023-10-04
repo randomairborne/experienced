@@ -147,7 +147,6 @@ async fn event_loop(
     db: PgPool,
 ) {
     loop {
-        #[allow(clippy::redundant_pub_crate)]
         let next_event = tokio::select! {
             event = shard.next_event() => event,
             _ = should_shutdown.changed() => break,
@@ -271,7 +270,6 @@ async fn cache_refresh_loop(
     mut should_shutdown: Receiver<()>,
 ) {
     loop {
-        #[allow(clippy::redundant_pub_crate)]
         let refresh_result = tokio::select! {
             result = refresh_cache(
                 shard.clone(),
