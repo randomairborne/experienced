@@ -89,12 +89,12 @@ macro_rules! basic_handler {
         ) -> Result<Html<String>, HttpError> {
             let mut context = ::tera::Context::new();
             context.insert("root_url", &state.root_url);
-            Ok(Html(
-                state
-                    .tera
-                    .render($template, &context)
-                    .map_err(|e| crate::HttpError::new(e.into(), state))?,
-            ))
+            Ok(Html(state.tera.render($template, &context).map_err(
+                |e| {
+                    #[allow(clippy::crate_in_macro_def)]
+                    crate::HttpError::new(e.into(), state)
+                },
+            )?))
         }
         __basic_generated_handler
     }};
