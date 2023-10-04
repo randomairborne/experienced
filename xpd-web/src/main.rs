@@ -30,7 +30,6 @@ async fn main() {
     dotenvy::dotenv().ok();
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::from_env("LOG"))
         .init();
     let database_url =
         std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");

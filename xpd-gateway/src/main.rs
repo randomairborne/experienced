@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+#![deny(clippy::all, clippy::cargo)]
 
 #[macro_use]
 extern crate tracing;
@@ -28,7 +28,7 @@ async fn main() {
     dotenvy::dotenv().ok();
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::from_env("LOG"))
+        .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
     let token =
         std::env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
@@ -52,7 +52,6 @@ async fn main() {
     let root_url = std::env::var("ROOT_URL")
         .ok()
         .map(|v| v.trim_end_matches('/').to_string());
-    println!("Connecting to database {pg}");
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
         .connect(&pg)
@@ -85,7 +84,7 @@ async fn main() {
             .collect();
     let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
     let client = Arc::new(twilight_http::Client::new(token));
-    println!("Connecting to discord");
+    info!("Connecting to discord");
     let http = reqwest::Client::new();
     let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
 
@@ -102,9 +101,7 @@ async fn main() {
     .await;
 
     let (shutdown_trigger, should_shutdown) = tokio::sync::watch::channel::<()>(());
-
     let mut set = JoinSet::new();
-
     for shard in shards {
         let guilds: GuildList = Arc::new(Mutex::new(AHashSet::with_capacity(3000)));
         set.spawn(cache_refresh_loop(
@@ -125,7 +122,6 @@ async fn main() {
     }
 
     xpd_common::wait_for_shutdown().await;
-
     warn!("Shutting down..");
 
     // Let the shards know not to reconnect
@@ -151,6 +147,7 @@ async fn event_loop(
     db: PgPool,
 ) {
     loop {
+        #[allow(clippy::redundant_pub_crate)]
         let next_event = tokio::select! {
             event = shard.next_event() => event,
             _ = should_shutdown.changed() => break,
@@ -217,7 +214,7 @@ async fn handle_event(
             .await?
             .is_some()
             {
-                trace!(
+                debug!(
                     id = guild_add.id.get(),
                     "Leaving guild because it is banned"
                 );
@@ -274,6 +271,7 @@ async fn cache_refresh_loop(
     mut should_shutdown: Receiver<()>,
 ) {
     loop {
+        #[allow(clippy::redundant_pub_crate)]
         let refresh_result = tokio::select! {
             result = refresh_cache(
                 shard.clone(),
@@ -292,7 +290,7 @@ async fn refresh_cache(
     guilds: AHashSet<Id<GuildMarker>>,
 ) -> Result<(), Error> {
     for guild in &guilds {
-        trace!(guild_id = guild.get(), "Requesting users for guild");
+        debug!(guild_id = guild.get(), "Requesting users for guild");
         shard.command(
             &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(*guild)
                 .query("", None),
