@@ -1,0 +1,169 @@
+html,
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #333333;
+    color: #FFFFFF;
+    display: flex;
+    flex-wrap: wrap;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.bot-name {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: linear-gradient(#EEFFEE, #444477);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -moz-text-fill-color: transparent;
+}
+
+a {
+    color: aqua;
+}
+
+a:visited {
+    color: aqua;
+}
+
+.big {
+    width: 100%;
+    margin-top: 10vh;
+    font-size: 10vw;
+}
+
+.stack-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.page-button-pad {
+    margin-top: 5vh;
+}
+
+.navbar {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.navbar-name {
+    padding-top: 1vh;
+    font-size: 40px;
+}
+
+.flex-grow {
+    flex-grow: 10;
+    flex-shrink: 0;
+}
+
+.title {
+    width: 100%;
+    font-size: xx-large;
+    padding: 1vw;
+}
+
+.subtitle {
+    width: 100%;
+    font-size: 2.7vh;
+}
+
+.features {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+}
+
+.feature-list {
+    text-align: left;
+    width: 40%;
+}
+
+.list-spacer {
+    padding-top: 1vh;
+    font-size: 2vh;
+}
+
+.invite-button-container {
+    width: 40%;
+    padding: 1vh;
+    display: flex;
+    justify-content: left;
+}
+
+.invite-button {
+    color: #000000;
+    background-color: #7289DA;
+    border-color: #7289DA;
+    border-style: solid;
+    padding: 1vh;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 120%;
+    width: fit-content;
+}
+
+.invite-button:visited {
+    color: #000000;
+}
+
+.tiny-spacer {
+    width: 8px;
+}
+
+.selfhost-button {
+    color: #FFFFFF;
+    border-color: #7289DA;
+    border-style: solid;
+    padding: 1vh;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 120%;
+}
+
+.selfhost-button:visited {
+    color: #FFFFFF;
+}
+
+.selfhost-button:hover {
+    transition-duration: 200ms;
+    background-color: #7289DA25;
+}
+
+.policy {
+    text-align: left;
+    width: 60%;
+    margin: 5vw;
+}
+
+.leaderboard {
+    list-style: none;
+}
+
+.leaderboard-user {
+    font-size: x-large;
+}
+
+.leaderboard-user-level {
+    color: aqua;
+}
+
+.leaderboard-user-name {
+    text-align: start;
+    min-width: 20ch;
+}
+
+.why-title {
+    font-size: x-large;
+}
+
+.why-paragraph {
+    max-width: 100ch;
+    padding: 1.5ch;
+}
