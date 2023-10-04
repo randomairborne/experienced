@@ -93,7 +93,7 @@ macro_rules! basic_handler {
                 state
                     .tera
                     .render($template, &context)
-                    .map_err(|e| HttpError::new(e.into(), state))?,
+                    .map_err(|e| crate::HttpError::new(e.into(), state))?,
             ))
         }
         __basic_generated_handler
