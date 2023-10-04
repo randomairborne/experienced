@@ -1,15 +1,15 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 mod error;
-mod files;
 
 use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Path, Query, State},
-    response::{Html, Redirect},
+    response::Html,
     routing::get,
 };
+use axum_extra::routing::RouterExt;
 pub use error::Error;
 use error::HttpError;
 use redis::AsyncCommands;
@@ -44,47 +44,34 @@ async fn main() {
     let redis = cfg
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))
         .unwrap();
+    redis.get().await.expect("Failed to connect to redis");
     sqlx::migrate!("../migrations")
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-    let mut tera = tera::Tera::default();
-    tera.add_raw_templates([
-        ("base.html", include_str!("resources/base.html")),
-        ("index.html", include_str!("resources/index.html")),
-        ("404.html", include_str!("resources/404.html")),
-        ("5xx.html", include_str!("resources/5xx.html")),
-        (
-            "leaderboard.html",
-            include_str!("resources/leaderboard.html"),
-        ),
-        ("terms.html", include_str!("resources/terms.html")),
-        ("privacy.html", include_str!("resources/privacy.html")),
-        ("sitemap.txt", include_str!("resources/sitemap.txt")),
-        ("robots.txt", include_str!("resources/robots.txt")),
-    ])
-    .expect("Failed to add templates");
-    let tera = Arc::new(tera);
-    let route = axum::Router::new()
-        .route("/", get(files::serve_index))
-        .route("/privacy/", get(files::serve_privacy))
-        .route("/terms/", get(files::serve_terms))
-        .route("/privacy", get(|| async { Redirect::to("/privacy/") }))
-        .route("/terms", get(|| async { Redirect::to("/terms/") }))
-        .route("/main.css", get(files::serve_css))
-        .route("/MontserratAlt1.woff2", get(files::serve_font))
-        .route("/favicon.png", get(files::serve_icon))
-        .route("/logo.png", get(files::serve_logo))
-        .route("/robots.txt", get(files::serve_robots))
-        .route("/sitemap.txt", get(files::serve_sitemap))
-        .route("/leaderboard/:id", get(fetch_stats))
-        .fallback(files::serve_404)
-        .with_state(AppState {
-            db,
-            redis,
-            tera,
-            root_url,
-        });
+    let tera = Arc::new(tera::Tera::new("./templates/**/*").expect("Failed to build templates"));
+    let state = AppState {
+        db,
+        redis,
+        tera,
+        root_url,
+    };
+let serve_dir = tower_http::services::ServeDir::new("./static/")
+.append_index_html_on_directories(false)
+.not_found_service(axum::middleware::from_fn_with_state(
+    state.clone(),
+    crate::basic_handler!("404.html"),
+));
+let route = axum::Router::new()
+.route("/", get(crate::basic_handler!("index.html")))
+.route_with_tsr("/privacy/", get(crate::basic_handler!("privacy.html")))
+.route_with_tsr("/terms/", get(crate::basic_handler!("terms.html")))
+.route_with_tsr("/leaderboard/:id", get(fetch_stats))
+.route("/robots.txt", get(crate::basic_handler!("robots.txt")))
+.route("/sitemap.txt", get(crate::basic_handler!("sitemap.txt")))
+.fallback_service(serve_dir)
+.layer(tower_http::compression::CompressionLayer::new())
+.with_state(state);
     info!("Server listening on https://0.0.0.0:8080!");
     #[allow(clippy::redundant_pub_crate)]
     axum::Server::bind(&([0, 0, 0, 0], 8080).into())
@@ -234,4 +221,26 @@ async fn get_redis_guild(state: &AppState, guild: Id<GuildMarker>) -> Result<Red
             icon_hash: None,
         }
     })
+}
+
+#[macro_export]
+macro_rules! basic_handler {
+    ($template:expr) => {
+        {
+            #[allow(clippy::unused_async)]
+            async fn __basic_generated_handler(
+                ::axum::extract::State(state): ::axum::extract::State<AppState>,
+            ) -> Result<Html<String>, HttpError> {
+                let mut context = ::tera::Context::new();
+                context.insert("root_url", &state.root_url);
+                Ok(Html(
+                    state
+                        .tera
+                        .render($template, &context)
+                        .map_err(|e| HttpError::new(e.into(), state))?,
+                ))
+            }
+            __basic_generated_handler
+        }
+    }
 }
