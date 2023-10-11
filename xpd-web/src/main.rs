@@ -40,7 +40,8 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-    let tera = Arc::new(tera::Tera::new("./templates/**/*.html").expect("Failed to build templates"));
+    let tera =
+        Arc::new(tera::Tera::new("./templates/**/*.html").expect("Failed to build templates"));
     let state = AppState {
         db,
         redis,
