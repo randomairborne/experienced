@@ -7,7 +7,6 @@ use std::sync::Arc;
 
 use axum::{handler::Handler, response::Html, routing::get};
 use axum_extra::routing::RouterExt;
-pub use error::Error;
 use error::HttpError;
 use sqlx::PgPool;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};

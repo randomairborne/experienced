@@ -11,8 +11,10 @@ use twilight_model::id::{
 };
 use xpd_common::{RedisGuild, RedisUser};
 
-pub use crate::error::{Error, HttpError};
-use crate::AppState;
+use crate::{
+    error::{Error, HttpError},
+    AppState,
+};
 
 #[derive(serde::Serialize, Debug)]
 pub struct User {
