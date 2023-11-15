@@ -47,9 +47,7 @@ async fn process_experience(
         XpCommandExperience::Remove(rm) => {
             modify_user_xp(guild_id, rm.user, -rm.amount, state).await
         }
-        XpCommandExperience::Reset(rst) => {
-            reset_user_xp(guild_id, rst.user, state).await
-        }
+        XpCommandExperience::Reset(rst) => reset_user_xp(guild_id, rst.user, state).await,
     }
 }
 
@@ -93,7 +91,9 @@ async fn reset_user_xp(
     )
     .execute(&state.db)
     .await?;
-    Ok(format!("Deleted <@{user_id}> from my databse in this server!"))
+    Ok(format!(
+        "Deleted <@{user_id}> from my databse in this server!"
+    ))
 }
 
 async fn import_level_data(
