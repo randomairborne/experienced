@@ -35,7 +35,6 @@ async fn process_experience(
     data: XpCommandExperience,
     guild_id: Id<GuildMarker>,
     interaction_token: String,
-
     state: SlashState,
 ) -> Result<String, Error> {
     match data {
@@ -47,6 +46,9 @@ async fn process_experience(
         }
         XpCommandExperience::Remove(rm) => {
             modify_user_xp(guild_id, rm.user, -rm.amount, state).await
+        }
+        XpCommandExperience::Reset(rst) => {
+            reset_user_xp(guild_id, rst.user, state).await
         }
     }
 }
@@ -75,7 +77,23 @@ async fn modify_user_xp(
         "Removed"
     };
     let amount_abs = amount.abs();
-    Ok(format!("{action} {amount_abs} XP from <@!{user_id}>, leaving them with {xp} XP at level {current_level}"))
+    Ok(format!("{action} {amount_abs} XP from <@{user_id}>, leaving them with {xp} XP at level {current_level}"))
+}
+
+async fn reset_user_xp(
+    guild_id: Id<GuildMarker>,
+    user_id: Id<UserMarker>,
+    state: SlashState,
+) -> Result<String, Error> {
+    #[allow(clippy::cast_possible_wrap)]
+    query!(
+        "DELETE FROM levels WHERE id = $1 AND guild = $2",
+        user_id.get() as i64,
+        guild_id.get() as i64
+    )
+    .execute(&state.db)
+    .await?;
+    Ok(format!("Deleted <@{user_id}> from my databse in this server!"))
 }
 
 async fn import_level_data(

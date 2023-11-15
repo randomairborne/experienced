@@ -55,6 +55,8 @@ pub enum XpCommandExperience {
     Add(XpCommandExperienceAdd),
     #[command(name = "remove")]
     Remove(XpCommandExperienceRemove),
+    #[command(name = "reset")]
+    Reset(XpCommandExperienceReset),
     #[command(name = "import")]
     Import(XpCommandExperienceImport),
 }
@@ -83,6 +85,17 @@ pub struct XpCommandExperienceRemove {
     pub user: Id<UserMarker>,
     #[command(desc = "Amount of experience to remove", min_value = 1)]
     pub amount: i64,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "reset",
+    desc = "Reset a user's experienced progress & remove them from the leaderboard",
+    dm_permission = false
+)]
+pub struct XpCommandExperienceReset {
+    #[command(desc = "User to remove")]
+    pub user: Id<UserMarker>,
 }
 
 #[derive(CommandModel, CreateCommand)]
