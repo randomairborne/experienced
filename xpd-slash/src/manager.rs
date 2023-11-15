@@ -92,7 +92,7 @@ async fn reset_user_xp(
     .execute(&state.db)
     .await?;
     Ok(format!(
-        "Deleted <@{user_id}> from my databse in this server!"
+        "Deleted <@{user_id}> from my database in this server!"
     ))
 }
 
