@@ -10,7 +10,7 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
-axum = { version = "0.6", features = ["tokio", "macros", "http1", "http2", "query"], default-features = false }
+axum = { version = "0.7", features = ["tokio", "macros", "http1", "http2", "query"], default-features = false }
 tower-http = { version = "0.4.4", default-features = false, features = ["fs", "compression-full"] }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
