@@ -203,15 +203,15 @@ async fn handle_event(
         Event::GuildCreate(guild_add) => {
             #[allow(clippy::cast_possible_wrap)]
             let db_guild_id = guild_add.id.get() as i64;
-            if sqlx::query!(
+            if !sqlx::query!(
                 "SELECT id FROM guild_bans WHERE
                 ((expires > NOW()) OR (expires IS NULL))
                 AND id = $1",
                 db_guild_id
             )
-            .fetch_optional(&db)
+            .fetch_all(&db)
             .await?
-            .is_some()
+            .is_empty()
             {
                 debug!(
                     id = guild_add.id.get(),
