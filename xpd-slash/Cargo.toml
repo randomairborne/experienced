@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 description = "A slash command handler for experienced"
 repository = "https://github.com/randomairborne/experienced"
-readme = "README.txt"
 license = "EUPL-1.2"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
@@ -16,9 +15,9 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], de
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-features = false }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-deadpool-redis = { version = "0.13", features = ["rt_tokio_1"] }
+deadpool-redis = { version = "0.14", features = ["rt_tokio_1"] }
 xpd-rank-card = { path = "../xpd-rank-card", version = "0.5" }
-redis = { version = "0.23", features = ["aio", "tokio-comp"] }
+redis = { version = "0.24", features = ["aio", "tokio-comp"] }
 twilight-util = { version = "0.15", features = ["builder"] }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 serde = { version = "1", features = ["derive"] }

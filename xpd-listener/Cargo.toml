@@ -5,15 +5,14 @@ edition = "2021"
 authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 description = "A websocket listener for experienced"
 repository = "https://github.com/randomairborne/experienced"
-readme = "README.txt"
 license = "EUPL-1.2"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
-redis = { version = "0.23", default-features = false, features = ["aio"] }
-deadpool-redis = { version = "0.13", features = ["rt_tokio_1"] }
+redis = { version = "0.24", default-features = false, features = ["aio"] }
+deadpool-redis = { version = "0.14", features = ["rt_tokio_1"] }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 twilight-model = "0.15"
 twilight-http = "0.15"
