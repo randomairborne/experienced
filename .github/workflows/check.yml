@@ -22,8 +22,14 @@ jobs:
       - name: Cache rust
         uses: Swatinem/rust-cache@v2
 
-      - name: Check formatting
+      - name: Check Rust formatting
         run: cargo fmt --check
+
+      - name: Install prettier
+        run: npm install
+
+      - name: Check web formatting
+        run: npm run prettier-check
 
       - name: Check build
         run: cargo clippy
