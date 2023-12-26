@@ -42,7 +42,6 @@ jobs:
             target/x86_64-unknown-linux-musl/release/xpd-web
             target/x86_64-unknown-linux-musl/release/xpd-gateway
 
-
   publish:
     runs-on: ubuntu-latest
     needs: [build]
@@ -96,4 +95,3 @@ jobs:
     steps:
       - name: Notify bot of updates
         run: "curl --max-time 30 -H 'Authorization: Bearer ${{ secrets.RESTART_TOKEN }}' https://hooks.valk.sh/xpd-${{ github.ref_name }}"
-

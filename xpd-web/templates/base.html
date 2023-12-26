@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
@@ -14,17 +14,20 @@
     />
     <meta property="og:determiner" content="the" />
     <meta property="og:site_name" content="Experienced" />
-    {# <meta
-      name="description"
-      content="{{ ?? description ?? }}"
-    /> #}
-    {% block extraheaders %}{% endblock extraheaders %}
+    {#
+    <meta name="description" content="{{ ?? description ?? }}" />
+    #} {% block extraheaders %}{% endblock extraheaders %}
   </head>
 
   <body>
     <nav class="navbar">
       <a class="navbar" href="/">
-        <img src="{{ root_url }}/favicon.png" width="50" height="50" alt="Experience orb from Minecraft" />
+        <img
+          src="{{ root_url }}/favicon.png"
+          width="50"
+          height="50"
+          alt="Experience orb from Minecraft"
+        />
         <div class="tiny-spacer"></div>
         <div class="bot-name navbar-name">EXPERIENCED</div>
       </a>

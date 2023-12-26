@@ -26,8 +26,7 @@ description %} {% block extraheaders %}
   >
     Next page
   </a>
-  {% endif %}
-  {% if page > 0 %}
+  {% endif %} {% if page > 0 %}
   <a
     class="selfhost-button page-button-pad"
     href="{{ root_url }}/leaderboard/{{ guild.id }}?page={{ page - 1 }}"
