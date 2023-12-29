@@ -3,12 +3,13 @@
 mod error;
 mod leaderboard;
 
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{handler::Handler, response::Html, routing::get};
 use axum_extra::routing::RouterExt;
 use error::HttpError;
 use sqlx::PgPool;
+use tokio::net::TcpListener;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 #[macro_use]
@@ -50,7 +51,7 @@ async fn main() {
     let serve_dir = tower_http::services::ServeDir::new("./static/")
         .append_index_html_on_directories(false)
         .not_found_service(crate::basic_handler!("404.html").with_state(state.clone()));
-    let route = axum::Router::new()
+    let app = axum::Router::new()
         .route("/", get(crate::basic_handler!("index.html")))
         .route_with_tsr("/privacy/", get(crate::basic_handler!("privacy.html")))
         .route_with_tsr("/terms/", get(crate::basic_handler!("terms.html")))
@@ -61,13 +62,10 @@ async fn main() {
         .layer(tower_http::compression::CompressionLayer::new())
         .with_state(state);
     info!("Server listening on https://0.0.0.0:8080!");
-    #[allow(clippy::redundant_pub_crate)]
-    axum::Server::bind(&([0, 0, 0, 0], 8080).into())
-        .serve(route.into_make_service())
-        .with_graceful_shutdown(async {
-            xpd_common::wait_for_shutdown().await;
-            warn!("Shutting down...");
-        })
+    let bind_address = SocketAddr::from(([0, 0, 0, 0], 8080));
+    let tcp = TcpListener::bind(bind_address).await.unwrap();
+    axum::serve(tcp, app)
+        .with_graceful_shutdown(xpd_common::wait_for_shutdown())
         .await
         .expect("failed to run server!");
 }
