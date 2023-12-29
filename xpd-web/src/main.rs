@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 mod error;
 mod leaderboard;

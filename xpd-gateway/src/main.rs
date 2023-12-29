@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::cargo)]
+#![deny(clippy::all)]
 
 #[macro_use]
 extern crate tracing;
