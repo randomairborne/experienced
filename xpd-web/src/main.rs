@@ -65,7 +65,7 @@ async fn main() {
     let bind_address = SocketAddr::from(([0, 0, 0, 0], 8080));
     let tcp = TcpListener::bind(bind_address).await.unwrap();
     axum::serve(tcp, app)
-        .with_graceful_shutdown(xpd_common::wait_for_shutdown())
+        .with_graceful_shutdown(vss::shutdown_signal())
         .await
         .expect("failed to run server!");
 }

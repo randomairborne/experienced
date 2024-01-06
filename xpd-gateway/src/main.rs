@@ -121,7 +121,7 @@ async fn main() {
         ));
     }
 
-    xpd_common::wait_for_shutdown().await;
+    vss::shutdown_signal().await;
     warn!("Shutting down..");
 
     // Let the shards know not to reconnect

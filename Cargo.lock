@@ -3489,6 +3489,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
+name = "vss"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a14bd433e08e07dfc1a255bab490125ca0ef05f70b6d810337ced217fcc42ac"
+dependencies = [
+ "tokio",
+]
+
+[[package]]
 name = "walkdir"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3838,6 +3847,7 @@ dependencies = [
  "twilight-http",
  "twilight-model",
  "twilight-validate",
+ "vss",
  "xpd-common",
  "xpd-listener",
  "xpd-slash",
@@ -3919,6 +3929,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "twilight-model",
+ "vss",
  "xpd-common",
 ]
 
