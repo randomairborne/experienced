@@ -24,8 +24,15 @@ async fn main() {
         .init();
     let database_url = xpd_common::get_var("DATABASE_URL");
     let redis_url = xpd_common::get_var("REDIS_URL");
-    let raw_root_url = xpd_common::get_var("ROOT_URL");
-    let root_url = Arc::new(raw_root_url.trim_end_matches('/').to_string());
+    let asset_dir = xpd_common::get_var("ASSET_DIR");
+    let template_dir = {
+        let template_dir = xpd_common::get_var("TEMPLATE_DIR");
+        template_dir.trim_end_matches('/').to_owned()
+    };
+    let root_url = {
+        let raw_root_url = xpd_common::get_var("ROOT_URL");
+        Arc::new(raw_root_url.trim_end_matches('/').to_string())
+    };
     info!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)
         .await
@@ -39,15 +46,16 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-    let tera =
-        Arc::new(tera::Tera::new("./templates/**/*.html").expect("Failed to build templates"));
+    let tera = Arc::new(
+        tera::Tera::new(&format!("{template_dir}/**/*.html")).expect("Failed to build templates"),
+    );
     let state = AppState {
         db,
         redis,
         tera,
         root_url,
     };
-    let serve_dir = tower_http::services::ServeDir::new("./static/")
+    let serve_dir = tower_http::services::ServeDir::new(asset_dir)
         .append_index_html_on_directories(false)
         .not_found_service(crate::basic_handler!("404.html").with_state(state.clone()));
     let app = axum::Router::new()
