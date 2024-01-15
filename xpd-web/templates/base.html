@@ -20,33 +20,44 @@
   </head>
 
   <body>
-    <nav class="navbar">
-      <a class="navbar" href="/">
-        <img
-          src="{{ root_url }}/favicon.png"
-          width="50"
-          height="50"
-          alt="Experience orb from Minecraft"
-        />
-        <div class="tiny-spacer"></div>
-        <div class="bot-name navbar-name">EXPERIENCED</div>
+    <nav class="top-nav">
+      <a href="/" class="menu-title navbar">
+          <img
+            src="{{ root_url }}/favicon.png"
+            width="50"
+            height="50"
+            alt="Experience orb"
+          />
+          <div class="tiny-spacer"></div>
+          <div class="bot-name">EXPERIENCED</div>
       </a>
       <div class="flex-grow"></div>
-      <a class="selfhost-button" href="{{ root_url }}/terms/">Terms</a>
-      <div class="tiny-spacer"></div>
-      <a class="selfhost-button" href="{{ root_url }}/privacy/">Privacy</a>
-      <div class="tiny-spacer"></div>
-      <a
-        class="invite-button"
-        href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
-        >Add to Discord</a
-      >
-      <div class="tiny-spacer"></div>
-      <a
-        class="selfhost-button"
-        href="https://github.com/randomairborne/experienced/tree/prod#how-to-self-host-experienced"
-        >Selfhost</a
-      >
+      <input id="menu-toggle" type="checkbox" />
+      <label class="menu-button-container" for="menu-toggle">
+        <div class="menu-button"></div>
+      </label>
+      <ul class="menu">
+        <li>
+          <a class="selfhost-button" href="{{ root_url }}/terms/">Terms</a>
+        </li>
+        <li>
+          <a class="selfhost-button" href="{{ root_url }}/privacy/">Privacy</a>
+        </li>
+        <li>
+          <a
+            class="invite-button"
+            href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
+            >Add to Discord</a
+          >
+        </li>
+        <li>
+          <a
+            class="selfhost-button"
+            href="https://github.com/randomairborne/experienced/tree/prod#how-to-self-host-experienced"
+            >Selfhost</a
+          >
+        </li>
+      </ul>
     </nav>
     {% block body %}{% endblock body %}
   </body>
