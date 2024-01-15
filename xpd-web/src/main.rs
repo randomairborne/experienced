@@ -68,7 +68,7 @@ async fn main() {
         .fallback_service(serve_dir)
         .layer(tower_http::compression::CompressionLayer::new())
         .with_state(state);
-    info!("Server listening on https://0.0.0.0:8080!");
+    info!("Server listening on http://0.0.0.0:8080!");
     let bind_address = SocketAddr::from(([0, 0, 0, 0], 8080));
     let tcp = TcpListener::bind(bind_address).await.unwrap();
     axum::serve(tcp, app)
