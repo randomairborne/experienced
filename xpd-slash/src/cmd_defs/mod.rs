@@ -81,17 +81,15 @@ impl SlashState {
     /// # Panics
     /// Can panic if setting the global commands fails
     pub async fn register_slashes(&self) {
-        let mut cmds = vec![
+        let cmds = vec![
             XpCommand::create_command().into(),
             RankCommand::create_command().into(),
             CardCommand::create_command().into(),
             HelpCommand::create_command().into(),
+            LeaderboardCommand::create_command().into(),
             CommandBuilder::new("Get level", "", CommandType::User).build(),
             CommandBuilder::new("Get author level", "", CommandType::Message).build(),
         ];
-        if self.root_url.is_some() {
-            cmds.push(LeaderboardCommand::create_command().into());
-        }
         self.client
             .interaction(self.my_id)
             .set_global_commands(&cmds)

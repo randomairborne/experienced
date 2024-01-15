@@ -30,18 +30,11 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
-    let token =
-        std::env::var("DISCORD_TOKEN").expect("Failed to get DISCORD_TOKEN environment variable");
-    let redis_url =
-        std::env::var("REDIS_URL").expect("Failed to get REDIS_URL environment variable");
-    let pg =
-        std::env::var("DATABASE_URL").expect("Failed to get DATABASE_URL environment variable");
-    let control_guild: Id<GuildMarker> = std::env::var("CONTROL_GUILD")
-        .expect("Failed to get CONTROL_GUILD environment variable")
-        .parse()
-        .expect("CONTROL_GUILD must be a valid Discord Snowflake!");
-    let owners: Vec<Id<UserMarker>> = std::env::var("OWNERS")
-        .expect("Failed to get OWNERS environment variable")
+    let token = xpd_common::get_var("DISCORD_TOKEN");
+    let redis_url = xpd_common::get_var("REDIS_URL");
+    let pg = xpd_common::get_var("DATABASE_URL");
+    let control_guild: Id<GuildMarker> = xpd_common::parse_var("CONTROL_GUILD");
+    let owners: Vec<Id<UserMarker>> = xpd_common::get_var("OWNERS")
         .split(',')
         .map(|v| {
             v.trim()
@@ -49,9 +42,9 @@ async fn main() {
                 .expect("One of the values in OWNERS was not a valid ID!")
         })
         .collect();
-    let root_url = std::env::var("ROOT_URL")
-        .ok()
-        .map(|v| v.trim_end_matches('/').to_string());
+    let root_url = xpd_common::get_var("ROOT_URL")
+        .trim_end_matches('/')
+        .to_string();
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
         .connect(&pg)

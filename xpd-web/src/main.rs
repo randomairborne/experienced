@@ -22,10 +22,9 @@ async fn main() {
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
         .init();
-    let database_url =
-        std::env::var("DATABASE_URL").expect("Expected environment variable DATABASE_URL");
-    let redis_url = std::env::var("REDIS_URL").expect("Expected environment variable REDIS_URL");
-    let raw_root_url = std::env::var("ROOT_URL").expect("Expected environment variable ROOT_URL");
+    let database_url = xpd_common::get_var("DATABASE_URL");
+    let redis_url = xpd_common::get_var("REDIS_URL");
+    let raw_root_url = xpd_common::get_var("ROOT_URL");
     let root_url = Arc::new(raw_root_url.trim_end_matches('/').to_string());
     info!("Connecting to database {database_url}");
     let db = PgPool::connect(&database_url)

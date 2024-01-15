@@ -195,17 +195,7 @@ fn toy_or_none(toy: &Option<String>) -> Option<Toy> {
     }
 }
 
-pub fn leaderboard(
-    root_url_opt: &Arc<Option<String>>,
-    guild_id: Id<GuildMarker>,
-) -> XpdSlashResponse {
-    let Some(root_url) = root_url_opt.as_ref() else {
-        let embed = EmbedBuilder::new()
-            .description("The leaderboard is disabled for this instance.".to_string())
-            .color(0xFF_00_00)
-            .build();
-        return XpdSlashResponse::new().embeds([embed]);
-    };
+pub fn leaderboard(root_url: &Arc<str>, guild_id: Id<GuildMarker>) -> XpdSlashResponse {
     let guild_link = format!("{root_url}/leaderboard/{guild_id}");
     let embed = EmbedBuilder::new()
         .description(format!("[Click to view the leaderboard!]({guild_link})"))

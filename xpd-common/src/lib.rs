@@ -1,5 +1,7 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
+use std::{fmt::Display, str::FromStr};
+
 use twilight_model::{
     id::{
         marker::{GuildMarker, UserMarker},
@@ -62,4 +64,26 @@ fn name_discrim_to_tag(name: &str, discriminator: u16) -> String {
             twilight_model::user::DiscriminatorDisplay::new(discriminator)
         )
     }
+}
+
+/// Get environment variable and parse it, panicking on failure
+/// # Panics
+/// If the environment variable cannot be found or parsed
+#[must_use]
+pub fn parse_var<T>(key: &str) -> T
+where
+    T: FromStr,
+    T::Err: Display,
+{
+    get_var(key)
+        .parse()
+        .unwrap_or_else(|e| panic!("{key} could not be parsed: {e}"))
+}
+
+/// Get environment variable and parse it, panicking on failure
+/// # Panics
+/// If the environment variable cannot be found or parsed
+#[must_use]
+pub fn get_var(key: &str) -> String {
+    std::env::var(key).unwrap_or_else(|e| panic!("Expected {key} in environment: {e}"))
 }

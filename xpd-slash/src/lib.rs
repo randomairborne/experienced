@@ -47,7 +47,7 @@ impl XpdSlash {
         id: Id<ApplicationMarker>,
         db: PgPool,
         redis: deadpool_redis::Pool,
-        root_url: Option<String>,
+        root_url: String,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
     ) -> Self {
@@ -61,7 +61,7 @@ impl XpdSlash {
             http,
             redis,
             import_queue,
-            root_url: Arc::new(root_url),
+            root_url: root_url.into(),
             control_guild,
             owners: owners.into(),
         };
@@ -72,13 +72,12 @@ impl XpdSlash {
     }
 
     pub async fn run(self, interaction: Interaction) -> XpdSlashResponse {
-        match Box::pin(crate::processor::process(interaction, self.state.clone())).await {
-            Ok(val) => val,
-            Err(e) => {
+        Box::pin(processor::process(interaction, self.state.clone()))
+            .await
+            .unwrap_or_else(|e| {
                 error!("{e}");
                 XpdSlashResponse::new().content(e.to_string())
-            }
-        }
+            })
     }
 
     #[must_use]
@@ -130,7 +129,7 @@ pub struct SlashState {
     pub http: reqwest::Client,
     pub redis: deadpool_redis::Pool,
     pub import_queue: ImportQueue,
-    pub root_url: Arc<Option<String>>,
+    pub root_url: Arc<str>,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
 }
