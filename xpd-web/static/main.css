@@ -10,6 +10,10 @@ body {
   align-items: center;
 }
 
+main {
+  max-width: 90vw;
+}
+
 .bot-name {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-image: linear-gradient(#eeffee, #444477);
@@ -31,7 +35,7 @@ a:visited {
 .big {
   width: 100%;
   margin-top: 10vh;
-  font-size: 10vw;
+  font-size: xx-large;
 }
 
 .stack-vertical {
@@ -48,13 +52,13 @@ a:visited {
   display: flex;
   align-items: center;
   flex-direction: row;
-  width: 100%;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .flex-grow {
-  flex-grow: 10;
+  display: flex;
+  flex-grow: 1;
   flex-shrink: 0;
 }
 
@@ -65,8 +69,8 @@ a:visited {
 }
 
 .subtitle {
-  width: 100%;
-  font-size: 2.7vh;
+  font-size: x-large;
+  text-wrap: normal;
 }
 
 .features {
@@ -82,7 +86,7 @@ a:visited {
 
 .list-spacer {
   padding-top: 1vh;
-  font-size: 2vh;
+  font-size: large;
 }
 
 .invite-button-container {
@@ -100,7 +104,7 @@ a:visited {
   padding: 1vh;
   text-decoration: none;
   border-radius: 10px;
-  font-size: 120%;
+  font-size: larger;
   width: fit-content;
 }
 
@@ -119,7 +123,7 @@ a:visited {
   padding: 1vh;
   text-decoration: none;
   border-radius: 10px;
-  font-size: 120%;
+  font-size: larger;
 }
 
 .selfhost-button:visited {
@@ -159,18 +163,21 @@ a:visited {
 }
 
 .why-paragraph {
-  max-width: 100ch;
+  max-width: 50vw;
   padding: 1.5ch;
 }
 
 .top-nav {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
   color: #fff;
   height: 50px;
+  width: 100vw;
   padding-bottom: 1em;
+  padding-left: 5%;
+  padding-right: 5%;
 }
 
 .menu {
@@ -182,12 +189,15 @@ a:visited {
 }
 
 .menu > li {
-  margin: 0 1rem;
+  margin: 0 3px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menu-title {
-  font-size: 3vh;
+  font-size: xx-large;
 }
 
 .menu-button-container {
@@ -200,7 +210,7 @@ a:visited {
   align-items: center;
 }
 
-#menu-toggle {
+input#menu-toggle {
   display: none;
 }
 
@@ -279,5 +289,9 @@ a:visited {
   }
   .menu > li:not(:last-child) {
     border-bottom: 1px solid #444;
+  }
+
+  .why-paragraph {
+    max-width: 90vw;
   }
 }

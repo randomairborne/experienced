@@ -21,7 +21,7 @@
 
   <body>
     <nav class="top-nav">
-      <a href="/" class="menu-title navbar">
+      <a href="/" class="menu-title">
         <img
           src="{{ root_url }}/favicon.png"
           width="50"
@@ -59,6 +59,6 @@
         </li>
       </ul>
     </nav>
-    {% block body %}{% endblock body %}
+    <main>{% block body %}{% endblock body %}</main>
   </body>
 </html>
