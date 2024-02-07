@@ -13,7 +13,7 @@ categories = ["multimedia::images"]
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1", features = ["sync"] }
 thiserror = "1"
-resvg = "0.37"
+resvg = "0.39"
 png = "0.17"
 rayon = "1"
 tera = "1"

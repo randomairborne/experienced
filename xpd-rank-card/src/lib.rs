@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use cards::Card;
 pub use font::Font;
-use resvg::usvg::{ImageKind, ImageRendering, TreeParsing, TreeTextToPath};
+use resvg::usvg::{ImageKind, ImageRendering};
 use tera::Value;
 pub use toy::Toy;
 
@@ -104,12 +104,15 @@ impl SvgState {
             ..Default::default()
         };
         let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
-        tree.convert_text(&self.fonts);
+        tree.postprocess(Default::default(), &self.fonts);
         let pixmap_size = tree.size.to_int_size();
         let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
             .ok_or(Error::PixmapCreation)?;
-        let retree = resvg::Tree::from_usvg(&tree);
-        retree.render(resvg::tiny_skia::Transform::default(), &mut pixmap.as_mut());
+        resvg::render(
+            &tree,
+            resvg::tiny_skia::Transform::default(),
+            &mut pixmap.as_mut(),
+        );
         Ok(pixmap.encode_png()?)
     }
 }
