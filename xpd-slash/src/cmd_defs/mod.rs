@@ -6,6 +6,7 @@ use crate::SlashState;
 
 pub mod admin;
 pub mod card;
+mod gdpr;
 pub mod manage;
 
 #[derive(CommandModel, CreateCommand)]
@@ -77,6 +78,19 @@ impl XpCommand {
     }
 }
 
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "gdpr",
+    desc = "Exercise your rights under the GDPR",
+    dm_permission = true
+)]
+pub enum GdprCommand {
+    #[command(name = "delete")]
+    Delete(gdpr::GdprCommandDelete),
+    #[command(name = "download")]
+    Download(gdpr::GdprCommandDownload),
+}
+
 impl SlashState {
     /// # Panics
     /// Can panic if setting the global commands fails
@@ -86,6 +100,7 @@ impl SlashState {
             RankCommand::create_command().into(),
             CardCommand::create_command().into(),
             HelpCommand::create_command().into(),
+            GdprCommand::create_command().into(),
             LeaderboardCommand::create_command().into(),
             CommandBuilder::new("Get level", "", CommandType::User).build(),
             CommandBuilder::new("Get author level", "", CommandType::Message).build(),

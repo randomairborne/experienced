@@ -4,6 +4,7 @@
 mod admin;
 mod cmd_defs;
 mod error;
+mod gdpr;
 mod help;
 mod levels;
 mod manage_card;
