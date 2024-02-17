@@ -3,6 +3,7 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_common::id_to_db;
 
 use crate::{Error, SlashState};
 
@@ -71,10 +72,9 @@ async fn fetch(guild_id: Id<GuildMarker>, page: usize, state: &SlashState) -> Re
     let mee6_users = mee6_data.players;
     let mut trans = state.db.begin().await?;
     for user in &mee6_users {
-        #[allow(clippy::cast_possible_wrap)]
         let xp_user = XpUserGuildLevel {
-            id: user.id.get() as i64,
-            guild: guild_id.get() as i64,
+            id: id_to_db(user.id),
+            guild: id_to_db(guild_id),
             xp: user.xp,
         };
         query!(

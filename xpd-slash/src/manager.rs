@@ -5,6 +5,7 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_common::id_to_db;
 
 use crate::{
     cmd_defs::{
@@ -57,18 +58,16 @@ async fn modify_user_xp(
     amount: i64,
     state: SlashState,
 ) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
     let xp = query!(
         "UPDATE levels SET xp = xp + $3 WHERE id = $1 AND guild = $2 RETURNING xp",
-        user_id.get() as i64,
-        guild_id.get() as i64,
+        id_to_db(user_id),
+        id_to_db(guild_id),
         amount
     )
     .fetch_one(&state.db)
     .await?
     .xp;
-    #[allow(clippy::cast_sign_loss)]
-    let current_level = mee6::LevelInfo::new(xp as u64).level();
+    let current_level = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0)).level();
     let action = if amount.is_positive() {
         "Added"
     } else {
@@ -83,11 +82,10 @@ async fn reset_user_xp(
     user_id: Id<UserMarker>,
     state: SlashState,
 ) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
     query!(
         "DELETE FROM levels WHERE id = $1 AND guild = $2",
-        user_id.get() as i64,
-        guild_id.get() as i64
+        id_to_db(user_id),
+        id_to_db(guild_id)
     )
     .execute(&state.db)
     .await?;
@@ -161,12 +159,11 @@ async fn process_rewards_add(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
     query!(
         "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)",
-        options.role.id.get() as i64,
+        id_to_db(options.role.id),
         options.level,
-        guild_id.get() as i64
+        id_to_db(guild_id)
     )
     .execute(&state.db)
     .await?;
@@ -181,21 +178,19 @@ async fn process_rewards_rm(
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
     if let Some(role) = options.role {
-        #[allow(clippy::cast_possible_wrap)]
         query!(
             "DELETE FROM role_rewards WHERE id = $1 AND guild = $2",
-            role.get() as i64,
-            guild_id.get() as i64
+            id_to_db(role),
+            id_to_db(guild_id)
         )
         .execute(&state.db)
         .await?;
         return Ok(format!("Removed role reward <@&{role}>!"));
     } else if let Some(level) = options.level {
-        #[allow(clippy::cast_possible_wrap)]
         query!(
             "DELETE FROM role_rewards WHERE requirement = $1 AND guild = $2",
             level,
-            guild_id.get() as i64
+            id_to_db(guild_id)
         )
         .execute(&state.db)
         .await?;
@@ -209,10 +204,9 @@ async fn process_rewards_list(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
     let roles = query!(
         "SELECT * FROM role_rewards WHERE guild = $1",
-        guild_id.get() as i64
+        id_to_db(guild_id)
     )
     .fetch_all(&state.db)
     .await?;

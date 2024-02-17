@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use cards::Card;
 pub use font::Font;
-use resvg::usvg::{ImageKind, ImageRendering};
+use resvg::usvg::{ImageKind, ImageRendering, PostProcessingSteps};
 use tera::Value;
 pub use toy::Toy;
 
@@ -104,7 +104,7 @@ impl SvgState {
             ..Default::default()
         };
         let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
-        tree.postprocess(Default::default(), &self.fonts);
+        tree.postprocess(PostProcessingSteps::default(), &self.fonts);
         let pixmap_size = tree.size.to_int_size();
         let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
             .ok_or(Error::PixmapCreation)?;
@@ -193,6 +193,16 @@ mod tests {
 
     use super::*;
 
+    fn percentify(percentage: f64) -> u64 {
+        #[allow(
+            clippy::cast_precision_loss,
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation
+        )]
+        let percentage = (percentage * 100.0).round() as u64;
+        percentage
+    }
+
     #[test]
     fn test_classic_l() -> Result<(), Error> {
         let state = SvgState::new();
@@ -200,17 +210,12 @@ mod tests {
         let data = mee6::LevelInfo::new(xp);
         let mut customizations = Card::Classic.default_customizations();
         customizations.toy = Some(Toy::Bee);
-        #[allow(
-            clippy::cast_precision_loss,
-            clippy::cast_sign_loss,
-            clippy::cast_possible_truncation
-        )]
         let context = Context {
             level: data.level(),
             rank: 1,
             name: "Testy McTestington".to_string(),
             discriminator: None,
-            percentage: (data.percentage() * 100.0).round() as u64,
+            percentage: percentify(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
             customizations,
@@ -227,17 +232,12 @@ mod tests {
         let data = mee6::LevelInfo::new(xp);
         let mut customizations = Card::Classic.default_customizations();
         customizations.toy = Some(Toy::Bee);
-        #[allow(
-            clippy::cast_precision_loss,
-            clippy::cast_sign_loss,
-            clippy::cast_possible_truncation
-        )]
         let context = Context {
             level: data.level(),
             rank: 1,
             name: "Testy McTestington".to_string(),
             discriminator: None,
-            percentage: (data.percentage() * 100.0).round() as u64,
+            percentage: percentify(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
             customizations,
@@ -254,17 +254,12 @@ mod tests {
         let data = mee6::LevelInfo::new(xp);
         let mut customizations = Card::Vertical.default_customizations();
         customizations.font = Font::MontserratAlt1;
-        #[allow(
-            clippy::cast_precision_loss,
-            clippy::cast_sign_loss,
-            clippy::cast_possible_truncation
-        )]
         let context = Context {
             level: data.level(),
             rank: 100_000,
             name: "Testy McTestington".to_string(),
             discriminator: None,
-            percentage: (data.percentage() * 100.0).round() as u64,
+            percentage: percentify(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
             customizations,
@@ -295,7 +290,7 @@ mod tests {
                     rank: 1_000_000,
                     name: "Testy McTestington".to_string(),
                     discriminator: None,
-                    percentage: (data.percentage() * 100.0).round() as u64,
+                    percentage: percentify(data.percentage()),
                     current: xp,
                     needed: mee6::xp_needed_for_level(data.level() + 1),
                     customizations: Card::Vertical.default_customizations(),

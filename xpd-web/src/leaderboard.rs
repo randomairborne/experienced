@@ -9,7 +9,7 @@ use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,
 };
-use xpd_common::{RedisGuild, RedisUser};
+use xpd_common::{id_to_db, RedisGuild, RedisUser};
 
 use crate::{
     error::{Error, HttpError},
@@ -48,10 +48,10 @@ pub async fn fetch_stats(
     let guild = get_redis_guild(&state, guild_id)
         .await
         .map_err(|e| HttpError::new(e, state.clone()))?;
-    #[allow(clippy::cast_possible_wrap)]
+
     let user_rows = sqlx::query!(
         "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
-        guild_id.get() as i64,
+        id_to_db(guild_id),
         PAGE_SIZE + 1,
         offset
     )
@@ -69,12 +69,12 @@ pub async fn fetch_stats(
         .into_iter()
         .enumerate()
         .map(|(i, v)| {
+            ids_to_indices.insert(Id::new(u64::try_from(v.id).unwrap_or(0)), i);
             #[allow(clippy::cast_sign_loss)]
-            ids_to_indices.insert(Id::new(v.id as u64), i);
-            #[allow(clippy::cast_sign_loss)]
+            let id = v.id as u64;
             User {
-                id: v.id as u64,
-                level: mee6::LevelInfo::new(v.xp as u64).level(),
+                id,
+                level: mee6::LevelInfo::new(u64::try_from(v.xp).unwrap_or(0)).level(),
                 name: None,
                 discriminator: None,
             }

@@ -5,6 +5,7 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
+use xpd_common::id_to_db;
 
 use crate::{
     cmd_defs::{
@@ -31,15 +32,11 @@ pub async fn card_update<'a>(
             Arc::new(invoker),
         ),
     };
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_id = guild_id.get() as i64;
-    #[allow(clippy::cast_possible_wrap)]
-    let referenced_user_id = referenced_user.id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-        referenced_user_id,
-        guild_id
+        id_to_db(referenced_user.id),
+        id_to_db(guild_id)
     )
     .fetch_optional(&state.db)
     .await?
@@ -47,7 +44,7 @@ pub async fn card_update<'a>(
     let rank = query!(
         "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
         xp,
-        guild_id
+        id_to_db(guild_id)
     )
     .fetch_one(&state.db)
     .await?
@@ -55,7 +52,7 @@ pub async fn card_update<'a>(
     .unwrap_or(0)
         + 1;
     #[allow(clippy::cast_sign_loss)]
-    let level_info = mee6::LevelInfo::new(xp as u64);
+    let level_info = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0));
     let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, rank).await?;
     let embed = EmbedBuilder::new()
         .description(contents)
@@ -69,7 +66,8 @@ async fn process_edit(
     state: &SlashState,
     user: &User,
 ) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
+    // todo: Write a single function to replace all these damn closures
+
     query!(
         "INSERT INTO custom_card (
             username,
@@ -115,7 +113,7 @@ async fn process_edit(
             .to_string(),
         edit.toy_image.map(|v| v.value()),
         edit.card_layout.map(|v| v.value()),
-        user.id.get() as i64,
+        id_to_db(user.id),
     )
     .execute(&state.db)
     .await?;
@@ -124,13 +122,9 @@ async fn process_edit(
 }
 
 async fn process_reset(state: &SlashState, user: &User) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    query!(
-        "DELETE FROM custom_card WHERE id = $1",
-        user.id.get() as i64
-    )
-    .execute(&state.db)
-    .await?;
+    query!("DELETE FROM custom_card WHERE id = $1", id_to_db(user.id))
+        .execute(&state.db)
+        .await?;
     Ok("Card settings cleared!".to_string())
 }
 

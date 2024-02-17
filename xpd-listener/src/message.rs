@@ -3,11 +3,9 @@ use redis::AsyncCommands;
 use sqlx::query;
 use twilight_model::{
     gateway::payload::incoming::MessageCreate,
-    id::{
-        marker::{GuildMarker, RoleMarker},
-        Id,
-    },
+    id::{marker::GuildMarker, Id},
 };
+use xpd_common::{db_to_id, id_to_db};
 
 use crate::{Error, XpdListener};
 impl XpdListener {
@@ -27,32 +25,34 @@ impl XpdListener {
         let has_sent: bool = self.redis.get().await?.get(&has_sent_key).await?;
         if !msg.author.bot && !has_sent {
             let xp_count: i64 = rand::thread_rng().gen_range(15..=25);
-            #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
-            let xp = query!(
-                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp=levels.xp+excluded.xp RETURNING xp",
-                msg.author.id.get() as i64,
+            let xp_record = query!(
+                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3)
+                    ON CONFLICT (id, guild)
+                    DO UPDATE SET xp=levels.xp+excluded.xp
+                    RETURNING xp",
+                id_to_db(msg.author.id),
                 xp_count,
-                guild_id.get() as i64
+                id_to_db(guild_id)
             )
             .fetch_one(&self.db)
-            .await?.xp as u64;
+            .await?;
+            let xp = u64::try_from(xp_record.xp).unwrap_or(0);
             self.redis
                 .get()
                 .await?
                 .set_ex(&has_sent_key, true, 60)
                 .await?;
             let level_info = mee6::LevelInfo::new(xp);
-            #[allow(clippy::cast_sign_loss, clippy::cast_possible_wrap)]
             let reward = query!(
                 "SELECT id FROM role_rewards
                     WHERE guild = $1 AND requirement <= $2
                     ORDER BY requirement DESC LIMIT 1",
-                guild_id.get() as i64,
-                level_info.level() as i64
+                id_to_db(guild_id),
+                i64::try_from(level_info.level()).unwrap_or(i64::MAX)
             )
             .fetch_optional(&self.db)
             .await?
-            .map(|v| Id::<RoleMarker>::new(v.id as u64));
+            .map(|v| db_to_id(v.id));
             if let Some(reward) = reward {
                 if let Some(member) = &msg.member {
                     if member.roles.contains(&reward) {

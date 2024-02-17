@@ -3,6 +3,7 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_common::id_to_db;
 
 use crate::{
     cmd_defs::{
@@ -46,17 +47,14 @@ async fn do_leave(state: SlashState, leave: AdminCommandLeave) -> Result<String,
 
 async fn do_reset_guild(state: SlashState, leave: AdminCommandResetGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = leave.guild.parse()?;
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_db = guild.get() as i64;
-    query!("DELETE FROM levels WHERE guild = $1", guild_db)
+    query!("DELETE FROM levels WHERE guild = $1", id_to_db(guild))
         .execute(&state.db)
         .await?;
     Ok(format!("Reset levels for guild {guild}"))
 }
 
 async fn do_reset_user(state: SlashState, leave: AdminCommandResetUser) -> Result<String, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_db = leave.user.get() as i64;
+    let guild_db = id_to_db(leave.user);
     query!("DELETE FROM levels WHERE id = $1", guild_db)
         .execute(&state.db)
         .await?;
@@ -81,15 +79,13 @@ async fn do_set_nick(state: SlashState, nick: AdminCommandSetNick) -> Result<Str
 
 async fn do_ban_guild(state: SlashState, ban: AdminCommandBanGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = ban.guild.parse()?;
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_db = guild.get() as i64;
     query!(
         "INSERT INTO guild_bans (id, expires) \
             VALUES ($1, \
             CASE WHEN $3 \
             THEN NULL \
             ELSE NOW() + interval '1' day * $2 END)",
-        guild_db,
+        id_to_db(guild),
         ban.duration,
         ban.duration.is_none()
     )
@@ -103,9 +99,7 @@ async fn do_pardon_guild(
     pardon: AdminCommandPardonGuild,
 ) -> Result<String, Error> {
     let guild: Id<GuildMarker> = pardon.guild.parse()?;
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_db = guild.get() as i64;
-    query!("DELETE FROM guild_bans WHERE id = $1", guild_db)
+    query!("DELETE FROM guild_bans WHERE id = $1", id_to_db(guild))
         .execute(&state.db)
         .await?;
     Ok(format!("Pardoned guild {guild}"))

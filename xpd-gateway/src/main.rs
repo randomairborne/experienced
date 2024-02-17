@@ -20,6 +20,7 @@ use twilight_model::{
         Id,
     },
 };
+use xpd_common::id_to_db;
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 
@@ -194,13 +195,11 @@ async fn handle_event(
             let _ = http.join_thread(thread.id).await;
         }
         Event::GuildCreate(guild_add) => {
-            #[allow(clippy::cast_possible_wrap)]
-            let db_guild_id = guild_add.id.get() as i64;
             if !sqlx::query!(
                 "SELECT id FROM guild_bans WHERE
                 ((expires > NOW()) OR (expires IS NULL))
                 AND id = $1",
-                db_guild_id
+                id_to_db(guild_add.id)
             )
             .fetch_all(&db)
             .await?

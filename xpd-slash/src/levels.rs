@@ -7,7 +7,7 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::Tag;
+use xpd_common::{id_to_db, Tag};
 use xpd_rank_card::{
     cards::Card,
     customizations::{Color, Customizations},
@@ -23,14 +23,12 @@ pub async fn get_level(
     state: SlashState,
     interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    let guild_id = guild_id.get() as i64;
     // Select current XP from the database, return 0 if there is no row
-    #[allow(clippy::cast_possible_wrap)]
+
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-        user.id.get() as i64,
-        guild_id
+        id_to_db(user.id),
+        id_to_db(guild_id)
     )
     .fetch_optional(&state.db)
     .await?
@@ -38,15 +36,14 @@ pub async fn get_level(
     let rank = query!(
         "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
         xp,
-        guild_id
+        id_to_db(guild_id)
     )
     .fetch_one(&state.db)
     .await?
     .count
     .unwrap_or(0)
         + 1;
-    #[allow(clippy::cast_sign_loss)]
-    let level_info = mee6::LevelInfo::new(xp as u64);
+    let level_info = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0));
     let content = if user.bot {
         "Bots aren't ranked, that would be silly!".to_string()
     } else if invoker == user {
@@ -98,6 +95,7 @@ pub async fn gen_card(
         clippy::cast_sign_loss,
         clippy::cast_possible_truncation
     )]
+    let percentage = (level_info.percentage() * 100.0).round() as u64;
     let png = state
         .svg
         .render(xpd_rank_card::Context {
@@ -105,7 +103,7 @@ pub async fn gen_card(
             rank,
             name: user.name.clone(),
             discriminator,
-            percentage: (level_info.percentage() * 100.0).round() as u64,
+            percentage,
             current: level_info.xp(),
             needed: mee6::xp_needed_for_level(level_info.level() + 1),
             customizations,
@@ -131,13 +129,9 @@ pub async fn get_customizations(
     state: SlashState,
     user: Arc<User>,
 ) -> Result<Customizations, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    let customizations = query!(
-        "SELECT * FROM custom_card WHERE id = $1",
-        user.id.get() as i64
-    )
-    .fetch_optional(&state.db)
-    .await?;
+    let customizations = query!("SELECT * FROM custom_card WHERE id = $1", id_to_db(user.id))
+        .fetch_optional(&state.db)
+        .await?;
     let Some(customizations) = customizations else {
         return Ok(Card::default().default_customizations());
     };

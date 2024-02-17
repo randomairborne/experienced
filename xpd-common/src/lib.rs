@@ -88,6 +88,7 @@ pub fn get_var(key: &str) -> String {
     std::env::var(key).unwrap_or_else(|e| panic!("Expected {key} in environment: {e}"))
 }
 
+/// This is basically a no-op. It fetches a field on a struct through a method and casts it
 #[must_use]
 #[inline]
 pub const fn id_to_db<T>(id: Id<T>) -> i64 {
@@ -97,6 +98,7 @@ pub const fn id_to_db<T>(id: Id<T>) -> i64 {
     }
 }
 
+/// Create a new checked twilight id from an i64. Only get this from the DB!
 #[must_use]
 #[inline]
 pub const fn db_to_id<T>(db: i64) -> Id<T> {
