@@ -8,7 +8,10 @@ use twilight_model::{
     user::User,
 };
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{
+    cmd_defs::{AdminCommand, CardCommand, GdprCommand, XpCommand},
+    Error, SlashState, XpdSlashResponse,
+};
 
 pub async fn process(
     interaction: Interaction,
@@ -68,7 +71,7 @@ async fn process_slash_cmd(
         }
         "xp" => {
             crate::manager::process_xp(
-                crate::cmd_defs::XpCommand::from_interaction(data.into())?,
+                XpCommand::from_interaction(data.into())?,
                 interaction_token,
                 guild_id,
                 state,
@@ -77,7 +80,7 @@ async fn process_slash_cmd(
         }
         "admin" => {
             crate::admin::process_admin(
-                crate::cmd_defs::AdminCommand::from_interaction(data.into())?,
+                AdminCommand::from_interaction(data.into())?,
                 guild_id,
                 invoker.id,
                 state,
@@ -85,10 +88,16 @@ async fn process_slash_cmd(
             .await
         }
         "card" => Ok(crate::manage_card::card_update(
-            crate::cmd_defs::CardCommand::from_interaction(data.into())?,
+            CardCommand::from_interaction(data.into())?,
             invoker,
             &state,
             guild_id,
+        )
+        .await?),
+        "gdpr" => Ok(crate::gdpr::process_gdpr(
+            state,
+            GdprCommand::from_interaction(data.into())?,
+            invoker,
         )
         .await?),
         "leaderboard" => Ok(crate::levels::leaderboard(&state.root_url, guild_id)),

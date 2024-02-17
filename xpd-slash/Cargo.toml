@@ -29,6 +29,7 @@ tracing = "0.1"
 base64 = "0.21"
 thiserror = "1"
 mee6 = "0.1"
+csv = "1"
 
 
 [dev-dependencies]

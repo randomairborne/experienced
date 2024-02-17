@@ -3,6 +3,7 @@ use twilight_model::{
     channel::message::{AllowedMentions, Component, Embed, MessageFlags},
     http::{attachment::Attachment, interaction::InteractionResponseData},
 };
+use twilight_util::builder::embed::EmbedBuilder;
 
 #[derive(Debug, Default, Clone)]
 #[allow(clippy::module_name_repetitions)]
@@ -23,6 +24,12 @@ impl XpdSlashResponse {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    #[must_use]
+    pub fn with_embed_text(text: impl Into<String>) -> Self {
+        let embed = EmbedBuilder::new().description(text).build();
+        Self::new().embeds([embed])
     }
 
     #[must_use]

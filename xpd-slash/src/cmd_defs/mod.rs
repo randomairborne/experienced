@@ -6,7 +6,7 @@ use crate::SlashState;
 
 pub mod admin;
 pub mod card;
-mod gdpr;
+pub mod gdpr;
 pub mod manage;
 
 #[derive(CommandModel, CreateCommand)]

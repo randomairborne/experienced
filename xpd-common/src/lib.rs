@@ -87,3 +87,19 @@ where
 pub fn get_var(key: &str) -> String {
     std::env::var(key).unwrap_or_else(|e| panic!("Expected {key} in environment: {e}"))
 }
+
+#[must_use]
+#[inline]
+pub const fn id_to_db<T>(id: Id<T>) -> i64 {
+    #[allow(clippy::cast_possible_wrap)]
+    {
+        id.get() as i64
+    }
+}
+
+#[must_use]
+#[inline]
+pub const fn db_to_id<T>(db: i64) -> Id<T> {
+    #[allow(clippy::cast_sign_loss)]
+    Id::new(db as u64)
+}
