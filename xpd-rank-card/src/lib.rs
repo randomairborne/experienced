@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use cards::Card;
 pub use font::Font;
-use resvg::usvg::{ImageKind, ImageRendering, PostProcessingSteps};
+use resvg::usvg::{fontdb::Database, ImageKind, ImageRendering};
 use tera::Value;
 pub use toy::Toy;
 
@@ -83,13 +83,15 @@ impl SvgState {
             &tera::Context::from_serialize(context)?,
         )?;
         let resolve_data = Box::new(
-            |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
-                "image/png" => Some(ImageKind::PNG(data)),
-                "image/jpg" | "image/jpeg" => Some(ImageKind::JPEG(data)),
-                _ => None,
+            |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options, _: &Database| {
+                match mime {
+                    "image/png" => Some(ImageKind::PNG(data)),
+                    "image/jpg" | "image/jpeg" => Some(ImageKind::JPEG(data)),
+                    _ => None,
+                }
             },
         );
-        let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
+        let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options, _: &Database| {
             Some(ImageKind::PNG(
                 Toy::from_filename(href)?.png().to_vec().into(),
             ))
@@ -103,9 +105,8 @@ impl SvgState {
             font_family: context.customizations.font.to_string(),
             ..Default::default()
         };
-        let mut tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
-        tree.postprocess(PostProcessingSteps::default(), &self.fonts);
-        let pixmap_size = tree.size.to_int_size();
+        let tree = resvg::usvg::Tree::from_str(&svg, &opt, &self.fonts)?;
+        let pixmap_size = tree.size().to_int_size();
         let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
             .ok_or(Error::PixmapCreation)?;
         resvg::render(
