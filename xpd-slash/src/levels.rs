@@ -21,7 +21,6 @@ pub async fn get_level(
     user: User,
     invoker: User,
     state: SlashState,
-    interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
     // Select current XP from the database, return 0 if there is no row
 
@@ -50,8 +49,7 @@ pub async fn get_level(
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(&state, user, level_info, rank, interaction_token)
-                .await;
+            return generate_level_response(&state, user, level_info, rank).await;
         }
     } else if xp == 0 {
         format!(
@@ -59,7 +57,7 @@ pub async fn get_level(
             user.tag()
         )
     } else {
-        return generate_level_response(&state, user, level_info, rank, interaction_token).await;
+        return generate_level_response(&state, user, level_info, rank).await;
     };
     Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(content).build()]))
 }
@@ -69,7 +67,6 @@ async fn generate_level_response(
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
-    _interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
     let card = gen_card(state.clone(), Arc::new(user), level_info, rank).await?;
     Ok(XpdSlashResponse::new().attachments([card]))

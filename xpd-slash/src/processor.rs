@@ -44,12 +44,8 @@ async fn process_app_cmd(
         CommandType::ChatInput => {
             process_slash_cmd(data, guild_id, invoker, state, interaction.token).await
         }
-        CommandType::User => {
-            process_user_cmd(data, guild_id, invoker, state, interaction.token).await
-        }
-        CommandType::Message => {
-            process_msg_cmd(data, guild_id, invoker, state, interaction.token).await
-        }
+        CommandType::User => process_user_cmd(data, guild_id, invoker, state).await,
+        CommandType::Message => process_msg_cmd(data, guild_id, invoker, state).await,
         _ => Err(Error::WrongInteractionData),
     }
 }
@@ -67,7 +63,7 @@ async fn process_slash_cmd(
             let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
                 .user
                 .map_or_else(|| invoker.clone(), |v| v.resolved);
-            crate::levels::get_level(guild_id, target, invoker, state, interaction_token).await
+            crate::levels::get_level(guild_id, target, invoker, state).await
         }
         "xp" => {
             crate::manager::process_xp(
@@ -110,7 +106,6 @@ async fn process_user_cmd(
     guild_id: Id<GuildMarker>,
     invoker: User,
     state: SlashState,
-    interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
     let user = data
@@ -120,7 +115,7 @@ async fn process_user_cmd(
         .users
         .get(&msg_id.cast())
         .ok_or(Error::NoTarget)?;
-    crate::levels::get_level(guild_id, user.clone(), invoker, state, interaction_token).await
+    crate::levels::get_level(guild_id, user.clone(), invoker, state).await
 }
 
 async fn process_msg_cmd(
@@ -128,7 +123,6 @@ async fn process_msg_cmd(
     guild_id: Id<GuildMarker>,
     invoker: User,
     state: SlashState,
-    interaction_token: String,
 ) -> Result<XpdSlashResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
     let user = &data
@@ -139,5 +133,5 @@ async fn process_msg_cmd(
         .get(&msg_id.cast())
         .ok_or(Error::NoTarget)?
         .author;
-    crate::levels::get_level(guild_id, user.clone(), invoker, state, interaction_token).await
+    crate::levels::get_level(guild_id, user.clone(), invoker, state).await
 }
