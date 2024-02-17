@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT guild, xp FROM levels WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "xp",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "84e4f4ec01b9a6653ebc80a5932e253d22f7a692a681eb3d1d07231cf2903908"
+}
