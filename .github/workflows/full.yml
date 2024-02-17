@@ -35,7 +35,7 @@ jobs:
         run: cargo b --release --target x86_64-unknown-linux-musl
 
       - name: Upload executables
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: executables
           path: |
@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download executables
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: executables
           path: executables
