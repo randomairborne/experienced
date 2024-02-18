@@ -9,7 +9,7 @@ use xpd_common::id_to_db;
 
 use crate::{
     cmd_defs::{
-        card::{CardCommandEdit, CardCommandEditFont},
+        card::{CardCommandEdit, CardCommandEditFont, ColorOption},
         CardCommand,
     },
     Error, SlashState, XpdSlashResponse,
@@ -66,8 +66,6 @@ async fn process_edit(
     state: &SlashState,
     user: &User,
 ) -> Result<String, Error> {
-    // todo: Write a single function to replace all these damn closures
-
     query!(
         "INSERT INTO custom_card (
             username,
@@ -98,15 +96,15 @@ async fn process_edit(
             font = COALESCE($10, custom_card.font),
             toy_image = COALESCE($11, custom_card.toy_image),
             card_layout = COALESCE($12, custom_card.card_layout)",
-        edit.username.map(|v| v.to_string()),
-        edit.rank.map(|v| v.to_string()),
-        edit.level.map(|v| v.to_string()),
-        edit.border.map(|v| v.to_string()),
-        edit.background.map(|v| v.to_string()),
-        edit.progress_foreground.map(|v| v.to_string()),
-        edit.progress_background.map(|v| v.to_string()),
-        edit.foreground_xp_count.map(|v| v.to_string()),
-        edit.background_xp_count.map(|v| v.to_string()),
+        edit.username.map(ColorOption::string),
+        edit.rank.map(ColorOption::string),
+        edit.level.map(ColorOption::string),
+        edit.border.map(ColorOption::string),
+        edit.background.map(ColorOption::string),
+        edit.progress_foreground.map(ColorOption::string),
+        edit.progress_background.map(ColorOption::string),
+        edit.foreground_xp_count.map(ColorOption::string),
+        edit.background_xp_count.map(ColorOption::string),
         edit.font
             .unwrap_or(CardCommandEditFont::Roboto)
             .as_xpd_rank_card()

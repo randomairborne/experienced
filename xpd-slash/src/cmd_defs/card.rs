@@ -124,6 +124,12 @@ pub enum CardCommandEditToy {
 
 pub struct ColorOption(Color);
 
+impl ColorOption {
+    pub fn string(self) -> String {
+        self.to_string()
+    }
+}
+
 impl std::ops::Deref for ColorOption {
     type Target = Color;
 
