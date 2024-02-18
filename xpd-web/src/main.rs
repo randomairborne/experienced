@@ -5,7 +5,7 @@ mod leaderboard;
 
 use std::{net::SocketAddr, sync::Arc};
 
-use axum::{handler::Handler, response::Html, routing::get};
+use axum::{handler::Handler, routing::get};
 use axum_extra::routing::RouterExt;
 use error::HttpError;
 use sqlx::PgPool;
@@ -47,7 +47,7 @@ async fn main() {
         .await
         .expect("Failed to run database migrations!");
     let tera = Arc::new(
-        tera::Tera::new(&format!("{template_dir}/**/*.html")).expect("Failed to build templates"),
+        tera::Tera::new(&format!("{template_dir}/**/*")).expect("Failed to build templates"),
     );
     let state = AppState {
         db,
@@ -90,16 +90,20 @@ macro_rules! basic_handler {
     ($template:expr) => {{
         #[allow(clippy::unused_async)]
         async fn __basic_generated_handler(
-            ::axum::extract::State(state): ::axum::extract::State<AppState>,
-        ) -> Result<Html<String>, HttpError> {
+            ::axum::extract::State(state): ::axum::extract::State<$crate::AppState>,
+        ) -> ::axum::response::Response {
+            use ::axum::response::IntoResponse;
             let mut context = ::tera::Context::new();
             context.insert("root_url", &state.root_url);
-            Ok(Html(
-                state
-                    .tera
-                    .render($template, &context)
-                    .map_err(|e| $crate::HttpError::new(e.into(), state))?,
-            ))
+            let rendered = match state.tera.render($template, &context) {
+                Ok(v) => v,
+                Err(e) => return $crate::HttpError::new(e.into(), state).into_response(),
+            };
+            if $template.ends_with(".html") {
+                ::axum::response::Html(rendered).into_response()
+            } else {
+                rendered.into_response()
+            }
         }
         __basic_generated_handler
     }};
