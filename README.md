@@ -14,13 +14,17 @@ First, we need to create a Discord application. Go to [https://discord.com/devel
 Give it a nice name, then click continue. Now we need to create a .env file, which should look like this:
 
 ```dotenv
-DISCORD_TOKEN=
 DATABASE_URL=
+DISCORD_TOKEN=
 REDIS_URL=
+CONTROL_GUILD=
+OWNERS=
+ROOT_URL=
 ```
 
 Go to the `Bot` tab. This will show you a `Reset Token` button. Clicking this should reveal and copy your bot token,
-which should then be filled into the `DISCORD_TOKEN`. Then, customize your bot to your heart's content. No gateway intents are needed. While you are legally within your rights to do so, please do not self-host public instances of Experienced.
+which should then be filled into the `DISCORD_TOKEN`. Then, customize your bot to your heart's content. No gateway intents are needed. 
+While you are legally within your rights to do so, please do not self-host public instances of Experienced.
 
 ### Preparing your server
 
@@ -28,7 +32,7 @@ To run experienced, you need [docker](https://docs.docker.com/engine/install/) o
 You also need postgres and redis. You can get these by running
 
 ```bash
-sudo apt install redis-server postgresql-15
+sudo apt install redis-server postgresql-16
 ```
 
 Then, you can create a new user with
@@ -40,12 +44,14 @@ psql -U postgres -c "CREATE DATABASE xpd OWNER xpd"
 exit
 ```
 
-Create a file called .env, filling in the contents as nessecary:
-
+edit the .env file, filling in `<things in angle brackets>` with your text.
 ```dotenv
-DISCORD_TOKEN=
+DISCORD_TOKEN=<your discord bot token>
 DATABASE_URL=postgres://xpd:xpd@host.docker.internal/xpd
 REDIS_URL=redis://host.docker.internal:6379
+CONTROL_GUILD=<the server id of a server you will control the bot from>
+OWNERS=<your discord ID>
+ROOT_URL=<your website url>
 ```
 
 ### Starting the bot
@@ -53,7 +59,7 @@ REDIS_URL=redis://host.docker.internal:6379
 Finally, you can actually run the bot!
 
 ```bash
-docker run ghcr.io/randomairborne/xpd-lite --env-file .env --add-host=host.docker.internal:host-gateway --detach
+docker run ghcr.io/randomairborne/xpd-gateway --env-file .env --add-host=host.docker.internal:host-gateway --detach
 ```
 
-And you're done!
+And you're done! This mini-tutorial doesn't support the leaderboard, though.
