@@ -23,7 +23,7 @@ ROOT_URL=
 ```
 
 Go to the `Bot` tab. This will show you a `Reset Token` button. Clicking this should reveal and copy your bot token,
-which should then be filled into the `DISCORD_TOKEN`. Then, customize your bot to your heart's content. No gateway intents are needed. 
+which should then be filled into the `DISCORD_TOKEN`. Then, customize your bot to your heart's content. No gateway intents are needed.
 While you are legally within your rights to do so, please do not self-host public instances of Experienced.
 
 ### Preparing your server
@@ -45,6 +45,7 @@ exit
 ```
 
 edit the .env file, filling in `<things in angle brackets>` with your text.
+
 ```dotenv
 DISCORD_TOKEN=<your discord bot token>
 DATABASE_URL=postgres://xpd:xpd@host.docker.internal/xpd
