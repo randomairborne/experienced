@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Experienced - {% block title %}{% endblock title %}</title>
-    <link rel="icon" type="image/png" href="{{ root_url }}/favicon.png" />
+    <link rel="icon" type="image/webp" href="{{ root_url }}/favicon.webp" />
     <link rel="stylesheet" href="{{ root_url }}/main.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
@@ -16,12 +16,16 @@
   <body>
     <nav class="top-nav">
       <a href="/" class="menu-title">
-        <img
-          src="{{ root_url }}/favicon.png"
-          width="50"
-          height="50"
-          alt="Experience orb"
-        />
+        <picture>
+          <source srcset="{{ root_url }}/logo.avif" type="image/avif" />
+          <source srcset="{{ root_url }}/logo.webp" type="image/webp" />
+          <img
+            width="50"
+            height="50"
+            src="{{ root_url }}/logo.jpeg"
+            alt="experienced orb"
+          />
+        </picture>
         <div class="tiny-spacer"></div>
         <div class="bot-name">EXPERIENCED</div>
       </a>
