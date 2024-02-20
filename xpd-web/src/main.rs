@@ -5,7 +5,14 @@ mod leaderboard;
 
 use std::{net::SocketAddr, sync::Arc};
 
-use axum::{handler::Handler, routing::get};
+use axum::{
+    extract::Request,
+    handler::Handler,
+    http::{header::CACHE_CONTROL, HeaderValue},
+    middleware::Next,
+    response::Response,
+    routing::get,
+};
 use axum_extra::routing::RouterExt;
 use error::HttpError;
 use sqlx::PgPool;
@@ -57,7 +64,11 @@ async fn main() {
     };
     let serve_dir = tower_http::services::ServeDir::new(asset_dir)
         .append_index_html_on_directories(false)
-        .not_found_service(crate::basic_handler!("404.html").with_state(state.clone()));
+        .not_found_service(
+            crate::basic_handler!("404.html")
+                .layer(axum::middleware::from_fn(efficient_cache))
+                .with_state(state.clone()),
+        );
     let app = axum::Router::new()
         .route("/", get(crate::basic_handler!("index.html")))
         .route_with_tsr("/privacy/", get(crate::basic_handler!("privacy.html")))
@@ -75,6 +86,15 @@ async fn main() {
         .with_graceful_shutdown(vss::shutdown_signal())
         .await
         .expect("failed to run server!");
+}
+
+static CACHE_CONTROLLED: HeaderValue = HeaderValue::from_static("max-age=86400");
+
+pub async fn efficient_cache(request: Request, next: Next) -> Response {
+    let mut resp = next.run(request).await;
+    resp.headers_mut()
+        .insert(CACHE_CONTROL, CACHE_CONTROLLED.clone());
+    resp
 }
 
 #[derive(Clone)]
