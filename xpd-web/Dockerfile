@@ -1,10 +1,8 @@
-FROM alpine AS compressor
-
-RUN apk add zstd brotli gzip
+FROM ghcr.io/randomairborne/asset-squisher AS compressor
 
 COPY /xpd-web/static/ /xpd-web/static/
 
-RUN find /xpd-web/static/ -type f -exec gzip -k9 '{}' \; -exec brotli -k9 '{}' \; -exec zstd -qk19 '{}' \;
+RUN asset-squisher /xpd-web/static/
 
 FROM alpine
 
