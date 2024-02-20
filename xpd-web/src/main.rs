@@ -17,6 +17,7 @@ use axum_extra::routing::RouterExt;
 use error::HttpError;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
+use tower_http::compression::CompressionLayer;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 #[macro_use]
@@ -77,7 +78,13 @@ async fn main() {
         .route("/robots.txt", get(crate::basic_handler!("robots.txt")))
         .route("/sitemap.txt", get(crate::basic_handler!("sitemap.txt")))
         .fallback_service(serve_dir)
-        .layer(tower_http::compression::CompressionLayer::new())
+        .layer(
+            CompressionLayer::new()
+                .br(true)
+                .deflate(true)
+                .gzip(true)
+                .zstd(true),
+        )
         .with_state(state);
     info!("Server listening on http://0.0.0.0:8080!");
     let bind_address = SocketAddr::from(([0, 0, 0, 0], 8080));
