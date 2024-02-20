@@ -6,17 +6,8 @@
     <link rel="icon" type="image/png" href="{{ root_url }}/favicon.png" />
     <link rel="stylesheet" href="{{ root_url }}/main.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta property="og:title" content="Experienced discord bot" />
-    <meta property="og:url" content="{{ root_url }}/" />
-    <meta
-      property="og:description"
-      content="{% block description %}{% endblock description %}"
-    />
-    <meta property="og:determiner" content="the" />
-    <meta property="og:site_name" content="Experienced" />
-    {#
-    <meta name="description" content="{{ ?? description ?? }}" />
-    #} {% block extraheaders %}{% endblock extraheaders %}
+    <meta name="description" content="{% block description %}{% endblock description %}" />
+    {% block extraheaders %}{% endblock extraheaders %}
   </head>
 
   <body>
