@@ -1,8 +1,8 @@
 FROM ghcr.io/randomairborne/asset-squisher AS compressor
 
-COPY /xpd-web/static/ /xpd-web/static/
+COPY /xpd-web/static/ /xpd-web/raw-static/
 
-RUN asset-squisher /xpd-web/static/
+RUN asset-squisher /xpd-web/raw-static/ /xpd-web/static/
 
 FROM alpine
 
