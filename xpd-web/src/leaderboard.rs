@@ -80,6 +80,10 @@ pub async fn fetch_stats(
             }
         })
         .collect();
+    // if we have 51 users, the 51st user is the first user on the next page
+    if has_next_page {
+        users.pop();
+    }
     let user_strings: Vec<Option<String>> = if users.is_empty() {
         Vec::new()
     } else {
@@ -97,10 +101,6 @@ pub async fn fetch_stats(
             .await
             .map_err(|e| HttpError::new(e.into(), state.clone()))?
     };
-    // if we have 51 users, the 51st user is the first user on the next page
-    if has_next_page {
-        users.pop();
-    }
     for user_string in user_strings.into_iter().flatten() {
         let user: RedisUser = match serde_json::from_str(&user_string) {
             Ok(v) => v,
