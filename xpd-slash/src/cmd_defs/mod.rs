@@ -59,6 +59,21 @@ pub enum CardCommand {
 
 #[derive(CommandModel, CreateCommand)]
 #[command(
+    name = "guild-card",
+    desc = "Set hex codes for different color schemes in your server's rank card."
+)]
+#[allow(clippy::large_enum_variant)]
+pub enum GuildCardCommand {
+    #[command(name = "reset")]
+    Reset(card::CardCommandReset),
+    #[command(name = "fetch")]
+    Fetch(card::CardCommandFetch),
+    #[command(name = "edit")]
+    Edit(card::CardCommandEdit),
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
     name = "xp",
     desc = "Manage administrator-only bot functions",
     dm_permission = false,
@@ -101,6 +116,7 @@ impl SlashState {
             CardCommand::create_command().into(),
             HelpCommand::create_command().into(),
             GdprCommand::create_command().into(),
+            GuildCardCommand::create_command().into(),
             LeaderboardCommand::create_command().into(),
             CommandBuilder::new("Get level", "", CommandType::User).build(),
             CommandBuilder::new("Get author level", "", CommandType::Message).build(),
