@@ -24,6 +24,8 @@ pub async fn card_update<'a>(
     state: &SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<XpdSlashResponse, Error> {
+    // if let else takes self
+    #[allow(clippy::option_if_let_else)]
     let target_id = if let Some(invoker) = &invoker {
         invoker.id.cast()
     } else {
