@@ -49,7 +49,7 @@ impl std::fmt::Display for Customizations {
             defaults.background_xp_count
         );
         crate::add_output!(f, "Font", self.font, defaults.font);
-        write!(
+        writeln!(
             f,
             "Toy: `{}`",
             self.toy
