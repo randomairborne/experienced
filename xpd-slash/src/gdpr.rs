@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use csv::{IntoInnerError as CsvIntoInnerError, Writer as CsvWriter};
 use serde::Serialize;
-use tokio::join;
+use tokio::{join, try_join};
 use twilight_model::{
     http::attachment::Attachment,
     id::{marker::GuildMarker, Id},
@@ -58,18 +58,19 @@ pub async fn download(state: SlashState, invoker: User) -> Result<XpdSlashRespon
         id_to_db(invoker.id)
     )
     .fetch_all(&state.db);
-    let (levels, custom_card) = join!(
-        levels,
-        crate::levels::get_customizations(state.clone(), invoker.clone())
-    );
+    let invoker_id = &[invoker.id.cast()];
+    let (levels, custom_card) = try_join!(
+        async { levels.await.map_err(Into::into) },
+        crate::levels::get_customizations(state.clone(), invoker_id)
+    )?;
 
-    let levels: Vec<UserXpArchiveEntry> = levels?
+    let levels: Vec<UserXpArchiveEntry> = levels
         .into_iter()
         .map(|v| UserXpArchiveEntry::from_record(v.guild, v.xp))
         .collect();
 
     let levels = multicsv(&levels)?;
-    let custom_card = unicsv(custom_card?)?;
+    let custom_card = unicsv(custom_card)?;
 
     let level_file = Attachment::from_bytes(format!("leveling-{}.csv", invoker.id), levels, 1);
     let card_file = Attachment::from_bytes(format!("card-{}.csv", invoker.id), custom_card, 2);

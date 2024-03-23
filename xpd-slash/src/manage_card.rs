@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use twilight_model::{
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GenericMarker, GuildMarker},
+        Id,
+    },
     user::User,
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
@@ -17,21 +20,21 @@ use crate::{
 
 pub async fn card_update<'a>(
     command: CardCommand,
-    invoker: User,
+    invoker: Option<User>,
     state: &SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<XpdSlashResponse, Error> {
-    let (contents, referenced_user) = match command {
-        CardCommand::Reset(_reset) => (process_reset(state, &invoker).await?, Arc::new(invoker)),
-        CardCommand::Fetch(fetch) => {
-            let fetch_user = Arc::new(fetch.user.map_or(invoker, |user| user.resolved));
-            (process_fetch(state, fetch_user.clone()).await?, fetch_user)
-        }
-        CardCommand::Edit(edit) => (
-            process_edit(edit, state, &invoker).await?,
-            Arc::new(invoker),
-        ),
+    let target_id = if let Some(invoker) = &invoker {
+        invoker.id.cast()
+    } else {
+        guild_id.cast()
     };
+    let contents = match command {
+        CardCommand::Reset(_reset) => process_reset(state, target_id).await?,
+        CardCommand::Fetch(_fetch) => process_fetch(state, &[target_id, guild_id.cast()]).await?,
+        CardCommand::Edit(edit) => process_edit(edit, state, target_id).await?,
+    };
+    let referenced_user = Arc::new(invoker.unwrap_or_else(fake_user));
     // Select current XP from the database, return 0 if there is no row
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
@@ -64,7 +67,7 @@ pub async fn card_update<'a>(
 async fn process_edit(
     edit: CardCommandEdit,
     state: &SlashState,
-    user: &User,
+    id: Id<GenericMarker>,
 ) -> Result<String, Error> {
     query!(
         "INSERT INTO custom_card (
@@ -111,7 +114,7 @@ async fn process_edit(
             .to_string(),
         edit.toy_image.map(|v| v.value()),
         edit.card_layout.map(|v| v.value()),
-        id_to_db(user.id),
+        id_to_db(id),
     )
     .execute(&state.db)
     .await?;
@@ -119,15 +122,37 @@ async fn process_edit(
     Ok("Updated card!".to_string())
 }
 
-async fn process_reset(state: &SlashState, user: &User) -> Result<String, Error> {
-    query!("DELETE FROM custom_card WHERE id = $1", id_to_db(user.id))
+async fn process_reset(state: &SlashState, id: Id<GenericMarker>) -> Result<String, Error> {
+    query!("DELETE FROM custom_card WHERE id = $1", id_to_db(id))
         .execute(&state.db)
         .await?;
     Ok("Card settings cleared!".to_string())
 }
 
-async fn process_fetch(state: &SlashState, user: Arc<User>) -> Result<String, Error> {
-    Ok(crate::levels::get_customizations(state.clone(), user)
+async fn process_fetch(state: &SlashState, ids: &[Id<GenericMarker>]) -> Result<String, Error> {
+    Ok(crate::levels::get_customizations(state.clone(), ids)
         .await?
         .to_string())
+}
+
+fn fake_user() -> User {
+    User {
+        accent_color: None,
+        avatar: None,
+        avatar_decoration: None,
+        banner: None,
+        bot: false,
+        discriminator: 0,
+        email: None,
+        flags: None,
+        global_name: None,
+        id: Id::new(1),
+        locale: None,
+        mfa_enabled: None,
+        name: "Preview".to_string(),
+        premium_type: None,
+        public_flags: None,
+        system: None,
+        verified: None,
+    }
 }

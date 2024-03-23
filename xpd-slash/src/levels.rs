@@ -1,9 +1,13 @@
 use std::sync::Arc;
 
 use base64::Engine;
+use tokio::try_join;
 use twilight_model::{
     http::attachment::Attachment,
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GenericMarker, GuildMarker, UserMarker},
+        Id,
+    },
     user::User,
 };
 use twilight_util::builder::embed::EmbedBuilder;
@@ -19,11 +23,9 @@ use crate::{Error, SlashState, XpdSlashResponse};
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
     user: User,
-    invoker: User,
+    invoker: Id<UserMarker>,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
-    // Select current XP from the database, return 0 if there is no row
-
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
         id_to_db(user.id),
@@ -45,7 +47,7 @@ pub async fn get_level(
     let level_info = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0));
     let content = if user.bot {
         "Bots aren't ranked, that would be silly!".to_string()
-    } else if invoker == user {
+    } else if invoker == user.id {
         if xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
@@ -78,10 +80,10 @@ pub async fn gen_card(
     level_info: mee6::LevelInfo,
     rank: i64,
 ) -> Result<Attachment, Error> {
-    let customizations_future = tokio::spawn(get_customizations(state.clone(), user.clone()));
-    let avatar_future = tokio::spawn(get_avatar(state.clone(), user.clone()));
-    let customizations = customizations_future.await??;
-    let avatar = avatar_future.await??;
+    let customizations_future =
+        async { get_customizations(state.clone(), &[user.id.cast()]).await };
+    let avatar_future = get_avatar(state.clone(), user.clone());
+    let (customizations, avatar) = try_join!(customizations_future, avatar_future)?;
     let discriminator = if user.discriminator == 0 {
         None
     } else {
@@ -124,11 +126,19 @@ pub async fn gen_card(
 
 pub async fn get_customizations(
     state: SlashState,
-    user: Arc<User>,
+    ids: &[Id<GenericMarker>],
 ) -> Result<Customizations, Error> {
-    let customizations = query!("SELECT * FROM custom_card WHERE id = $1", id_to_db(user.id))
-        .fetch_optional(&state.db)
-        .await?;
+    let mut customizations = None;
+    for id in ids {
+        if let Some(custom_params) =
+            query!("SELECT * FROM custom_card WHERE id = $1", id_to_db(*id))
+                .fetch_optional(&state.db)
+                .await?
+        {
+            customizations = Some(custom_params);
+            break;
+        }
+    }
     let Some(customizations) = customizations else {
         return Ok(Card::default().default_customizations());
     };
