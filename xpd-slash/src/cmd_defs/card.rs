@@ -20,6 +20,13 @@ pub struct CardCommandFetch {
 
 #[derive(CommandModel, CreateCommand)]
 #[command(
+    name = "fetch",
+    desc = "Get your server's current default card settings."
+)]
+pub struct GuildCardCommandFetch;
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
     name = "edit",
     desc = "Edit card colors by specifying hex codes for values you would like to change."
 )]

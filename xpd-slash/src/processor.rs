@@ -9,7 +9,7 @@ use twilight_model::{
 };
 
 use crate::{
-    cmd_defs::{AdminCommand, CardCommand, GdprCommand, XpCommand},
+    cmd_defs::{AdminCommand, CardCommand, GdprCommand, GuildCardCommand, XpCommand},
     Error, SlashState, XpdSlashResponse,
 };
 
@@ -83,16 +83,15 @@ async fn process_slash_cmd(
             )
             .await
         }
-        "card" => Ok(crate::manage_card::card_update(
+        "card" => Ok(crate::manage_card::user_card_update(
             CardCommand::from_interaction(data.into())?,
-            Some(invoker),
+            invoker,
             &state,
             guild_id,
         )
         .await?),
-        "guild-card" => Ok(crate::manage_card::card_update(
-            CardCommand::from_interaction(data.into())?,
-            None,
+        "guild-card" => Ok(crate::manage_card::guild_card_update(
+            GuildCardCommand::from_interaction(data.into())?,
             &state,
             guild_id,
         )

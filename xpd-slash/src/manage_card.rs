@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use mee6::LevelInfo;
 use twilight_model::{
     id::{
         marker::{GenericMarker, GuildMarker},
@@ -13,30 +14,25 @@ use xpd_common::id_to_db;
 use crate::{
     cmd_defs::{
         card::{CardCommandEdit, CardCommandEditFont, ColorOption},
-        CardCommand,
+        CardCommand, GuildCardCommand,
     },
     Error, SlashState, XpdSlashResponse,
 };
 
-pub async fn card_update<'a>(
+pub async fn user_card_update<'a>(
     command: CardCommand,
-    invoker: Option<User>,
+    invoker: User,
     state: &SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<XpdSlashResponse, Error> {
-    // if let else takes self
-    #[allow(clippy::option_if_let_else)]
-    let target_id = if let Some(invoker) = &invoker {
-        invoker.id.cast()
-    } else {
-        guild_id.cast()
-    };
     let contents = match command {
-        CardCommand::Reset(_reset) => process_reset(state, target_id).await?,
-        CardCommand::Fetch(_fetch) => process_fetch(state, &[target_id, guild_id.cast()]).await?,
-        CardCommand::Edit(edit) => process_edit(edit, state, target_id).await?,
+        CardCommand::Reset(_reset) => process_reset(state, invoker.id.cast()).await?,
+        CardCommand::Fetch(_fetch) => {
+            process_fetch(state, &[invoker.id.cast(), guild_id.cast()]).await?
+        }
+        CardCommand::Edit(edit) => process_edit(edit, state, invoker.id.cast()).await?,
     };
-    let referenced_user = Arc::new(invoker.unwrap_or_else(|| fake_user(target_id)));
+    let referenced_user = Arc::new(invoker);
     // Select current XP from the database, return 0 if there is no row
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
@@ -57,8 +53,29 @@ pub async fn card_update<'a>(
     .unwrap_or(0)
         + 1;
     #[allow(clippy::cast_sign_loss)]
-    let level_info = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0));
+    let level_info = LevelInfo::new(u64::try_from(xp).unwrap_or(0));
     let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, rank).await?;
+    let embed = EmbedBuilder::new()
+        .description(contents)
+        .image(ImageSource::attachment("card.png")?)
+        .build();
+    Ok(XpdSlashResponse::new().attachments([card]).embeds([embed]))
+}
+
+pub async fn guild_card_update<'a>(
+    command: GuildCardCommand,
+    state: &SlashState,
+    guild_id: Id<GuildMarker>,
+) -> Result<XpdSlashResponse, Error> {
+    let contents = match command {
+        GuildCardCommand::Reset(_reset) => process_reset(state, guild_id.cast()).await?,
+        GuildCardCommand::Fetch(_fetch) => process_fetch(state, &[guild_id.cast()]).await?,
+        GuildCardCommand::Edit(edit) => process_edit(edit, state, guild_id.cast()).await?,
+    };
+    let referenced_user = Arc::new(fake_user(guild_id.cast()));
+    #[allow(clippy::cast_sign_loss)]
+    let level_info = LevelInfo::new(40);
+    let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, 127).await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
