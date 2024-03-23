@@ -36,7 +36,7 @@ pub async fn card_update<'a>(
         CardCommand::Fetch(_fetch) => process_fetch(state, &[target_id, guild_id.cast()]).await?,
         CardCommand::Edit(edit) => process_edit(edit, state, target_id).await?,
     };
-    let referenced_user = Arc::new(invoker.unwrap_or_else(fake_user));
+    let referenced_user = Arc::new(invoker.unwrap_or_else(|| fake_user(target_id)));
     // Select current XP from the database, return 0 if there is no row
     let xp = query!(
         "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
@@ -137,7 +137,7 @@ async fn process_fetch(state: &SlashState, ids: &[Id<GenericMarker>]) -> Result<
         .to_string())
 }
 
-fn fake_user() -> User {
+fn fake_user(id: Id<GenericMarker>) -> User {
     User {
         accent_color: None,
         avatar: None,
@@ -148,7 +148,7 @@ fn fake_user() -> User {
         email: None,
         flags: None,
         global_name: None,
-        id: Id::new(1),
+        id: id.cast(),
         locale: None,
         mfa_enabled: None,
         name: "Preview".to_string(),
