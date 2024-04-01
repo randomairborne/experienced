@@ -589,7 +589,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36f2381b0e993d06a1f6d49f486b33bc4004085bf980340fc05726bacc681fff"
 dependencies = [
  "deadpool",
- "redis",
+ "redis 0.24.0",
 ]
 
 [[package]]
@@ -1120,7 +1120,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.6",
+ "socket2",
  "tokio",
  "tower-service",
  "tracing",
@@ -1187,7 +1187,7 @@ dependencies = [
  "http-body 1.0.0",
  "hyper 1.2.0",
  "pin-project-lite",
- "socket2 0.5.6",
+ "socket2",
  "tokio",
 ]
 
@@ -1906,8 +1906,27 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "ryu",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
+name = "redis"
+version = "0.25.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71d64e978fd98a0e6b105d066ba4889a7301fca65aeac850a877d8797343feeb"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "combine",
+ "futures-util",
+ "itoa",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
  "sha1_smol",
- "socket2 0.4.10",
+ "socket2",
  "tokio",
  "tokio-util",
  "url",
@@ -2434,16 +2453,6 @@ checksum = "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
 
 [[package]]
 name = "socket2"
-version = "0.4.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f7916fc008ca5542385b89a3d3ce689953c143e9304a9bf8beec1de48994c0d"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
-name = "socket2"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05ffd9c0a93b7543e062e759284fcf5f5e3b098501104bfbdde4d404db792871"
@@ -2921,7 +2930,7 @@ dependencies = [
  "num_cpus",
  "pin-project-lite",
  "signal-hook-registry",
- "socket2 0.5.6",
+ "socket2",
  "tokio-macros",
  "windows-sys 0.48.0",
 ]
@@ -3854,7 +3863,7 @@ dependencies = [
  "deadpool-redis",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
- "redis",
+ "redis 0.25.2",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -3888,7 +3897,7 @@ dependencies = [
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot",
  "rand",
- "redis",
+ "redis 0.25.2",
  "reqwest",
  "serde",
  "sqlx",
@@ -3913,7 +3922,7 @@ dependencies = [
  "deadpool-redis",
  "dotenvy",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "redis",
+ "redis 0.25.2",
  "serde",
  "serde_json",
  "sqlx",
