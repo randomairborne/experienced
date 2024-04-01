@@ -11,13 +11,13 @@ keywords = ["discord-bot", "mee6"]
 # SO MANY DEPENDENCIES
 
 [dependencies]
-reqwest = { version = "0.11", features = ["json", "rustls-tls-native-roots"], default-features = false }
+reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots"], default-features = false }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-features = false }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-deadpool-redis = { version = "0.14", features = ["rt_tokio_1"] }
+deadpool-redis = { version = "0.15", features = ["rt_tokio_1"] }
 xpd-rank-card = { path = "../xpd-rank-card", version = "0.5" }
-redis = { version = "0.24", features = ["aio", "tokio-comp"] }
+redis = { version = "0.25", features = ["aio", "tokio-comp"] }
 twilight-util = { version = "0.15", features = ["builder"] }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 serde = { version = "1", features = ["derive"] }
@@ -26,7 +26,7 @@ twilight-validate = "0.15"
 twilight-model = "0.15"
 parking_lot = "0.12.1"
 tracing = "0.1"
-base64 = "0.21"
+base64 = "0.22"
 thiserror = "1"
 mee6 = "0.1"
 csv = "1"
