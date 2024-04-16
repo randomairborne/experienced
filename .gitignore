@@ -6,5 +6,8 @@ target
 /.vscode/
 /.idea/
 
+/venv/
+dump.sql
+
 node_modules
 package-lock.json
