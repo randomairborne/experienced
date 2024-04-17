@@ -37,4 +37,4 @@ Anonymous, aggregated stats are shared with everyone who wishes to view them.
 Who can I contact with concerns?
 You can contact the developer via email at valk (at) randomairborne.dev
 How can I request deletion of my data?
-You may contact the core developers via the mediums specified above and request we delete your data. 
+You may contact the core developers via the mediums specified above and request we delete your data.
