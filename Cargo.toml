@@ -4,7 +4,6 @@ members = [
     "xpd-slash",
     "xpd-listener",
     "xpd-gateway",
-    "xpd-web",
     "xpd-common",
     "xpd-rank-card"
 ]
