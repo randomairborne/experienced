@@ -1,11 +1,3 @@
 {
-  "plugins": ["prettier-plugin-jinja-template", "prettier-plugin-astro"],
-  "overrides": [
-    {
-      "files": ["*.svg"],
-      "options": {
-        "parser": "jinja-template"
-      }
-    }
-  ]
+  "plugins": ["prettier-plugin-astro"]
 }

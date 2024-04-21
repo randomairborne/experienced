@@ -8,16 +8,20 @@ const fillClass = filled ? "filled" : "outlined";
 </a>
 
 <style>
+  a {
+    margin: 0.1ch;
+    border-color: #7289da;
+    border-style: solid;
+    padding: 0.5ch;
+    text-decoration: none;
+    border-radius: 1ch;
+    font-size: larger;
+    width: max-content;
+  }
+
   a.filled {
     color: #000000;
     background-color: #7289da;
-    border-color: #7289da;
-    border-style: solid;
-    padding: 1vh;
-    text-decoration: none;
-    border-radius: 10px;
-    font-size: larger;
-    width: fit-content;
   }
 
   a.filled:visited {
@@ -26,12 +30,6 @@ const fillClass = filled ? "filled" : "outlined";
 
   a.outlined {
     color: #ffffff;
-    border-color: #7289da;
-    border-style: solid;
-    padding: 1vh;
-    text-decoration: none;
-    border-radius: 10px;
-    font-size: larger;
   }
 
   a.outlined:visited {
