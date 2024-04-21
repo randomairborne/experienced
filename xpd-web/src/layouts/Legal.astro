@@ -1,0 +1,29 @@
+---
+import Layout from "./Layout.astro";
+const { frontmatter } = Astro.props;
+---
+
+<Layout description={frontmatter.description} title={frontmatter.title}>
+  <h1>{frontmatter.title}</h1>
+  <div>
+    <slot />
+  </div>
+</Layout>
+
+<style>
+  div {
+    text-align: start;
+  }
+
+  @media (max-width: 600px) {
+    div {
+      max-width: 90vw;
+    }
+  }
+
+  @media (min-width: 600px) {
+    div {
+      max-width: 50vw;
+    }
+  }
+</style>

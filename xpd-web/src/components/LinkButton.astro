@@ -1,0 +1,45 @@
+---
+const { filled, href }: { filled: boolean; href: string } = Astro.props;
+const fillClass = filled ? "filled" : "outlined";
+---
+
+<a href={href} class={fillClass}>
+  <slot />
+</a>
+
+<style>
+  a.filled {
+    color: #000000;
+    background-color: #7289da;
+    border-color: #7289da;
+    border-style: solid;
+    padding: 1vh;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: larger;
+    width: fit-content;
+  }
+
+  a.filled:visited {
+    color: #000000;
+  }
+
+  a.outlined {
+    color: #ffffff;
+    border-color: #7289da;
+    border-style: solid;
+    padding: 1vh;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: larger;
+  }
+
+  a.outlined:visited {
+    color: #ffffff;
+  }
+
+  a.outlined:hover {
+    transition-duration: 200ms;
+    background-color: #7289da25;
+  }
+</style>

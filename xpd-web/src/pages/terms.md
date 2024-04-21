@@ -1,6 +1,8 @@
-+++
-title = "Experienced Terms of Service"
-+++
+---
+title: "Experienced Terms of Service"
+layout: "../layouts/Legal.astro"
+description: "Legal terms for the use of the Experienced discord bot"
+---
 
 ## Section I - Binding of the Terms
 
@@ -75,4 +77,4 @@ with the internal substantive laws of Colorado in the United States of America, 
 principles. Any and all such claims and disputes shall be brought in, and you hereby consent to them being decided
 exclusively by a court of competent jurisdiction located in Vail, Colorado, United States of America
 
-Last updated: April 14, 2024
+Last updated: April 20, 2024

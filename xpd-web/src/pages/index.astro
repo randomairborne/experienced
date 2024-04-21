@@ -1,0 +1,97 @@
+---
+import Wordmark from "../components/Wordmark.astro";
+import LinkButton from "../components/LinkButton.astro";
+import TinySpacer from "../components/TinySpacer.astro";
+import Layout from "../layouts/Layout.astro";
+
+const title = "The best leveling bot on discord.";
+const description =
+  "Set up custom cards for free, import MEE6 levels, and level up to the stars\n" +
+  "  with Experienced!";
+---
+
+<Layout title={title} description={description}>
+  <div class="huge">
+    <Wordmark>EXPERIENCED</Wordmark>
+  </div>
+
+  <h2>{title}</h2>
+
+  <h3>
+    {description}
+  </h3>
+  <ul>
+    <li>Free custom cards</li>
+    <li>No NFTs or superfluous features</li>
+    <li>MEE6 compatible</li>
+    <li>Easy to switch</li>
+    <li>Open-Source and ready to selfhost</li>
+  </ul>
+
+  <div class="rows">
+    <LinkButton
+      href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
+      filled={true}
+    >
+      Add to discord
+    </LinkButton>
+    <TinySpacer />
+    <LinkButton
+      href="https://github.com/randomairborne/experienced/tree/prod#how-to-self-host-experienced"
+      filled={false}
+    >
+      Selfhost
+    </LinkButton>
+  </div>
+
+  <h2>Why Experienced?</h2>
+
+  <h3>It's Open Source</h3>
+
+  <p>
+    Experienced is fully open-source, so you can verify that it doesn't collect
+    your data or the data of the users in your server. Even if you don't trust
+    that, you can check the "Data Access" section of the bot's Discord profile
+    and note the lack of "Read Messages". You can even host your own instance
+    for added security and peace of mind. <a href="https://valk.sh/discord"
+      >Join our discord</a
+    > if you need help!
+  </p>
+  <h3>There Are No Paywalls</h3>
+
+  <p>
+    Experienced is run by a single person and is written to make use of its
+    resources as efficiently as possible. This allows it to easily be funded out
+    of pocket- but donations are greatly appreciated. You can donate via <a
+      href="https://github.com/sponsors/randomairborne">GitHub sponsors</a
+    >, of which 100% will go to funding bot hosting and development. Many
+    features locked behind paywalls in other bots, such as automated role
+    assignment and card customization, are absolutely free in experienced.
+  </p>
+  <h3>It's Super Customizable</h3>
+
+  <p>
+    Experienced is designed for customizability. You control every aspect of
+    your rank card, from the font to the layout and color of the progress bar.
+    Create custom cards with ease, or copy them from your friends with the card
+    fetch command. Control is everything, and experienced gives you as much as
+    possible.
+  </p>
+  <LinkButton
+    href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
+    filled={true}
+  >
+    Add to discord
+  </LinkButton>
+</Layout>
+<style>
+  .rows {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .huge {
+    font-size: min(15vh, 10vw);
+    text-align: center;
+  }
+</style>

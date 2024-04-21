@@ -1,0 +1,74 @@
+---
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <title>Experienced - {title}</title>
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="stylesheet" href="/xpd-web/src/styles/main.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+</head>
+
+<body>
+<div>
+  <Navbar />
+</div>
+<main>
+  <slot />
+</main>
+<div>
+  <Footer />
+</div>
+</body>
+<!-- Cloudflare Web Analytics -->
+<script
+  defer
+  src="https://static.cloudflareinsights.com/beacon.min.js"
+  data-cf-beacon='{"token": "f6a0a041037d4167bb5ef9458eba4fc5"}'></script>
+<!-- End Cloudflare Web Analytics -->
+</html>
+
+<style>
+    html,
+    body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #333333;
+        color: #ffffff;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+        flex-direction: column;
+    }
+
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-grow: 1;
+        padding-right: 5%;
+        padding-left: 5%;
+    }
+
+    div {
+        display: flex;
+        flex-grow: 1;
+    }
+</style>
+<style is:global>
+    a {
+        color: aqua;
+    }
+
+    a:visited {
+        color: aquamarine;
+    }
+</style>

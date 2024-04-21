@@ -7,8 +7,12 @@
     "prettier": "prettier . -w",
     "prettier-check": "prettier . --check"
   },
+  "workspaces": [
+    "./xpd-web/"
+  ],
   "devDependencies": {
     "prettier": "^3.2.5",
-    "prettier-plugin-jinja-template": "^1.3.3"
+    "prettier-plugin-jinja-template": "^1.3.3",
+    "prettier-plugin-astro": "^0.13.0"
   }
 }
