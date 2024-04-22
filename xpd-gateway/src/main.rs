@@ -191,9 +191,6 @@ async fn handle_event(
             }
         }
         Event::MessageCreate(msg) => listener.save(*msg).await?,
-        Event::ThreadCreate(thread) => {
-            let _ = http.join_thread(thread.id).await;
-        }
         Event::GuildCreate(guild_add) => {
             if !sqlx::query!(
                 "SELECT id FROM guild_bans WHERE
