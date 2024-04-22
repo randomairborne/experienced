@@ -73,7 +73,7 @@ impl XpdSlash {
         Self { state }
     }
 
-    pub async fn execute(&self, interaction_create: InteractionCreate)  {
+    pub async fn execute(&self, interaction_create: InteractionCreate) {
         let interaction_token = interaction_create.token.clone();
         if let Err(error) = self
             .client()
