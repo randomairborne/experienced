@@ -101,7 +101,7 @@ impl XpdSlash {
             .await
             .unwrap_or_else(|error| {
                 error!(?error, "got error");
-                XpdSlashResponse::new().content(e.to_string())
+                XpdSlashResponse::new().content(error.to_string())
             })
     }
 
