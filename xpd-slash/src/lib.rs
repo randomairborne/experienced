@@ -94,14 +94,13 @@ impl XpdSlash {
         if let Err(error) = self.send_followup(response, &interaction_token).await {
             error!(?error, "Failed to send real response");
         };
-        Ok(())
     }
 
     async fn run(&self, interaction: Interaction) -> XpdSlashResponse {
         Box::pin(dispatch::process(interaction, self.state.clone()))
             .await
-            .unwrap_or_else(|e| {
-                error!("{e}");
+            .unwrap_or_else(|error| {
+                error!(?error, "got error");
                 XpdSlashResponse::new().content(e.to_string())
             })
     }
