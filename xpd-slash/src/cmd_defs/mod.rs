@@ -15,7 +15,12 @@ pub struct HelpCommand;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "leaderboard", desc = "See the leaderboard for this server")]
-pub struct LeaderboardCommand;
+pub struct LeaderboardCommand {
+    #[command(desc = "User to check level of")]
+    pub user: Option<ResolvedUser>,
+    #[command(desc = "Page to jump to", min_value = 1)]
+    pub page: Option<i64>,
+}
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "rank", desc = "Check someone's rank and level")]

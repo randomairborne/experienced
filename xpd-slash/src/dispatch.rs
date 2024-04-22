@@ -4,6 +4,7 @@ use twilight_model::{
         command::CommandType,
         interaction::{application_command::CommandData, Interaction, InteractionData},
     },
+    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::GuildMarker, Id},
     user::User,
 };
@@ -11,6 +12,11 @@ use twilight_model::{
 use crate::{
     cmd_defs::{AdminCommand, CardCommand, GdprCommand, GuildCardCommand, XpCommand},
     Error, SlashState, XpdSlashResponse,
+};
+
+const PONG: InteractionResponse = InteractionResponse {
+    kind: InteractionResponseType::Pong,
+    data: None,
 };
 
 pub async fn process(

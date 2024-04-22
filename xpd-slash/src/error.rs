@@ -64,4 +64,12 @@ pub enum Error {
     DeadpoolRedis(#[from] deadpool_redis::PoolError),
     #[error("Discord API decoding error: {0}")]
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
+    #[error("This page does not exist!")]
+    NoUsersForPage,
+    #[error("This modal did not contain any action rows!")]
+    NoModalActionRow,
+    #[error("This modal did not contain the required form field!")]
+    NoFormField,
+    #[error("This modal did not contain the required form data!")]
+    NoDestinationInComponent,
 }

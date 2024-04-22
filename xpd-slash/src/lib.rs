@@ -3,14 +3,14 @@
 
 mod admin;
 mod cmd_defs;
+mod dispatch;
 mod error;
 mod gdpr;
 mod help;
+mod leaderboard;
 mod levels;
 mod manage_card;
 mod manager;
-mod mee6_worker;
-mod processor;
 mod response;
 
 use std::{collections::VecDeque, sync::Arc};
@@ -21,6 +21,8 @@ pub use response::XpdSlashResponse;
 use sqlx::PgPool;
 use twilight_model::{
     application::interaction::Interaction,
+    gateway::payload::incoming::InteractionCreate,
+    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
         marker::{ApplicationMarker, GuildMarker, UserMarker},
         Id,
@@ -68,12 +70,35 @@ impl XpdSlash {
         };
         info!("Creating commands...");
         state.register_slashes().await;
-        tokio::spawn(mee6_worker::do_fetches(state.clone()));
         Self { state }
     }
 
-    pub async fn run(self, interaction: Interaction) -> XpdSlashResponse {
-        Box::pin(processor::process(interaction, self.state.clone()))
+    pub async fn execute(&self, interaction_create: InteractionCreate)  {
+        let interaction_token = interaction_create.token.clone();
+        if let Err(error) = self
+            .client()
+            .interaction(self.id())
+            .create_response(
+                interaction_create.id,
+                &interaction_create.token,
+                &InteractionResponse {
+                    kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                    data: None,
+                },
+            )
+            .await
+        {
+            error!(?error, "Failed to ack discord gateway message");
+        };
+        let response = self.run(interaction_create.0).await;
+        if let Err(error) = self.send_followup(response, &interaction_token).await {
+            error!(?error, "Failed to send real response");
+        };
+        Ok(())
+    }
+
+    async fn run(&self, interaction: Interaction) -> XpdSlashResponse {
+        Box::pin(dispatch::process(interaction, self.state.clone()))
             .await
             .unwrap_or_else(|e| {
                 error!("{e}");

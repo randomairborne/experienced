@@ -101,7 +101,7 @@ pub struct XpCommandExperienceReset {
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "import",
-    desc = "Import your server's mee6 leveling data. WARNING: THIS WILL OVERWRITE ANY CURRENT LEVELING DATA!",
+    desc = "Learn how to import your server's MEE6 leveling data.",
     dm_permission = false
 )]
 pub struct XpCommandExperienceImport;

@@ -39,9 +39,7 @@ async fn process_experience(
     state: SlashState,
 ) -> Result<String, Error> {
     match data {
-        XpCommandExperience::Import(_) => {
-            import_level_data(guild_id, interaction_token, state).await
-        }
+        XpCommandExperience::Import(_) => Ok(import_level_data()),
         XpCommandExperience::Add(add) => {
             modify_user_xp(guild_id, add.user, add.amount, state).await
         }
@@ -94,52 +92,13 @@ async fn reset_user_xp(
     ))
 }
 
-async fn import_level_data(
-    guild_id: Id<GuildMarker>,
-    interaction_token: String,
-    state: SlashState,
-) -> Result<String, Error> {
-    let ratelimiting_key = format!("ratelimit-import-mee6-{}", guild_id.get());
-    let mut redis = state.redis.get().await?;
-    let time_remaining_option: Option<isize> = redis::cmd("TTL")
-        .arg(&ratelimiting_key)
-        .query_async(&mut redis)
-        .await?;
-    let time_remaining = time_remaining_option.unwrap_or(0);
-    if time_remaining > 0 {
-        return Ok(format!(
-            "This guild is being ratelimited. Try again in {time_remaining} seconds."
-        ));
-    }
-    let total_users = state
-        .client
-        .guild(guild_id)
-        .with_counts(true)
-        .await?
-        .model()
-        .await?
-        .approximate_member_count;
-    if let Some(total) = total_users {
-        if total > 10_000 {
-            return Err(Error::TooManyUsersForImport);
-        }
-    }
-    state
-        .import_queue
-        .mee6
-        .lock()
-        .push_back((guild_id, interaction_token));
-    {
-        let mut redis = state.redis.get().await?;
-        redis::cmd("SET")
-            .arg(ratelimiting_key)
-            .arg(3600)
-            .arg("EX")
-            .arg(3600)
-            .query_async(&mut redis)
-            .await?;
-    }
-    Ok("Importing user data- check back here soon!".to_string())
+fn import_level_data() -> String {
+    concat!(
+        "MEE6 has disabled our ability to automatically import your leveling data.",
+        "\n",
+        "Please join our [support server](https://valk.sh/discord) for further information."
+    )
+    .to_string()
 }
 
 async fn process_rewards<'a>(

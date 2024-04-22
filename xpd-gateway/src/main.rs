@@ -227,28 +227,7 @@ async fn handle_event(
         Event::MemberAdd(member_add) => listener.set_user(member_add.member.user).await?,
         Event::MemberUpdate(member_update) => listener.set_user(member_update.user).await?,
         Event::MemberChunk(member_chunk) => listener.set_chunk(member_chunk.members).await?,
-        Event::InteractionCreate(interaction_create) => {
-            let interaction_token = interaction_create.token.clone();
-            if let Err(error) = slash
-                .client()
-                .interaction(slash.id())
-                .create_response(
-                    interaction_create.id,
-                    &interaction_create.token,
-                    &InteractionResponse {
-                        kind: InteractionResponseType::DeferredChannelMessageWithSource,
-                        data: None,
-                    },
-                )
-                .await
-            {
-                error!(?error, "Failed to ack discord gateway message");
-            };
-            let response = slash.clone().run(interaction_create.0).await;
-            if let Err(error) = slash.send_followup(response, &interaction_token).await {
-                error!(?error, "Failed to send real response");
-            };
-        }
+        Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         _ => {}
     };
     Ok(())
