@@ -9,6 +9,10 @@ on:
 env:
   SQLX_OFFLINE: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   check:
     uses: ./.github/workflows/check.yml
