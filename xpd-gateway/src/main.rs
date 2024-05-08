@@ -14,7 +14,6 @@ use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard}
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
     gateway::ShardId,
-    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
         marker::{GuildMarker, UserMarker},
         Id,

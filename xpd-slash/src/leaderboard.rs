@@ -25,13 +25,13 @@ use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
 pub async fn leaderboard(
     guild_id: Id<GuildMarker>,
     state: SlashState,
-    prefs: LeaderboardCommand,
+    guild_command: LeaderboardCommand,
 ) -> Result<InteractionResponse, Error> {
     // "zpage" means "zero-indexed page", which is how this is represented internally.
     // We add one whenever we show it to the user, and subtract one every time we get it from the user.
-    let zpage = if let Some(pick) = prefs.page {
+    let zpage = if let Some(pick) = guild_command.page {
         pick - 1
-    } else if let Some(pick) = prefs.user {
+    } else if let Some(pick) = guild_command.user {
         get_user_position(pick.resolved.id, guild_id, &state.db).await?
     } else {
         0
