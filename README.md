@@ -4,13 +4,17 @@ A powerful, flexible discord leveling bot
 
 ## How to Self-Host Experienced
 
-The easisest way to self-host experienced is on Debian or Ubuntu Linux. Thus, this is how this tutorial will set up Experienced.
+The easisest way to self-host experienced is on Debian or Ubuntu Linux. Thus, this is how this tutorial will set up
+Experienced.
 
-If you'd rather just have a hosted bot, that's fine! I really appreciate it. [Click here to invite the official instance.](https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands)
+If you'd rather just have a hosted bot, that's fine! I really appreciate
+it. [Click here to invite the official instance.](https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands)
 
 ### Creating a Discord application
 
-First, we need to create a Discord application. Go to [https://discord.com/developers/applications](https://discord.com/developers/applications) and click the `New Application` button in the top right corner.
+First, we need to create a Discord application. Go
+to [https://discord.com/developers/applications](https://discord.com/developers/applications) and click
+the `New Application` button in the top right corner.
 Give it a nice name, then click continue. Now we need to create a .env file, which should look like this:
 
 ```dotenv
@@ -23,12 +27,14 @@ ROOT_URL=
 ```
 
 Go to the `Bot` tab. This will show you a `Reset Token` button. Clicking this should reveal and copy your bot token,
-which should then be filled into the `DISCORD_TOKEN`. Then, customize your bot to your heart's content. No gateway intents are needed.
+which should then be filled into the `DISCORD_TOKEN`. Then, customize your bot to your heart's content. No gateway
+intents are needed.
 While you are legally within your rights to do so, please do not self-host public instances of Experienced.
 
 ### Preparing your server
 
-To run experienced, you need [docker](https://docs.docker.com/engine/install/) or [podman](https://podman.io/docs/installation). We'll use docker for this tutorial.
+To run experienced, you need [docker](https://docs.docker.com/engine/install/)
+or [podman](https://podman.io/docs/installation). We'll use docker for this tutorial.
 You also need postgres and redis. You can get these by running
 
 ```bash
@@ -60,7 +66,8 @@ ROOT_URL=<your website url>
 Finally, you can actually run the bot!
 
 ```bash
-docker run ghcr.io/randomairborne/xpd-gateway --env-file .env --add-host=host.docker.internal:host-gateway --detach
+docker run --env-file .env --add-host=host.docker.internal:host-gateway --detach ghcr.io/randomairborne/xpd-gateway:latest
 ```
 
-And you're done! This mini-tutorial doesn't support the leaderboard, though.
+And you're done! This mini-tutorial doesn't support the leaderboard, though. You also may wish to set up a simple
+docker compose file. [Join the discord](https://valk.sh/discord) to learn more!
