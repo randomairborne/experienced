@@ -1,33 +1,42 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
+use expiringmap::ExpiringSet;
 use sqlx::PgPool;
+use twilight_model::id::{
+    marker::{GuildMarker, UserMarker},
+    Id,
+};
 
 mod message;
-mod user_cache;
+
+type SentMessages = ExpiringSet<(Id<GuildMarker>, Id<UserMarker>)>;
 
 #[derive(Clone)]
 pub struct XpdListener {
     db: PgPool,
-    redis: deadpool_redis::Pool,
+    messages: Arc<RwLock<SentMessages>>,
     http: Arc<twilight_http::Client>,
 }
 
 impl XpdListener {
-    pub fn new(db: PgPool, redis: deadpool_redis::Pool, http: Arc<twilight_http::Client>) -> Self {
-        Self { db, redis, http }
+    pub fn new(db: PgPool, http: Arc<twilight_http::Client>) -> Self {
+        let messages = Arc::new(RwLock::new(SentMessages::new()));
+        Self { db, messages, http }
     }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("SQL error: {0}")]
+    #[error("SQL error")]
     Sqlx(#[from] sqlx::Error),
-    #[error("Redis error: {0}")]
-    Redis(#[from] redis::RedisError),
-    #[error("Pool error: {0}")]
-    Pool(#[from] deadpool_redis::PoolError),
-    #[error("Discord error: {0}")]
+    #[error("Discord error")]
     Twilight(#[from] twilight_http::Error),
-    #[error("JSON error: {0}")]
-    SerdeJson(#[from] serde_json::Error),
+    #[error("RwLock Poisioned, please report: https://valk.sh/discord")]
+    LockPoisoned,
+}
+
+impl<T> From<std::sync::PoisonError<T>> for Error {
+    fn from(_: std::sync::PoisonError<T>) -> Self {
+        Self::LockPoisoned
+    }
 }

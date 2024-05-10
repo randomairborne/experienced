@@ -1,11 +1,14 @@
+use std::time::Duration;
+
 use rand::Rng;
-use redis::AsyncCommands;
 use sqlx::query;
 use twilight_model::{
     gateway::payload::incoming::MessageCreate,
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::{db_to_id, id_to_db};
+
+const MESSAGE_COOLDOWN: Duration = Duration::from_secs(60);
 
 use crate::{Error, XpdListener};
 impl XpdListener {
@@ -21,8 +24,8 @@ impl XpdListener {
         guild_id: Id<GuildMarker>,
         msg: MessageCreate,
     ) -> Result<(), Error> {
-        let has_sent_key = format!("cooldown-{guild_id}-{}", msg.author.id);
-        let has_sent: bool = self.redis.get().await?.get(&has_sent_key).await?;
+        let user_cooldown_key = (guild_id, msg.author.id);
+        let has_sent = self.messages.read()?.contains(&user_cooldown_key);
         if !msg.author.bot && !has_sent {
             let xp_count: i64 = rand::thread_rng().gen_range(15..=25);
             let xp_record = query!(
@@ -37,11 +40,9 @@ impl XpdListener {
             .fetch_one(&self.db)
             .await?;
             let xp = u64::try_from(xp_record.xp).unwrap_or(0);
-            self.redis
-                .get()
-                .await?
-                .set_ex(&has_sent_key, true, 60)
-                .await?;
+            self.messages
+                .write()?
+                .insert(user_cooldown_key, MESSAGE_COOLDOWN);
             let level_info = mee6::LevelInfo::new(xp);
             let reward = query!(
                 "SELECT id FROM role_rewards
