@@ -131,6 +131,12 @@ ROOT_URL=https://my.domain.com
 
 Make sure you replace `<token>` and both `<db_pass>` with your own bot token and database password for postgres. You do **NOT** need to configure postgres, just set those variables up and it will configure for you.
 
+## Finally, start the docker with:
+```bash
+docker compose up
+```
+If there are any errors, ping rosilla07 or valkyrie_pilot on the official discord [here](<https://discord.gg/sGX2EhceNc>)
+
 ## Invite the bot with:
 
 ```bash https://discord.com/oauth2/authorize?client_id=<yourclientid>&permissions=8&scope=bot+applications.commands```
