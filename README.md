@@ -74,6 +74,7 @@ docker compose file. [Join the discord](https://valk.sh/discord) to learn more!
 
 
 # Using Docker Compose
+You can copy the variables below, or grab them from [here](<https://github.com/PBOwner/xpd/blob/prod/docker-compose.yml>)
 
 ## Docker Compose File:
 
@@ -118,14 +119,14 @@ services:
 Just Copy and Paste this into a `docker-compose.yml` file.
 
 ## Env File:
-
+You can copy the variables below, or grab them from [here](<https://github.com/PBOwner/xpd/blob/prod/.env.example>)
 ```bash
 POSTGRES_PASSWORD=<db_pass>
 DATABASE_URL=postgres://xpd:<db_pass>@postgres:5432/xpd
 DISCORD_TOKEN=<token>
-CONTROL_GUILD=
-OWNERS=
-ROOT_URL=
+CONTROL_GUILD=<main_discord_server_id>
+OWNERS=<your_discord_id>
+ROOT_URL=https://my.domain.com
 ```
 
 Make sure you replace `<token>` and both `<db_pass>` with your own bot token and database password for postgres. You do **NOT** need to configure postgres, just set those variables up and it will configure for you.
