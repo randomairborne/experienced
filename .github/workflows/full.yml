@@ -44,7 +44,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ env.REPO }}-gateway:latest
+          tags: ghcr.io/${{ env.REPO }}:latest
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -55,7 +55,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ env.REPO }}-gateway:unstable
+          tags: ghcr.io/${{ env.REPO }}:unstable
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
