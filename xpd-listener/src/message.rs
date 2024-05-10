@@ -24,9 +24,13 @@ impl XpdListener {
         guild_id: Id<GuildMarker>,
         msg: MessageCreate,
     ) -> Result<(), Error> {
+        if msg.author.bot {
+            return Ok(());
+        }
+
         let user_cooldown_key = (guild_id, msg.author.id);
         let has_sent = self.messages.read()?.contains(&user_cooldown_key);
-        if !msg.author.bot && !has_sent {
+        if !has_sent {
             let xp_count: i64 = rand::thread_rng().gen_range(15..=25);
             let xp_record = query!(
                 "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3)
