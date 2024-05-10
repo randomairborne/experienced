@@ -115,7 +115,7 @@ services:
     volumes:
       - ./postgres:/var/lib/postgresql/data
 ```
-Just Copy and Paste this into a `docker.compose.yml` file.
+Just Copy and Paste this into a `docker-compose.yml` file.
 
 ## Env File:
 
