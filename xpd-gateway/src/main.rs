@@ -54,11 +54,6 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-    let redis_cfg = deadpool_redis::Config::from_url(redis_url);
-    let redis = redis_cfg
-        .create_pool(Some(deadpool_redis::Runtime::Tokio1))
-        .expect("Failed to connect to redis");
-    redis.get().await.expect("Failed to connect to redis");
     let client = twilight_http::Client::new(token.clone());
     let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
     let my_id = client
@@ -73,20 +68,19 @@ async fn main() {
     let shards: Vec<Shard> =
         twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
             .await
-            .expect("Failed to create reccomended shard count")
+            .expect("Failed to create recommended shard count")
             .collect();
     let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
     let client = Arc::new(twilight_http::Client::new(token));
     info!("Connecting to discord");
     let http = reqwest::Client::new();
-    let listener = XpdListener::new(db.clone(), redis.clone(), client.clone());
+    let listener = XpdListener::new(db.clone(), client.clone());
 
     let slash = XpdSlash::new(
         http,
         client.clone(),
         my_id,
         db.clone(),
-        redis,
         root_url,
         control_guild,
         owners,
@@ -96,17 +90,10 @@ async fn main() {
     let (shutdown_trigger, should_shutdown) = tokio::sync::watch::channel::<()>(());
     let mut set = JoinSet::new();
     for shard in shards {
-        let guilds: GuildList = Arc::new(Mutex::new(AHashSet::with_capacity(3000)));
-        set.spawn(cache_refresh_loop(
-            shard.sender(),
-            guilds.clone(),
-            should_shutdown.clone(),
-        ));
         let client = client.clone();
         set.spawn(event_loop(
             shard,
             client,
-            guilds,
             should_shutdown.clone(),
             listener.clone(),
             slash.clone(),
@@ -133,7 +120,6 @@ async fn main() {
 async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
-    guilds: GuildList,
     mut should_shutdown: Receiver<()>,
     listener: XpdListener,
     slash: XpdSlash,
@@ -152,10 +138,8 @@ async fn event_loop(
                 let slash = slash.clone();
                 let sender = shard.sender();
                 let db = db.clone();
-                let guilds = guilds.clone();
                 tokio::spawn(async move {
-                    if let Err(error) =
-                        handle_event(event, http, guilds, listener, slash, sender, db).await
+                    if let Err(error) = handle_event(event, http, listener, slash, sender, db).await
                     {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         error!(?error, "Handler error");
@@ -170,7 +154,6 @@ async fn event_loop(
 async fn handle_event(
     event: Event,
     http: Arc<DiscordClient>,
-    guilds: GuildList,
     listener: XpdListener,
     slash: XpdSlash,
     shard: MessageSender,
@@ -184,10 +167,6 @@ async fn handle_event(
                 id = ready.user.id.get(),
                 "shard got ready",
             );
-            let mut guilds = guilds.lock();
-            for guild in ready.guilds {
-                guilds.insert(guild.id);
-            }
         }
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::GuildCreate(guild_add) => {
@@ -208,17 +187,6 @@ async fn handle_event(
                 http.leave_guild(guild_add.id).await?;
                 return Ok(());
             }
-            guilds.lock().insert(guild_add.id);
-            shard.command(
-                &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(
-                    guild_add.id,
-                )
-                .query("", None),
-            )?;
-            listener.set_guild(guild_add.0).await?;
-        }
-        Event::GuildDelete(guild_delete) => {
-            guilds.lock().remove(&guild_delete.id);
         }
         Event::MemberAdd(member_add) => listener.set_user(member_add.member.user).await?,
         Event::MemberUpdate(member_update) => listener.set_user(member_update.user).await?,
@@ -226,50 +194,6 @@ async fn handle_event(
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         _ => {}
     };
-    Ok(())
-}
-
-type GuildList = Arc<Mutex<AHashSet<Id<GuildMarker>>>>;
-
-async fn cache_refresh_loop(
-    shard: MessageSender,
-    guilds: GuildList,
-    mut should_shutdown: Receiver<()>,
-) {
-    let mut timer = tokio::time::interval(std::time::Duration::from_secs(3600));
-    timer.set_missed_tick_behavior(MissedTickBehavior::Delay);
-    loop {
-        tokio::select! {
-            _ = should_shutdown.changed() => break,
-            _ = timer.tick() => {}
-        }
-        let refresh_result = tokio::select! {
-            result = refresh_cache(
-                shard.clone(),
-                guilds.lock().clone()
-            ) => result,
-            _ = should_shutdown.changed() => break,
-        };
-        if let Err(source) = refresh_result {
-            error!(?source, "Failed to update cache");
-        }
-    }
-}
-
-async fn refresh_cache(
-    shard: MessageSender,
-    guilds: AHashSet<Id<GuildMarker>>,
-) -> Result<(), Error> {
-    let mut timer = tokio::time::interval(std::time::Duration::from_secs(1));
-    timer.set_missed_tick_behavior(MissedTickBehavior::Delay);
-    for guild in &guilds {
-        debug!(guild_id = guild.get(), "Requesting users for guild");
-        shard.command(
-            &twilight_model::gateway::payload::outgoing::RequestGuildMembers::builder(*guild)
-                .query("", None),
-        )?;
-        timer.tick().await;
-    }
     Ok(())
 }
 

@@ -16,7 +16,6 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres",
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 xpd-listener = { path = "../xpd-listener", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-deadpool-redis = { version = "0.15", features = ["rt_tokio_1"] }
 xpd-slash = { path = "../xpd-slash", default-features = false }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 twilight-validate = "0.15"
