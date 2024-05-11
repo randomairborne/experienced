@@ -74,60 +74,10 @@ docker compose file. [Join the discord](https://valk.sh/discord) to learn more!
 
 
 # Using Docker Compose
-You can copy the variables below, or grab them from [here](<https://github.com/PBOwner/xpd/blob/prod/docker-compose.yml>)
-
-## Docker Compose File:
-
-```bash
-networks:
-  xpd-network:
-    external: false
-
-services:
-  xpd-gateway:
-    image: ghcr.io/randomairborne/xpd-gateway:latest
-    restart: unless-stopped
-    networks:
-      - xpd-network
-    env_file:
-      - .env
-    environment:
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-      - postgres
-
-  redis:
-    image: redis
-    restart: unless-stopped
-    networks:
-      - xpd-network
-
-  postgres:
-    image: postgres:16-alpine3.19
-    restart: unless-stopped
-    networks:
-      - xpd-network
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_USER=xpd
-      - POSTGRES_DB=xpd
-    volumes:
-      - ./postgres:/var/lib/postgresql/data
-```
-Just Copy and Paste this into a `docker-compose.yml` file.
+You can grab the file from [here](<https://github.com/PBOwner/xpd/blob/prod/docker-compose.yml>)
 
 ## Env File:
-You can copy the variables below, or grab them from [here](<https://github.com/PBOwner/xpd/blob/prod/.env.example>)
-```bash
-POSTGRES_PASSWORD=<db_pass>
-DATABASE_URL=postgres://xpd:<db_pass>@postgres:5432/xpd
-DISCORD_TOKEN=<token>
-CONTROL_GUILD=<main_discord_server_id>
-OWNERS=<your_discord_id>
-ROOT_URL=https://my.domain.com
-```
+You can grav the variables from [here](<https://github.com/PBOwner/xpd/blob/prod/.env.example>)
 
 Make sure you replace `<token>` and both `<db_pass>` with your own bot token and database password for postgres. You do **NOT** need to configure postgres, just set those variables up and it will configure for you.
 
@@ -141,4 +91,4 @@ If there are any errors, ping rosilla07 or valkyrie_pilot on the official discor
 
 ```bash https://discord.com/oauth2/authorize?client_id=<yourclientid>&permissions=8&scope=bot+applications.commands```
 
-Make sure to replace the `<yourclientid>` with your own.
+Make sure to replace the `<yourclientid>` with your bots.
