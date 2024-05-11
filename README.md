@@ -89,6 +89,6 @@ If there are any errors, ping valkyrie_pilot on the official discord [here](<htt
 
 ## Invite the bot with:
 
-```bash https://discord.com/oauth2/authorize?client_id=<yourclientid>&permissions=8&scope=bot+applications.commands```
+`https://discord.com/oauth2/authorize?client_id=<yourclientid>&permissions=414733126656&scope=bot+applications.commands`
 
 Make sure to replace the `<yourclientid>` with your bots.
