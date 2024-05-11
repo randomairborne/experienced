@@ -54,14 +54,10 @@ pub enum Error {
     Fmt(#[from] std::fmt::Error),
     #[error("Could not convert string to int: {0}")]
     StrToInt(#[from] std::num::ParseIntError),
-    #[error("Redis error: {0}")]
-    Redis(#[from] redis::RedisError),
     #[error("CSV error: {0}")]
     Csv(#[from] csv::Error),
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Deadpool-Redis error: {0}")]
-    DeadpoolRedis(#[from] deadpool_redis::PoolError),
     #[error("Discord API decoding error: {0}")]
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("This page does not exist!")]

@@ -16,9 +16,11 @@ mod response;
 use std::{collections::VecDeque, sync::Arc};
 
 pub use error::Error;
-use parking_lot::Mutex;
 pub use response::XpdSlashResponse;
 use sqlx::PgPool;
+use tokio::sync::oneshot::{
+    channel as oneshot_channel, Receiver as OneshotReceiver, Sender as OneshotSender,
+};
 use twilight_model::{
     application::interaction::Interaction,
     gateway::payload::incoming::InteractionCreate,
@@ -28,6 +30,7 @@ use twilight_model::{
         Id,
     },
 };
+use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -49,21 +52,17 @@ impl XpdSlash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
-        redis: deadpool_redis::Pool,
         root_url: String,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
     ) -> Self {
         let svg = SvgState::new();
-        let import_queue = ImportQueue::new();
         let state = SlashState {
             db,
             client,
             my_id: id,
             svg,
             http,
-            redis,
-            import_queue,
             root_url: root_url.into(),
             control_guild,
             owners: owners.into(),
@@ -96,12 +95,19 @@ impl XpdSlash {
         };
     }
 
-    async fn run(&self, interaction: Interaction) -> XpdSlashResponse {
-        Box::pin(dispatch::process(interaction, self.state.clone()))
+    async fn run(&self, interaction: Interaction, pr: PreResponder) -> InteractionResponse {
+        Box::pin(dispatch::process(interaction, self.state.clone(), pr))
             .await
             .unwrap_or_else(|error| {
                 error!(?error, "got error");
-                XpdSlashResponse::new().content(error.to_string())
+                InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(
+                        InteractionResponseDataBuilder::new()
+                            .content(error.to_string())
+                            .build(),
+                    ),
+                }
             })
     }
 
@@ -152,22 +158,7 @@ pub struct SlashState {
     pub my_id: Id<ApplicationMarker>,
     pub svg: SvgState,
     pub http: reqwest::Client,
-    pub redis: deadpool_redis::Pool,
-    pub import_queue: ImportQueue,
     pub root_url: Arc<str>,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
-}
-
-pub type ImportQueueMember = (Id<GuildMarker>, String);
-#[derive(Clone, Default)]
-pub struct ImportQueue {
-    pub mee6: Arc<Mutex<VecDeque<ImportQueueMember>>>,
-}
-
-impl ImportQueue {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
 }

@@ -11,6 +11,7 @@ use twilight_model::{
 
 use crate::{
     cmd_defs::{AdminCommand, CardCommand, GdprCommand, GuildCardCommand, XpCommand},
+    leaderboard::{process_message_component, process_modal_submit},
     Error, SlashState, XpdSlashResponse,
 };
 
@@ -22,22 +23,9 @@ const PONG: InteractionResponse = InteractionResponse {
 pub async fn process(
     interaction: Interaction,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
-    process_app_cmd(interaction, state).await
-}
-
-async fn process_app_cmd(
-    interaction: Interaction,
-    state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
-    trace!("{interaction:#?}");
-    let data = if let Some(data) = interaction.data {
-        if let InteractionData::ApplicationCommand(cmd) = data {
-            *cmd
-        } else {
-            return Err(Error::WrongInteractionData);
-        }
-    } else {
+) -> Result<InteractionResponse, Error> {
+    trace!(?interaction, "got interaction");
+    let Some(data) = interaction.data else {
         return Err(Error::NoInteractionData);
     };
     let invoker = match interaction.member {
@@ -45,11 +33,32 @@ async fn process_app_cmd(
         None => interaction.user,
     }
     .ok_or(Error::NoInvoker)?;
-    let guild_id = interaction.guild_id.ok_or(Error::NoGuildId)?;
-    match data.kind {
-        CommandType::ChatInput => {
-            process_slash_cmd(data, guild_id, invoker, state, interaction.token).await
+    let guild_id = interaction.guild_id;
+    match data {
+        InteractionData::ApplicationCommand(cmd) => {
+            process_app_cmd(state, *cmd, invoker, interaction.token)
+                .await
+                .map(Into::into)
         }
+        InteractionData::MessageComponent(mcd) => {
+            process_message_component(mcd, guild_id.ok_or(Error::NoGuildId)?, state).await
+        }
+        InteractionData::ModalSubmit(mid) => {
+            process_modal_submit(mid, guild_id.ok_or(Error::NoGuildId)?, state).await
+        }
+        _ => Err(Error::NoInteractionData),
+    }
+}
+
+async fn process_app_cmd(
+    state: SlashState,
+    data: CommandData,
+    invoker: User,
+    guild_id: Id<GuildMarker>,
+    token: String,
+) -> Result<XpdSlashResponse, Error> {
+    match data.kind {
+        CommandType::ChatInput => process_slash_cmd(data, guild_id, invoker, state, token).await,
         CommandType::User => process_user_cmd(data, guild_id, invoker, state).await,
         CommandType::Message => process_msg_cmd(data, guild_id, invoker, state).await,
         _ => Err(Error::WrongInteractionData),
