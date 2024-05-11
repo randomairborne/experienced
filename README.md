@@ -74,10 +74,10 @@ docker compose file. [Join the discord](https://valk.sh/discord) to learn more!
 
 
 # Using Docker Compose
-You can grab the file from [here](<https://github.com/PBOwner/xpd/blob/prod/docker-compose.yml>)
+You can grab the file from [here](/docker-compose.yml)
 
 ## Env File:
-You can grav the variables from [here](<https://github.com/PBOwner/xpd/blob/prod/.env.example>)
+You can grav the variables from [here](/.env.example)
 
 Make sure you replace `<token>` and both `<db_pass>` with your own bot token and database password for postgres. You do **NOT** need to configure postgres, just set those variables up and it will configure for you.
 
@@ -85,7 +85,7 @@ Make sure you replace `<token>` and both `<db_pass>` with your own bot token and
 ```bash
 docker compose up
 ```
-If there are any errors, ping rosilla07 or valkyrie_pilot on the official discord [here](<https://discord.gg/sGX2EhceNc>)
+If there are any errors, ping valkyrie_pilot on the official discord [here](<https://valk.sh/discord>)
 
 ## Invite the bot with:
 
