@@ -79,7 +79,7 @@ You can grab the file from [here](/docker-compose.yml)
 ## Env File:
 You can grav the variables from [here](/.env.example)
 
-Make sure you replace `<token>` and both `<db_pass>` with your own bot token and database password for postgres. You do **NOT** need to configure postgres, just set those variables up and it will configure for you.
+Make sure you replace `<token>` and `<db_pass>` with your own bot token and database password for postgres.
 
 ## Finally, start the docker with:
 ```bash
