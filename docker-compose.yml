@@ -1,0 +1,36 @@
+networks:
+  xpd-network:
+    external: false
+
+services:
+  xpd-gateway:
+    image: ghcr.io/randomairborne/xpd-gateway:latest
+    restart: unless-stopped
+    networks:
+      - xpd-network
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379
+      DATABASE_URL: "postgres://xpd:${POSTGRES_PASSWORD}@postgres:5432/xpd"
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis
+    restart: unless-stopped
+    networks:
+      - xpd-network
+
+  postgres:
+    image: postgres:16-alpine3.19
+    restart: unless-stopped
+    networks:
+      - xpd-network
+    environment:
+      POSTGRES_USER: xpd
+      POSTGRES_DB: xpd
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data

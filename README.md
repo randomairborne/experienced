@@ -71,3 +71,27 @@ docker run --env-file .env --add-host=host.docker.internal:host-gateway --detach
 
 And you're done! This mini-tutorial doesn't support the leaderboard, though. You also may wish to set up a simple
 docker compose file. [Join the discord](https://valk.sh/discord) to learn more!
+
+# Using Docker Compose
+
+You can grab the file from [here](/docker-compose.yml)
+
+## Env File:
+
+You can grav the variables from [here](/.env.example)
+
+Make sure you replace `<token>` and `<db_pass>` with your own bot token and database password for postgres.
+
+## Finally, start the docker with:
+
+```bash
+docker compose up
+```
+
+If there are any errors, ping valkyrie_pilot on the official discord [here](https://valk.sh/discord)
+
+## Invite the bot with:
+
+`https://discord.com/oauth2/authorize?client_id=<yourclientid>&permissions=414733126656&scope=bot+applications.commands`
+
+Make sure to replace the `<yourclientid>` with your bots.
