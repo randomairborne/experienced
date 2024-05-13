@@ -2,13 +2,7 @@
 
 use std::{fmt::Display, str::FromStr};
 
-use twilight_model::{
-    id::{
-        marker::{GuildMarker, UserMarker},
-        Id,
-    },
-    util::ImageHash,
-};
+use twilight_model::id::Id;
 
 pub trait Tag {
     #[must_use]

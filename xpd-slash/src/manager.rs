@@ -19,7 +19,6 @@ use crate::{
 
 pub async fn process_xp(
     data: XpCommand,
-    interaction_token: String,
     guild_id: Id<GuildMarker>,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {

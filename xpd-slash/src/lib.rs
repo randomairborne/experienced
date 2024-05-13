@@ -13,14 +13,11 @@ mod manage_card;
 mod manager;
 mod response;
 
-use std::{collections::VecDeque, sync::Arc};
+use std::{sync::Arc, time::Instant};
 
 pub use error::Error;
 pub use response::XpdSlashResponse;
 use sqlx::PgPool;
-use tokio::sync::oneshot::{
-    channel as oneshot_channel, Receiver as OneshotReceiver, Sender as OneshotSender,
-};
 use twilight_model::{
     application::interaction::Interaction,
     gateway::payload::incoming::InteractionCreate,
@@ -31,6 +28,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
+use xpd_common::id_to_db;
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -74,29 +72,23 @@ impl XpdSlash {
 
     pub async fn execute(&self, interaction_create: InteractionCreate) {
         let interaction_token = interaction_create.token.clone();
+        let ic_id = interaction_create.id;
+        let process_start = Instant::now();
+        let response = self.run(interaction_create.0).await;
+        let total_time = process_start.elapsed();
+        info!(?total_time, "processed interaction in time");
         if let Err(error) = self
             .client()
             .interaction(self.id())
-            .create_response(
-                interaction_create.id,
-                &interaction_create.token,
-                &InteractionResponse {
-                    kind: InteractionResponseType::DeferredChannelMessageWithSource,
-                    data: None,
-                },
-            )
+            .create_response(ic_id, &interaction_token, &response)
             .await
         {
             error!(?error, "Failed to ack discord gateway message");
         };
-        let response = self.run(interaction_create.0).await;
-        if let Err(error) = self.send_followup(response, &interaction_token).await {
-            error!(?error, "Failed to send real response");
-        };
     }
 
-    async fn run(&self, interaction: Interaction, pr: PreResponder) -> InteractionResponse {
-        Box::pin(dispatch::process(interaction, self.state.clone(), pr))
+    async fn run(&self, interaction: Interaction) -> InteractionResponse {
+        Box::pin(dispatch::process(interaction, self.state.clone()))
             .await
             .unwrap_or_else(|error| {
                 error!(?error, "got error");
@@ -161,4 +153,39 @@ pub struct SlashState {
     pub root_url: Arc<str>,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
+}
+
+#[derive(Copy, Clone)]
+pub struct UserStats {
+    xp: i64,
+    rank: i64,
+}
+
+impl SlashState {
+    pub async fn get_user_stats(
+        &self,
+        id: Id<UserMarker>,
+        guild_id: Id<GuildMarker>,
+    ) -> Result<UserStats, Error> {
+        // Select current XP from the database, return 0 if there is no row
+        let xp = query!(
+            "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
+            id_to_db(id),
+            id_to_db(guild_id)
+        )
+        .fetch_optional(&self.db)
+        .await?
+        .map_or(0, |v| v.xp);
+        let rank = query!(
+            "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
+            xp,
+            id_to_db(guild_id)
+        )
+        .fetch_one(&self.db)
+        .await?
+        .count
+        .unwrap_or(0)
+            + 1;
+        Ok(UserStats { xp, rank })
+    }
 }

@@ -22,7 +22,6 @@ serde = { version = "1", features = ["derive"] }
 twilight-interactions = "0.15"
 twilight-validate = "0.15"
 twilight-model = "0.15"
-parking_lot = "0.12.1"
 tracing = "0.1"
 base64 = "0.22"
 thiserror = "1"

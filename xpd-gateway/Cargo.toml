@@ -11,7 +11,7 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 twilight-gateway = { version = "0.15", features = ["rustls-native-roots", "twilight-http"], default-features = false }
-reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots"], default-features = false }
+reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots", "hickory-dns"], default-features = false }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 xpd-listener = { path = "../xpd-listener", default-features = false }
@@ -21,9 +21,7 @@ xpd-common = { path = "../xpd-common", version = "0.0.6" }
 twilight-validate = "0.15"
 twilight-model = "0.15"
 twilight-http = "0.15"
-parking_lot = "0.12"
 dotenvy = "0.15"
 thiserror = "1"
 tracing = "0.1"
-ahash = "0.8"
 vss = "0.1"

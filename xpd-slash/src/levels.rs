@@ -26,40 +26,23 @@ pub async fn get_level(
     invoker: Id<UserMarker>,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
-    let xp = query!(
-        "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-        id_to_db(user.id),
-        id_to_db(guild_id)
-    )
-    .fetch_optional(&state.db)
-    .await?
-    .map_or(0, |v| v.xp);
-    let rank = query!(
-        "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
-        xp,
-        id_to_db(guild_id)
-    )
-    .fetch_one(&state.db)
-    .await?
-    .count
-    .unwrap_or(0)
-        + 1;
-    let level_info = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0));
+    let rankstats = state.get_user_stats(invoker, guild_id).await?;
+    let level_info = mee6::LevelInfo::new(u64::try_from(rankstats.xp).unwrap_or(0));
     let content = if user.bot {
         "Bots aren't ranked, that would be silly!".to_string()
     } else if invoker == user.id {
-        if xp == 0 {
+        if rankstats.xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(&state, user, level_info, rank).await;
+            return generate_level_response(&state, user, level_info, rankstats.rank).await;
         }
-    } else if xp == 0 {
+    } else if rankstats.xp == 0 {
         format!(
             "{} isn't ranked yet, because they haven't sent any messages!",
             user.tag()
         )
     } else {
-        return generate_level_response(&state, user, level_info, rank).await;
+        return generate_level_response(&state, user, level_info, rankstats.rank).await;
     };
     Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(content).build()]))
 }
@@ -196,32 +179,26 @@ fn toy_or_none(toy: &Option<String>) -> Option<Toy> {
     }
 }
 
-pub fn leaderboard(root_url: &Arc<str>, guild_id: Id<GuildMarker>) -> XpdSlashResponse {
-    let guild_link = format!("{root_url}/leaderboard/{guild_id}");
-    let embed = EmbedBuilder::new()
-        .description(format!("[Click to view the leaderboard!]({guild_link})"))
-        .color(crate::THEME_COLOR)
-        .build();
-    XpdSlashResponse::new().embeds([embed])
-}
-
 async fn get_avatar(state: SlashState, user: Arc<User>) -> Result<String, Error> {
     let url = user.avatar.map_or_else(
         || {
             format!(
-                "https://cdn.discordapp.com/embed/avatars/{}.png?size=512",
+                "https://cdn.discordapp.com/embed/avatars/{}.png",
                 (user.id.get() >> 22) % 6
             )
         },
         |hash| {
             format!(
-                "https://cdn.discordapp.com/avatars/{}/{}.png?size=512",
+                "https://cdn.discordapp.com/avatars/{}/{}.png",
                 user.id, hash
             )
         },
     );
+    debug!(url, "Downloading avatar");
     let png = state.http.get(url).send().await?.bytes().await?;
-    let data = format!("data:image/png;base64,{}", BASE64_ENGINE.encode(png));
+    debug!("Encoding avatar");
+    let data = "data:image/png;base64,".to_string() + &BASE64_ENGINE.encode(png);
+    debug!("Encoded avatar");
     Ok(data)
 }
 

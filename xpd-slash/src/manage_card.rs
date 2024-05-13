@@ -16,45 +16,36 @@ use crate::{
         card::{CardCommandEdit, CardCommandEditFont, ColorOption},
         CardCommand, GuildCardCommand,
     },
-    Error, SlashState, XpdSlashResponse,
+    Error, SlashState, UserStats, XpdSlashResponse,
 };
 
 pub async fn user_card_update<'a>(
     command: CardCommand,
     invoker: User,
     state: &SlashState,
-    guild_id: Id<GuildMarker>,
+    guild_id: Option<Id<GuildMarker>>,
 ) -> Result<XpdSlashResponse, Error> {
     let contents = match command {
         CardCommand::Reset(_reset) => process_reset(state, invoker.id.cast()).await?,
         CardCommand::Fetch(_fetch) => {
-            process_fetch(state, &[invoker.id.cast(), guild_id.cast()]).await?
+            if let Some(guild_id) = guild_id {
+                process_fetch(state, &[invoker.id.cast(), guild_id.cast()]).await
+            } else {
+                process_fetch(state, &[invoker.id.cast()]).await
+            }?
         }
         CardCommand::Edit(edit) => process_edit(edit, state, invoker.id.cast()).await?,
     };
+    let user_stats = if let Some(id) = guild_id {
+        state.get_user_stats(invoker.id, id).await?
+    } else {
+        // I am so mature.
+        UserStats { xp: 420, rank: 69 }
+    };
     let referenced_user = Arc::new(invoker);
-    // Select current XP from the database, return 0 if there is no row
-    let xp = query!(
-        "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-        id_to_db(referenced_user.id),
-        id_to_db(guild_id)
-    )
-    .fetch_optional(&state.db)
-    .await?
-    .map_or(0, |v| v.xp);
-    let rank = query!(
-        "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
-        xp,
-        id_to_db(guild_id)
-    )
-    .fetch_one(&state.db)
-    .await?
-    .count
-    .unwrap_or(0)
-        + 1;
-    #[allow(clippy::cast_sign_loss)]
-    let level_info = LevelInfo::new(u64::try_from(xp).unwrap_or(0));
-    let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, rank).await?;
+    let level_info = LevelInfo::new(u64::try_from(user_stats.xp).unwrap_or(0));
+    let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, user_stats.rank)
+        .await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)

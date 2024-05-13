@@ -5,10 +5,8 @@ extern crate tracing;
 
 use std::sync::Arc;
 
-use ahash::AHashSet;
-use parking_lot::Mutex;
 use sqlx::PgPool;
-use tokio::{sync::watch::Receiver, task::JoinSet, time::MissedTickBehavior};
+use tokio::{sync::watch::Receiver, task::JoinSet};
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
 use twilight_http::Client as DiscordClient;
@@ -31,7 +29,6 @@ async fn main() {
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
     let token = xpd_common::get_var("DISCORD_TOKEN");
-    let redis_url = xpd_common::get_var("REDIS_URL");
     let pg = xpd_common::get_var("DATABASE_URL");
     let control_guild: Id<GuildMarker> = xpd_common::parse_var("CONTROL_GUILD");
     let owners: Vec<Id<UserMarker>> = xpd_common::get_var("OWNERS")
@@ -54,8 +51,8 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
-    let client = twilight_http::Client::new(token.clone());
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILD_MEMBERS | Intents::GUILDS;
+    let client = Arc::new(DiscordClient::new(token.clone()));
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
     let my_id = client
         .current_user_application()
         .await
@@ -71,9 +68,12 @@ async fn main() {
             .expect("Failed to create recommended shard count")
             .collect();
     let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
-    let client = Arc::new(twilight_http::Client::new(token));
     info!("Connecting to discord");
-    let http = reqwest::Client::new();
+    let http = reqwest::Client::builder()
+        .user_agent("randomairborne/experienced")
+        .https_only(true)
+        .build()
+        .unwrap();
     let listener = XpdListener::new(db.clone(), client.clone());
 
     let slash = XpdSlash::new(
@@ -136,11 +136,9 @@ async fn event_loop(
                 let listener = listener.clone();
                 let http = http.clone();
                 let slash = slash.clone();
-                let sender = shard.sender();
                 let db = db.clone();
                 tokio::spawn(async move {
-                    if let Err(error) = handle_event(event, http, listener, slash, sender, db).await
-                    {
+                    if let Err(error) = handle_event(event, http, listener, slash, db).await {
                         // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                         error!(?error, "Handler error");
                     }
@@ -156,7 +154,6 @@ async fn handle_event(
     http: Arc<DiscordClient>,
     listener: XpdListener,
     slash: XpdSlash,
-    shard: MessageSender,
     db: PgPool,
 ) -> Result<(), Error> {
     match event {
@@ -188,9 +185,6 @@ async fn handle_event(
                 return Ok(());
             }
         }
-        Event::MemberAdd(member_add) => listener.set_user(member_add.member.user).await?,
-        Event::MemberUpdate(member_update) => listener.set_user(member_update.user).await?,
-        Event::MemberChunk(member_chunk) => listener.set_chunk(member_chunk.members).await?,
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         _ => {}
     };

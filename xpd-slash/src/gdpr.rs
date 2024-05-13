@@ -100,7 +100,7 @@ struct UserXpArchiveEntry {
 }
 
 impl UserXpArchiveEntry {
-    const fn from_record(guild: i64, xp: i64) -> Self {
+    fn from_record(guild: i64, xp: i64) -> Self {
         Self {
             guild: db_to_id(guild),
             xp,

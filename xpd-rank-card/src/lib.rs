@@ -12,6 +12,7 @@ pub use font::Font;
 use resvg::usvg::{fontdb::Database, ImageKind, ImageRendering};
 use tera::Value;
 pub use toy::Toy;
+use tracing::debug;
 
 /// Context is the main argument of [`SvgState::render`], and takes parameters for what to put on
 /// the card.
@@ -59,9 +60,11 @@ impl SvgState {
     pub async fn render(&self, data: Context) -> Result<Vec<u8>, Error> {
         let cloned_self = self.clone();
         let (send, recv) = tokio::sync::oneshot::channel();
+        debug!("starting render of SVG");
         self.threads.spawn(move || {
             send.send(cloned_self.sync_render(&data)).ok();
         });
+        debug!("SVG render finished");
         recv.await?
     }
 

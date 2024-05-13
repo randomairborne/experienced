@@ -9,10 +9,7 @@ use twilight_model::{
         Component, ReactionType,
     },
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    id::{
-        marker::{GuildMarker, UserMarker},
-        Id,
-    },
+    id::{marker::GuildMarker, Id},
 };
 use twilight_util::builder::{
     embed::{EmbedBuilder, EmbedFooterBuilder},
@@ -23,8 +20,8 @@ use xpd_common::id_to_db;
 use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
 
 pub async fn leaderboard(
-    guild_id: Id<GuildMarker>,
     state: SlashState,
+    guild_id: Id<GuildMarker>,
     guild_command: LeaderboardCommand,
 ) -> Result<InteractionResponse, Error> {
     // "zpage" means "zero-indexed page", which is how this is represented internally.
@@ -32,7 +29,7 @@ pub async fn leaderboard(
     let zpage = if let Some(pick) = guild_command.page {
         pick - 1
     } else if let Some(pick) = guild_command.user {
-        get_user_position(pick.resolved.id, guild_id, &state.db).await?
+        state.get_user_stats(pick.resolved.id, guild_id).await?.rank / 10
     } else {
         0
     };
@@ -168,21 +165,4 @@ pub async fn process_message_component(
         kind: InteractionResponseType::UpdateMessage,
         data: Some(gen_leaderboard(guild_id, state.db, offset).await?),
     })
-}
-
-// this is a really simple wrapper function
-async fn get_user_position(
-    user_id: Id<UserMarker>,
-    guild_id: Id<GuildMarker>,
-    db: &sqlx::PgPool,
-) -> Result<i64, Error> {
-    #[allow(clippy::cast_possible_wrap)]
-    Ok(query!(
-        "SELECT COUNT(*) as count FROM levels WHERE xp > (SELECT xp FROM levels WHERE id = $1 AND guild = $2) AND guild = $2",
-        id_to_db(user_id),
-        id_to_db(guild_id)
-    )
-        .fetch_one(db)
-        .await?
-        .count.unwrap_or(0) / 10)
 }

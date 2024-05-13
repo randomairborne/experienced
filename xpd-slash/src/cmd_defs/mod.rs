@@ -10,11 +10,19 @@ pub mod gdpr;
 pub mod manage;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "help", desc = "Learn about how to use experienced")]
+#[command(
+    name = "help",
+    desc = "Learn about how to use experienced",
+    dm_permission = true
+)]
 pub struct HelpCommand;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "leaderboard", desc = "See the leaderboard for this server")]
+#[command(
+    name = "leaderboard",
+    desc = "See the leaderboard for this server",
+    dm_permission = false
+)]
 pub struct LeaderboardCommand {
     #[command(desc = "User to check level of")]
     pub user: Option<ResolvedUser>,
@@ -23,7 +31,11 @@ pub struct LeaderboardCommand {
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "rank", desc = "Check someone's rank and level")]
+#[command(
+    name = "rank",
+    desc = "Check someone's rank and level",
+    dm_permission = false
+)]
 pub struct RankCommand {
     #[command(desc = "User to check level of")]
     pub user: Option<ResolvedUser>,
@@ -32,7 +44,11 @@ pub struct RankCommand {
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "admin", desc = "Globally manage the bot")]
+#[command(
+    name = "admin",
+    desc = "Globally manage the bot",
+    dm_permission = false
+)]
 #[allow(clippy::large_enum_variant)]
 pub enum AdminCommand {
     #[command(name = "leave")]
@@ -52,7 +68,8 @@ pub enum AdminCommand {
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "card",
-    desc = "Set hex codes for different color schemes in your rank card."
+    desc = "Set hex codes for different color schemes in your rank card.",
+    dm_permission = true
 )]
 #[allow(clippy::large_enum_variant)]
 pub enum CardCommand {

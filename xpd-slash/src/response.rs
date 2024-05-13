@@ -1,7 +1,10 @@
 use twilight_model::{
     application::command::CommandOptionChoice,
     channel::message::{AllowedMentions, Component, Embed, MessageFlags},
-    http::{attachment::Attachment, interaction::InteractionResponseData},
+    http::{
+        attachment::Attachment,
+        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    },
 };
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -186,6 +189,15 @@ impl From<InteractionResponseData> for XpdSlashResponse {
             flags: value.flags,
             title: value.title,
             tts: value.tts,
+        }
+    }
+}
+
+impl From<XpdSlashResponse> for InteractionResponse {
+    fn from(value: XpdSlashResponse) -> Self {
+        Self {
+            data: Some(value.into()),
+            kind: InteractionResponseType::ChannelMessageWithSource,
         }
     }
 }
