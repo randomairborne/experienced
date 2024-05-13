@@ -162,6 +162,11 @@ pub struct UserStats {
 }
 
 impl SlashState {
+    /// Get public-facing statistics for a user
+    /// # Errors
+    /// This function can error when sqlx fails to get the right datatype.
+    /// # Panics
+    /// This can panic in some sqlx edge cases.
     pub async fn get_user_stats(
         &self,
         id: Id<UserMarker>,
