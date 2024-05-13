@@ -54,20 +54,19 @@ pub fn get_var(key: &str) -> String {
     std::env::var(key).unwrap_or_else(|e| panic!("Expected {key} in environment: {e}"))
 }
 
-/// This is basically a no-op. It fetches a field on a struct through a method and casts it
+/// Fetches the raw ID data from Twilight and returns it as an i64, so it can be stored in Postgres
+/// easily.
+/// Essentially a no-op.
 #[must_use]
 #[inline]
 pub const fn id_to_db<T>(id: Id<T>) -> i64 {
-    #[allow(clippy::cast_possible_wrap)]
-    {
-        id.get() as i64
-    }
+    i64::from_le_bytes(id.get().to_le_bytes())
 }
 
 /// Create a new checked twilight id from an i64. Only get this from the DB!
-#[must_use]
+/// Essentially a no-op.
 #[inline]
+#[must_use]
 pub const fn db_to_id<T>(db: i64) -> Id<T> {
-    #[allow(clippy::cast_sign_loss)]
-    Id::new(db as u64)
+    Id::new(u64::from_le_bytes(db.to_le_bytes()))
 }
