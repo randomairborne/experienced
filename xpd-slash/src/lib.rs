@@ -20,6 +20,7 @@ pub use response::XpdSlashResponse;
 use sqlx::PgPool;
 use twilight_model::{
     application::interaction::Interaction,
+    channel::message::MessageFlags,
     gateway::payload::incoming::InteractionCreate,
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
@@ -94,6 +95,7 @@ impl XpdSlash {
                     kind: InteractionResponseType::ChannelMessageWithSource,
                     data: Some(
                         InteractionResponseDataBuilder::new()
+                            .flags(MessageFlags::EPHEMERAL)
                             .content(error.to_string())
                             .build(),
                     ),
