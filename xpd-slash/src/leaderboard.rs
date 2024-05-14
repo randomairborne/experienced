@@ -137,7 +137,7 @@ pub async fn process_message_component(
     if data.custom_id == "jump_modal" {
         let input = TextInput {
             custom_id: "jump_modal_input".to_string(),
-            label: "jump_destination".to_string(),
+            label: "Jump Destination".to_string(),
             max_length: Some(6),
             min_length: Some(1),
             placeholder: Some("What page to jump to".to_string()),
