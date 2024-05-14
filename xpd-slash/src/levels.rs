@@ -3,6 +3,7 @@ use std::sync::Arc;
 use base64::Engine;
 use tokio::try_join;
 use twilight_model::{
+    channel::message::MessageFlags,
     http::attachment::Attachment,
     id::{
         marker::{GenericMarker, GuildMarker, UserMarker},
@@ -18,15 +19,22 @@ use xpd_rank_card::{
     Font, Toy,
 };
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{cmd_defs::RankCommand, Error, SlashState, XpdSlashResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
     user: User,
     invoker: Id<UserMarker>,
+    showoff: Option<bool>,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
     let rankstats = state.get_user_stats(invoker, guild_id).await?;
+    let flags = if showoff.is_some_and(|v| v) {
+        MessageFlags::empty()
+    } else {
+        MessageFlags::EPHEMERAL
+    };
+
     let level_info = mee6::LevelInfo::new(u64::try_from(rankstats.xp).unwrap_or(0));
     let content = if user.bot {
         "Bots aren't ranked, that would be silly!".to_string()
@@ -34,7 +42,7 @@ pub async fn get_level(
         if rankstats.xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(&state, user, level_info, rankstats.rank).await;
+            return generate_level_response(&state, user, level_info, rankstats.rank, flags).await;
         }
     } else if rankstats.xp == 0 {
         format!(
@@ -42,9 +50,10 @@ pub async fn get_level(
             user.tag()
         )
     } else {
-        return generate_level_response(&state, user, level_info, rankstats.rank).await;
+        return generate_level_response(&state, user, level_info, rankstats.rank, flags).await;
     };
-    Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(content).build()]))
+    let embed = EmbedBuilder::new().description(content).build();
+    Ok(XpdSlashResponse::new().embeds([embed]).flags(flags))
 }
 
 async fn generate_level_response(
@@ -52,9 +61,10 @@ async fn generate_level_response(
     user: User,
     level_info: mee6::LevelInfo,
     rank: i64,
+    flags: MessageFlags,
 ) -> Result<XpdSlashResponse, Error> {
     let card = gen_card(state.clone(), Arc::new(user), level_info, rank).await?;
-    Ok(XpdSlashResponse::new().attachments([card]))
+    Ok(XpdSlashResponse::new().attachments([card]).flags(flags))
 }
 
 pub async fn gen_card(

@@ -76,12 +76,17 @@ async fn process_slash_cmd(
     match data.name.as_str() {
         "help" => Ok(crate::help::help().into()),
         "rank" => {
-            let target = crate::cmd_defs::RankCommand::from_interaction(data.into())?
-                .user
-                .map_or_else(|| invoker.clone(), |v| v.resolved);
-            crate::levels::get_level(guild_id.ok_or(Error::NoGuildId)?, target, invoker.id, state)
-                .await
-                .map(Into::into)
+            let data = crate::cmd_defs::RankCommand::from_interaction(data.into())?;
+            let target = data.user.map_or_else(|| invoker.clone(), |v| v.resolved);
+            crate::levels::get_level(
+                guild_id.ok_or(Error::NoGuildId)?,
+                target,
+                invoker.id,
+                data.showoff,
+                state,
+            )
+            .await
+            .map(Into::into)
         }
         "xp" => crate::manager::process_xp(
             XpCommand::from_interaction(data.into())?,
@@ -129,6 +134,8 @@ async fn process_slash_cmd(
     }
 }
 
+const DEFAULT_SHOWOFF: Option<bool> = None;
+
 async fn process_user_cmd(
     data: CommandData,
     guild_id: Id<GuildMarker>,
@@ -143,7 +150,7 @@ async fn process_user_cmd(
         .users
         .get(&msg_id.cast())
         .ok_or(Error::NoTarget)?;
-    crate::levels::get_level(guild_id, user.clone(), invoker.id, state).await
+    crate::levels::get_level(guild_id, user.clone(), invoker.id, DEFAULT_SHOWOFF, state).await
 }
 
 async fn process_msg_cmd(
@@ -161,5 +168,5 @@ async fn process_msg_cmd(
         .get(&msg_id.cast())
         .ok_or(Error::NoTarget)?
         .author;
-    crate::levels::get_level(guild_id, user.clone(), invoker.id, state).await
+    crate::levels::get_level(guild_id, user.clone(), invoker.id, DEFAULT_SHOWOFF, state).await
 }
