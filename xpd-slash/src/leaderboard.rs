@@ -117,14 +117,15 @@ pub async fn process_modal_submit(
 ) -> Result<InteractionResponse, Error> {
     let actions = data.components.first().ok_or(Error::NoModalActionRow)?;
     let field = actions.components.first().ok_or(Error::NoFormField)?;
-    let offset: i64 = field
+    let choice: i64 = field
         .value
         .as_ref()
         .ok_or(Error::NoDestinationInComponent)?
-        .parse()? - 1;
+        .parse()?;
+    let zpage = choice - 1;
     Ok(InteractionResponse {
         kind: InteractionResponseType::UpdateMessage,
-        data: Some(gen_leaderboard(guild_id, state.db, offset).await?),
+        data: Some(gen_leaderboard(guild_id, state.db, zpage).await?),
     })
 }
 
