@@ -121,7 +121,7 @@ pub async fn process_modal_submit(
         .value
         .as_ref()
         .ok_or(Error::NoDestinationInComponent)?
-        .parse()?;
+        .parse()? - 1;
     Ok(InteractionResponse {
         kind: InteractionResponseType::UpdateMessage,
         data: Some(gen_leaderboard(guild_id, state.db, offset).await?),
