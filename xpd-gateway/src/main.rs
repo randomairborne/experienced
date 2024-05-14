@@ -39,9 +39,6 @@ async fn main() {
                 .expect("One of the values in OWNERS was not a valid ID!")
         })
         .collect();
-    let root_url = xpd_common::get_var("ROOT_URL")
-        .trim_end_matches('/')
-        .to_string();
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
         .connect(&pg)
@@ -81,7 +78,6 @@ async fn main() {
         client.clone(),
         my_id,
         db.clone(),
-        root_url,
         control_guild,
         owners,
     )

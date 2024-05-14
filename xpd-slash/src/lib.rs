@@ -50,7 +50,6 @@ impl XpdSlash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
-        root_url: String,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
     ) -> Self {
@@ -61,7 +60,6 @@ impl XpdSlash {
             my_id: id,
             svg,
             http,
-            root_url: root_url.into(),
             control_guild,
             owners: owners.into(),
         };
@@ -150,7 +148,6 @@ pub struct SlashState {
     pub my_id: Id<ApplicationMarker>,
     pub svg: SvgState,
     pub http: reqwest::Client,
-    pub root_url: Arc<str>,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
 }
