@@ -5,16 +5,21 @@ COPY . .
 
 RUN apk add musl-dev
 
+ENV SQLX_OFFLINE=1
+
 RUN \
     --mount=type=cache,target=/build/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
-    cargo build --release && cp /build/target/release/xpd-gateway /build/xpd-gateway
+    cargo build --release
+
+RUN ls -lah /build/
+RUN --mount=type=cache,target=/build/target/ cp /build/target/release/xpd-gateway /xpd-gateway
 
 FROM alpine:latest
 
 WORKDIR /
 
-COPY --from=builder /build/xpd-gateway /usr/bin/xpd-gateway
+COPY --from=builder /xpd-gateway /usr/bin/xpd-gateway
 
 EXPOSE 8080
 
