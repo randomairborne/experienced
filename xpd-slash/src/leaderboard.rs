@@ -6,7 +6,7 @@ use twilight_model::{
     },
     channel::message::{
         component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
-        Component, ReactionType,
+        Component, MessageFlags, ReactionType,
     },
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
     id::{marker::GuildMarker, Id},
@@ -34,7 +34,7 @@ pub async fn leaderboard(
         0
     };
     Ok(InteractionResponse {
-        data: Some(gen_leaderboard(guild_id, state.db, zpage).await?),
+        data: Some(gen_leaderboard(guild_id, state.db, zpage, guild_command.show_off).await?),
         kind: InteractionResponseType::ChannelMessageWithSource,
     })
 }
@@ -43,6 +43,7 @@ async fn gen_leaderboard(
     guild_id: Id<GuildMarker>,
     db: sqlx::PgPool,
     zpage: i64,
+    show_off: Option<bool>,
 ) -> Result<InteractionResponseData, Error> {
     let users = query!(
         "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 10 OFFSET $2",
@@ -102,11 +103,17 @@ async fn gen_leaderboard(
         style: ButtonStyle::Primary,
         url: None,
     });
+    let flags = if show_off.is_some_and(|v| v) {
+        MessageFlags::empty()
+    } else {
+        MessageFlags::EPHEMERAL
+    };
     Ok(InteractionResponseDataBuilder::new()
         .components([Component::ActionRow(ActionRow {
             components: vec![back_button, select_button, forward_button],
         })])
         .embeds([embed])
+        .flags(flags)
         .build())
 }
 
@@ -125,7 +132,7 @@ pub async fn process_modal_submit(
     let zpage = choice - 1;
     Ok(InteractionResponse {
         kind: InteractionResponseType::UpdateMessage,
-        data: Some(gen_leaderboard(guild_id, state.db, zpage).await?),
+        data: Some(gen_leaderboard(guild_id, state.db, zpage, Some(true)).await?),
     })
 }
 
@@ -164,6 +171,6 @@ pub async fn process_message_component(
     let offset: i64 = data.custom_id.parse()?;
     Ok(InteractionResponse {
         kind: InteractionResponseType::UpdateMessage,
-        data: Some(gen_leaderboard(guild_id, state.db, offset).await?),
+        data: Some(gen_leaderboard(guild_id, state.db, offset, Some(true)).await?),
     })
 }

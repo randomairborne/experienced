@@ -28,6 +28,8 @@ pub struct LeaderboardCommand {
     pub user: Option<ResolvedUser>,
     #[command(desc = "Page to jump to", min_value = 1)]
     pub page: Option<i64>,
+    #[command(desc = "Want to show this off to everyone?")]
+    pub show_off: Option<bool>,
 }
 
 #[derive(CommandModel, CreateCommand)]
