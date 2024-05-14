@@ -19,7 +19,7 @@ use xpd_rank_card::{
     Font, Toy,
 };
 
-use crate::{cmd_defs::RankCommand, Error, SlashState, XpdSlashResponse};
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
