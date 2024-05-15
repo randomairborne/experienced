@@ -157,6 +157,20 @@ impl XpdSlashResponse {
     pub fn tts(self, tts: bool) -> Self {
         self.tts_o(Some(tts))
     }
+
+    #[must_use]
+    pub fn ephemeral(mut self, ephemeral: bool) -> Self {
+        if let Some(flags) = &mut self.flags {
+            if ephemeral {
+                flags.insert(MessageFlags::EPHEMERAL);
+            } else {
+                flags.remove(MessageFlags::EPHEMERAL);
+            }
+        } else if ephemeral {
+            self.flags = Some(MessageFlags::EPHEMERAL);
+        }
+        self
+    }
 }
 
 impl From<XpdSlashResponse> for InteractionResponseData {

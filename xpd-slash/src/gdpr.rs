@@ -46,9 +46,10 @@ pub async fn delete(
     let (levels, custom_card) = join!(levels, custom_card);
     levels?;
     custom_card?;
-    Ok(XpdSlashResponse::with_embed_text(
-        "All data wiped. Thank you for using experienced.",
-    ))
+    Ok(
+        XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
+            .ephemeral(true),
+    )
 }
 
 pub async fn download(state: SlashState, invoker: User) -> Result<XpdSlashResponse, Error> {
@@ -88,9 +89,12 @@ pub async fn download(state: SlashState, invoker: User) -> Result<XpdSlashRespon
         .attachments(&[level_file, card_file])?
         .await?;
 
-    Ok(XpdSlashResponse::with_embed_text(
-        "Check your DMs, your data package has been sent to you!",
-    ))
+    Ok(
+        XpdSlashResponse::with_embed_text(
+            "Check your DMs, your data package has been sent to you!",
+        )
+        .ephemeral(true),
+    )
 }
 
 #[derive(Serialize)]
