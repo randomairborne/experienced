@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{convert::TryInto, fmt::Write};
 
 use twilight_model::{
     application::interaction::{
@@ -39,28 +39,41 @@ pub async fn leaderboard(
     })
 }
 
+const USERS_PER_PAGE_USIZE: usize = 10;
+#[allow(clippy::cast_possible_wrap)]
+const USERS_PER_PAGE: i64 = USERS_PER_PAGE_USIZE as i64;
+
 async fn gen_leaderboard(
     guild_id: Id<GuildMarker>,
     db: sqlx::PgPool,
     zpage: i64,
     show_off: Option<bool>,
 ) -> Result<InteractionResponseData, Error> {
+    if zpage.is_negative() {
+        return Err(Error::PageDoesNotExist);
+    }
     let users = query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT 10 OFFSET $2",
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
         id_to_db(guild_id),
-        zpage * 10
+        USERS_PER_PAGE + 1,
+        zpage * USERS_PER_PAGE
     )
     .fetch_all(&db)
     .await?;
     if users.is_empty() {
         return Err(Error::NoUsersForPage);
     }
+    let one_more_page_bro = users.len() >= (USERS_PER_PAGE_USIZE + 1);
+    let last_user_idx = users.len().clamp(0, USERS_PER_PAGE_USIZE);
+    let users = &users[0..last_user_idx];
     // this is kinda the only way to do this
     // It's designed to only allocate once, at the start here
     let mut description = String::with_capacity(users.len() * 128);
     for (i, user) in users.iter().enumerate() {
         let level = mee6::LevelInfo::new(user.xp.try_into().unwrap_or(0)).level();
-        let rank: i64 = i.try_into().map_or(-1, |v: i64| v + (zpage * 10) + 1);
+        let rank: i64 = i
+            .try_into()
+            .map_or(-1, |v: i64| v + (zpage * USERS_PER_PAGE) + 1);
         writeln!(description, "**#{rank}.** <@{}> - Level {level}", user.id).ok();
     }
     if description.is_empty() {
@@ -83,8 +96,7 @@ async fn gen_leaderboard(
     });
     let select_button = Component::Button(Button {
         custom_id: Some("jump_modal".to_string()),
-        // this checks if we are on both the last page and the first page, in which case we do not need to be able to jump
-        disabled: users.len() < 10 && zpage == 0,
+        disabled: !one_more_page_bro && zpage == 0,
         emoji: None,
         label: Some("Go to page".to_string()),
         style: ButtonStyle::Primary,
@@ -92,10 +104,7 @@ async fn gen_leaderboard(
     });
     let forward_button = Component::Button(Button {
         custom_id: Some((zpage + 1).to_string()),
-        // this checks if the users on the current page are less then 10.
-        // If this is the case, that means we *must* be at the last page.
-        // this saves us doing weird counting shenanigans with the db
-        disabled: users.len() < 10,
+        disabled: !one_more_page_bro,
         emoji: Some(ReactionType::Unicode {
             name: "➡️".to_string(),
         }),
@@ -145,7 +154,7 @@ pub async fn process_message_component(
         let input = TextInput {
             custom_id: "jump_modal_input".to_string(),
             label: "Jump Destination".to_string(),
-            max_length: Some(6),
+            max_length: Some(8),
             min_length: Some(1),
             placeholder: Some("What page to jump to".to_string()),
             required: Some(true),

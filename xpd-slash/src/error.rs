@@ -62,6 +62,8 @@ pub enum Error {
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("This page does not exist!")]
     NoUsersForPage,
+    #[error("This page does not exist!")]
+    PageDoesNotExist,
     #[error("This modal did not contain any action rows!")]
     NoModalActionRow,
     #[error("This modal did not contain the required form field!")]
