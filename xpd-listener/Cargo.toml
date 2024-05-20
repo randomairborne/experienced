@@ -12,8 +12,8 @@ keywords = ["discord-bot", "mee6"]
 [dependencies]
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
-twilight-model = "0.15"
-twilight-http = "0.15"
+twilight-model = "0.16.0-rc.1"
+twilight-http = "0.16.0-rc.1"
 expiringmap = "0.1"
 thiserror = "1"
 rand = "0.8"

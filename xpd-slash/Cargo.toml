@@ -13,15 +13,15 @@ keywords = ["discord-bot", "mee6"]
 [dependencies]
 reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots"], default-features = false }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
-twilight-http = { version = "0.15", features = ["rustls-native-roots"], default-features = false }
+twilight-http = { version = "0.16.0-rc.1", features = ["rustls-native-roots"], default-features = false }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 xpd-rank-card = { path = "../xpd-rank-card", version = "0.5" }
-twilight-util = { version = "0.15", features = ["builder"] }
+twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 serde = { version = "1", features = ["derive"] }
-twilight-interactions = "0.15"
-twilight-validate = "0.15"
-twilight-model = "0.15"
+twilight-interactions = "0.16.0-rc.1"
+twilight-validate = "0.16.0-rc.1"
+twilight-model = "0.16.0-rc.1"
 tracing = "0.1"
 base64 = "0.22"
 thiserror = "1"

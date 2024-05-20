@@ -3,12 +3,18 @@
 #[macro_use]
 extern crate tracing;
 
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 use sqlx::PgPool;
-use tokio::{sync::watch::Receiver, task::JoinSet};
+use tokio::task::JoinSet;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
-use twilight_gateway::{CloseFrame, Config, Event, Intents, MessageSender, Shard};
+use twilight_gateway::{
+    error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
+    MessageSender, Shard, StreamExt,
+};
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
     gateway::ShardId,
@@ -60,7 +66,7 @@ async fn main() {
         .id;
     let config = Config::new(token.clone(), intents);
     let shards: Vec<Shard> =
-        twilight_gateway::stream::create_recommended(&client, config, |_, builder| builder.build())
+        twilight_gateway::create_recommended(&client, config, |_, builder| builder.build())
             .await
             .expect("Failed to create recommended shard count")
             .collect();
@@ -83,14 +89,14 @@ async fn main() {
     )
     .await;
 
-    let (shutdown_trigger, should_shutdown) = tokio::sync::watch::channel::<()>(());
+    let shutdown = Arc::new(AtomicBool::new(false));
     let mut set = JoinSet::new();
     for shard in shards {
         let client = client.clone();
         set.spawn(event_loop(
             shard,
             client,
-            should_shutdown.clone(),
+            shutdown.clone(),
             listener.clone(),
             slash.clone(),
             db.clone(),
@@ -101,7 +107,7 @@ async fn main() {
     warn!("Shutting down..");
 
     // Let the shards know not to reconnect
-    shutdown_trigger.send(()).unwrap();
+    shutdown.store(true, Ordering::Release);
 
     // Tell the shards to shut down
     for sender in senders {
@@ -116,32 +122,43 @@ async fn main() {
 async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
-    mut should_shutdown: Receiver<()>,
+    shutdown: Arc<AtomicBool>,
     listener: XpdListener,
     slash: XpdSlash,
     db: PgPool,
 ) {
-    loop {
-        let next_event = tokio::select! {
-            event = shard.next_event() => event,
-            _ = should_shutdown.changed() => break,
-        };
-        trace!(?next_event, "event");
-        match next_event {
-            Ok(event) => {
-                let listener = listener.clone();
-                let http = http.clone();
-                let slash = slash.clone();
-                let db = db.clone();
-                tokio::spawn(async move {
-                    if let Err(error) = handle_event(event, http, listener, slash, db).await {
-                        // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
-                        error!(?error, "Handler error");
-                    }
-                });
+    let event_flags = EventTypeFlags::READY
+        | EventTypeFlags::GUILD_CREATE
+        | EventTypeFlags::MESSAGE_CREATE
+        | EventTypeFlags::INTERACTION_CREATE;
+    while let Some(next) = shard.next_event(event_flags).await {
+        trace!(?next, "got new event");
+        let event = match next {
+            Ok(event) => event,
+            Err(source) => {
+                if shutdown.load(Ordering::Acquire)
+                    && matches!(source.kind(), ReceiveMessageErrorType::WebSocket)
+                {
+                    break;
+                }
+                error!(?source, "error receiving event");
+                continue;
             }
-            Err(error) => error!(?error, "Shard loop error"),
+        };
+        if matches!(event, Event::GatewayClose(_)) && shutdown.load(Ordering::Acquire) {
+            break;
         }
+        trace!(?event, "got event");
+        let listener = listener.clone();
+        let http = http.clone();
+        let slash = slash.clone();
+        let db = db.clone();
+        tokio::spawn(async move {
+            if let Err(error) = handle_event(event, http, listener, slash, db).await {
+                // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
+                error!(?error, "Handler error");
+            }
+        });
     }
 }
 
@@ -191,8 +208,6 @@ async fn handle_event(
 pub enum Error {
     #[error("listener-library error: {0}")]
     Listener(#[from] xpd_listener::Error),
-    #[error("Twilight-Gateway error: {0}")]
-    Send(#[from] twilight_gateway::error::SendError),
     #[error("Twilight-Validate error: {0}")]
     Validate(#[from] twilight_validate::message::MessageValidationError),
     #[error("Twilight-Http error: {0}")]

@@ -128,10 +128,10 @@ impl XpdSlash {
             .interaction(self.id())
             .create_followup(token)
             .allowed_mentions(response.allowed_mentions.as_ref())
-            .attachments(&response.attachments.unwrap_or_default())?
-            .components(&response.components.unwrap_or_default())?
-            .content(&response.content.unwrap_or_default())?
-            .embeds(&response.embeds.unwrap_or_default())?
+            .attachments(&response.attachments.unwrap_or_default())
+            .components(&response.components.unwrap_or_default())
+            .content(&response.content.unwrap_or_default())
+            .embeds(&response.embeds.unwrap_or_default())
             .tts(response.tts.unwrap_or(false))
             .await
         {

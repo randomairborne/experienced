@@ -149,7 +149,7 @@ impl CommandOption for ColorOption {
     fn from_option(
         value: twilight_model::application::interaction::application_command::CommandOptionValue,
         _data: twilight_interactions::command::internal::CommandOptionData,
-        _resolved: Option<&twilight_model::application::interaction::application_command::CommandInteractionDataResolved>,
+        _resolved: Option<&twilight_model::application::interaction::InteractionDataResolved>,
     ) -> Result<Self, twilight_interactions::error::ParseOptionErrorType> {
         if let twilight_model::application::interaction::application_command::CommandOptionValue::String(string) = value {
             Ok(Self(Color::from_hex(&string).map_err(|e| twilight_interactions::error::ParseOptionErrorType::InvalidChoice(format!("{e}")))?))

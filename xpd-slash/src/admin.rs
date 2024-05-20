@@ -69,7 +69,7 @@ async fn do_set_nick(state: SlashState, nick: AdminCommandSetNick) -> Result<Str
     state
         .client
         .update_current_member(guild)
-        .nick(nick.name.as_deref())?
+        .nick(nick.name.as_deref())
         .await?;
     Ok(format!(
         "Set nickname to {} in {guild}",

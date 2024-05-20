@@ -86,7 +86,7 @@ pub async fn download(state: SlashState, invoker: User) -> Result<XpdSlashRespon
     state
         .client
         .create_message(dm_channel.id)
-        .attachments(&[level_file, card_file])?
+        .attachments(&[level_file, card_file])
         .await?;
 
     Ok(

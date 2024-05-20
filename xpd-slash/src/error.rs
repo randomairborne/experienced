@@ -6,12 +6,8 @@ pub enum Error {
     TaskPanicked(#[from] tokio::task::JoinError),
     #[error("Discord error!")]
     TwilightHttp(#[from] twilight_http::Error),
-    #[error("Discord validation error!")]
-    InvalidApiRequest(#[from] twilight_validate::request::ValidationError),
     #[error("HTTP error!")]
     ReqwestHttp(#[from] reqwest::Error),
-    #[error("Invalid constructed message!")]
-    Validate(#[from] twilight_validate::message::MessageValidationError),
     #[error("Invalid message attachment!")]
     ImageSourceAttachment(
         #[from] twilight_util::builder::embed::image_source::ImageSourceAttachmentError,

@@ -36,7 +36,7 @@ pub async fn process(
             process_app_cmd(state, *cmd, invoker, guild_id).await
         }
         InteractionData::MessageComponent(mcd) => {
-            process_message_component(mcd, guild_id.ok_or(Error::NoGuildId)?, state).await
+            process_message_component(*mcd, guild_id.ok_or(Error::NoGuildId)?, state).await
         }
         InteractionData::ModalSubmit(mid) => {
             process_modal_submit(mid, guild_id.ok_or(Error::NoGuildId)?, state).await
