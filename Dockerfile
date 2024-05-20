@@ -12,7 +12,6 @@ RUN \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
     cargo build --release
 
-RUN ls -lah /build/
 RUN --mount=type=cache,target=/build/target/ cp /build/target/release/xpd-gateway /xpd-gateway
 
 FROM alpine:latest
