@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use strum_macros::VariantArray;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, VariantArray)]
 pub enum Font {
     JetBrainsMono,
     Mojang,
@@ -9,19 +11,21 @@ pub enum Font {
 }
 
 impl Font {
+    pub const JETBRAINS_MONO_PATH: &'static str = "JetBrainsMono.ttf";
     pub const JETBRAINS_MONO_STR: &'static str = "JetBrains Mono";
+    pub const MOJANG_PATH: &'static str = "Mojang.ttf";
     pub const MOJANG_STR: &'static str = "Mojang";
+    pub const MONTSERRAT_ALT_1_PATH: &'static str = "MontserratAlt1.ttf";
     pub const MONTSERRAT_ALT_1_STR: &'static str = "Montserrat Alt1";
+    pub const PATH_PREFIX: &'static str = "./xpd-card-resources/fonts";
+    pub const ROBOTO_PATH: &'static str = "Roboto.ttf";
     pub const ROBOTO_STR: &'static str = "Roboto";
 
-    #[must_use]
-    pub const fn ttf(&self) -> &'static [u8] {
-        match self {
-            Self::JetBrainsMono => include_bytes!("resources/fonts/JetBrainsMono.ttf"),
-            Self::Mojang => include_bytes!("resources/fonts/Mojang.ttf"),
-            Self::MontserratAlt1 => include_bytes!("resources/fonts/MontserratAlt1.ttf"),
-            Self::Roboto => include_bytes!("resources/fonts/Roboto.ttf"),
-        }
+    /// # Errors
+    /// This function can error when the underlying filesystem read fails.
+    pub fn ttf(&self) -> Result<Vec<u8>, std::io::Error> {
+        let path = format!("{}/{}", Self::PATH_PREFIX, self.filename());
+        std::fs::read(path)
     }
 
     #[must_use]
@@ -43,6 +47,16 @@ impl Font {
             Self::Mojang => "Mojang",
             Self::MontserratAlt1 => "'Montserrat-Alt1'",
             Self::Roboto => "Roboto",
+        }
+    }
+
+    #[must_use]
+    pub(crate) const fn filename(self) -> &'static str {
+        match self {
+            Self::JetBrainsMono => Self::JETBRAINS_MONO_PATH,
+            Self::Mojang => Self::MOJANG_PATH,
+            Self::MontserratAlt1 => Self::MONTSERRAT_ALT_1_PATH,
+            Self::Roboto => Self::ROBOTO_PATH,
         }
     }
 }

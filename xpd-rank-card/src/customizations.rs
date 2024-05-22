@@ -16,51 +16,6 @@ pub struct Customizations {
     pub card: Card,
 }
 
-impl std::fmt::Display for Customizations {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let defaults = self.card.default_customizations();
-        crate::add_output!(f, "Important text", self.username, defaults.username);
-        crate::add_output!(f, "Rank", self.rank, defaults.rank);
-        crate::add_output!(f, "Level", self.level, defaults.level);
-        crate::add_output!(f, "Border", self.border, defaults.border);
-        crate::add_output!(f, "Background", self.background, defaults.background);
-        crate::add_output!(
-            f,
-            "Progress bar completed",
-            self.progress_foreground,
-            defaults.progress_foreground
-        );
-        crate::add_output!(
-            f,
-            "Progress bar remaining",
-            self.progress_background,
-            defaults.progress_background
-        );
-        crate::add_output!(
-            f,
-            "Progress bar foreground overlay",
-            self.foreground_xp_count,
-            defaults.foreground_xp_count
-        );
-        crate::add_output!(
-            f,
-            "Progress bar background overlay",
-            self.background_xp_count,
-            defaults.background_xp_count
-        );
-        crate::add_output!(f, "Font", self.font, defaults.font);
-        writeln!(
-            f,
-            "Toy: `{}`",
-            self.toy
-                .map_or_else(|| "None".to_owned(), |v| v.to_string())
-        )?;
-        crate::add_output!(f, "Card", self.card, defaults.card);
-        Ok(())
-    }
-}
-
-#[macro_export]
 macro_rules! add_output {
     ($f:expr, $name:expr, $val:expr, $default:expr) => {
         write!($f, "{}: `{}`", $name, $val)?;
@@ -72,13 +27,48 @@ macro_rules! add_output {
     };
 }
 
-#[macro_export]
-macro_rules! from_maybe_hex {
-    ($val:expr, $default:expr) => {
-        $val.map_or($default, |color| {
-            Color::from_hex(&color).unwrap_or($default)
-        })
-    };
+impl std::fmt::Display for Customizations {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let defaults = self.card.default_customizations();
+        add_output!(f, "Important text", self.username, defaults.username);
+        add_output!(f, "Rank", self.rank, defaults.rank);
+        add_output!(f, "Level", self.level, defaults.level);
+        add_output!(f, "Border", self.border, defaults.border);
+        add_output!(f, "Background", self.background, defaults.background);
+        add_output!(
+            f,
+            "Progress bar completed",
+            self.progress_foreground,
+            defaults.progress_foreground
+        );
+        add_output!(
+            f,
+            "Progress bar remaining",
+            self.progress_background,
+            defaults.progress_background
+        );
+        add_output!(
+            f,
+            "Progress bar foreground overlay",
+            self.foreground_xp_count,
+            defaults.foreground_xp_count
+        );
+        add_output!(
+            f,
+            "Progress bar background overlay",
+            self.background_xp_count,
+            defaults.background_xp_count
+        );
+        add_output!(f, "Font", self.font, defaults.font);
+        writeln!(
+            f,
+            "Toy: `{}`",
+            self.toy
+                .map_or_else(|| "None".to_owned(), |v| v.to_string())
+        )?;
+        add_output!(f, "Card", self.card, defaults.card);
+        Ok(())
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -29,14 +29,6 @@ impl Card {
     }
 
     #[must_use]
-    pub const fn template(&self) -> &'static str {
-        match *self {
-            Self::Classic => include_str!("resources/cards/classic.svg"),
-            Self::Vertical => include_str!("resources/cards/vertical.svg"),
-        }
-    }
-
-    #[must_use]
     pub fn from_name(data: &str) -> Option<Self> {
         let out = match data {
             "classic.svg" => Self::Classic,

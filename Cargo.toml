@@ -8,3 +8,4 @@ members = [
     "xpd-rank-card"
 ]
 resolver = "2"
+default-members = ["xpd-gateway"]

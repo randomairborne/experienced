@@ -1,7 +1,10 @@
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use strum_macros::{EnumCount, VariantArray};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumCount, VariantArray)]
 pub enum Toy {
+    Airplane = 0,
     Bee,
     Biscuit,
     Chicken,
@@ -17,29 +20,37 @@ pub enum Toy {
     Sheep,
     SteveHeart,
     Tree,
-    Airplane,
 }
 
 impl Toy {
+    const BASE_PATH: &'static str = "./xpd-card-resources/icons";
+
+    /// # Errors
+    /// This function can error when the underlying filesystem read fails.
+    pub fn load_png(&self) -> Result<Vec<u8>, std::io::Error> {
+        let path = format!("{}/{}/{}", Self::BASE_PATH, self.author(), self.filename());
+        std::fs::read(path)
+    }
+
     #[must_use]
-    pub const fn png(&self) -> &'static [u8] {
+    pub const fn author(&self) -> &'static str {
         match self {
-            Self::Bee => include_bytes!("resources/icons/CEa_TIde/bee.png"),
-            Self::Biscuit => include_bytes!("resources/icons/CEa_TIde/biscuit.png"),
-            Self::Chicken => include_bytes!("resources/icons/CEa_TIde/chicken.png"),
-            Self::Cow => include_bytes!("resources/icons/CEa_TIde/cow.png"),
-            Self::Fox => include_bytes!("resources/icons/CEa_TIde/fox.png"),
-            Self::GrassBlock => include_bytes!("resources/icons/CEa_TIde/grassblock.png"),
-            Self::Parrot => include_bytes!("resources/icons/CEa_TIde/parrot.png"),
-            Self::Pickaxe => include_bytes!("resources/icons/CEa_TIde/pickaxe.png"),
-            Self::Pig => include_bytes!("resources/icons/CEa_TIde/pig.png"),
-            Self::PotionBlue => include_bytes!("resources/icons/CEa_TIde/potion_blue.png"),
-            Self::PotionPurple => include_bytes!("resources/icons/CEa_TIde/potion_purple.png"),
-            Self::PotionRed => include_bytes!("resources/icons/CEa_TIde/potion_red.png"),
-            Self::Sheep => include_bytes!("resources/icons/CEa_TIde/sheep.png"),
-            Self::SteveHeart => include_bytes!("resources/icons/CEa_TIde/steveheart.png"),
-            Self::Tree => include_bytes!("resources/icons/CEa_TIde/tree.png"),
-            Self::Airplane => include_bytes!("resources/icons/valkyrie_pilot/airplane.png"),
+            Self::Airplane => "valkyrie_pilot",
+            Self::Bee
+            | Self::Biscuit
+            | Toy::Chicken
+            | Toy::Cow
+            | Toy::Fox
+            | Toy::GrassBlock
+            | Toy::Parrot
+            | Toy::Pickaxe
+            | Toy::Pig
+            | Toy::PotionBlue
+            | Toy::PotionPurple
+            | Toy::PotionRed
+            | Toy::Sheep
+            | Toy::SteveHeart
+            | Toy::Tree => "Cyana",
         }
     }
 
