@@ -1,4 +1,5 @@
 use std::fmt::Write;
+use twilight_model::channel::message::AllowedMentions;
 
 use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
@@ -27,6 +28,7 @@ pub async fn process_xp(
         XpCommand::Experience(experience) => process_experience(experience, guild_id, state).await,
     }?;
     Ok(XpdSlashResponse::new()
+        .allowed_mentions_o(Some(AllowedMentions::default()))
         .ephemeral(true)
         .embeds([EmbedBuilder::new().description(contents).build()]))
 }
