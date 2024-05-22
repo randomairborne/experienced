@@ -16,9 +16,10 @@ RUN --mount=type=cache,target=/build/target/ cp /build/target/release/xpd-gatewa
 
 FROM alpine:latest
 
-WORKDIR /
+WORKDIR /experienced/
 
 COPY --from=builder /xpd-gateway /usr/bin/xpd-gateway
+COPY xpd-card-resources xpd-card-resources
 
 EXPOSE 8080
 
