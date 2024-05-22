@@ -71,7 +71,7 @@ async fn main() {
         .https_only(true)
         .build()
         .unwrap();
-    
+
     let listener = XpdListener::new(db.clone(), client.clone());
 
     let slash = XpdSlash::new(
