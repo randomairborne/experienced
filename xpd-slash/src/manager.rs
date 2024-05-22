@@ -1,9 +1,11 @@
 use std::fmt::Write;
-use twilight_model::channel::message::AllowedMentions;
 
-use twilight_model::id::{
-    marker::{GuildMarker, UserMarker},
-    Id,
+use twilight_model::{
+    channel::message::AllowedMentions,
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::id_to_db;
