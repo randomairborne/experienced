@@ -26,7 +26,9 @@ pub async fn process_xp(
         XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
         XpCommand::Experience(experience) => process_experience(experience, guild_id, state).await,
     }?;
-    Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(contents).build()]))
+    Ok(XpdSlashResponse::new()
+        .ephemeral(true)
+        .embeds([EmbedBuilder::new().description(contents).build()]))
 }
 
 async fn process_experience(

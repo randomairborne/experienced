@@ -36,5 +36,5 @@ pub fn help() -> XpdSlashResponse {
         .field(xp_help)
         .footer(footer)
         .build();
-    XpdSlashResponse::new().embeds([help_embed])
+    XpdSlashResponse::new().ephemeral(true).embeds([help_embed])
 }

@@ -36,7 +36,9 @@ pub async fn process_admin(
         AdminCommand::BanGuild(ban_guild) => do_ban_guild(state, ban_guild).await,
         AdminCommand::PardonGuild(pardon_guild) => do_pardon_guild(state, pardon_guild).await,
     }?;
-    Ok(XpdSlashResponse::new().embeds([EmbedBuilder::new().description(contents).build()]))
+    Ok(XpdSlashResponse::new()
+        .ephemeral(true)
+        .embeds([EmbedBuilder::new().description(contents).build()]))
 }
 
 async fn do_leave(state: SlashState, leave: AdminCommandLeave) -> Result<String, Error> {

@@ -50,7 +50,10 @@ pub async fn user_card_update<'a>(
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
-    Ok(XpdSlashResponse::new().attachments([card]).embeds([embed]))
+    Ok(XpdSlashResponse::new()
+        .attachments([card])
+        .ephemeral(true)
+        .embeds([embed]))
 }
 
 pub async fn guild_card_update<'a>(
@@ -71,7 +74,10 @@ pub async fn guild_card_update<'a>(
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
-    Ok(XpdSlashResponse::new().attachments([card]).embeds([embed]))
+    Ok(XpdSlashResponse::new()
+        .ephemeral(true)
+        .attachments([card])
+        .embeds([embed]))
 }
 
 async fn process_edit(
