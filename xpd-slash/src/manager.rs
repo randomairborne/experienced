@@ -64,13 +64,13 @@ async fn modify_user_xp(
     .await?
     .xp;
     let current_level = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0)).level();
-    let action = if amount.is_positive() {
-        "Added"
+    let (action, targeter) = if amount.is_positive() {
+        ("Added", "to")
     } else {
-        "Removed"
+        ("Removed", "from")
     };
     let amount_abs = amount.abs();
-    Ok(format!("{action} {amount_abs} XP from <@{user_id}>, leaving them with {xp} XP at level {current_level}"))
+    Ok(format!("{action} {amount_abs} XP {targeter} <@{user_id}>, leaving them with {xp} XP at level {current_level}"))
 }
 
 async fn reset_user_xp(
