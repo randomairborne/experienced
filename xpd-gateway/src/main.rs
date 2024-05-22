@@ -54,6 +54,7 @@ async fn main() {
         .run(&db)
         .await
         .expect("Failed to run database migrations!");
+
     let client = Arc::new(DiscordClient::new(token.clone()));
     let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
     let my_id = client
@@ -64,19 +65,13 @@ async fn main() {
         .await
         .expect("Failed to convert own app ID!")
         .id;
-    let config = Config::new(token.clone(), intents);
-    let shards: Vec<Shard> =
-        twilight_gateway::create_recommended(&client, config, |_, builder| builder.build())
-            .await
-            .expect("Failed to create recommended shard count")
-            .collect();
-    let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
-    info!("Connecting to discord");
+
     let http = reqwest::Client::builder()
         .user_agent("randomairborne/experienced")
         .https_only(true)
         .build()
         .unwrap();
+    
     let listener = XpdListener::new(db.clone(), client.clone());
 
     let slash = XpdSlash::new(
@@ -88,6 +83,14 @@ async fn main() {
         owners,
     )
     .await;
+    let config = Config::new(token.clone(), intents);
+    let shards: Vec<Shard> =
+        twilight_gateway::create_recommended(&client, config, |_, builder| builder.build())
+            .await
+            .expect("Failed to create recommended shard count")
+            .collect();
+    let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
+    info!("Connecting to discord");
 
     let shutdown = Arc::new(AtomicBool::new(false));
     let mut set = JoinSet::new();
