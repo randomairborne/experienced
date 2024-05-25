@@ -38,19 +38,19 @@ impl Toy {
             Self::Airplane => "valkyrie_pilot",
             Self::Bee
             | Self::Biscuit
-            | Toy::Chicken
-            | Toy::Cow
-            | Toy::Fox
-            | Toy::GrassBlock
-            | Toy::Parrot
-            | Toy::Pickaxe
-            | Toy::Pig
-            | Toy::PotionBlue
-            | Toy::PotionPurple
-            | Toy::PotionRed
-            | Toy::Sheep
-            | Toy::SteveHeart
-            | Toy::Tree => "Cyana",
+            | Self::Chicken
+            | Self::Cow
+            | Self::Fox
+            | Self::GrassBlock
+            | Self::Parrot
+            | Self::Pickaxe
+            | Self::Pig
+            | Self::PotionBlue
+            | Self::PotionPurple
+            | Self::PotionRed
+            | Self::Sheep
+            | Self::SteveHeart
+            | Self::Tree => "Cyana",
         }
     }
 
