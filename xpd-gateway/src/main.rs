@@ -25,7 +25,7 @@ use twilight_model::{
 };
 use xpd_common::id_to_db;
 use xpd_listener::XpdListener;
-use xpd_slash::XpdSlash;
+use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
 
 #[tokio::main]
 async fn main() {
@@ -73,15 +73,35 @@ async fn main() {
         .unwrap();
 
     let (config_tx, mut config_rx) = tokio::sync::mpsc::channel(10);
+    let (rewards_tx, mut rewards_rx) = tokio::sync::mpsc::channel(10);
 
     let listener = XpdListener::new(db.clone(), client.clone());
 
     let updating_listener = listener.clone();
     let config_update = tokio::spawn(async move {
         while let Some((guild, config)) = config_rx.recv().await {
-            updating_listener.update_config(guild, config);
+            if let Err(source) = updating_listener.update_config(guild, config) {
+                error!(?guild, ?source, "Unable to update config for guild");
+            }
         }
     });
+
+    let updating_listener = listener.clone();
+    let rewards_update = tokio::spawn(async move {
+        while let Some(InvalidateCache(guild)) = rewards_rx.recv().await {
+            let updating_listener = updating_listener.clone();
+            tokio::spawn(async move {
+                if let Err(source) = updating_listener.invalidate_rewards(guild).await {
+                    error!(?guild, ?source, "Unable to invalidate rewards for guild");
+                }
+            });
+        }
+    });
+
+    let update_channels = UpdateChannels {
+        config: config_tx,
+        rewards: rewards_tx,
+    };
 
     let slash = XpdSlash::new(
         http,
@@ -90,7 +110,7 @@ async fn main() {
         db.clone(),
         control_guild,
         owners,
-        config_tx,
+        update_channels,
     )
     .await;
     let config = Config::new(token.clone(), intents);
@@ -133,8 +153,11 @@ async fn main() {
     while set.join_next().await.is_some() {}
 
     drop(slash); // Must be dropped before awaiting config shutdown, to allow the recv loop to end
-    debug!("Waiting for config updater to close");
+    debug!("Waiting for listener updater to close");
     if let Err(source) = config_update.await {
+        error!(?source, "Could not shut down config updater");
+    }
+    if let Err(source) = rewards_update.await {
         error!(?source, "Could not shut down config updater");
     }
 

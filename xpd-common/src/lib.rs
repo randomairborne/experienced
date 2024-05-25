@@ -6,7 +6,7 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use twilight_model::id::Id;
+use twilight_model::id::{marker::RoleMarker, Id};
 
 pub trait Tag {
     #[must_use]
@@ -98,6 +98,18 @@ pub fn db_to_id<T>(db: i64) -> Id<T> {
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct GuildConfig {
     pub one_at_a_time: Option<bool>,
+}
+
+#[derive(Debug)]
+pub struct RoleReward {
+    pub id: Id<RoleMarker>,
+    pub requirement: i64,
+}
+
+#[must_use]
+#[inline]
+pub fn sort_rewards(a: &RoleReward, b: &RoleReward) -> std::cmp::Ordering {
+    a.requirement.cmp(&b.requirement)
 }
 
 #[inline]

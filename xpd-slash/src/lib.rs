@@ -39,11 +39,19 @@ extern crate tracing;
 #[macro_use]
 extern crate sqlx;
 
-pub type ConfigUpdateSender = Sender<(Id<GuildMarker>, GuildConfig)>;
+pub type UpdateSender<T> = Sender<(Id<GuildMarker>, T)>;
 
 #[derive(Clone)]
 pub struct XpdSlash {
     state: SlashState,
+}
+
+pub struct InvalidateCache(pub Id<GuildMarker>);
+
+#[derive(Clone)]
+pub struct UpdateChannels {
+    pub config: UpdateSender<GuildConfig>,
+    pub rewards: Sender<InvalidateCache>,
 }
 
 impl XpdSlash {
@@ -56,7 +64,7 @@ impl XpdSlash {
         db: PgPool,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
-        config_update_chan: ConfigUpdateSender,
+        update_channels: UpdateChannels,
     ) -> Self {
         let svg = SvgState::new();
         let state = SlashState {
@@ -67,7 +75,7 @@ impl XpdSlash {
             http,
             control_guild,
             owners: owners.into(),
-            config_update_chan,
+            update_channels,
         };
         info!("Creating commands...");
         state.register_slashes().await;
@@ -130,12 +138,20 @@ pub struct SlashState {
     pub http: reqwest::Client,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
-    pub config_update_chan: ConfigUpdateSender,
+    pub update_channels: UpdateChannels,
 }
 
 impl SlashState {
     pub async fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) {
-        let _ = self.config_update_chan.send((guild, config)).await;
+        let _ = self.update_channels.config.send((guild, config)).await;
+    }
+
+    pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) {
+        let _ = self
+            .update_channels
+            .rewards
+            .send(InvalidateCache(guild))
+            .await;
     }
 }
 

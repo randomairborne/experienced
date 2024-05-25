@@ -4,12 +4,12 @@ use std::{
 };
 
 use expiringmap::ExpiringSet;
-use sqlx::{query_as, PgPool};
+use sqlx::{query, query_as, PgPool};
 use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,
 };
-use xpd_common::{id_to_db, GuildConfig};
+use xpd_common::{db_to_id, id_to_db, GuildConfig, RoleReward};
 
 mod message;
 
@@ -17,33 +17,34 @@ mod message;
 extern crate tracing;
 
 type SentMessages = ExpiringSet<(Id<GuildMarker>, Id<UserMarker>)>;
+type LockingMap<K, V> = Arc<RwLock<HashMap<K, V>>>;
 
 #[derive(Clone)]
 pub struct XpdListener {
     db: PgPool,
     messages: Arc<RwLock<SentMessages>>,
     http: Arc<twilight_http::Client>,
-    configs: Arc<RwLock<HashMap<Id<GuildMarker>, GuildConfig>>>,
+    configs: LockingMap<Id<GuildMarker>, GuildConfig>,
+    rewards: LockingMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
 }
 
 impl XpdListener {
     pub fn new(db: PgPool, http: Arc<twilight_http::Client>) -> Self {
         let messages = Arc::new(RwLock::new(SentMessages::new()));
         let configs = Arc::new(RwLock::new(HashMap::new()));
+        let rewards = Arc::new(RwLock::new(HashMap::new()));
         Self {
             db,
             messages,
             http,
             configs,
+            rewards,
         }
     }
 
-    pub fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) {
-        if let Ok(mut lock) = self.configs.write() {
-            lock.insert(guild, config);
-        } else {
-            error!("Unable to get guild config lock!!");
-        }
+    pub fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) -> Result<(), Error> {
+        self.configs.write()?.insert(guild, config);
+        Ok(())
     }
 
     pub async fn get_guild_config(&self, guild: Id<GuildMarker>) -> Result<GuildConfig, Error> {
@@ -60,6 +61,47 @@ impl XpdListener {
         .unwrap_or_else(GuildConfig::default);
         self.configs.write()?.insert(guild, config.clone());
         Ok(config)
+    }
+
+    pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
+        let mut new_rewards = self.get_guild_rewards_uncached(guild).await?;
+        new_rewards.sort_by(xpd_common::sort_rewards);
+        self.rewards.write()?.insert(guild, Arc::new(new_rewards));
+        Ok(())
+    }
+
+    pub async fn get_guild_rewards(
+        &self,
+        guild_id: Id<GuildMarker>,
+    ) -> Result<Arc<Vec<RoleReward>>, Error> {
+        if let Some(rewards) = self.rewards.read()?.get(&guild_id) {
+            return Ok(rewards.clone());
+        }
+        let mut rewards = self.get_guild_rewards_uncached(guild_id).await?;
+        rewards.sort_by(xpd_common::sort_rewards);
+
+        let new_copy = Arc::new(rewards);
+        self.rewards.write()?.insert(guild_id, new_copy.clone());
+        Ok(new_copy)
+    }
+
+    async fn get_guild_rewards_uncached(
+        &self,
+        guild_id: Id<GuildMarker>,
+    ) -> Result<Vec<RoleReward>, Error> {
+        let rewards: Vec<RoleReward> = query!(
+            "SELECT id, requirement FROM role_rewards WHERE guild = $1",
+            id_to_db(guild_id),
+        )
+        .fetch_all(&self.db)
+        .await?
+        .into_iter()
+        .map(|v| RoleReward {
+            id: db_to_id(v.id),
+            requirement: v.requirement,
+        })
+        .collect();
+        Ok(rewards)
     }
 }
 

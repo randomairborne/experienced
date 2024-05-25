@@ -9,11 +9,12 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{db_to_id, id_to_db};
+use xpd_common::{id_to_db, RoleReward};
 
 const MESSAGE_COOLDOWN: Duration = Duration::from_secs(60);
 
 use crate::{Error, XpdListener};
+
 impl XpdListener {
     pub async fn save(&self, msg: MessageCreate) -> Result<(), Error> {
         if let Some(guild_id) = msg.guild_id {
@@ -41,16 +42,17 @@ impl XpdListener {
 
         let xp_count: i64 = rand::thread_rng().gen_range(15..=25);
         let xp_record = query!(
-            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3)
-                    ON CONFLICT (id, guild)
-                    DO UPDATE SET xp=levels.xp+excluded.xp
-                    RETURNING xp",
+            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+                ON CONFLICT (id, guild) \
+                DO UPDATE SET xp=levels.xp+excluded.xp \
+                RETURNING xp",
             id_to_db(msg.author.id),
             xp_count,
             id_to_db(guild_id)
         )
         .fetch_one(&self.db)
         .await?;
+
         let xp = u64::try_from(xp_record.xp).unwrap_or(0);
         self.messages
             .write()?
@@ -58,21 +60,8 @@ impl XpdListener {
 
         let level_info = mee6::LevelInfo::new(xp);
 
-        // TODO: Cache this the same way as guild configs are
-        let mut rewards: Vec<RoleReward> = query!(
-            "SELECT id, requirement FROM role_rewards WHERE guild = $1",
-            id_to_db(guild_id),
-        )
-        .fetch_all(&self.db)
-        .await?
-        .into_iter()
-        .map(|v| RoleReward {
-            id: db_to_id(v.id),
-            requirement: v.requirement,
-        })
-        .collect();
+        let rewards = self.get_guild_rewards(guild_id).await?;
 
-        rewards.sort_by(|a, b| a.requirement.cmp(&b.requirement));
         debug!(
             ?rewards,
             guild_id = guild_id.get(),
@@ -82,7 +71,6 @@ impl XpdListener {
         let user_level: i64 = level_info.level().try_into().unwrap_or(0);
 
         let mut reward_idx = None;
-
         for (idx, data) in rewards.iter().enumerate() {
             if data.requirement > user_level {
                 break;
@@ -129,10 +117,4 @@ impl XpdListener {
 // any of the items in list are equal to item
 fn contains(list: &[RoleReward], item: Id<RoleMarker>) -> bool {
     list.iter().any(|v| v.id == item)
-}
-
-#[derive(Debug)]
-struct RoleReward {
-    id: Id<RoleMarker>,
-    requirement: i64,
 }

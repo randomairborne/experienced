@@ -268,6 +268,7 @@ async fn process_rewards_add(
     )
     .execute(&state.db)
     .await?;
+    state.invalidate_rewards(guild_id).await;
     Ok(format!(
         "Added role reward <@&{}> at level {}!",
         options.role.id, options.level
@@ -297,6 +298,7 @@ async fn process_rewards_rm(
         .await?;
         return Ok(format!("Removed role reward for level {level}!"));
     };
+    state.invalidate_rewards(guild_id).await;
     Err(Error::WrongArgumentCount(
         "`/xp rewards remove` requires either a level or a role!",
     ))
@@ -358,5 +360,6 @@ async fn process_rewards_reset_config(
     )
     .execute(&state.db)
     .await?;
+    state.update_config(guild_id, GuildConfig::default()).await;
     Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
 }
