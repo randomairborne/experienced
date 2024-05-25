@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM role_rewards WHERE guild = $1",
+  "query": "SELECT id, requirement FROM role_rewards WHERE guild = $1",
   "describe": {
     "columns": [
       {
@@ -12,11 +12,6 @@
         "ordinal": 1,
         "name": "requirement",
         "type_info": "Int8"
-      },
-      {
-        "ordinal": 2,
-        "name": "guild",
-        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -26,9 +21,8 @@
     },
     "nullable": [
       false,
-      false,
       false
     ]
   },
-  "hash": "8dd31c6b1b5cdc72156b422e3018b95ed94d047a185311c85736e745e30d7df3"
+  "hash": "e3fc48d0ee54e8daa51fd82c6c1e02a572f6e4d26852e43f68e13bf22880ddb6"
 }
