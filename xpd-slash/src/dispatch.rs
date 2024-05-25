@@ -17,11 +17,25 @@ use crate::{
     Error, SlashState, XpdSlashResponse,
 };
 
+#[derive(Clone, Debug)]
+pub struct Respondable {
+    token: String,
+}
+
+impl Respondable {
+    pub fn token(&self) -> &str {
+        &self.token
+    }
+}
+
 pub async fn process(
     interaction: Interaction,
     state: SlashState,
 ) -> Result<InteractionResponse, Error> {
     trace!(?interaction, "got interaction");
+    let respondable = Respondable {
+        token: interaction.token.clone(),
+    };
     let Some(data) = interaction.data else {
         return Err(Error::NoInteractionData);
     };
@@ -33,7 +47,7 @@ pub async fn process(
     let guild_id = interaction.guild_id;
     match data {
         InteractionData::ApplicationCommand(cmd) => {
-            process_app_cmd(state, *cmd, invoker, guild_id).await
+            process_app_cmd(state, *cmd, respondable, invoker, guild_id).await
         }
         InteractionData::MessageComponent(mcd) => {
             process_message_component(*mcd, guild_id.ok_or(Error::NoGuildId)?, state).await
@@ -48,11 +62,14 @@ pub async fn process(
 async fn process_app_cmd(
     state: SlashState,
     data: CommandData,
+    respondable: Respondable,
     invoker: User,
     guild_id: Option<Id<GuildMarker>>,
 ) -> Result<InteractionResponse, Error> {
     match data.kind {
-        CommandType::ChatInput => process_slash_cmd(data, guild_id, invoker, state).await,
+        CommandType::ChatInput => {
+            process_slash_cmd(data, guild_id, respondable, invoker, state).await
+        }
         CommandType::User => {
             process_user_cmd(data, guild_id.ok_or(Error::NoGuildId)?, invoker, state)
                 .await
@@ -70,6 +87,7 @@ async fn process_app_cmd(
 async fn process_slash_cmd(
     data: CommandData,
     guild_id: Option<Id<GuildMarker>>,
+    respondable: Respondable,
     invoker: User,
     state: SlashState,
 ) -> Result<InteractionResponse, Error> {
@@ -91,6 +109,7 @@ async fn process_slash_cmd(
         "xp" => crate::manager::process_xp(
             XpCommand::from_interaction(data.into())?,
             guild_id.ok_or(Error::NoGuildId)?,
+            respondable,
             state,
         )
         .await

@@ -1,5 +1,6 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
+    channel::Attachment,
     guild::Role,
     id::{
         marker::{RoleMarker, UserMarker},
@@ -59,6 +60,8 @@ pub enum XpCommandExperience {
     Reset(XpCommandExperienceReset),
     #[command(name = "import")]
     Import(XpCommandExperienceImport),
+    #[command(name = "export")]
+    Export(XpCommandExperienceExport),
 }
 
 #[derive(CommandModel, CreateCommand)]
@@ -101,7 +104,18 @@ pub struct XpCommandExperienceReset {
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "import",
-    desc = "Learn how to import your server's MEE6 leveling data.",
+    desc = "Import leveling data from another Discord bot or other source",
     dm_permission = false
 )]
-pub struct XpCommandExperienceImport;
+pub struct XpCommandExperienceImport {
+    #[command(desc = "Leveling JSON file")]
+    pub levels: Attachment,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "export",
+    desc = "Export this server's leveling data into a JSON file",
+    dm_permission = false
+)]
+pub struct XpCommandExperienceExport;

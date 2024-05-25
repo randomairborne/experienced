@@ -1,14 +1,19 @@
 use std::fmt::Write;
 
+use http_body_util::{BodyExt, Limited};
+use serde::{Deserialize, Serialize};
+use sqlx::Executor;
+use tokio::time::Instant;
 use twilight_model::{
-    channel::message::AllowedMentions,
+    channel::{message::AllowedMentions, Attachment},
+    http::attachment::Attachment as HttpAttachment,
     id::{
         marker::{GuildMarker, UserMarker},
         Id,
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::id_to_db;
+use xpd_common::{db_to_id, id_to_db};
 
 use crate::{
     cmd_defs::{
@@ -17,17 +22,21 @@ use crate::{
         },
         XpCommand,
     },
+    dispatch::Respondable,
     Error, SlashState, XpdSlashResponse,
 };
 
 pub async fn process_xp(
     data: XpCommand,
     guild_id: Id<GuildMarker>,
+    respondable: Respondable,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
     let contents = match data {
         XpCommand::Rewards(rewards) => process_rewards(rewards, guild_id, state).await,
-        XpCommand::Experience(experience) => process_experience(experience, guild_id, state).await,
+        XpCommand::Experience(experience) => {
+            process_experience(experience, respondable, guild_id, state).await
+        }
     }?;
     Ok(XpdSlashResponse::new()
         .allowed_mentions_o(Some(AllowedMentions::default()))
@@ -37,11 +46,15 @@ pub async fn process_xp(
 
 async fn process_experience(
     data: XpCommandExperience,
+    respondable: Respondable,
     guild_id: Id<GuildMarker>,
     state: SlashState,
 ) -> Result<String, Error> {
     match data {
-        XpCommandExperience::Import(_) => Ok(import_level_data()),
+        XpCommandExperience::Import(import) => {
+            import_level_data(state, respondable, guild_id, import.levels).await
+        }
+        XpCommandExperience::Export(_) => export_level_data(state, respondable, guild_id).await,
         XpCommandExperience::Add(add) => {
             modify_user_xp(guild_id, add.user, add.amount, state).await
         }
@@ -94,13 +107,137 @@ async fn reset_user_xp(
     ))
 }
 
-fn import_level_data() -> String {
-    concat!(
-        "MEE6 has disabled our ability to automatically import your leveling data.",
-        "\n",
-        "Please join our [support server](https://valk.sh/discord) for further information."
+#[derive(Deserialize, Serialize)]
+pub struct ImportUser {
+    id: Id<UserMarker>,
+    xp: i64,
+}
+
+#[allow(clippy::unused_async)]
+async fn export_level_data(
+    state: SlashState,
+    respondable: Respondable,
+    guild_id: Id<GuildMarker>,
+) -> Result<String, Error> {
+    tokio::spawn(background_data_operation_wrapper(
+        state,
+        respondable,
+        guild_id,
+        None,
+    ));
+    Ok("Exporting level data, check back soon!".to_string())
+}
+
+async fn background_data_export(
+    state: &SlashState,
+    guild_id: Id<GuildMarker>,
+) -> Result<XpdSlashResponse, Error> {
+    let levels: Vec<ImportUser> = query!(
+        "SELECT id, xp FROM levels WHERE guild = $1",
+        id_to_db(guild_id)
     )
-    .to_string()
+    .fetch_all(&state.db)
+    .await?
+    .into_iter()
+    .map(|v| ImportUser {
+        id: db_to_id(v.id),
+        xp: v.xp,
+    })
+    .collect();
+    let file = serde_json::to_vec_pretty(&levels)?;
+    let attachment = HttpAttachment::from_bytes(format!("export-{guild_id}.json"), file, 0);
+    Ok(XpdSlashResponse::new()
+        .content("Exported your level data!".to_string())
+        .attachments([attachment]))
+}
+
+#[allow(clippy::unused_async)]
+async fn import_level_data(
+    state: SlashState,
+    respondable: Respondable,
+    guild_id: Id<GuildMarker>,
+    attachment: Attachment,
+) -> Result<String, Error> {
+    tokio::spawn(background_data_operation_wrapper(
+        state,
+        respondable,
+        guild_id,
+        Some(attachment),
+    ));
+    Ok("Importing level data, check back soon!".to_string())
+}
+
+const MAX_IMPORT_SIZE: usize = 1024 * 1024 * 10;
+
+async fn background_data_import(
+    state: &SlashState,
+    guild_id: Id<GuildMarker>,
+    attachment: Attachment,
+) -> Result<XpdSlashResponse, Error> {
+    let start = Instant::now();
+
+    let request = state.http.get(attachment.url).send().await?;
+    request.error_for_status_ref()?;
+
+    let raw_body = reqwest::Body::from(request);
+    let body = Limited::new(raw_body, MAX_IMPORT_SIZE)
+        .collect()
+        .await
+        .map_err(|_| Error::RawHttpBody)?
+        .to_bytes();
+
+    let data: Vec<ImportUser> = serde_json::from_slice(&body)?;
+
+    let mut txn = state.db.begin().await?;
+
+    let db_guild = id_to_db(guild_id);
+    for user in &data {
+        let query = query!(
+            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+                ON CONFLICT (id, guild) \
+                DO UPDATE SET xp=levels.xp+excluded.xp",
+            id_to_db(user.id),
+            user.xp,
+            db_guild,
+        );
+        if let Err(err) = txn.execute(query).await {
+            txn.rollback().await?;
+            return Err(err.into());
+        };
+    }
+
+    txn.commit().await?;
+
+    let seconds = start.elapsed().as_secs_f64();
+    let users = data.len();
+    Ok(XpdSlashResponse::with_embed_text(format!(
+        "Imported XP data for {users} users in {seconds:.2} seconds!"
+    )))
+}
+
+async fn background_data_operation_wrapper(
+    state: SlashState,
+    respondable: Respondable,
+    guild_id: Id<GuildMarker>,
+    attachment: Option<Attachment>,
+) {
+    let xsr = if let Some(attachment) = attachment {
+        background_data_import(&state, guild_id, attachment)
+            .await
+            .unwrap_or_else(|source| {
+                error!(?source, "Failed to import level data");
+                XpdSlashResponse::with_embed_text(format!("Failed to import level data: {source}"))
+            })
+    } else {
+        background_data_export(&state, guild_id)
+            .await
+            .unwrap_or_else(|source| {
+                error!(?source, "Failed to export level data");
+                XpdSlashResponse::with_embed_text(format!("Failed to export level data: {source}"))
+            })
+    }
+    .ephemeral(true);
+    state.send_followup(xsr, respondable.token()).await;
 }
 
 async fn process_rewards<'a>(

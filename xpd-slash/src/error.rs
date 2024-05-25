@@ -24,6 +24,8 @@ pub enum Error {
     StrToInt(#[from] std::num::ParseIntError),
     #[error("CSV error")]
     Csv(#[from] csv::Error),
+    #[error("JSON error")]
+    Json(#[from] serde_json::Error),
     #[error("I/O error")]
     Io(#[from] std::io::Error),
     #[error("Discord API decoding error")]
@@ -54,8 +56,8 @@ pub enum Error {
     NotControlGuild,
     #[error("This command only works as a control user!")]
     NotControlUser,
-    #[error("There are too many users to import automatically. Please email valk@randomairborne.dev to set up imports for your server.")]
-    TooManyUsersForImport,
+    #[error("That file is too big to import automatically. Please email valk@randomairborne.dev or [join our support server](https://discord.com/invite/KWkPYxqNKe) to set up imports for your server.")]
+    ImportFileTooBig,
     #[error("This page does not exist!")]
     NoUsersForPage,
     #[error("This page does not exist!")]
@@ -66,4 +68,6 @@ pub enum Error {
     NoFormField,
     #[error("This modal did not contain the required form data!")]
     NoDestinationInComponent,
+    #[error("HTTP body error!")]
+    RawHttpBody,
 }

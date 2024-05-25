@@ -70,7 +70,6 @@ impl XpdSlashResponse {
 
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
-
     pub fn content_o(self, content: Option<String>) -> Self {
         Self { content, ..self }
     }
