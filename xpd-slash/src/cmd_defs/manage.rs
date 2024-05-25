@@ -21,10 +21,18 @@ pub enum XpCommandRewards {
     Remove(XpCommandRewardsRemove),
     #[command(name = "list")]
     List(XpCommandRewardsList),
+    #[command(name = "config")]
+    Config(XpCommandRewardsConfig),
+    #[command(name = "reset_config")]
+    ResetConfig(XpCommandRewardsResetConfig),
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "add", desc = "Add a new leveling reward")]
+#[command(
+    name = "add",
+    desc = "Add a new leveling reward",
+    dm_permission = false
+)]
 pub struct XpCommandRewardsAdd {
     #[command(desc = "What level to grant the role reward at", min_value = 1)]
     pub level: i64,
@@ -33,7 +41,11 @@ pub struct XpCommandRewardsAdd {
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "remove", desc = "Remove a leveling reward")]
+#[command(
+    name = "remove",
+    desc = "Remove a leveling reward",
+    dm_permission = false
+)]
 pub struct XpCommandRewardsRemove {
     #[command(desc = "What level of role reward to remove", min_value = 1)]
     pub level: Option<i64>,
@@ -42,8 +54,27 @@ pub struct XpCommandRewardsRemove {
 }
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "list", desc = "Show a list of leveling rewards")]
+#[command(
+    name = "list",
+    desc = "Show a list of leveling rewards",
+    dm_permission = false
+)]
 pub struct XpCommandRewardsList;
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "config",
+    desc = "Configure role reward behavior",
+    dm_permission = false
+)]
+pub struct XpCommandRewardsConfig {
+    #[command(desc = "Remove all existing Experienced-managed roles when assigning a new one")]
+    pub one_at_a_time: Option<bool>,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "reset_config", desc = "Reset your guild's configuration")]
+pub struct XpCommandRewardsResetConfig;
 
 #[derive(CommandModel, CreateCommand)]
 #[command(

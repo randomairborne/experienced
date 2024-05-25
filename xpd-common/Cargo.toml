@@ -10,4 +10,5 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
+serde = { version = "1", features = ["derive"] }
 twilight-model = "0.16.0-rc.1"

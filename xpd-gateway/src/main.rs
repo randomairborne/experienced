@@ -72,7 +72,16 @@ async fn main() {
         .build()
         .unwrap();
 
+    let (config_tx, mut config_rx) = tokio::sync::mpsc::channel(10);
+
     let listener = XpdListener::new(db.clone(), client.clone());
+
+    let updating_listener = listener.clone();
+    let config_update = tokio::spawn(async move {
+        while let Some((guild, config)) = config_rx.recv().await {
+            updating_listener.update_config(guild, config);
+        }
+    });
 
     let slash = XpdSlash::new(
         http,
@@ -81,6 +90,7 @@ async fn main() {
         db.clone(),
         control_guild,
         owners,
+        config_tx,
     )
     .await;
     let config = Config::new(token.clone(), intents);
@@ -108,17 +118,26 @@ async fn main() {
 
     vss::shutdown_signal().await;
     warn!("Shutting down..");
-
+    debug!("Informing shards of shutdown");
     // Let the shards know not to reconnect
     shutdown.store(true, Ordering::Release);
 
+    debug!("Informing discord of shutdown");
     // Tell the shards to shut down
     for sender in senders {
         sender.close(CloseFrame::NORMAL).ok();
     }
 
+    debug!("Waiting for shards to close");
     // Await all tasks to complete.
     while set.join_next().await.is_some() {}
+
+    drop(slash); // Must be dropped before awaiting config shutdown, to allow the recv loop to end
+    debug!("Waiting for config updater to close");
+    if let Err(source) = config_update.await {
+        error!(?source, "Could not shut down config updater");
+    }
+
     info!("Done, see ya!");
 }
 

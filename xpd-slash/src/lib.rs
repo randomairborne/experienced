@@ -18,6 +18,7 @@ use std::{sync::Arc, time::Instant};
 pub use error::Error;
 pub use response::XpdSlashResponse;
 use sqlx::PgPool;
+use tokio::sync::mpsc::Sender;
 use twilight_model::{
     application::interaction::Interaction,
     channel::message::MessageFlags,
@@ -29,7 +30,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
-use xpd_common::id_to_db;
+use xpd_common::{id_to_db, GuildConfig};
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -37,6 +38,8 @@ extern crate tracing;
 
 #[macro_use]
 extern crate sqlx;
+
+pub type ConfigUpdateSender = Sender<(Id<GuildMarker>, GuildConfig)>;
 
 #[derive(Clone)]
 pub struct XpdSlash {
@@ -53,6 +56,7 @@ impl XpdSlash {
         db: PgPool,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
+        config_update_chan: ConfigUpdateSender,
     ) -> Self {
         let svg = SvgState::new();
         let state = SlashState {
@@ -63,6 +67,7 @@ impl XpdSlash {
             http,
             control_guild,
             owners: owners.into(),
+            config_update_chan,
         };
         info!("Creating commands...");
         state.register_slashes().await;
@@ -125,6 +130,13 @@ pub struct SlashState {
     pub http: reqwest::Client,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
+    pub config_update_chan: ConfigUpdateSender,
+}
+
+impl SlashState {
+    pub async fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) {
+        let _ = self.config_update_chan.send((guild, config)).await;
+    }
 }
 
 #[derive(Copy, Clone)]

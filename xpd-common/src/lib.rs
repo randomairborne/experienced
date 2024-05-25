@@ -1,7 +1,11 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
-use std::{fmt::Display, str::FromStr};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
+use serde::{Deserialize, Serialize};
 use twilight_model::id::Id;
 
 pub trait Tag {
@@ -89,4 +93,29 @@ pub fn id_to_db<T>(id: Id<T>) -> i64 {
 #[must_use]
 pub fn db_to_id<T>(db: i64) -> Id<T> {
     Id::new(db.reinterpret_bits())
+}
+
+#[derive(Clone, Serialize, Deserialize, Default)]
+pub struct GuildConfig {
+    pub one_at_a_time: Option<bool>,
+}
+
+#[inline]
+const fn tribool(data: Option<bool>) -> &'static str {
+    match data {
+        None => "unset",
+        Some(true) => "true",
+        Some(false) => "false",
+    }
+}
+
+impl Display for GuildConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "One reward role at a time: {}",
+            tribool(self.one_at_a_time)
+        )?;
+        Ok(())
+    }
 }

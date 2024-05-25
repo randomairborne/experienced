@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO guild_configs (id, one_at_a_time) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET one_at_a_time = COALESCE($2, excluded.one_at_a_time)RETURNING one_at_a_time",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "one_at_a_time",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "783b420046640bf063a2befbaddaeebc09153aaa18cbe11790cd9bcb31adb04b"
+}
