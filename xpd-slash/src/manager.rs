@@ -312,9 +312,9 @@ async fn process_rewards_list(
     .fetch_all(&state.db)
     .await?;
     let mut data = String::new();
-    
+
     roles.sort_by(|a, b| a.requirement.cmp(&b.requirement));
-    
+
     for role in roles {
         writeln!(
             data,
