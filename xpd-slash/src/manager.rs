@@ -305,14 +305,16 @@ async fn process_rewards_list(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let roles = query!(
-        "SELECT * FROM role_rewards WHERE guild = $1",
+    let mut roles = query!(
+        "SELECT id, requirement FROM role_rewards WHERE guild = $1",
         id_to_db(guild_id)
     )
     .fetch_all(&state.db)
     .await?;
     let mut data = String::new();
-    // TODO: Sort these
+    
+    roles.sort_by(|a, b| a.requirement.cmp(&b.requirement));
+    
     for role in roles {
         writeln!(
             data,
