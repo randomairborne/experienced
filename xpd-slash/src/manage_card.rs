@@ -67,7 +67,6 @@ pub async fn guild_card_update<'a>(
         GuildCardCommand::Edit(edit) => process_edit(edit, state, guild_id.cast()).await?,
     };
     let referenced_user = Arc::new(fake_user(guild_id.cast()));
-    #[allow(clippy::cast_sign_loss)]
     let level_info = LevelInfo::new(40);
     let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, 127).await?;
     let embed = EmbedBuilder::new()
