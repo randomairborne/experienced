@@ -6,9 +6,8 @@ use tokio::{join, try_join};
 use twilight_model::{
     http::attachment::Attachment,
     id::{marker::GuildMarker, Id},
-    user::User,
 };
-use xpd_common::{db_to_id, id_to_db};
+use xpd_common::{db_to_id, id_to_db, MemberDisplayInfo};
 
 use crate::{
     cmd_defs::{gdpr::GdprCommandDelete, GdprCommand},
@@ -18,7 +17,7 @@ use crate::{
 pub async fn process_gdpr(
     state: SlashState,
     cmd: GdprCommand,
-    invoker: User,
+    invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
     match cmd {
         GdprCommand::Delete(data) => delete(state, data, invoker).await,
@@ -26,10 +25,10 @@ pub async fn process_gdpr(
     }
 }
 
-pub async fn delete(
+async fn delete(
     state: SlashState,
     cmd: GdprCommandDelete,
-    invoker: User,
+    invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
     if cmd.username != invoker.name {
         return Ok(XpdSlashResponse::with_embed_text(
@@ -52,7 +51,10 @@ pub async fn delete(
     )
 }
 
-pub async fn download(state: SlashState, invoker: User) -> Result<XpdSlashResponse, Error> {
+async fn download(
+    state: SlashState,
+    invoker: MemberDisplayInfo,
+) -> Result<XpdSlashResponse, Error> {
     let invoker = Arc::new(invoker);
     let levels = query!(
         "SELECT guild, xp FROM levels WHERE id = $1",

@@ -9,7 +9,13 @@ use serde::{Deserialize, Serialize};
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::Intents,
-    id::{marker::RoleMarker, Id},
+    guild::Member,
+    id::{
+        marker::{RoleMarker, UserMarker},
+        Id,
+    },
+    user::User,
+    util::ImageHash,
 };
 
 pub trait Tag {
@@ -17,7 +23,7 @@ pub trait Tag {
     fn tag(&self) -> String;
 }
 
-impl Tag for twilight_model::user::User {
+impl Tag for User {
     fn tag(&self) -> String {
         name_discrim_to_tag(&self.name, self.discriminator)
     }
@@ -40,17 +46,92 @@ pub trait DisplayName {
     fn display_name(&self) -> &str;
 }
 
-impl DisplayName for twilight_model::user::User {
+impl DisplayName for User {
     fn display_name(&self) -> &str {
         self.global_name.as_ref().unwrap_or(&self.name)
     }
 }
 
-impl DisplayName for twilight_model::guild::Member {
+impl DisplayName for Member {
     fn display_name(&self) -> &str {
         self.nick
             .as_deref()
             .unwrap_or_else(|| self.user.display_name())
+    }
+}
+
+impl DisplayName for MemberDisplayInfo {
+    fn display_name(&self) -> &str {
+        self.nick.as_ref().map_or_else(
+            || {
+                self.global_name
+                    .as_ref()
+                    .map_or(self.name.as_str(), |global| global.as_str())
+            },
+            |nick| nick.as_str(),
+        )
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MemberDisplayInfo {
+    pub id: Id<UserMarker>,
+    pub name: String,
+    pub global_name: Option<String>,
+    pub nick: Option<String>,
+    pub avatar: Option<ImageHash>,
+    pub bot: bool,
+}
+
+impl From<User> for MemberDisplayInfo {
+    fn from(value: User) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            global_name: value.global_name,
+            nick: None,
+            avatar: value.avatar,
+            bot: value.bot,
+        }
+    }
+}
+
+impl From<Member> for MemberDisplayInfo {
+    fn from(value: Member) -> Self {
+        Self {
+            id: value.user.id,
+            name: value.user.name,
+            global_name: value.user.global_name,
+            nick: value.nick,
+            avatar: value.avatar.or(value.user.avatar),
+            bot: value.user.bot,
+        }
+    }
+}
+
+impl MemberDisplayInfo {
+    #[must_use]
+    pub const fn new(
+        id: Id<UserMarker>,
+        name: String,
+        global_name: Option<String>,
+        nick: Option<String>,
+        avatar: Option<ImageHash>,
+        bot: bool,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            global_name,
+            nick,
+            avatar,
+            bot,
+        }
+    }
+
+    #[must_use]
+    pub fn with_nick(self, nick: Option<String>) -> Self {
+        Self { nick, ..self }
     }
 }
 

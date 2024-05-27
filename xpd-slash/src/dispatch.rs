@@ -6,8 +6,8 @@ use twilight_model::{
     },
     http::interaction::InteractionResponse,
     id::{marker::GuildMarker, Id},
-    user::User,
 };
+use xpd_common::MemberDisplayInfo;
 
 use crate::{
     cmd_defs::{
@@ -39,11 +39,14 @@ pub async fn process(
     let Some(data) = interaction.data else {
         return Err(Error::NoInteractionData);
     };
-    let invoker = match interaction.member {
-        Some(val) => val.user,
-        None => interaction.user,
+    let invoker: MemberDisplayInfo = match interaction.member {
+        Some(val) => val
+            .user
+            .map(|u| MemberDisplayInfo::from(u).with_nick(val.nick)),
+        None => interaction.user.map(MemberDisplayInfo::from),
     }
     .ok_or(Error::NoInvoker)?;
+
     let guild_id = interaction.guild_id;
     match data {
         InteractionData::ApplicationCommand(cmd) => {
@@ -63,7 +66,7 @@ async fn process_app_cmd(
     state: SlashState,
     data: CommandData,
     respondable: Respondable,
-    invoker: User,
+    invoker: MemberDisplayInfo,
     guild_id: Option<Id<GuildMarker>>,
 ) -> Result<InteractionResponse, Error> {
     match data.kind {
@@ -88,14 +91,30 @@ async fn process_slash_cmd(
     data: CommandData,
     guild_id: Option<Id<GuildMarker>>,
     respondable: Respondable,
-    invoker: User,
+    invoker: MemberDisplayInfo,
     state: SlashState,
 ) -> Result<InteractionResponse, Error> {
     match data.name.as_str() {
         "help" => Ok(crate::help::help().into()),
         "rank" => {
             let data = crate::cmd_defs::RankCommand::from_interaction(data.into())?;
-            let target = data.user.map_or_else(|| invoker.clone(), |v| v.resolved);
+            let target = data.user.map_or_else(
+                || invoker.clone(),
+                |ru| {
+                    let (nick, avatar) = ru.member.map_or_else(
+                        || (None, None),
+                        |im| (im.nick, im.avatar.or(ru.resolved.avatar)),
+                    );
+                    MemberDisplayInfo {
+                        id: ru.resolved.id,
+                        name: ru.resolved.name,
+                        global_name: ru.resolved.global_name,
+                        nick,
+                        avatar,
+                        bot: ru.resolved.bot,
+                    }
+                },
+            );
             crate::levels::get_level(
                 guild_id.ok_or(Error::NoGuildId)?,
                 target,
@@ -158,34 +177,40 @@ const DEFAULT_SHOWOFF: Option<bool> = None;
 async fn process_user_cmd(
     data: CommandData,
     guild_id: Id<GuildMarker>,
-    invoker: User,
+    invoker: MemberDisplayInfo,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
-    let user = data
-        .resolved
-        .as_ref()
-        .ok_or(Error::NoResolvedData)?
+    let resolved = data.resolved.as_ref().ok_or(Error::NoResolvedData)?;
+    let user = resolved
         .users
         .get(&msg_id.cast())
-        .ok_or(Error::NoTarget)?;
-    crate::levels::get_level(guild_id, user.clone(), invoker.id, DEFAULT_SHOWOFF, state).await
+        .ok_or(Error::NoTarget)?
+        .clone();
+
+    let nick = resolved.members.get(&user.id).and_then(|v| v.nick.clone());
+    let target = MemberDisplayInfo::from(user).with_nick(nick);
+
+    crate::levels::get_level(guild_id, target, invoker.id, DEFAULT_SHOWOFF, state).await
 }
 
 async fn process_msg_cmd(
     data: CommandData,
     guild_id: Id<GuildMarker>,
-    invoker: User,
+    invoker: MemberDisplayInfo,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
-    let user = &data
-        .resolved
-        .as_ref()
-        .ok_or(Error::NoResolvedData)?
+    let resolved = &data.resolved.as_ref().ok_or(Error::NoResolvedData)?;
+    let user = resolved
         .messages
         .get(&msg_id.cast())
         .ok_or(Error::NoTarget)?
-        .author;
-    crate::levels::get_level(guild_id, user.clone(), invoker.id, DEFAULT_SHOWOFF, state).await
+        .author
+        .clone();
+
+    let nick = resolved.members.get(&user.id).and_then(|v| v.nick.clone());
+    let target = MemberDisplayInfo::from(user).with_nick(nick);
+
+    crate::levels::get_level(guild_id, target, invoker.id, DEFAULT_SHOWOFF, state).await
 }

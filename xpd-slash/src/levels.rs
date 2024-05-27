@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use base64::Engine;
 use tokio::try_join;
 use twilight_model::{
@@ -9,10 +7,10 @@ use twilight_model::{
         marker::{GenericMarker, GuildMarker, UserMarker},
         Id,
     },
-    user::User,
+    util::ImageHash,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{id_to_db, DisplayName};
+use xpd_common::{id_to_db, DisplayName, MemberDisplayInfo};
 use xpd_rank_card::{
     cards::Card,
     customizations::{Color, Customizations},
@@ -23,35 +21,35 @@ use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
-    target: User,
+    target: MemberDisplayInfo,
     invoker: Id<UserMarker>,
     showoff: Option<bool>,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
-    let rankstats = state.get_user_stats(target.id, guild_id).await?;
+    let rank_stats = state.get_user_stats(target.id, guild_id).await?;
     let flags = if showoff.is_some_and(|v| v) {
         MessageFlags::empty()
     } else {
         MessageFlags::EPHEMERAL
     };
 
-    let level_info = mee6::LevelInfo::new(u64::try_from(rankstats.xp).unwrap_or(0));
+    let level_info = mee6::LevelInfo::new(u64::try_from(rank_stats.xp).unwrap_or(0));
     let content = if target.bot {
         "Bots aren't ranked, that would be silly!".to_string()
     } else if invoker == target.id {
-        if rankstats.xp == 0 {
+        if rank_stats.xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(&state, target, level_info, rankstats.rank, flags)
+            return generate_level_response(&state, target, level_info, rank_stats.rank, flags)
                 .await;
         }
-    } else if rankstats.xp == 0 {
+    } else if rank_stats.xp == 0 {
         format!(
             "{} isn't ranked yet, because they haven't sent any messages!",
             target.display_name()
         )
     } else {
-        return generate_level_response(&state, target, level_info, rankstats.rank, flags).await;
+        return generate_level_response(&state, target, level_info, rank_stats.rank, flags).await;
     };
     let embed = EmbedBuilder::new().description(content).build();
     Ok(XpdSlashResponse::new().embeds([embed]).flags(flags))
@@ -59,30 +57,25 @@ pub async fn get_level(
 
 async fn generate_level_response(
     state: &SlashState,
-    user: User,
+    user: MemberDisplayInfo,
     level_info: mee6::LevelInfo,
     rank: i64,
     flags: MessageFlags,
 ) -> Result<XpdSlashResponse, Error> {
-    let card = gen_card(state.clone(), Arc::new(user), level_info, rank).await?;
+    let card = gen_card(state.clone(), user, level_info, rank).await?;
     Ok(XpdSlashResponse::new().attachments([card]).flags(flags))
 }
 
 pub async fn gen_card(
     state: SlashState,
-    user: Arc<User>,
+    user: MemberDisplayInfo,
     level_info: mee6::LevelInfo,
     rank: i64,
 ) -> Result<Attachment, Error> {
     let customizations_future =
         async { get_customizations(state.clone(), &[user.id.cast()]).await };
-    let avatar_future = get_avatar(state.clone(), user.clone());
+    let avatar_future = get_avatar(state.clone(), user.id, user.avatar);
     let (customizations, avatar) = try_join!(customizations_future, avatar_future)?;
-    let discriminator = if user.discriminator == 0 {
-        None
-    } else {
-        Some(user.discriminator().to_string())
-    };
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let percentage = (level_info.percentage() * 100.0).round() as u64;
     let png = state
@@ -91,7 +84,6 @@ pub async fn gen_card(
             level: level_info.level(),
             rank,
             name: user.display_name().to_string(),
-            discriminator,
             percentage,
             current: level_info.xp(),
             needed: mee6::xp_needed_for_level(level_info.level() + 1),
@@ -186,20 +178,19 @@ fn toy_or_none(toy: &Option<String>) -> Option<Toy> {
     }
 }
 
-async fn get_avatar(state: SlashState, user: Arc<User>) -> Result<String, Error> {
-    let url = user.avatar.map_or_else(
+async fn get_avatar(
+    state: SlashState,
+    user_id: Id<UserMarker>,
+    avatar_hash: Option<ImageHash>,
+) -> Result<String, Error> {
+    let url = avatar_hash.map_or_else(
         || {
             format!(
                 "https://cdn.discordapp.com/embed/avatars/{}.png",
-                (user.id.get() >> 22) % 6
+                (user_id.get() >> 22) % 6
             )
         },
-        |hash| {
-            format!(
-                "https://cdn.discordapp.com/avatars/{}/{}.png",
-                user.id, hash
-            )
-        },
+        |hash| format!("https://cdn.discordapp.com/avatars/{user_id}/{hash}.png",),
     );
     debug!(url, "Downloading avatar");
     let png = state.http.get(url).send().await?.bytes().await?;

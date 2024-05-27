@@ -1,15 +1,10 @@
-use std::sync::Arc;
-
 use mee6::LevelInfo;
-use twilight_model::{
-    id::{
-        marker::{GenericMarker, GuildMarker},
-        Id,
-    },
-    user::User,
+use twilight_model::id::{
+    marker::{GenericMarker, GuildMarker},
+    Id,
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
-use xpd_common::id_to_db;
+use xpd_common::{id_to_db, MemberDisplayInfo};
 
 use crate::{
     cmd_defs::{
@@ -21,7 +16,7 @@ use crate::{
 
 pub async fn user_card_update(
     command: CardCommand,
-    invoker: User,
+    invoker: MemberDisplayInfo,
     state: &SlashState,
     guild_id: Option<Id<GuildMarker>>,
 ) -> Result<XpdSlashResponse, Error> {
@@ -42,10 +37,8 @@ pub async fn user_card_update(
         // I am so mature.
         UserStats { xp: 420, rank: 69 }
     };
-    let referenced_user = Arc::new(invoker);
     let level_info = LevelInfo::new(u64::try_from(user_stats.xp).unwrap_or(0));
-    let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, user_stats.rank)
-        .await?;
+    let card = crate::levels::gen_card(state.clone(), invoker, level_info, user_stats.rank).await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
@@ -66,7 +59,7 @@ pub async fn guild_card_update(
         GuildCardCommand::Fetch(_fetch) => process_fetch(state, &[guild_id.cast()]).await?,
         GuildCardCommand::Edit(edit) => process_edit(edit, state, guild_id.cast()).await?,
     };
-    let referenced_user = Arc::new(fake_user(guild_id.cast()));
+    let referenced_user = fake_user(guild_id.cast());
     let level_info = LevelInfo::new(40);
     let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, 127).await?;
     let embed = EmbedBuilder::new()
@@ -150,24 +143,13 @@ async fn process_fetch(state: &SlashState, ids: &[Id<GenericMarker>]) -> Result<
         .to_string())
 }
 
-fn fake_user(id: Id<GenericMarker>) -> User {
-    User {
-        accent_color: None,
-        avatar: None,
-        avatar_decoration: None,
-        banner: None,
-        bot: false,
-        discriminator: 0,
-        email: None,
-        flags: None,
-        global_name: None,
+fn fake_user(id: Id<GenericMarker>) -> MemberDisplayInfo {
+    MemberDisplayInfo {
         id: id.cast(),
-        locale: None,
-        mfa_enabled: None,
         name: "Preview".to_string(),
-        premium_type: None,
-        public_flags: None,
-        system: None,
-        verified: None,
+        global_name: None,
+        nick: None,
+        avatar: None,
+        bot: false,
     }
 }
