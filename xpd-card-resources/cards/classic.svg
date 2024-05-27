@@ -11,10 +11,6 @@
       font-size: 50px;
       fill: {{ customizations.username }};
     }
-    .discriminator {
-      font-size: 20px;
-      fill: {{ customizations.username }};
-    }
     .stat {
       font-size: 80px;
     }
@@ -46,9 +42,6 @@
   <image id="avatar" class="avatar" x="60" y="50" width="180" height="180" clip-path="url(#clipProfilePic)" href="{{ avatar }}" />
   <text x="270" y="120" class="font">
     <tspan class="name">{{ name }}</tspan>
-    {% if discriminator %}
-    <tspan class="discriminator">#{{ discriminator }}</tspan>
-    {% endif %}
   </text>
   <text x="270" y="220" class="font">
     <tspan class="stat-name rank">RANK:</tspan>

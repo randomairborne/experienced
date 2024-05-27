@@ -25,8 +25,6 @@ pub struct Context {
     pub rank: i64,
     /// Username
     pub name: String,
-    /// Optional, 4-character discriminator
-    pub discriminator: Option<String>,
     /// Percentage of the way to the next level, out of 100
     pub percentage: u64,
     /// Current XP count
@@ -233,7 +231,6 @@ mod tests {
             level: data.level(),
             rank: 1,
             name: "Testy McTestington".to_string(),
-            discriminator: None,
             percentage: percentify(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
@@ -255,7 +252,6 @@ mod tests {
             level: data.level(),
             rank: 1,
             name: "Testy McTestington".to_string(),
-            discriminator: None,
             percentage: percentify(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
@@ -277,7 +273,6 @@ mod tests {
             level: data.level(),
             rank: 100_000,
             name: "Testy McTestington".to_string(),
-            discriminator: None,
             percentage: percentify(data.percentage()),
             current: xp,
             needed: mee6::xp_needed_for_level(data.level() + 1),
@@ -303,7 +298,6 @@ mod tests {
                     level: data.level(),
                     rank: 1_000_000,
                     name: "Testy McTestington".to_string(),
-                    discriminator: None,
                     percentage: percentify(data.percentage()),
                     current: xp,
                     needed: mee6::xp_needed_for_level(data.level() + 1),
