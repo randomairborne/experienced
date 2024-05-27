@@ -11,7 +11,10 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
-xpd-common = { path = "../xpd-common", version = "0.0.6" }
+twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
+xpd-permission-cache = { path = "../xpd-permission-cache" }
+serde = { version = "1", features = ["derive"] }
+xpd-common = { path = "../xpd-common" }
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"
 expiringmap = "0.1"
@@ -19,4 +22,3 @@ thiserror = "1"
 tracing = "0.1"
 rand = "0.8"
 mee6 = "0.1"
-serde = { version = "1.0.203", features = ["derive"] }

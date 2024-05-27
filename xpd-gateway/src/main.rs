@@ -23,7 +23,7 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::id_to_db;
+use xpd_common::{id_to_db, RequiredEvents};
 use xpd_listener::XpdListener;
 use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
 
@@ -56,7 +56,7 @@ async fn main() {
         .expect("Failed to run database migrations!");
 
     let client = Arc::new(DiscordClient::new(token.clone()));
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
+    let intents = XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILDS;
     let my_id = client
         .current_user_application()
         .await
@@ -172,10 +172,10 @@ async fn event_loop(
     slash: XpdSlash,
     db: PgPool,
 ) {
-    let event_flags = EventTypeFlags::READY
-        | EventTypeFlags::GUILD_CREATE
-        | EventTypeFlags::MESSAGE_CREATE
-        | EventTypeFlags::INTERACTION_CREATE;
+    let event_flags = XpdListener::required_events()
+        | XpdSlash::required_events()
+        | EventTypeFlags::READY
+        | EventTypeFlags::GUILD_CREATE;
     while let Some(next) = shard.next_event(event_flags).await {
         trace!(?next, "got new event");
         let event = match next {

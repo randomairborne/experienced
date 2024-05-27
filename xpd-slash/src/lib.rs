@@ -19,10 +19,11 @@ pub use error::Error;
 pub use response::XpdSlashResponse;
 use sqlx::PgPool;
 use tokio::sync::mpsc::Sender;
+use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     application::interaction::Interaction,
     channel::message::MessageFlags,
-    gateway::payload::incoming::InteractionCreate,
+    gateway::{payload::incoming::InteractionCreate, Intents},
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
         marker::{ApplicationMarker, GuildMarker, UserMarker},
@@ -30,7 +31,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
-use xpd_common::{id_to_db, GuildConfig};
+use xpd_common::{id_to_db, GuildConfig, RequiredEvents};
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -124,6 +125,16 @@ impl XpdSlash {
     #[must_use]
     pub const fn id(&self) -> Id<ApplicationMarker> {
         self.state.my_id
+    }
+}
+
+impl RequiredEvents for XpdSlash {
+    fn required_intents() -> Intents {
+        Intents::empty()
+    }
+
+    fn required_events() -> EventTypeFlags {
+        EventTypeFlags::INTERACTION_CREATE
     }
 }
 

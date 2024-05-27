@@ -1,0 +1,11 @@
+[package]
+name = "xpd-permission-cache"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
+twilight-model = { version = "0.16.0-rc.1", default-features = false }
+xpd-common = { path = "../xpd-common" }
+thiserror = "1"
+tracing = "0.1"

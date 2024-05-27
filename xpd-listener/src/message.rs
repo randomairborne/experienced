@@ -87,19 +87,33 @@ impl XpdListenerInner {
         };
 
         // remove all role IDs which are in our rewards list
-        let base_roles = member
+        let base_roles: Vec<Id<RoleMarker>> = member
             .roles
             .iter()
             .filter(|role_id| !contains(&rewards, **role_id))
-            .copied();
+            .copied()
+            .collect();
 
-        let mut new_roles: Vec<Id<RoleMarker>> = base_roles.collect();
-
-        if guild_config.one_at_a_time.is_some_and(|v| v) {
-            new_roles.push(rewards[reward_idx].id);
+        let new_roles = if guild_config.one_at_a_time.is_some_and(|v| v) {
+            vec![rewards[reward_idx].id]
         } else {
-            new_roles.extend(rewards[..=reward_idx].iter().map(|v| v.id));
+            rewards[..=reward_idx].iter().map(|v| v.id).collect()
+        };
+
+        // ensure we have perms to add roles
+        if !self
+            .cache
+            .can_add_roles(guild_id, new_roles.as_slice())
+            .unwrap_or(true)
+        {
+            return Err(Error::NoPermsToAddRoles(guild_id, new_roles));
         }
+
+        let mut total_roles: Vec<Id<RoleMarker>> =
+            Vec::with_capacity(new_roles.len() + base_roles.len());
+
+        total_roles.extend(&base_roles);
+        total_roles.extend(&new_roles);
 
         // make sure we don't make useless requests to the API
         if member.roles != new_roles {

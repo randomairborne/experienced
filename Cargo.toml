@@ -6,6 +6,6 @@ members = [
     "xpd-gateway",
     "xpd-common",
     "xpd-rank-card"
-]
+, "xpd-permission-cache"]
 resolver = "2"
 default-members = ["xpd-gateway"]

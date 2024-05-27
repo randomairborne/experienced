@@ -6,7 +6,11 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
-use twilight_model::id::{marker::RoleMarker, Id};
+use twilight_gateway::EventTypeFlags;
+use twilight_model::{
+    gateway::Intents,
+    id::{marker::RoleMarker, Id},
+};
 
 pub trait Tag {
     #[must_use]
@@ -130,4 +134,9 @@ impl Display for GuildConfig {
         )?;
         Ok(())
     }
+}
+
+pub trait RequiredEvents {
+    fn required_intents() -> Intents;
+    fn required_events() -> EventTypeFlags;
 }

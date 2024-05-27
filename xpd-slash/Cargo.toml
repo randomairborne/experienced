@@ -15,6 +15,7 @@ reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots", "st
 twilight-http = { version = "0.16.0-rc.1", features = ["rustls-native-roots"], default-features = false }
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
 xpd-rank-card = { path = "../xpd-rank-card", version = "0.5" }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
