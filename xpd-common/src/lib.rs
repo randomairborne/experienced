@@ -35,6 +35,25 @@ fn name_discrim_to_tag(name: &str, discriminator: u16) -> String {
     }
 }
 
+pub trait DisplayName {
+    #[must_use]
+    fn display_name(&self) -> &str;
+}
+
+impl DisplayName for twilight_model::user::User {
+    fn display_name(&self) -> &str {
+        self.global_name.as_ref().unwrap_or(&self.name)
+    }
+}
+
+impl DisplayName for twilight_model::guild::Member {
+    fn display_name(&self) -> &str {
+        self.nick
+            .as_deref()
+            .unwrap_or_else(|| self.user.display_name())
+    }
+}
+
 /// Get environment variable and parse it, panicking on failure
 /// # Panics
 /// If the environment variable cannot be found or parsed

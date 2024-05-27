@@ -12,7 +12,7 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{id_to_db, Tag};
+use xpd_common::{id_to_db, DisplayName, Tag};
 use xpd_rank_card::{
     cards::Card,
     customizations::{Color, Customizations},
@@ -82,18 +82,14 @@ pub async fn gen_card(
     } else {
         Some(user.discriminator().to_string())
     };
-    #[allow(
-        clippy::cast_precision_loss,
-        clippy::cast_sign_loss,
-        clippy::cast_possible_truncation
-    )]
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let percentage = (level_info.percentage() * 100.0).round() as u64;
     let png = state
         .svg
         .render(xpd_rank_card::Context {
             level: level_info.level(),
             rank,
-            name: user.name.clone(),
+            name: user.display_name().to_string(),
             discriminator,
             percentage,
             current: level_info.xp(),
@@ -105,7 +101,7 @@ pub async fn gen_card(
     Ok(Attachment {
         description: Some(format!(
             "{} is level {} (rank #{}), and is {}% of the way to level {}.",
-            user.tag(),
+            user.display_name(),
             level_info.level(),
             rank,
             (level_info.percentage() * 100.0).round(),
