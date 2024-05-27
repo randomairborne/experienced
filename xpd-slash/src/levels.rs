@@ -12,7 +12,7 @@ use twilight_model::{
     user::User,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{id_to_db, DisplayName, Tag};
+use xpd_common::{id_to_db, DisplayName};
 use xpd_rank_card::{
     cards::Card,
     customizations::{Color, Customizations},
@@ -23,12 +23,12 @@ use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
-    user: User,
+    target: User,
     invoker: Id<UserMarker>,
     showoff: Option<bool>,
     state: SlashState,
 ) -> Result<XpdSlashResponse, Error> {
-    let rankstats = state.get_user_stats(invoker, guild_id).await?;
+    let rankstats = state.get_user_stats(target.id, guild_id).await?;
     let flags = if showoff.is_some_and(|v| v) {
         MessageFlags::empty()
     } else {
@@ -36,21 +36,22 @@ pub async fn get_level(
     };
 
     let level_info = mee6::LevelInfo::new(u64::try_from(rankstats.xp).unwrap_or(0));
-    let content = if user.bot {
+    let content = if target.bot {
         "Bots aren't ranked, that would be silly!".to_string()
-    } else if invoker == user.id {
+    } else if invoker == target.id {
         if rankstats.xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(&state, user, level_info, rankstats.rank, flags).await;
+            return generate_level_response(&state, target, level_info, rankstats.rank, flags)
+                .await;
         }
     } else if rankstats.xp == 0 {
         format!(
             "{} isn't ranked yet, because they haven't sent any messages!",
-            user.tag()
+            target.display_name()
         )
     } else {
-        return generate_level_response(&state, user, level_info, rankstats.rank, flags).await;
+        return generate_level_response(&state, target, level_info, rankstats.rank, flags).await;
     };
     let embed = EmbedBuilder::new().description(content).build();
     Ok(XpdSlashResponse::new().embeds([embed]).flags(flags))
