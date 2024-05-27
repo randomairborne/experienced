@@ -75,7 +75,7 @@ async fn main() {
     let (config_tx, mut config_rx) = tokio::sync::mpsc::channel(10);
     let (rewards_tx, mut rewards_rx) = tokio::sync::mpsc::channel(10);
 
-    let listener = XpdListener::new(db.clone(), client.clone());
+    let listener = XpdListener::new(db.clone(), client.clone(), my_id);
 
     let updating_listener = listener.clone();
     let config_update = tokio::spawn(async move {
@@ -214,6 +214,7 @@ async fn handle_event(
     slash: XpdSlash,
     db: PgPool,
 ) -> Result<(), Error> {
+    listener.update_cache(&event);
     match event {
         Event::Ready(ready) => {
             info!(

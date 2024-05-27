@@ -13,9 +13,9 @@ use xpd_common::{id_to_db, RoleReward};
 
 const MESSAGE_COOLDOWN: Duration = Duration::from_secs(60);
 
-use crate::{Error, XpdListener};
+use crate::{Error, XpdListenerInner};
 
-impl XpdListener {
+impl XpdListenerInner {
     pub async fn save(&self, msg: MessageCreate) -> Result<(), Error> {
         if let Some(guild_id) = msg.guild_id {
             self.save_msg_send(guild_id, msg).await?;

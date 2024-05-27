@@ -19,3 +19,4 @@ thiserror = "1"
 tracing = "0.1"
 rand = "0.8"
 mee6 = "0.1"
+serde = { version = "1.0.203", features = ["derive"] }
