@@ -22,6 +22,7 @@ impl Tag for twilight_model::user::User {
         name_discrim_to_tag(&self.name, self.discriminator)
     }
 }
+
 fn name_discrim_to_tag(name: &str, discriminator: u16) -> String {
     if discriminator == 0 {
         name.to_string()
