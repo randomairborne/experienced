@@ -19,7 +19,7 @@ use crate::{
     Error, SlashState, UserStats, XpdSlashResponse,
 };
 
-pub async fn user_card_update<'a>(
+pub async fn user_card_update(
     command: CardCommand,
     invoker: User,
     state: &SlashState,
@@ -56,7 +56,7 @@ pub async fn user_card_update<'a>(
         .embeds([embed]))
 }
 
-pub async fn guild_card_update<'a>(
+pub async fn guild_card_update(
     command: GuildCardCommand,
     state: &SlashState,
     guild_id: Id<GuildMarker>,

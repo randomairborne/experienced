@@ -241,7 +241,7 @@ async fn background_data_operation_wrapper(
     state.send_followup(xsr, respondable.token()).await;
 }
 
-async fn process_rewards<'a>(
+async fn process_rewards(
     cmd: XpCommandRewards,
     guild_id: Id<GuildMarker>,
     state: SlashState,
