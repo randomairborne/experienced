@@ -10,7 +10,6 @@ fn main() {
         level: 694,
         rank: 124,
         name: "Testy McTestington".to_string(),
-        discriminator: None,
         percentage: 30,
         current: 124,
         needed: 213,
