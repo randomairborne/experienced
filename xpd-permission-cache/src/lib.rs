@@ -6,7 +6,7 @@ use std::{
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::{event::Event, Intents},
-    guild::{Permissions, Role},
+    guild::{Guild, Permissions, Role},
     id::{
         marker::{ApplicationMarker, GuildMarker, RoleMarker, UserMarker},
         Id,
@@ -22,6 +22,7 @@ pub struct RoleMetadata {
     pub permissions: Permissions,
 }
 
+#[derive(Debug)]
 pub struct PermissionCache {
     role_cache: LockingMap<Id<RoleMarker>, RoleMetadata>,
     guild_role_cache: Mutex<HashMap<Id<GuildMarker>, HashSet<Id<RoleMarker>>>>,
@@ -48,7 +49,7 @@ impl PermissionCache {
             Event::RoleCreate(rc) => self.cache_insert_role(rc.guild_id, &rc.role),
             Event::RoleUpdate(ru) => self.cache_insert_role(ru.guild_id, &ru.role),
             Event::RoleDelete(rd) => self.cache_remove_role(rd.guild_id, rd.role_id),
-            Event::GuildCreate(gc) => self.cache_reset_guild(gc.id, &gc.roles),
+            Event::GuildCreate(gc) => self.guild_create(&gc.0),
             Event::GuildUpdate(gu) => self.cache_reset_guild(gu.id, &gu.roles),
             Event::GuildDelete(gd) => self.cache_delete_guild(gd.id),
             Event::MemberUpdate(mu) => self.cache_insert_self(mu.user.id, mu.guild_id, &mu.roles),
@@ -56,6 +57,14 @@ impl PermissionCache {
             Event::MemberRemove(mr) => self.cache_remove_self(mr.user.id, mr.guild_id),
             _ => Ok(()),
         }
+    }
+
+    fn guild_create(&self, guild: &Guild) -> Result<(), Error> {
+        // we should only be one of these, but cache_insert_self checks the ID for us
+        for member in &guild.members {
+            self.cache_insert_self(member.user.id, guild.id, &member.roles)?;
+        }
+        self.cache_reset_guild(guild.id, &guild.roles)
     }
 
     fn cache_insert_role(&self, guild_id: Id<GuildMarker>, role: &Role) -> Result<(), Error> {
