@@ -49,7 +49,7 @@ impl PermissionCache {
             Event::RoleCreate(rc) => self.cache_insert_role(rc.guild_id, &rc.role),
             Event::RoleUpdate(ru) => self.cache_insert_role(ru.guild_id, &ru.role),
             Event::RoleDelete(rd) => self.cache_remove_role(rd.guild_id, rd.role_id),
-            Event::GuildCreate(gc) => self.guild_create(&gc.0),
+            Event::GuildCreate(gc) => self.cache_guild_create(&gc.0),
             Event::GuildUpdate(gu) => self.cache_reset_guild(gu.id, &gu.roles),
             Event::GuildDelete(gd) => self.cache_delete_guild(gd.id),
             Event::MemberUpdate(mu) => self.cache_insert_self(mu.user.id, mu.guild_id, &mu.roles),
@@ -59,7 +59,7 @@ impl PermissionCache {
         }
     }
 
-    fn guild_create(&self, guild: &Guild) -> Result<(), Error> {
+    fn cache_guild_create(&self, guild: &Guild) -> Result<(), Error> {
         // we should only be one of these, but cache_insert_self checks the ID for us
         for member in &guild.members {
             self.cache_insert_self(member.user.id, guild.id, &member.roles)?;
@@ -74,13 +74,13 @@ impl PermissionCache {
         };
         self.role_cache.write()?.insert(role.id, role_meta);
         match self.guild_role_cache.lock()?.entry(guild_id) {
-            Entry::Occupied(mut o) => {
-                o.get_mut().insert(role.id);
+            Entry::Occupied(mut occupied) => {
+                occupied.get_mut().insert(role.id);
             }
-            Entry::Vacant(e) => {
+            Entry::Vacant(vacant) => {
                 let mut new_set = HashSet::new();
                 new_set.insert(role.id);
-                e.insert(new_set);
+                vacant.insert(new_set);
             }
         };
         Ok(())
@@ -92,11 +92,11 @@ impl PermissionCache {
         role_id: Id<RoleMarker>,
     ) -> Result<(), Error> {
         self.role_cache.write()?.remove(&role_id);
-        let mut grc = self.guild_role_cache.lock()?;
-        if let Some(roles) = grc.get_mut(&guild_id) {
+        let mut guild_role_cache = self.guild_role_cache.lock()?;
+        if let Some(roles) = guild_role_cache.get_mut(&guild_id) {
             roles.remove(&role_id);
             if roles.is_empty() {
-                grc.remove(&guild_id);
+                guild_role_cache.remove(&guild_id);
             }
         }
         Ok(())
@@ -186,10 +186,10 @@ impl PermissionCache {
             return Ok(CanAddRolesInfo::NoRoles);
         };
 
-        let rc = self.role_cache.read()?;
+        let role_cache = self.role_cache.read()?;
 
         let everyone_role: Id<RoleMarker> = guild_id.cast();
-        let baseline = rc
+        let baseline = role_cache
             .get(&everyone_role)
             .ok_or(Error::UnknownRole(everyone_role))?;
 
@@ -199,7 +199,7 @@ impl PermissionCache {
         };
 
         for role_id in my_roles {
-            if let Some(role) = rc.get(&role_id) {
+            if let Some(role) = role_cache.get(&role_id) {
                 virtual_role.position = std::cmp::max(virtual_role.position, role.position);
                 virtual_role.permissions |= role.permissions;
             }
@@ -215,7 +215,7 @@ impl PermissionCache {
 
         let mut can_assign = CanAddRolesInfo::CanAddRoles;
         for target_role in target_roles {
-            let target = rc
+            let target = role_cache
                 .get(target_role)
                 .ok_or(Error::UnknownRole(*target_role))?;
 
