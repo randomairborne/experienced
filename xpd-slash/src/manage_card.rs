@@ -150,6 +150,7 @@ fn fake_user(id: Id<GenericMarker>) -> MemberDisplayInfo {
         global_name: None,
         nick: None,
         avatar: None,
+        local_avatar: None,
         bot: false,
     }
 }

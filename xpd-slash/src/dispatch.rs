@@ -101,16 +101,16 @@ async fn process_slash_cmd(
             let target = data.user.map_or_else(
                 || invoker.clone(),
                 |ru| {
-                    let (nick, avatar) = ru.member.map_or_else(
-                        || (None, None),
-                        |im| (im.nick, im.avatar.or(ru.resolved.avatar)),
-                    );
+                    let (nick, local_avatar) = ru
+                        .member
+                        .map_or_else(|| (None, None), |im| (im.nick, im.avatar));
                     MemberDisplayInfo {
                         id: ru.resolved.id,
                         name: ru.resolved.name,
                         global_name: ru.resolved.global_name,
                         nick,
-                        avatar,
+                        avatar: ru.resolved.avatar,
+                        local_avatar,
                         bot: ru.resolved.bot,
                     }
                 },

@@ -80,6 +80,7 @@ pub struct MemberDisplayInfo {
     pub global_name: Option<String>,
     pub nick: Option<String>,
     pub avatar: Option<ImageHash>,
+    pub local_avatar: Option<ImageHash>,
     pub bot: bool,
 }
 
@@ -91,6 +92,7 @@ impl From<User> for MemberDisplayInfo {
             global_name: value.global_name,
             nick: None,
             avatar: value.avatar,
+            local_avatar: None,
             bot: value.bot,
         }
     }
@@ -103,32 +105,14 @@ impl From<Member> for MemberDisplayInfo {
             name: value.user.name,
             global_name: value.user.global_name,
             nick: value.nick,
-            avatar: value.avatar.or(value.user.avatar),
+            avatar: value.user.avatar,
+            local_avatar: value.avatar,
             bot: value.user.bot,
         }
     }
 }
 
 impl MemberDisplayInfo {
-    #[must_use]
-    pub const fn new(
-        id: Id<UserMarker>,
-        name: String,
-        global_name: Option<String>,
-        nick: Option<String>,
-        avatar: Option<ImageHash>,
-        bot: bool,
-    ) -> Self {
-        Self {
-            id,
-            name,
-            global_name,
-            nick,
-            avatar,
-            bot,
-        }
-    }
-
     #[must_use]
     pub fn with_nick(self, nick: Option<String>) -> Self {
         Self { nick, ..self }
