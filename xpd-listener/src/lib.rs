@@ -83,7 +83,9 @@ impl XpdListenerInner {
     }
 
     pub fn update_cache(&self, uc: &Event) {
-        self.cache.update_cache(uc);
+        if let Err(source) = self.cache.update_cache(uc) {
+            error!(?source, "Failed to update cache");
+        }
     }
 
     pub fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) -> Result<(), Error> {

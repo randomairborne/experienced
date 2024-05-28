@@ -14,9 +14,6 @@ use twilight_model::{
 };
 use xpd_common::RequiredEvents;
 
-#[macro_use]
-extern crate tracing;
-
 type LockingMap<K, V> = RwLock<HashMap<K, V>>;
 
 #[derive(Copy, Clone, Debug)]
@@ -46,13 +43,7 @@ impl PermissionCache {
         }
     }
 
-    pub fn update_cache(&self, uc: &Event) {
-        if let Err(source) = self.inner_update_cache(uc) {
-            error!(?source, "Failed to update cache");
-        }
-    }
-
-    fn inner_update_cache(&self, uc: &Event) -> Result<(), Error> {
+    pub fn update_cache(&self, uc: &Event) -> Result<(), Error> {
         match uc {
             Event::RoleCreate(rc) => self.cache_insert_role(rc.guild_id, &rc.role),
             Event::RoleUpdate(ru) => self.cache_insert_role(ru.guild_id, &ru.role),

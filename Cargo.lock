@@ -3673,7 +3673,6 @@ name = "xpd-permission-cache"
 version = "0.1.0"
 dependencies = [
  "thiserror",
- "tracing",
  "twilight-gateway",
  "twilight-model",
  "xpd-common",
