@@ -18,29 +18,6 @@ use twilight_model::{
     util::ImageHash,
 };
 
-pub trait Tag {
-    #[must_use]
-    fn tag(&self) -> String;
-}
-
-impl Tag for User {
-    fn tag(&self) -> String {
-        name_discrim_to_tag(&self.name, self.discriminator)
-    }
-}
-
-fn name_discrim_to_tag(name: &str, discriminator: u16) -> String {
-    if discriminator == 0 {
-        name.to_string()
-    } else {
-        format!(
-            "{}#{}",
-            name,
-            twilight_model::user::DiscriminatorDisplay::new(discriminator)
-        )
-    }
-}
-
 pub trait DisplayName {
     #[must_use]
     fn display_name(&self) -> &str;
