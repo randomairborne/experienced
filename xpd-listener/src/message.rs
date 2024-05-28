@@ -10,6 +10,7 @@ use twilight_model::{
     },
 };
 use xpd_common::{id_to_db, RoleReward};
+use xpd_permission_cache::CanAddRolesInfo;
 
 const MESSAGE_COOLDOWN: Duration = Duration::from_secs(60);
 
@@ -101,12 +102,13 @@ impl XpdListenerInner {
         };
 
         // ensure we have perms to add roles
-        if !self
+        match self
             .cache
             .can_add_roles(guild_id, new_roles.as_slice())
-            .unwrap_or(true)
+            .unwrap_or(CanAddRolesInfo::CanAddRoles)
         {
-            return Err(Error::NoPermsToAddRoles(guild_id, new_roles));
+            CanAddRolesInfo::CanAddRoles => {}
+            role_adding_issue => return Err(Error::NoPermsToAddRoles(guild_id, role_adding_issue)),
         }
 
         let mut total_roles: Vec<Id<RoleMarker>> =

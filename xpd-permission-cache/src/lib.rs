@@ -163,7 +163,7 @@ impl PermissionCache {
         &self,
         guild_id: Id<GuildMarker>,
         target_role: Id<RoleMarker>,
-    ) -> Result<bool, Error> {
+    ) -> Result<CanAddRolesInfo, Error> {
         let role_list = [target_role];
         self.can_add_roles(guild_id, role_list.as_slice())
     }
@@ -172,9 +172,9 @@ impl PermissionCache {
         &self,
         guild_id: Id<GuildMarker>,
         target_roles: &[Id<RoleMarker>],
-    ) -> Result<bool, Error> {
+    ) -> Result<CanAddRolesInfo, Error> {
         let Some(my_roles) = self.me_cache.read()?.get(&guild_id).cloned() else {
-            return Ok(false);
+            return Ok(CanAddRolesInfo::NoRoles);
         };
 
         let rc = self.role_cache.read()?;
@@ -201,10 +201,10 @@ impl PermissionCache {
                 .permissions
                 .contains(Permissions::ADMINISTRATOR)
         {
-            return Ok(false);
+            return Ok(CanAddRolesInfo::NoManageRoles);
         }
 
-        let mut can_assign = true;
+        let mut can_assign = CanAddRolesInfo::CanAddRoles;
         for target_role in target_roles {
             let target = rc
                 .get(target_role)
@@ -212,7 +212,20 @@ impl PermissionCache {
 
             // if the target's position is more than our virtual position
             if target.position >= virtual_role.position {
-                can_assign = false;
+                let role_data = RoleWhichIsAboveUs {
+                    id: *target_role,
+                    position: target.position,
+                };
+
+                if let CanAddRolesInfo::RolesAboveUs(above_us) = &mut can_assign {
+                    above_us.other_positions.push(role_data);
+                } else {
+                    let role_set = RolesAboveUs {
+                        our_position: virtual_role.position,
+                        other_positions: vec![role_data],
+                    };
+                    can_assign = CanAddRolesInfo::RolesAboveUs(role_set);
+                }
             }
         }
 
@@ -226,6 +239,31 @@ impl PermissionCache {
             .get(&guild_id)
             .cloned()
             .unwrap_or_else(Vec::new))
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RoleWhichIsAboveUs {
+    pub id: Id<RoleMarker>,
+    pub position: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct RolesAboveUs {
+    pub our_position: i64,
+    pub other_positions: Vec<RoleWhichIsAboveUs>,
+}
+
+#[derive(Debug, Clone)]
+pub enum CanAddRolesInfo {
+    RolesAboveUs(RolesAboveUs),
+    NoManageRoles,
+    NoRoles,
+    CanAddRoles,
+}
+impl CanAddRolesInfo {
+    pub fn overall(&self) -> bool {
+        matches!(self, Self::CanAddRoles)
     }
 }
 

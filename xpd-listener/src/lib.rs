@@ -174,7 +174,7 @@ pub enum Error {
     #[error("Unknown role: <@&{0}>")]
     UnknownRole(Id<RoleMarker>),
     #[error("Could not add roles in guild {0}")]
-    NoPermsToAddRoles(Id<GuildMarker>, Vec<Id<RoleMarker>>),
+    NoPermsToAddRoles(Id<GuildMarker>, xpd_permission_cache::CanAddRolesInfo),
 }
 
 impl<T> From<std::sync::PoisonError<T>> for Error {
