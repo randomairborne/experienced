@@ -100,7 +100,7 @@ impl XpdListenerInner {
         } else {
             rewards[..=reward_idx].iter().map(|v| v.id).collect()
         };
-
+        trace!(cache = ?self.cache, "Have cache");
         // ensure we have perms to add roles
         match self
             .cache
