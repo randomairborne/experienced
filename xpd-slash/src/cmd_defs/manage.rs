@@ -89,6 +89,8 @@ pub enum XpCommandExperience {
     Remove(XpCommandExperienceRemove),
     #[command(name = "reset")]
     Reset(XpCommandExperienceReset),
+    #[command(name = "reset-guild")]
+    ResetGuild(XpCommandExperienceResetGuild),
     #[command(name = "import")]
     Import(XpCommandExperienceImport),
     #[command(name = "export")]
@@ -132,6 +134,21 @@ pub struct XpCommandExperienceReset {
     pub user: Id<UserMarker>,
 }
 
+pub const CONFIRMATION_STRING: &str = "I Understand The Risks";
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "reset-guild",
+    desc = "DANGER: Reset ALL the leveling data for your guild! This is IRREVERSIBLE!",
+    dm_permission = false
+)]
+pub struct XpCommandExperienceResetGuild {
+    #[command(
+        desc = "\"I Understand The Risks\", to ensure you know this will delete ALL YOUR DATA"
+    )]
+    pub confirm_message: String,
+}
+
 #[derive(CommandModel, CreateCommand)]
 #[command(
     name = "import",
@@ -141,6 +158,8 @@ pub struct XpCommandExperienceReset {
 pub struct XpCommandExperienceImport {
     #[command(desc = "Leveling JSON file")]
     pub levels: Attachment,
+    #[command(desc = "Overwrite, rather then summing with previous leveling data")]
+    pub overwrite: Option<bool>,
 }
 
 #[derive(CommandModel, CreateCommand)]

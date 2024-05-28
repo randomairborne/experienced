@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use http_body_util::{BodyExt, Limited};
 use serde::{Deserialize, Serialize};
-use sqlx::Executor;
+use sqlx::{query, Executor};
 use tokio::time::Instant;
 use twilight_model::{
     channel::{message::AllowedMentions, Attachment},
@@ -53,7 +53,14 @@ async fn process_experience(
 ) -> Result<String, Error> {
     match data {
         XpCommandExperience::Import(import) => {
-            import_level_data(state, respondable, guild_id, import.levels).await
+            import_level_data(
+                state,
+                respondable,
+                guild_id,
+                import.levels,
+                import.overwrite.unwrap_or(false),
+            )
+            .await
         }
         XpCommandExperience::Export(_) => export_level_data(state, respondable, guild_id).await,
         XpCommandExperience::Add(add) => {
@@ -63,6 +70,9 @@ async fn process_experience(
             modify_user_xp(guild_id, rm.user, -rm.amount, state).await
         }
         XpCommandExperience::Reset(rst) => reset_user_xp(guild_id, rst.user, state).await,
+        XpCommandExperience::ResetGuild(rst) => {
+            reset_guild_xp(guild_id, rst.confirm_message, state).await
+        }
     }
 }
 
@@ -130,6 +140,7 @@ async fn export_level_data(
         respondable,
         guild_id,
         None,
+        false,
     ));
     Ok("Exporting level data, check back soon!".to_string())
 }
@@ -163,12 +174,14 @@ async fn import_level_data(
     respondable: Respondable,
     guild_id: Id<GuildMarker>,
     attachment: Attachment,
+    overwrite: bool,
 ) -> Result<String, Error> {
     tokio::spawn(background_data_operation_wrapper(
         state,
         respondable,
         guild_id,
         Some(attachment),
+        overwrite,
     ));
     Ok("Importing level data, check back soon!".to_string())
 }
@@ -179,6 +192,7 @@ async fn background_data_import(
     state: &SlashState,
     guild_id: Id<GuildMarker>,
     attachment: Attachment,
+    overwrite: bool,
 ) -> Result<XpdSlashResponse, Error> {
     let start = Instant::now();
 
@@ -198,14 +212,25 @@ async fn background_data_import(
 
     let db_guild = id_to_db(guild_id);
     for user in &data {
-        let query = query!(
-            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+        let query = if overwrite {
+            query!(
+                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+                ON CONFLICT (id, guild) \
+                DO UPDATE SET xp=excluded.xp",
+                id_to_db(user.id),
+                user.xp,
+                db_guild,
+            )
+        } else {
+            query!(
+                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
                 ON CONFLICT (id, guild) \
                 DO UPDATE SET xp=levels.xp+excluded.xp",
-            id_to_db(user.id),
-            user.xp,
-            db_guild,
-        );
+                id_to_db(user.id),
+                user.xp,
+                db_guild,
+            )
+        };
         if let Err(err) = txn.execute(query).await {
             txn.rollback().await?;
             return Err(err.into());
@@ -226,9 +251,10 @@ async fn background_data_operation_wrapper(
     respondable: Respondable,
     guild_id: Id<GuildMarker>,
     attachment: Option<Attachment>,
+    overwrite: bool,
 ) {
     let xsr = if let Some(attachment) = attachment {
-        background_data_import(&state, guild_id, attachment)
+        background_data_import(&state, guild_id, attachment, overwrite)
             .await
             .unwrap_or_else(|source| {
                 error!(?source, "Failed to import level data");
@@ -308,6 +334,7 @@ async fn process_rewards_rm(
         "`/xp rewards remove` requires either a level or a role!",
     ))
 }
+
 async fn process_rewards_list(
     state: SlashState,
     guild_id: Id<GuildMarker>,
@@ -367,4 +394,18 @@ async fn process_rewards_reset_config(
     .await?;
     state.update_config(guild_id, GuildConfig::default()).await;
     Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
+}
+
+async fn reset_guild_xp(
+    guild_id: Id<GuildMarker>,
+    confirmation: String,
+    state: SlashState,
+) -> Result<String, Error> {
+    if confirmation != crate::cmd_defs::manage::CONFIRMATION_STRING {
+        return Ok("Confirmation string did not match.".to_string());
+    }
+    query!("DELETE FROM levels WHERE guild = $1", id_to_db(guild_id))
+        .execute(&state.db)
+        .await?;
+    Ok("Done. Thank you for using Experienced.".to_string())
 }
