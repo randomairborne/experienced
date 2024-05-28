@@ -70,4 +70,6 @@ pub enum Error {
     NoDestinationInComponent,
     #[error("HTTP body error!")]
     RawHttpBody,
+    #[error("That would make this user's XP negative!")]
+    XpWouldBeNegative,
 }

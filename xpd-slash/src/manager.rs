@@ -72,15 +72,20 @@ async fn modify_user_xp(
     amount: i64,
     state: SlashState,
 ) -> Result<String, Error> {
+    let mut txn = state.db.begin().await?;
     let xp = query!(
         "UPDATE levels SET xp = xp + $3 WHERE id = $1 AND guild = $2 RETURNING xp",
         id_to_db(user_id),
         id_to_db(guild_id),
         amount
     )
-    .fetch_one(&state.db)
+    .fetch_one(txn.as_mut())
     .await?
     .xp;
+    if xp.is_negative() {
+        txn.rollback().await?;
+        return Err(Error::XpWouldBeNegative);
+    }
     let current_level = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0)).level();
     let (action, targeter) = if amount.is_positive() {
         ("Added", "to")
