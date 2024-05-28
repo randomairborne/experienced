@@ -94,8 +94,8 @@ impl XpdListenerInner {
     }
 
     pub async fn get_guild_config(&self, guild: Id<GuildMarker>) -> Result<GuildConfig, Error> {
-        if let Some(cfg) = self.configs.read()?.get(&guild) {
-            return Ok(cfg.clone());
+        if let Some(guild_config) = self.configs.read()?.get(&guild) {
+            return Ok(guild_config.clone());
         }
         let config = query_as!(
             GuildConfig,
@@ -142,9 +142,9 @@ impl XpdListenerInner {
         .fetch_all(&self.db)
         .await?
         .into_iter()
-        .map(|v| RoleReward {
-            id: db_to_id(v.id),
-            requirement: v.requirement,
+        .map(|row| RoleReward {
+            id: db_to_id(row.id),
+            requirement: row.requirement,
         })
         .collect();
         Ok(rewards)

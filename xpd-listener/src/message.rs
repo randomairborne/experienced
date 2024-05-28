@@ -34,8 +34,9 @@ impl XpdListenerInner {
         }
 
         let user_cooldown_key = (guild_id, msg.author.id);
-        let has_sent = self.messages.read()?.contains(&user_cooldown_key);
-        if has_sent {
+
+        // contains will only be true if the message also has not expired
+        if self.messages.read()?.contains(&user_cooldown_key) {
             return Ok(());
         }
 
@@ -100,7 +101,9 @@ impl XpdListenerInner {
         } else {
             rewards[..=reward_idx].iter().map(|v| v.id).collect()
         };
+        
         trace!(cache = ?self.cache, "Have cache");
+        
         // ensure we have perms to add roles
         match self
             .cache
@@ -111,11 +114,11 @@ impl XpdListenerInner {
             role_adding_issue => return Err(Error::NoPermsToAddRoles(guild_id, role_adding_issue)),
         }
 
-        let mut total_roles: Vec<Id<RoleMarker>> =
+        let mut complete_role_set: Vec<Id<RoleMarker>> =
             Vec::with_capacity(new_roles.len() + base_roles.len());
 
-        total_roles.extend(&base_roles);
-        total_roles.extend(&new_roles);
+        complete_role_set.extend(&base_roles);
+        complete_role_set.extend(&new_roles);
 
         // make sure we don't make useless requests to the API
         if member.roles != new_roles {
