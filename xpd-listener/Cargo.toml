@@ -13,7 +13,6 @@ keywords = ["discord-bot", "mee6"]
 sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 xpd-permission-cache = { path = "../xpd-permission-cache" }
-serde = { version = "1", features = ["derive"] }
 xpd-common = { path = "../xpd-common" }
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"

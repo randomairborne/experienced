@@ -10,7 +10,7 @@ use std::sync::{
 
 use sqlx::PgPool;
 use tokio::task::JoinSet;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+use tracing::Level;
 use twilight_gateway::{
     error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
     MessageSender, Shard, StreamExt,
@@ -29,10 +29,9 @@ use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::from_default_env())
+    tracing_subscriber::fmt()
+        .with_max_level(Level::TRACE)
+        .json()
         .init();
     let token = xpd_common::get_var("DISCORD_TOKEN");
     let pg = xpd_common::get_var("DATABASE_URL");
