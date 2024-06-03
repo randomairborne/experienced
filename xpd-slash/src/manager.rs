@@ -96,6 +96,7 @@ async fn modify_user_xp(
         txn.rollback().await?;
         return Err(Error::XpWouldBeNegative);
     }
+    txn.commit().await?;
     let current_level = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0)).level();
     let (action, targeter) = if amount.is_positive() {
         ("Added", "to")
@@ -305,6 +306,7 @@ async fn process_rewards_add(
         options.role.id, options.level
     ))
 }
+
 async fn process_rewards_rm(
     options: XpCommandRewardsRemove,
     state: SlashState,
