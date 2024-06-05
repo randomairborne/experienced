@@ -38,7 +38,14 @@ pub async fn user_card_update(
         UserStats { xp: 420, rank: 69 }
     };
     let level_info = LevelInfo::new(u64::try_from(user_stats.xp).unwrap_or(0));
-    let card = crate::levels::gen_card(state.clone(), invoker, level_info, user_stats.rank).await?;
+    let card = crate::levels::gen_card(
+        state.clone(),
+        invoker,
+        guild_id,
+        level_info,
+        user_stats.rank,
+    )
+    .await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
@@ -61,7 +68,14 @@ pub async fn guild_card_update(
     };
     let referenced_user = fake_user(guild_id.cast());
     let level_info = LevelInfo::new(40);
-    let card = crate::levels::gen_card(state.clone(), referenced_user, level_info, 127).await?;
+    let card = crate::levels::gen_card(
+        state.clone(),
+        referenced_user,
+        Some(guild_id),
+        level_info,
+        127,
+    )
+    .await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)

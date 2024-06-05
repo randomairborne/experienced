@@ -40,8 +40,15 @@ pub async fn get_level(
         if rank_stats.xp == 0 {
             "You aren't ranked yet, because you haven't sent any messages!".to_string()
         } else {
-            return generate_level_response(&state, target, level_info, rank_stats.rank, flags)
-                .await;
+            return generate_level_response(
+                &state,
+                target,
+                guild_id,
+                level_info,
+                rank_stats.rank,
+                flags,
+            )
+            .await;
         }
     } else if rank_stats.xp == 0 {
         format!(
@@ -49,7 +56,15 @@ pub async fn get_level(
             target.display_name()
         )
     } else {
-        return generate_level_response(&state, target, level_info, rank_stats.rank, flags).await;
+        return generate_level_response(
+            &state,
+            target,
+            guild_id,
+            level_info,
+            rank_stats.rank,
+            flags,
+        )
+        .await;
     };
     let embed = EmbedBuilder::new().description(content).build();
     Ok(XpdSlashResponse::new().embeds([embed]).flags(flags))
@@ -58,22 +73,35 @@ pub async fn get_level(
 async fn generate_level_response(
     state: &SlashState,
     user: MemberDisplayInfo,
+    guild_id: Id<GuildMarker>,
     level_info: mee6::LevelInfo,
     rank: i64,
     flags: MessageFlags,
 ) -> Result<XpdSlashResponse, Error> {
-    let card = gen_card(state.clone(), user, level_info, rank).await?;
+    let card = gen_card(state.clone(), user, Some(guild_id), level_info, rank).await?;
     Ok(XpdSlashResponse::new().attachments([card]).flags(flags))
+}
+
+async fn get_customizations_fields(
+    state: SlashState,
+    user_id: Id<UserMarker>,
+    guild_id: Option<Id<GuildMarker>>,
+) -> Result<Customizations, Error> {
+    if let Some(guild_id) = guild_id {
+        get_customizations(state.clone(), &[user_id.cast(), guild_id.cast()]).await
+    } else {
+        get_customizations(state.clone(), &[user_id.cast()]).await
+    }
 }
 
 pub async fn gen_card(
     state: SlashState,
     user: MemberDisplayInfo,
+    guild_id: Option<Id<GuildMarker>>,
     level_info: mee6::LevelInfo,
     rank: i64,
 ) -> Result<Attachment, Error> {
-    let customizations_future =
-        async { get_customizations(state.clone(), &[user.id.cast()]).await };
+    let customizations_future = get_customizations_fields(state.clone(), user.id, guild_id);
     let avatar_future = get_avatar(state.clone(), user.id, user.avatar);
     let (customizations, avatar) = try_join!(customizations_future, avatar_future)?;
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
