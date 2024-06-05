@@ -8,9 +8,9 @@ guild = sys.argv[1]
 last_len = 1
 page = 0
 
-headers = {
-    "Authorization": mee6_auth
-}
+headers = {}
+if mee6_auth is not None:
+    headers["Authorization"] = mee6_auth
 
 players = []
 
