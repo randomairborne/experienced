@@ -86,7 +86,7 @@ pub enum CardCommand {
 
 #[derive(CommandModel, CreateCommand)]
 #[command(
-    name = "card",
+    name = "config",
     desc = "Configure the behavior of the bot in your server",
     dm_permission = false,
     default_permissions = "Self::default_permissions"
