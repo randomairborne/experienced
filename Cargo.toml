@@ -1,11 +1,12 @@
 [workspace]
 members = [
     "mee6",
+    "simpleinterpolation",
     "xpd-slash",
     "xpd-listener",
     "xpd-gateway",
     "xpd-common",
-    "xpd-rank-card"
-, "xpd-permission-cache"]
+    "xpd-rank-card",
+]
 resolver = "2"
 default-members = ["xpd-gateway"]

@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO guild_configs (id, level_up_message, level_up_channel) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET level_up_message = COALESCE($2, excluded.level_up_message), level_up_channel = COALESCE($3, excluded.level_up_channel) RETURNING one_at_a_time, level_up_message, level_up_channel",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "one_at_a_time",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "level_up_message",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "level_up_channel",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "d937b858c64cca4a7edda5899a177e2282389873bd96a381afb4b69b477f4968"
+}

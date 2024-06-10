@@ -436,6 +436,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashmap"
+version = "5.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
+dependencies = [
+ "cfg-if",
+ "hashbrown",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2236,6 +2249,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "simpleinterpolation"
+version = "0.1.0"
+
+[[package]]
 name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2941,6 +2958,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17f77d76d837a7830fe1d4f12b7b4ba4192c1888001c7164257e4bc6d21d96b4"
 
 [[package]]
+name = "twilight-cache-inmemory"
+version = "0.16.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a997fdd14e32ebbe80ee87887720e756efed0a7dbf97bd1170eb7c9a3956378b"
+dependencies = [
+ "bitflags 2.5.0",
+ "dashmap",
+ "serde",
+ "twilight-model",
+ "twilight-util",
+]
+
+[[package]]
 name = "twilight-gateway"
 version = "0.16.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3615,7 +3645,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 name = "xpd-common"
 version = "0.0.6"
 dependencies = [
- "serde",
+ "simpleinterpolation",
  "twilight-gateway",
  "twilight-model",
 ]
@@ -3647,22 +3677,13 @@ dependencies = [
  "expiringmap",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
+ "simpleinterpolation",
  "sqlx",
  "thiserror",
  "tracing",
+ "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
- "twilight-model",
- "xpd-common",
- "xpd-permission-cache",
-]
-
-[[package]]
-name = "xpd-permission-cache"
-version = "0.1.0"
-dependencies = [
- "thiserror",
- "twilight-gateway",
  "twilight-model",
  "xpd-common",
 ]
@@ -3697,6 +3718,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "simpleinterpolation",
  "sqlx",
  "thiserror",
  "tokio",

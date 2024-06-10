@@ -11,5 +11,5 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
-serde = { version = "1", features = ["derive"] }
+simpleinterpolation = { path = "../simpleinterpolation" }
 twilight-model = "0.16.0-rc.1"

@@ -28,6 +28,8 @@ pub enum Error {
     Json(#[from] serde_json::Error),
     #[error("I/O error")]
     Io(#[from] std::io::Error),
+    #[error("Could not build template: {0}")]
+    SimpleInterpolation(#[from] simpleinterpolation::Error),
     #[error("Discord API decoding error")]
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Discord sent a command that is not known!")]
@@ -72,4 +74,10 @@ pub enum Error {
     RawHttpBody,
     #[error("That would make this user's XP negative!")]
     XpWouldBeNegative,
+    #[error("Unknown variable used in level-up message!")]
+    UnknownInterpolationVariable,
+    #[error("Level up message must be less than 512 characters!")]
+    LevelUpMessageTooLong,
+    #[error("Level up channel must be a text channel!")]
+    LevelUpChannelMustBeText,
 }

@@ -3,6 +3,7 @@
 
 mod admin;
 mod cmd_defs;
+mod config;
 mod dispatch;
 mod error;
 mod gdpr;

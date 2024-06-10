@@ -6,6 +6,7 @@ use std::{
 
 use expiringmap::ExpiringSet;
 use sqlx::{query, query_as, PgPool};
+use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::{event::Event, Intents},
@@ -14,8 +15,7 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{db_to_id, id_to_db, GuildConfig, RequiredEvents, RoleReward};
-use xpd_permission_cache::PermissionCache;
+use xpd_common::{db_to_id, id_to_db, GuildConfig, RawGuildConfig, RequiredEvents, RoleReward};
 
 mod message;
 
@@ -56,9 +56,10 @@ pub struct XpdListenerInner {
     db: PgPool,
     messages: RwLock<SentMessages>,
     http: Arc<twilight_http::Client>,
-    cache: PermissionCache,
-    configs: LockingMap<Id<GuildMarker>, GuildConfig>,
+    cache: InMemoryCache,
+    configs: LockingMap<Id<GuildMarker>, Arc<GuildConfig>>,
     rewards: LockingMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
+    current_application_id: Id<ApplicationMarker>,
 }
 
 impl XpdListenerInner {
@@ -70,7 +71,9 @@ impl XpdListenerInner {
         let messages = RwLock::new(SentMessages::new());
         let configs = RwLock::new(HashMap::new());
         let rewards = RwLock::new(HashMap::new());
-        let cache = PermissionCache::new(current_application_id);
+        let cache = InMemoryCache::builder()
+            .resource_types(ResourceType::USER_CURRENT | ResourceType::ROLE | ResourceType::GUILD)
+            .build();
 
         Self {
             db,
@@ -79,32 +82,36 @@ impl XpdListenerInner {
             configs,
             rewards,
             cache,
+            current_application_id,
         }
     }
 
     pub fn update_cache(&self, uc: &Event) {
-        if let Err(source) = self.cache.update_cache(uc) {
-            error!(?source, "Failed to update cache");
-        }
+        self.cache.update(uc);
     }
 
     pub fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) -> Result<(), Error> {
-        self.configs.write()?.insert(guild, config);
+        self.configs.write()?.insert(guild, Arc::new(config));
         Ok(())
     }
 
-    pub async fn get_guild_config(&self, guild: Id<GuildMarker>) -> Result<GuildConfig, Error> {
+    pub async fn get_guild_config(
+        &self,
+        guild: Id<GuildMarker>,
+    ) -> Result<Arc<GuildConfig>, Error> {
         if let Some(guild_config) = self.configs.read()?.get(&guild) {
             return Ok(guild_config.clone());
         }
         let config = query_as!(
-            GuildConfig,
-            "SELECT one_at_a_time FROM guild_configs WHERE id = $1",
+            RawGuildConfig,
+            "SELECT one_at_a_time, level_up_message, level_up_channel FROM guild_configs WHERE id = $1",
             id_to_db(guild)
         )
         .fetch_optional(&self.db)
         .await?
-        .unwrap_or_else(GuildConfig::default);
+        .unwrap_or_else(RawGuildConfig::default);
+        let config: GuildConfig = config.try_into()?;
+        let config = Arc::new(config);
         self.configs.write()?.insert(guild, config.clone());
         Ok(config)
     }
@@ -153,11 +160,24 @@ impl XpdListenerInner {
 
 impl RequiredEvents for XpdListenerInner {
     fn required_intents() -> Intents {
-        PermissionCache::required_intents() | Intents::GUILD_MESSAGES
+        Intents::GUILDS | Intents::GUILD_MESSAGES
     }
 
     fn required_events() -> EventTypeFlags {
-        PermissionCache::required_events() | EventTypeFlags::MESSAGE_CREATE
+        EventTypeFlags::GUILD_CREATE
+            | EventTypeFlags::GUILD_UPDATE
+            | EventTypeFlags::GUILD_DELETE
+            | EventTypeFlags::CHANNEL_CREATE
+            | EventTypeFlags::CHANNEL_UPDATE
+            | EventTypeFlags::CHANNEL_DELETE
+            | EventTypeFlags::ROLE_DELETE
+            | EventTypeFlags::ROLE_UPDATE
+            | EventTypeFlags::ROLE_CREATE
+            | EventTypeFlags::THREAD_CREATE
+            | EventTypeFlags::THREAD_UPDATE
+            | EventTypeFlags::THREAD_LIST_SYNC
+            | EventTypeFlags::THREAD_DELETE
+            | EventTypeFlags::MESSAGE_CREATE
     }
 }
 
@@ -167,14 +187,24 @@ pub enum Error {
     Sqlx(#[from] sqlx::Error),
     #[error("Discord error")]
     Twilight(#[from] twilight_http::Error),
+    #[error("simpleinterpolation failed")]
+    CouldNotInterpolate(#[from] simpleinterpolation::Error),
+    #[error("Unknown permissions for role")]
+    UnknownPermissionsForRole(#[from] twilight_cache_inmemory::permission::RootError),
+    #[error("Unknown permissions for role")]
+    UnknownPermissionsForMessage(#[from] twilight_cache_inmemory::permission::ChannelError),
     #[error("RwLock Poisioned, please report: https://valk.sh/discord")]
     LockPoisoned,
     #[error("Discord did not send a member where they MUST send a member")]
     NoMember,
     #[error("Unknown role: <@&{0}>")]
     UnknownRole(Id<RoleMarker>),
-    #[error("Could not add roles in guild {0}")]
-    NoPermsToAddRoles(Id<GuildMarker>, xpd_permission_cache::CanAddRolesInfo),
+    #[error("Highest known role for self was not found in cache!")]
+    NoHighestRoleForSelf,
+    #[error("Target role was not found in cache!")]
+    NoTargetRoleInCache,
+    #[error("Got unknown role for own highest role!")]
+    UnknownPositionForOwnHighestRole,
 }
 
 impl<T> From<std::sync::PoisonError<T>> for Error {

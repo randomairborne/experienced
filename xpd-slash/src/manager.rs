@@ -13,13 +13,12 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{db_to_id, id_to_db, GuildConfig};
+use xpd_common::{db_to_id, id_to_db};
 
 use crate::{
     cmd_defs::{
         manage::{
-            XpCommandExperience, XpCommandRewards, XpCommandRewardsAdd, XpCommandRewardsConfig,
-            XpCommandRewardsRemove,
+            XpCommandExperience, XpCommandRewards, XpCommandRewardsAdd, XpCommandRewardsRemove,
         },
         XpCommand,
     },
@@ -282,8 +281,6 @@ async fn process_rewards(
         XpCommandRewards::Add(add) => process_rewards_add(add, state, guild_id).await,
         XpCommandRewards::Remove(remove) => process_rewards_rm(remove, state, guild_id).await,
         XpCommandRewards::List(_list) => process_rewards_list(state, guild_id).await,
-        XpCommandRewards::Config(config) => process_rewards_config(state, guild_id, config).await,
-        XpCommandRewards::ResetConfig(_) => process_rewards_reset_config(state, guild_id).await,
     }
 }
 
@@ -362,40 +359,6 @@ async fn process_rewards_list(
         data = "No role rewards set for this server".to_string();
     }
     Ok(data)
-}
-
-async fn process_rewards_config(
-    state: SlashState,
-    guild_id: Id<GuildMarker>,
-    options: XpCommandRewardsConfig,
-) -> Result<String, Error> {
-    let config = query_as!(
-        GuildConfig,
-        "INSERT INTO guild_configs (id, one_at_a_time) VALUES ($1, $2) \
-            ON CONFLICT (id) DO UPDATE SET \
-            one_at_a_time = COALESCE($2, excluded.one_at_a_time)\
-            RETURNING one_at_a_time",
-        id_to_db(guild_id),
-        options.one_at_a_time
-    )
-    .fetch_one(&state.db)
-    .await?;
-    state.update_config(guild_id, config).await;
-    Ok("Updated guild config!".to_string())
-}
-
-async fn process_rewards_reset_config(
-    state: SlashState,
-    guild_id: Id<GuildMarker>,
-) -> Result<String, Error> {
-    query!(
-        "DELETE FROM guild_configs WHERE id = $1",
-        id_to_db(guild_id)
-    )
-    .execute(&state.db)
-    .await?;
-    state.update_config(guild_id, GuildConfig::default()).await;
-    Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
 }
 
 async fn reset_guild_xp(

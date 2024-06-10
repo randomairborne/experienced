@@ -11,7 +11,8 @@ use xpd_common::MemberDisplayInfo;
 
 use crate::{
     cmd_defs::{
-        AdminCommand, CardCommand, GdprCommand, GuildCardCommand, LeaderboardCommand, XpCommand,
+        AdminCommand, CardCommand, ConfigCommand, GdprCommand, GuildCardCommand,
+        LeaderboardCommand, XpCommand,
     },
     leaderboard::{process_message_component, process_modal_submit},
     Error, SlashState, XpdSlashResponse,
@@ -129,6 +130,13 @@ async fn process_slash_cmd(
             XpCommand::from_interaction(data.into())?,
             guild_id.ok_or(Error::NoGuildId)?,
             respondable,
+            state,
+        )
+        .await
+        .map(Into::into),
+        "config" => crate::config::process_config(
+            ConfigCommand::from_interaction(data.into())?,
+            guild_id.ok_or(Error::NoGuildId)?,
             state,
         )
         .await

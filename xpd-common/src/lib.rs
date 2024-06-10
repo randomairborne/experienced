@@ -5,13 +5,13 @@ use std::{
     str::FromStr,
 };
 
-use serde::{Deserialize, Serialize};
+use simpleinterpolation::Interpolation;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::Intents,
     guild::Member,
     id::{
-        marker::{RoleMarker, UserMarker},
+        marker::{ChannelMarker, RoleMarker, UserMarker},
         Id,
     },
     user::User,
@@ -161,9 +161,39 @@ pub fn db_to_id<T>(db: i64) -> Id<T> {
     Id::new(db.reinterpret_bits())
 }
 
-#[derive(Clone, Serialize, Deserialize, Default)]
+pub const TEMPLATE_VARIABLES: [&str; 2] = ["user_mention", "level"];
+
+#[derive(Clone, Default)]
+pub struct RawGuildConfig {
+    pub one_at_a_time: Option<bool>,
+    pub level_up_message: Option<String>,
+    pub level_up_channel: Option<i64>,
+}
+
+impl TryFrom<RawGuildConfig> for GuildConfig {
+    type Error = simpleinterpolation::Error;
+
+    fn try_from(value: RawGuildConfig) -> Result<Self, Self::Error> {
+        let level_up_message = if let Some(str) = value.level_up_message {
+            Some(Interpolation::new(str)?)
+        } else {
+            None
+        };
+
+        let gc = Self {
+            one_at_a_time: value.one_at_a_time,
+            level_up_message,
+            level_up_channel: value.level_up_channel.map(db_to_id),
+        };
+        Ok(gc)
+    }
+}
+
+#[derive(Default)]
 pub struct GuildConfig {
     pub one_at_a_time: Option<bool>,
+    pub level_up_message: Option<Interpolation>,
+    pub level_up_channel: Option<Id<ChannelMarker>>,
 }
 
 #[derive(Debug)]

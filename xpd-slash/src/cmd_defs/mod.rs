@@ -6,6 +6,7 @@ use crate::SlashState;
 
 pub mod admin;
 pub mod card;
+pub mod config;
 pub mod gdpr;
 pub mod manage;
 
@@ -85,6 +86,30 @@ pub enum CardCommand {
 
 #[derive(CommandModel, CreateCommand)]
 #[command(
+    name = "card",
+    desc = "Configure the behavior of the bot in your server",
+    dm_permission = false,
+    default_permissions = "Self::default_permissions"
+)]
+#[allow(clippy::large_enum_variant)]
+pub enum ConfigCommand {
+    #[command(name = "reset")]
+    Reset(config::ConfigCommandReset),
+    #[command(name = "rewards")]
+    Rewards(config::ConfigCommandRewards),
+    #[command(name = "levels")]
+    Levels(config::ConfigCommandLevels),
+}
+
+impl ConfigCommand {
+    #[inline]
+    const fn default_permissions() -> Permissions {
+        Permissions::ADMINISTRATOR
+    }
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
     name = "guild-card",
     desc = "Set hex codes for different color schemes in your server's default rank card.",
     dm_permission = false,
@@ -152,6 +177,7 @@ impl SlashState {
             HelpCommand::create_command().into(),
             GdprCommand::create_command().into(),
             GuildCardCommand::create_command().into(),
+            ConfigCommand::create_command().into(),
             LeaderboardCommand::create_command().into(),
             CommandBuilder::new("Get level", "", CommandType::User).build(),
             CommandBuilder::new("Get author level", "", CommandType::Message).build(),
