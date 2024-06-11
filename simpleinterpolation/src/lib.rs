@@ -49,6 +49,27 @@ impl Interpolation {
             current: 0,
         }
     }
+
+    pub fn input_value(&self) -> String {
+        fn push_escape(s: &mut String, txt: &str) {
+            for next in txt.chars() {
+                if next == '{' || next == '\\' {
+                    s.push('\\');
+                }
+                s.push(next);
+            }
+        }
+
+        let mut output = self.output_string();
+        for (text, key) in &self.parts {
+            push_escape(&mut output, text);
+            output.push('{');
+            output.push_str(key);
+            output.push('}');
+        }
+        push_escape(&mut output, &self.end);
+        output
+    }
 }
 
 struct UsedVariablesIterator<'a> {
@@ -219,6 +240,27 @@ mod tests {
             interpolation.variables_used().collect::<Vec<&str>>(),
             vec!["interpolation"]
         );
+    }
+    #[test]
+    fn basic_roundtrip() {
+        let roundtrip = "This is an example string for {interpolation}!";
+        let interpolation = Interpolation::new(roundtrip).unwrap();
+        println!("{interpolation:?}");
+        assert_eq!(roundtrip, interpolation.input_value());
+    }
+    #[test]
+    fn escapes_roundtrip() {
+        let roundtrip = "This is an example string for \\{interpolation} escapes!";
+        let interpolation = Interpolation::new(roundtrip).unwrap();
+        println!("{interpolation:?}");
+        assert_eq!(roundtrip, interpolation.input_value());
+    }
+    #[test]
+    fn recursive_escapes_roundtrip() {
+        let roundtrip = "This is an example string for \\\\{interpolation} recursive escapes!";
+        let interpolation = Interpolation::new(roundtrip).unwrap();
+        println!("{interpolation:?}");
+        assert_eq!(roundtrip, interpolation.input_value());
     }
     #[test]
     fn no_interpolation() {
