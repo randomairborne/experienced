@@ -91,43 +91,41 @@ impl XpdListenerInner {
             return Err(Error::NoMember);
         };
 
-        let Some(reward_idx) = reward_idx else {
-            return Ok(());
+        debug!(user = ?msg.author.id, channel = ?msg.channel_id, old = old_xp, new = xp, guild = ?guild_id, "Preparing to update user");
+
+        if let Some(reward_idx) = reward_idx {
+            // remove all role IDs which are in our rewards list
+            let base_roles: Vec<Id<RoleMarker>> = member
+                .roles
+                .iter()
+                .filter(|role_id| !contains(&rewards, **role_id))
+                .copied()
+                .collect();
+
+            let new_roles = if guild_config.one_at_a_time.is_some_and(|v| v) {
+                vec![rewards[reward_idx].id]
+            } else {
+                rewards[..=reward_idx].iter().map(|v| v.id).collect()
+            };
+
+            let mut complete_role_set: Vec<Id<RoleMarker>> =
+                Vec::with_capacity(new_roles.len() + base_roles.len());
+
+            complete_role_set.extend(&base_roles);
+            complete_role_set.extend(&new_roles);
+
+            // make sure we don't make useless requests to the API
+            let can_add_role = self
+                .can_add_roles(guild_id, new_roles.as_slice())?
+                .can_add_role();
+            if member.roles != new_roles && can_add_role {
+                debug!(user = ?msg.author.id, old = ?member.roles, new = ?new_roles, "Updating roles for user");
+                self.http
+                    .update_guild_member(guild_id, msg.author.id)
+                    .roles(&new_roles)
+                    .await?;
+            }
         };
-
-        // remove all role IDs which are in our rewards list
-        let base_roles: Vec<Id<RoleMarker>> = member
-            .roles
-            .iter()
-            .filter(|role_id| !contains(&rewards, **role_id))
-            .copied()
-            .collect();
-
-        let new_roles = if guild_config.one_at_a_time.is_some_and(|v| v) {
-            vec![rewards[reward_idx].id]
-        } else {
-            rewards[..=reward_idx].iter().map(|v| v.id).collect()
-        };
-
-        let mut complete_role_set: Vec<Id<RoleMarker>> =
-            Vec::with_capacity(new_roles.len() + base_roles.len());
-
-        complete_role_set.extend(&base_roles);
-        complete_role_set.extend(&new_roles);
-
-        debug!(user = ?msg.author.id, channel = ?msg.channel_id, old = old_xp, new = xp, guild = ?guild_id, "Modified user");
-
-        // make sure we don't make useless requests to the API
-        let can_add_role = self
-            .can_add_roles(guild_id, new_roles.as_slice())?
-            .can_add_role();
-        if member.roles != new_roles && can_add_role {
-            debug!(user = ?msg.author.id, old = ?member.roles, new = ?new_roles, "Updating roles for user");
-            self.http
-                .update_guild_member(guild_id, msg.author.id)
-                .roles(&new_roles)
-                .await?;
-        }
 
         if user_level > old_user_level {
             if let Some(template) = guild_config.level_up_message.as_ref() {
