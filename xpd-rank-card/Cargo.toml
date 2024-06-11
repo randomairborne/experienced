@@ -20,6 +20,3 @@ strum = "0.26"
 png = "0.17"
 rayon = "1"
 tera = "1"
-
-[dev-dependencies]
-mee6 = { path = "../mee6", version = "0.1" }

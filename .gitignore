@@ -1,7 +1,6 @@
 target
 .env
 .DS_Store
-*test*
 
 /.vscode/
 /.idea/
@@ -11,3 +10,5 @@ dump.sql
 
 /node_modules
 /package-lock.json
+
+/rendered-cards/
