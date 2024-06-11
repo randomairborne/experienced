@@ -40,7 +40,7 @@ pub struct Context {
 /// This struct should be constructed with [`SvgState::new`] to begin rendering rank cards
 #[derive(Clone)]
 pub struct SvgState {
-    fonts: Arc<Database>,
+    fontdb: Arc<Database>,
     tera: Arc<Tera>,
     threads: Arc<rayon::ThreadPool>,
     images: Arc<[Arc<Vec<u8>>; Toy::COUNT]>,
@@ -82,17 +82,16 @@ impl SvgState {
     pub fn sync_render(&self, context: &Context) -> Result<Vec<u8>, Error> {
         let start = Instant::now();
         let svg = self.render_svg(context)?;
-        let resolve_data = Box::new(
-            |mime: &str, data: std::sync::Arc<Vec<u8>>, _: &resvg::usvg::Options, _: &Database| {
-                match mime {
+        let resolve_data =
+            Box::new(
+                |mime: &str, data: Arc<Vec<u8>>, _: &resvg::usvg::Options| match mime {
                     "image/png" => Some(ImageKind::PNG(data)),
                     "image/jpg" | "image/jpeg" => Some(ImageKind::JPEG(data)),
                     _ => None,
-                }
-            },
-        );
+                },
+            );
         let images_clone = self.images.clone();
-        let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options, _: &Database| {
+        let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
             let toy = Toy::from_filename(href)?;
             images_clone.get(toy as usize).cloned().map(ImageKind::PNG)
         });
@@ -103,9 +102,10 @@ impl SvgState {
             },
             image_rendering: ImageRendering::OptimizeSpeed,
             font_family: context.customizations.font.to_string(),
+            fontdb: self.fontdb.clone(),
             ..Default::default()
         };
-        let tree = resvg::usvg::Tree::from_str(&svg, &opt, &self.fonts)?;
+        let tree = resvg::usvg::Tree::from_str(&svg, &opt)?;
         let pixmap_size = tree.size().to_int_size();
         let mut pixmap = resvg::tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height())
             .ok_or(Error::PixmapCreation)?;
@@ -149,7 +149,7 @@ impl Default for SvgState {
             .try_into()
             .unwrap();
         Self {
-            fonts: Arc::new(fonts),
+            fontdb: Arc::new(fonts),
             tera: Arc::new(tera),
             threads: Arc::new(threads),
             images: Arc::new(images),

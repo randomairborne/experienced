@@ -15,7 +15,7 @@ tokio = { version = "1", features = ["sync"] }
 strum_macros = "0.26"
 thiserror = "1"
 tracing = "0.1"
-resvg = "0.41"
+resvg = "0.42"
 strum = "0.26"
 png = "0.17"
 rayon = "1"
