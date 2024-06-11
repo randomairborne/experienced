@@ -71,8 +71,12 @@ impl XpdListenerInner {
         let messages = RwLock::new(SentMessages::new());
         let configs = RwLock::new(HashMap::new());
         let rewards = RwLock::new(HashMap::new());
+        let resource_types = ResourceType::USER_CURRENT
+            | ResourceType::ROLE
+            | ResourceType::GUILD
+            | ResourceType::CHANNEL;
         let cache = InMemoryCache::builder()
-            .resource_types(ResourceType::USER_CURRENT | ResourceType::ROLE | ResourceType::GUILD)
+            .resource_types(resource_types)
             .build();
 
         Self {
