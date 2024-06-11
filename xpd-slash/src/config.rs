@@ -1,6 +1,6 @@
 use simpleinterpolation::Interpolation;
 use twilight_model::{
-    channel::ChannelType,
+    channel::{message::MessageFlags, ChannelType},
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::{id_to_db, GuildConfig, RawGuildConfig, TEMPLATE_VARIABLES};
@@ -23,7 +23,7 @@ pub async fn process_config(
         ConfigCommand::Rewards(r) => process_rewards_config(state, guild, r).await,
         ConfigCommand::Levels(l) => process_levels_config(state, guild, l).await,
     }
-    .map(XpdSlashResponse::with_embed_text)
+    .map(|s| XpdSlashResponse::with_embed_text(s).flags(MessageFlags::EPHEMERAL))
 }
 
 async fn process_rewards_config(
