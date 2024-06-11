@@ -130,26 +130,24 @@ impl XpdListenerInner {
         if let Some(template) = guild_config.level_up_message.as_ref() {
             let target_channel = guild_config.level_up_channel.unwrap_or(msg.channel_id);
             debug!(user = ?msg.author.id, channel = ?msg.channel_id, ?target_channel, old = old_user_level, new = user_level, "Congratulating user");
-            if user_level > old_user_level {
-                if self.can_create_message(target_channel)? {
-                    let map = HashMap::from([
-                        ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
-                        ("level".to_string(), user_level.to_string()),
-                    ]);
-                    let message = template.render(&map);
-                    let allowed_mentions = AllowedMentions {
-                        replied_user: true,
-                        ..AllowedMentions::default()
-                    };
-                    self.http
-                        .create_message(msg.channel_id)
-                        .reply(msg.id)
-                        .allowed_mentions(Some(&allowed_mentions))
-                        .content(&message)
-                        .await?;
-                } else {
-                    warn!(channel = ?msg.channel_id, "Could not congratulate user")
-                }
+            if user_level > old_user_level && self.can_create_message(target_channel)? {
+                let map = HashMap::from([
+                    ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
+                    ("level".to_string(), user_level.to_string()),
+                ]);
+                let message = template.render(&map);
+                let allowed_mentions = AllowedMentions {
+                    replied_user: true,
+                    ..AllowedMentions::default()
+                };
+                self.http
+                    .create_message(msg.channel_id)
+                    .reply(msg.id)
+                    .allowed_mentions(Some(&allowed_mentions))
+                    .content(&message)
+                    .await?;
+            } else {
+                warn!(channel = ?msg.channel_id, "Could not congratulate user")
             }
         }
         Ok(())
