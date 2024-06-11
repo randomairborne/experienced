@@ -196,7 +196,7 @@ impl XpdListenerInner {
         };
 
         if my_position > max_target_position {
-            Ok(CanAddRole::CanAddRole)
+            Ok(CanAddRole::Yes)
         } else {
             Ok(CanAddRole::HighestRoleIsLowerRoleThanTarget)
         }
@@ -213,7 +213,7 @@ impl XpdListenerInner {
 
 #[derive(Debug, Clone, Copy)]
 pub enum CanAddRole {
-    CanAddRole,
+    Yes,
     NoManageRoles,
     HighestRoleIsLowerRoleThanTarget,
     RoleIsManaged,
@@ -221,7 +221,7 @@ pub enum CanAddRole {
 
 impl CanAddRole {
     pub fn can_add_role(&self) -> bool {
-        matches!(self, CanAddRole::CanAddRole)
+        matches!(self, CanAddRole::Yes)
     }
 }
 
