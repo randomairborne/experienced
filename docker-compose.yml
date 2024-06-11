@@ -17,12 +17,6 @@ services:
       - redis
       - postgres
 
-  redis:
-    image: redis
-    restart: unless-stopped
-    networks:
-      - xpd-network
-
   postgres:
     image: postgres:16-alpine3.19
     restart: unless-stopped
