@@ -84,7 +84,9 @@ async fn modify_user_xp(
 ) -> Result<String, Error> {
     let mut txn = state.db.begin().await?;
     let xp = query!(
-        "UPDATE levels SET xp = xp + $3 WHERE id = $1 AND guild = $2 RETURNING xp",
+        "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+         ON CONFLICT (id, guild) DO UPDATE SET xp = excluded.xp + $3 \
+         RETURNING xp",
         id_to_db(user_id),
         id_to_db(guild_id),
         amount
@@ -97,7 +99,7 @@ async fn modify_user_xp(
         return Err(Error::XpWouldBeNegative);
     }
     txn.commit().await?;
-    let current_level = mee6::LevelInfo::new(u64::try_from(xp).unwrap_or(0)).level();
+    let current_level = mee6::LevelInfo::new(xp.try_into().unwrap_or(0)).level();
     let (action, targeter) = if amount.is_positive() {
         ("Added", "to")
     } else {
