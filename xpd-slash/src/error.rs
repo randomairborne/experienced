@@ -74,8 +74,8 @@ pub enum Error {
     RawHttpBody,
     #[error("That would make this user's XP negative!")]
     XpWouldBeNegative,
-    #[error("Unknown variable used in level-up message!")]
-    UnknownInterpolationVariable,
+    #[error("Unknown variable `{0}` used in level-up message!")]
+    UnknownInterpolationVariable(String),
     #[error("Level up message must be less than 512 characters!")]
     LevelUpMessageTooLong,
     #[error("Level up channel must be a text channel!")]

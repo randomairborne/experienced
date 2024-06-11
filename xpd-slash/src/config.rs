@@ -59,7 +59,7 @@ async fn process_levels_config(
         let interp = Interpolation::new(interp_template.clone())?;
         for item in interp.variables_used() {
             if !TEMPLATE_VARIABLES.contains(&item) {
-                return Err(Error::UnknownInterpolationVariable);
+                return Err(Error::UnknownInterpolationVariable(item.to_string()));
             }
         }
     }
