@@ -69,6 +69,7 @@ async fn process_experience(
             modify_user_xp(guild_id, rm.user, -rm.amount, state).await
         }
         XpCommandExperience::Reset(rst) => reset_user_xp(guild_id, rst.user, state).await,
+        XpCommandExperience::Set(st) => set_user_xp(guild_id, st.user, st.xp, state).await,
         XpCommandExperience::ResetGuild(rst) => {
             reset_guild_xp(guild_id, rst.confirm_message, state).await
         }
@@ -120,6 +121,28 @@ async fn reset_user_xp(
     .await?;
     Ok(format!(
         "Deleted <@{user_id}> from my database in this server!"
+    ))
+}
+
+async fn set_user_xp(
+    guild_id: Id<GuildMarker>,
+    user_id: Id<UserMarker>,
+    setpoint: i64,
+    state: SlashState,
+) -> Result<String, Error> {
+    query!(
+        "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp = $3",
+        id_to_db(user_id),
+        id_to_db(guild_id),
+        setpoint
+    )
+    .execute(&state.db)
+    .await?;
+    let level = mee6::LevelInfo::new(setpoint.try_into().unwrap_or(0));
+    Ok(format!(
+        "Set <@{user_id}>'s XP to {}, leaving them at level {}",
+        level.xp(),
+        level.level()
     ))
 }
 

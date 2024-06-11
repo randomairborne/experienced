@@ -70,6 +70,8 @@ pub enum XpCommandExperience {
     Remove(XpCommandExperienceRemove),
     #[command(name = "reset")]
     Reset(XpCommandExperienceReset),
+    #[command(name = "set")]
+    Set(XpCommandExperienceSet),
     #[command(name = "reset-guild")]
     ResetGuild(XpCommandExperienceResetGuild),
     #[command(name = "import")]
@@ -113,6 +115,19 @@ pub struct XpCommandExperienceRemove {
 pub struct XpCommandExperienceReset {
     #[command(desc = "User to remove")]
     pub user: Id<UserMarker>,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "set",
+    desc = "Set a user's experience value",
+    dm_permission = false
+)]
+pub struct XpCommandExperienceSet {
+    #[command(desc = "User to set XP of")]
+    pub user: Id<UserMarker>,
+    #[command(desc = "value to set their current XP to", min_value = 1)]
+    pub xp: i64,
 }
 
 pub const CONFIRMATION_STRING: &str = "I Understand The Risks";
