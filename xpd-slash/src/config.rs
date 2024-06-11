@@ -95,7 +95,7 @@ async fn process_levels_config(
         };
         format!("Welcome message is `{message}`, and it will be sent in {new_channel}.")
     } else {
-        "Removed welcome message".to_string()
+        "Settings left unchanged.".to_string()
     };
     state.update_config(guild_id, config).await;
     Ok(message)
