@@ -70,7 +70,7 @@ impl XpdListenerInner {
 
         let rewards = self.get_guild_rewards(guild_id).await?;
 
-        debug!(
+        trace!(
             ?rewards,
             guild_id = guild_id.get(),
             "Got & sorted rewards for guild"
@@ -108,9 +108,7 @@ impl XpdListenerInner {
         } else {
             rewards[..=reward_idx].iter().map(|v| v.id).collect()
         };
-
-        trace!(cache = ?self.cache, "Have cache");
-
+        
         let mut complete_role_set: Vec<Id<RoleMarker>> =
             Vec::with_capacity(new_roles.len() + base_roles.len());
 
