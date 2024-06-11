@@ -230,12 +230,12 @@ fn opt_mention_str<T>(data: Option<Id<T>>, mention_kind: char) -> Cow<'static, s
 
 impl Display for GuildConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
+        writeln!(
             f,
             "One reward role at a time: {}",
             tribool(self.one_at_a_time)
         )?;
-        write!(
+        writeln!(
             f,
             "Level-up message: {}",
             opt_code_str(
