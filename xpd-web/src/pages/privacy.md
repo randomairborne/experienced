@@ -1,6 +1,6 @@
 ---
 title: "Experienced Privacy Policy"
-layout: "../layouts/Legal.astro"
+layout: "../layouts/Docs.astro"
 description: "How we at Experienced use your data"
 ---
 

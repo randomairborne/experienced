@@ -1,6 +1,6 @@
 ---
 title: "Experienced Terms of Service"
-layout: "../layouts/Legal.astro"
+layout: "../layouts/Docs.astro"
 description: "Legal terms for the use of the Experienced discord bot"
 ---
 
