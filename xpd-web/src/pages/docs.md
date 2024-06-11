@@ -34,7 +34,7 @@ The `experience` command has six subcommands. They all manipulate the XP of the 
 - `add`: Simple enough. Gives a user more XP. Events that trigger on level-up will not trigger until they next send a
   message (or in some cases, the next time they organically level up).
 - `remove`: Same as add, but with a negative sign on the front.
-- `set`: This will set a user's experience value to *exactly* the value you specify. It shares the same non-triggering
+- `set`: This will set a user's experience value to _exactly_ the value you specify. It shares the same non-triggering
   caveats as `add`.
 - `reset`: This allows you to quickly reset a user's XP in your server to 0.
 - `reset-guild`: This deletes all the leveling data associated with your server. It doesn't delete configuration
@@ -46,7 +46,7 @@ The `experience` command has six subcommands. They all manipulate the XP of the 
 
 The JSON format used by `xp experience import` and `xp experience export` is a list of structs, with the below definition:
 
-| Key   | Value    | Description                 |
-|:-----:|:--------:|-----------------------------|
-| `id`  | `string` | Stringified discord user ID |
-| `xp`  | `int`    | XP count for this user      |
+| Key  |  Value   | Description                 |
+| :--: | :------: | --------------------------- |
+| `id` | `string` | Stringified discord user ID |
+| `xp` |  `int`   | XP count for this user      |
