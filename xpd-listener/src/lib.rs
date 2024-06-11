@@ -74,7 +74,9 @@ impl XpdListenerInner {
         let resource_types = ResourceType::USER_CURRENT
             | ResourceType::ROLE
             | ResourceType::GUILD
-            | ResourceType::CHANNEL;
+            | ResourceType::CHANNEL
+            | ResourceType::MEMBER;
+
         let cache = InMemoryCache::builder()
             .resource_types(resource_types)
             .build();
