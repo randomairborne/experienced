@@ -20,6 +20,7 @@ pub async fn process_config(
 ) -> Result<XpdSlashResponse, Error> {
     match command {
         ConfigCommand::Reset(_) => reset_config(state, guild).await,
+        ConfigCommand::Get(_) => get_config(state, guild).await,
         ConfigCommand::Rewards(r) => process_rewards_config(state, guild, r).await,
         ConfigCommand::Levels(l) => process_levels_config(state, guild, l).await,
     }
@@ -110,4 +111,17 @@ async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<St
     .await?;
     state.update_config(guild_id, GuildConfig::default()).await;
     Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
+}
+
+async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
+    let config: GuildConfig = query_as!(
+        RawGuildConfig,
+        "SELECT one_at_a_time, level_up_message, level_up_channel FROM guild_configs \
+        WHERE id = $1",
+        id_to_db(guild_id),
+    )
+    .fetch_one(&state.db)
+    .await?
+    .try_into()?;
+    Ok(config.to_string())
 }

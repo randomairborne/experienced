@@ -95,6 +95,8 @@ pub enum CardCommand {
 pub enum ConfigCommand {
     #[command(name = "reset")]
     Reset(config::ConfigCommandReset),
+    #[command(name = "get")]
+    Get(config::ConfigCommandGet),
     #[command(name = "rewards")]
     Rewards(config::ConfigCommandRewards),
     #[command(name = "levels")]

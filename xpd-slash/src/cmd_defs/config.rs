@@ -32,3 +32,7 @@ pub struct ConfigCommandRewards {
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your guild's configuration")]
 pub struct ConfigCommandReset;
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "get", desc = "Get your guild's configuration")]
+pub struct ConfigCommandGet;
