@@ -108,7 +108,7 @@ impl XpdListenerInner {
         } else {
             rewards[..=reward_idx].iter().map(|v| v.id).collect()
         };
-        
+
         let mut complete_role_set: Vec<Id<RoleMarker>> =
             Vec::with_capacity(new_roles.len() + base_roles.len());
 
