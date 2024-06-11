@@ -126,7 +126,7 @@ impl XpdListenerInner {
                     .await?;
             }
         };
-        
+
         if let Some(template) = guild_config.level_up_message.as_ref() {
             let target_channel = guild_config.level_up_channel.unwrap_or(msg.channel_id);
             debug!(user = ?msg.author.id, channel = ?msg.channel_id, ?target_channel, old = old_user_level, new = user_level, "Congratulating user");
