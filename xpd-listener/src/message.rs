@@ -91,7 +91,7 @@ impl XpdListenerInner {
             return Err(Error::NoMember);
         };
 
-        debug!(user = ?msg.author.id, channel = ?msg.channel_id, old = old_xp, new = xp, guild = ?guild_id, "Preparing to update user");
+        debug!(user = ?msg.author.id, channel = ?msg.channel_id, old = old_xp, new = xp, config = ?guild_config, "Preparing to update user");
 
         if let Some(reward_idx) = reward_idx {
             // remove all role IDs which are in our rewards list

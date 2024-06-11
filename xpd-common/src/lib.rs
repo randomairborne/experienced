@@ -189,7 +189,7 @@ impl TryFrom<RawGuildConfig> for GuildConfig {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct GuildConfig {
     pub one_at_a_time: Option<bool>,
     pub level_up_message: Option<Interpolation>,
