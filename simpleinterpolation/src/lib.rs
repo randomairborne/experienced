@@ -10,15 +10,17 @@ use std::{collections::HashMap, fmt::Formatter};
 pub struct Interpolation {
     // The first value is the raw value that will be appended
     // to the final string. The second value will go AFTER this string,
-    // but it may be dynamic, and will be empty if unset
+    // but it is dynamic
     parts: Vec<(String, String)>,
+    // The value which is placed after the otherwise rendered interpolation
+    end: String,
 }
 
 impl Interpolation {
     const REASONABLE_INTERPOLATION_PREALLOC_BYTES: usize = 128;
 
-    pub fn new(input: String) -> Result<Self, Error> {
-        InterpolationCompiler::compile(input)
+    pub fn new(input: impl AsRef<str>) -> Result<Self, Error> {
+        InterpolationCompiler::compile(input.as_ref())
     }
 
     fn output_string(&self) -> String {
@@ -37,20 +39,7 @@ impl Interpolation {
             let interpolation_value = args.get(interpolation_key);
             output.push_str(interpolation_value.unwrap_or(&String::new()));
         }
-        output
-    }
-
-    pub fn render_transform<T, F: Fn(&T) -> String>(
-        &self,
-        args: &HashMap<String, T>,
-        transform: F,
-    ) -> String {
-        let mut output = self.output_string();
-        for (raw, interpolation_key) in &self.parts {
-            output.push_str(raw);
-            let interpolation_value = args.get(interpolation_key);
-            output.push_str(&interpolation_value.map_or(String::new(), &transform));
-        }
+        output.push_str(&self.end);
         output
     }
 
@@ -71,7 +60,7 @@ impl<'a> Iterator for UsedVariablesIterator<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let next = self.inner[self.current].1.as_str();
+        let next = self.inner.get(self.current)?.1.as_str();
         self.current += 1;
         Some(next)
     }
@@ -86,7 +75,7 @@ struct InterpolationCompiler {
 }
 
 impl InterpolationCompiler {
-    fn compile(input: String) -> Result<Interpolation, Error> {
+    fn compile(input: &str) -> Result<Interpolation, Error> {
         let mut compiler = Self {
             chars: input.chars().collect(),
             parts: Vec::new(),
@@ -100,14 +89,11 @@ impl InterpolationCompiler {
             compiler.handle_char(character)?;
         }
 
-        // Push the final part and return self
-        if !compiler.next.is_empty() {
-            compiler.parts.push((compiler.next, String::new()));
-        }
         compiler.parts.shrink_to_fit();
 
         Ok(Interpolation {
             parts: compiler.parts,
+            end: compiler.next,
         })
     }
 
@@ -202,36 +188,43 @@ mod tests {
     #[test]
     fn basic() {
         let interpolation =
-            Interpolation::new("This is an example string for {interpolation}!".to_string())
-                .unwrap();
+            Interpolation::new("This is an example string for {interpolation}!").unwrap();
         println!("{interpolation:?}");
-        println!("{}", interpolation.render(&get_example_args()));
+        let rendered = interpolation.render(&get_example_args());
+        assert_eq!("This is an example string for Interpolation!", rendered)
     }
     #[test]
     fn escapes() {
-        let interpolation = Interpolation::new(
-            "This is an example string for \\{interpolation} escapes!".to_string(),
-        )
-        .unwrap();
+        let initial = "This is an example string for \\{interpolation} escapes!";
+        let target = "This is an example string for {interpolation} escapes!";
+        let interpolation = Interpolation::new(initial).unwrap();
         println!("{interpolation:?}");
-        println!("{}", interpolation.render(&get_example_args()));
+        assert_eq!(target, interpolation.render(&HashMap::new()));
     }
     #[test]
     fn recursive_escapes() {
-        let interpolation = Interpolation::new(
-            "This is an example string for \\\\{interpolation} recursive escapes!".to_string(),
-        )
-        .unwrap();
+        let initial = "This is an example string for \\\\{interpolation} recursive escapes!";
+        let target = "This is an example string for \\Interpolation recursive escapes!";
+        let interpolation = Interpolation::new(initial).unwrap();
         println!("{interpolation:?}");
-        println!("{}", interpolation.render(&get_example_args()));
+        assert_eq!(target, interpolation.render(&get_example_args()));
+    }
+    #[test]
+    fn variables_are_right() {
+        let interpolation =
+            Interpolation::new("This is an example string for {interpolation} variable listing!")
+                .unwrap();
+        println!("{interpolation:?}");
+        assert_eq!(
+            interpolation.variables_used().collect::<Vec<&str>>(),
+            vec!["interpolation"]
+        );
     }
     #[test]
     fn no_interpolation() {
-        let interpolation = Interpolation::new(
-            "This is an example string for a lack of interpolation!".to_string(),
-        )
-        .unwrap();
+        let unchanged = "This is an example string for a lack of interpolation!";
+        let interpolation = Interpolation::new(unchanged).unwrap();
         println!("{interpolation:?}");
-        println!("{}", interpolation.render(&get_example_args()));
+        assert_eq!(unchanged, interpolation.render(&HashMap::new()));
     }
 }
