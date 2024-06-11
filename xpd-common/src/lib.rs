@@ -1,6 +1,7 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 use std::{
+    borrow::Cow,
     fmt::{Display, Formatter},
     str::FromStr,
 };
@@ -217,12 +218,37 @@ const fn tribool(data: Option<bool>) -> &'static str {
     }
 }
 
+fn opt_code_str(data: Option<&str>) -> Cow<str> {
+    data.map_or(Cow::Borrowed("unset"), |v| Cow::Owned(format!("`{v}`")))
+}
+
+fn opt_mention_str<T>(data: Option<Id<T>>, mention_kind: char) -> Cow<'static, str> {
+    data.map_or(Cow::Borrowed("unset"), |v| {
+        Cow::Owned(format!("`<{mention_kind}{v}>`"))
+    })
+}
+
 impl Display for GuildConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "One reward role at a time: {}",
             tribool(self.one_at_a_time)
+        )?;
+        write!(
+            f,
+            "Level-up message: {}",
+            opt_code_str(
+                self.level_up_message
+                    .as_ref()
+                    .map(Interpolation::input_value)
+                    .as_deref()
+            )
+        )?;
+        write!(
+            f,
+            "Level-up channel: {}",
+            opt_mention_str(self.level_up_channel, '#')
         )?;
         Ok(())
     }
