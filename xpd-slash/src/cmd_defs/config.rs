@@ -9,7 +9,7 @@ use twilight_model::application::interaction::InteractionChannel;
 )]
 pub struct ConfigCommandLevels {
     #[command(
-        desc = "Message to send when a user levels up. https://xp.valk.sh/docs/#level_up_msg",
+        desc = "Message to send when a user levels up. https://xp.valk.sh/docs/",
         max_length = 512,
         min_length = 1
     )]
