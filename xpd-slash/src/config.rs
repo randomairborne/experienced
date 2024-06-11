@@ -93,7 +93,7 @@ async fn process_levels_config(
         } else {
             "the same channel as the message that caused the level-up".to_string()
         };
-        format!("Welcome message is `{message}`, and it will be sent in {new_channel}.")
+        format!("Level-up message is `{message}`, and it will be sent in {new_channel}.")
     } else {
         "Settings left unchanged.".to_string()
     };
