@@ -142,11 +142,12 @@ impl XpdListenerInner {
                     ]);
                     let message = template.render(&map);
                     let allowed_mentions = AllowedMentions {
-                        users: vec![msg.author.id],
+                        replied_user: true,
                         ..AllowedMentions::default()
                     };
                     self.http
                         .create_message(msg.channel_id)
+                        .reply(msg.id)
                         .allowed_mentions(Some(&allowed_mentions))
                         .content(&message)
                         .await?;
