@@ -120,8 +120,8 @@ async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<Stri
         WHERE id = $1",
         id_to_db(guild_id),
     )
-    .fetch_one(&state.db)
+    .fetch_optional(&state.db)
     .await?
-    .try_into()?;
+    .map_or_else(|| Ok(GuildConfig::default()), TryInto::try_into)?;
     Ok(config.to_string())
 }
