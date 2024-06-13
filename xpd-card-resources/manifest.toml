@@ -10,7 +10,7 @@ file = "./fonts/Mojang.ttf"
 
 [[fonts]]
 display_name = "Montserrat Alt-1"
-internal_name = "Montserrat Alt1"
+internal_name = "Montserrat-Alt1"
 file = "./fonts/MontserratAlt1.ttf"
 
 [[fonts]]
