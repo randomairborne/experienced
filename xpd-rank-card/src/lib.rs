@@ -13,7 +13,7 @@ use resvg::usvg::{
 use tera::{Tera, Value};
 use tracing::debug;
 
-use crate::config::{Config, ConfigItem};
+pub use crate::config::{Config, ConfigItem};
 
 /// Context is the main argument of [`InnerSvgState::render`], and takes parameters for what to put on
 /// the card.
