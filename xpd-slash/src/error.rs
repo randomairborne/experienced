@@ -80,4 +80,8 @@ pub enum Error {
     LevelUpMessageTooLong,
     #[error("Level up channel must be a text channel!")]
     LevelUpChannelMustBeText,
+    #[error("That card does not exist!")]
+    UnknownCard,
+    #[error("That toy does not exist!")]
+    UnknownToy,
 }

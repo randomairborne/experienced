@@ -2,6 +2,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 mod admin;
+mod autocomplete;
 mod cmd_defs;
 mod config;
 mod dispatch;
@@ -68,7 +69,7 @@ impl XpdSlash {
         owners: Vec<Id<UserMarker>>,
         update_channels: UpdateChannels,
     ) -> Self {
-        let svg = SvgState::new();
+        let svg = SvgState::new("xpd-card-resources").unwrap();
         let state = SlashState {
             db,
             client,

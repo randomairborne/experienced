@@ -11,11 +11,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{id_to_db, DisplayName, MemberDisplayInfo};
-use xpd_rank_card::{
-    cards::Card,
-    customizations::{Color, Customizations},
-    Font, Toy,
-};
+use xpd_rank_card::customizations::{Color, Customizations};
 
 use crate::{Error, SlashState, XpdSlashResponse};
 
@@ -150,10 +146,9 @@ pub async fn get_customizations(
         }
     }
     let Some(customizations) = customizations else {
-        return Ok(Card::default().default_customizations());
+        return Ok(Customizations::default());
     };
-    let card = Card::from_name(&customizations.card_layout).ok_or(Error::InvalidCard)?;
-    let defaults = card.default_customizations();
+    let defaults = Customizations::default_customizations_str(&customizations.card_layout);
     Ok(Customizations {
         username: color_or_default(&customizations.username, defaults.username)?,
         rank: color_or_default(&customizations.rank, defaults.rank)?,
@@ -176,9 +171,9 @@ pub async fn get_customizations(
             &customizations.foreground_xp_count,
             defaults.foreground_xp_count,
         )?,
-        font: font_or_default(&customizations.font, defaults.font).ok_or(Error::InvalidFont)?,
-        toy: toy_or_none(&customizations.toy_image),
-        card: Card::from_name(&customizations.card_layout).ok_or(Error::InvalidCard)?,
+        font: customizations.font.unwrap_or(defaults.font),
+        toy: customizations.toy_image,
+        card: customizations.card_layout,
     })
 }
 
@@ -187,22 +182,6 @@ fn color_or_default(color: &Option<String>, default: Color) -> Result<Color, Err
         Ok(Color::from_hex(color)?)
     } else {
         Ok(default)
-    }
-}
-
-fn font_or_default(font: &Option<String>, default: Font) -> Option<Font> {
-    if let Some(font) = font {
-        Some(Font::from_name(font)?)
-    } else {
-        Some(default)
-    }
-}
-
-fn toy_or_none(toy: &Option<String>) -> Option<Toy> {
-    if let Some(toy) = toy {
-        Some(Toy::from_filename(toy)?)
-    } else {
-        None
     }
 }
 

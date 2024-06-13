@@ -17,7 +17,7 @@ sqlx = { version = "0.7", features = ["runtime-tokio", "tls-rustls", "postgres",
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
-xpd-rank-card = { path = "../xpd-rank-card", version = "0.5" }
+xpd-rank-card = { path = "../xpd-rank-card", version = "0.6" }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 simpleinterpolation = { path = "../simpleinterpolation" }
 serde = { version = "1", features = ["derive"] }

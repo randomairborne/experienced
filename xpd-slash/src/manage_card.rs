@@ -8,7 +8,7 @@ use xpd_common::{id_to_db, MemberDisplayInfo};
 
 use crate::{
     cmd_defs::{
-        card::{CardCommandEdit, CardCommandEditFont, ColorOption},
+        card::{CardCommandEdit, ColorOption},
         CardCommand, GuildCardCommand,
     },
     Error, SlashState, UserStats, XpdSlashResponse,
@@ -86,11 +86,35 @@ pub async fn guild_card_update(
         .embeds([embed]))
 }
 
+macro_rules! process_edit_helper {
+    ($state:ident, $edit:ident, $edit_field:ident, $config_field:ident) => {{
+        let item = $edit.$edit_field.map(|chosen| {
+            $state
+                .svg
+                .config()
+                .$config_field
+                .iter()
+                .find_map(|ci| matches_config_item(ci, &chosen))
+                .ok_or(Error::UnknownCard)
+        });
+        let item = match item {
+            Some(Err(e)) => return Err(e),
+            Some(Ok(v)) => Some(v),
+            None => None,
+        };
+        item
+    }};
+}
+
 async fn process_edit(
     edit: CardCommandEdit,
     state: &SlashState,
     id: Id<GenericMarker>,
 ) -> Result<String, Error> {
+    let toy_image = process_edit_helper!(state, edit, toy_image, toys);
+    let card_layout = process_edit_helper!(state, edit, card_layout, cards);
+    let font = process_edit_helper!(state, edit, font, fonts);
+
     query!(
         "INSERT INTO custom_card (
             username,
@@ -130,18 +154,23 @@ async fn process_edit(
         edit.progress_background.map(ColorOption::string),
         edit.foreground_xp_count.map(ColorOption::string),
         edit.background_xp_count.map(ColorOption::string),
-        edit.font
-            .unwrap_or(CardCommandEditFont::Roboto)
-            .as_xpd_rank_card()
-            .to_string(),
-        edit.toy_image.map(|v| v.value()),
-        edit.card_layout.map(|v| v.value()),
+        font,
+        toy_image,
+        card_layout,
         id_to_db(id),
     )
     .execute(&state.db)
     .await?;
 
     Ok("Updated card!".to_string())
+}
+
+fn matches_config_item(ci: &xpd_rank_card::ConfigItem, ch: &str) -> Option<String> {
+    if ci.display_name == ch {
+        Some(ci.internal_name.clone())
+    } else {
+        None
+    }
 }
 
 async fn process_reset(state: &SlashState, id: Id<GenericMarker>) -> Result<String, Error> {

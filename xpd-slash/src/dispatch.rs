@@ -2,7 +2,9 @@ use twilight_interactions::command::CommandModel;
 use twilight_model::{
     application::{
         command::CommandType,
-        interaction::{application_command::CommandData, Interaction, InteractionData},
+        interaction::{
+            application_command::CommandData, Interaction, InteractionData, InteractionType,
+        },
     },
     http::interaction::InteractionResponse,
     id::{marker::GuildMarker, Id},
@@ -40,6 +42,18 @@ pub async fn process(
     let Some(data) = interaction.data else {
         return Err(Error::NoInteractionData);
     };
+
+    if matches!(
+        interaction.kind,
+        InteractionType::ApplicationCommandAutocomplete
+    ) {
+        return if let InteractionData::ApplicationCommand(data) = data {
+            Ok(crate::autocomplete::autocomplete(data).await)
+        } else {
+            Err(Error::WrongInteractionData)
+        };
+    }
+
     let invoker: MemberDisplayInfo = match interaction.member {
         Some(val) => val
             .user
