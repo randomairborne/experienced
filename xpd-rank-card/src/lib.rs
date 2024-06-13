@@ -1,21 +1,21 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
-
-pub mod cards;
+#[allow(clippy::module_name_repetitions)]
+mod config;
 pub mod customizations;
-mod font;
-mod toy;
 
-use std::{sync::Arc, time::Instant};
+use std::{collections::HashMap, ops::Deref, path::Path, sync::Arc, time::Instant};
 
-pub use font::Font;
 use rayon::ThreadPoolBuilder;
-use resvg::usvg::{fontdb::Database, ImageKind, ImageRendering};
-use strum::{EnumCount, VariantArray};
+use resvg::usvg::{
+    fontdb::{Database, Family, Query},
+    ImageKind, ImageRendering,
+};
 use tera::{Tera, Value};
-pub use toy::Toy;
 use tracing::debug;
 
-/// Context is the main argument of [`SvgState::render`], and takes parameters for what to put on
+use crate::config::{Config, ConfigItem};
+
+/// Context is the main argument of [`InnerSvgState::render`], and takes parameters for what to put on
 /// the card.
 #[derive(serde::Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Context {
@@ -37,20 +37,16 @@ pub struct Context {
     pub avatar: String,
 }
 
-/// This struct should be constructed with [`SvgState::new`] to begin rendering rank cards
 #[derive(Clone)]
-pub struct SvgState {
-    fontdb: Arc<Database>,
-    tera: Arc<Tera>,
-    threads: Arc<rayon::ThreadPool>,
-    images: Arc<[Arc<Vec<u8>>; Toy::COUNT]>,
-}
+pub struct SvgState(pub Arc<InnerSvgState>);
 
 impl SvgState {
     /// Create a new [`SvgState`]
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+    ///
+    /// # Errors
+    /// This function usually fails when your manifest.toml is invalid.
+    pub fn new(path: impl AsRef<Path>) -> Result<Self, NewSvgStateError> {
+        Ok(Self(Arc::new(InnerSvgState::new(path.as_ref())?)))
     }
 
     /// this function renders an SVG on the internal thread pool, and returns PNG-encoded image
@@ -66,14 +62,93 @@ impl SvgState {
         });
         recv.await?
     }
+}
+
+impl Deref for SvgState {
+    type Target = InnerSvgState;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref()
+    }
+}
+
+/// This struct should be constructed with [`InnerSvgState::new`] to begin rendering rank cards
+pub struct InnerSvgState {
+    fontdb: Arc<Database>,
+    tera: Tera,
+    threads: rayon::ThreadPool,
+    images: HashMap<String, Arc<Vec<u8>>>,
+    config: Config,
+}
+
+impl InnerSvgState {
+    /// Create a new [`InnerSvgState`]
+    ///
+    /// # Errors
+    /// This function will error if your manifest lies or is invalid
+    pub fn new(data_dir: &Path) -> Result<Self, NewSvgStateError> {
+        let config_path = data_dir.join("manifest.toml");
+        let config = std::fs::read_to_string(config_path)?;
+        let config: Config = toml::from_str(&config)?;
+
+        let mut fonts = Database::new();
+        for font in &config.fonts {
+            fonts.load_font_file(data_dir.join(&font.file))?;
+            let test_query = Query {
+                families: &[Family::Name(&font.internal_name)],
+                ..Query::default()
+            };
+            fonts
+                .query(&test_query)
+                .ok_or_else(|| NewSvgStateError::WrongFontName(font.internal_name.clone()))?;
+        }
+
+        let mut tera = Tera::default();
+        tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
+        tera.register_filter("integerhumanize", int_humanize);
+        let template_files = config
+            .cards
+            .clone()
+            .into_iter()
+            .map(|v| (data_dir.join(&v.file), Some(v.internal_name)));
+        tera.add_template_files(template_files)?;
+
+        let threads = ThreadPoolBuilder::new()
+            .thread_name(|i| format!("svg-renderer-{i}"))
+            .build()?;
+
+        let images = config
+            .toys
+            .clone()
+            .into_iter()
+            .map(|v| ConfigItem {
+                file: data_dir.join(&v.file),
+                ..v
+            })
+            .map(config_item_tuple)
+            .collect::<Result<HashMap<_, _>, _>>()?;
+
+        Ok(Self {
+            fontdb: Arc::new(fonts),
+            tera,
+            threads,
+            images,
+            config,
+        })
+    }
+
+    #[must_use]
+    /// A config file which is guaranteed to have been successfully loaded.
+    pub const fn config(&self) -> &Config {
+        &self.config
+    }
 
     /// This function is very fast. It does not need to be async.
     /// # Errors
     /// Errors if tera has a problem
     pub fn render_svg(&self, context: &Context) -> Result<String, Error> {
-        let name = context.customizations.card.name();
         let ctx = tera::Context::from_serialize(context)?;
-        Ok(self.tera.render(name, &ctx)?)
+        Ok(self.tera.render(&context.customizations.card, &ctx)?)
     }
 
     /// Render the PNG for a card.
@@ -92,8 +167,8 @@ impl SvgState {
             );
         let images_clone = self.images.clone();
         let resolve_string = Box::new(move |href: &str, _: &resvg::usvg::Options| {
-            let toy = Toy::from_filename(href)?;
-            images_clone.get(toy as usize).cloned().map(ImageKind::PNG)
+            debug!(href, "fetching toy image");
+            images_clone.get(href).cloned().map(ImageKind::PNG)
         });
         let opt = resvg::usvg::Options {
             image_href_resolver: resvg::usvg::ImageHrefResolver {
@@ -123,42 +198,13 @@ impl SvgState {
     }
 }
 
-impl Default for SvgState {
-    fn default() -> Self {
-        let mut fonts = Database::new();
-        for variant in Font::VARIANTS {
-            fonts.load_font_data(
-                variant.ttf().unwrap_or_else(|e| {
-                    panic!("Failed to load font `{}`: {e}", variant.filename())
-                }),
-            );
-        }
-        let mut tera =
-            Tera::new("xpd-card-resources/cards/**/*.svg").expect("Failed to build card templates");
-        tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
-        tera.register_filter("integerhumanize", int_humanize);
-        let threads = ThreadPoolBuilder::new().build().unwrap();
-        let images = Toy::VARIANTS
-            .iter()
-            .map(|v| {
-                v.load_png()
-                    .unwrap_or_else(|e| panic!("Failed to load toy PNG `{}`: {e}", v.filename()))
-            })
-            .map(Arc::new)
-            .collect::<Vec<Arc<Vec<u8>>>>()
-            .try_into()
-            .unwrap();
-        Self {
-            fontdb: Arc::new(fonts),
-            tera: Arc::new(tera),
-            threads: Arc::new(threads),
-            images: Arc::new(images),
-        }
-    }
+fn config_item_tuple(ci: ConfigItem) -> Result<(String, Arc<Vec<u8>>), NewSvgStateError> {
+    let data = std::fs::read(&ci.file)?;
+    Ok((ci.internal_name, Arc::new(data)))
 }
 
 #[allow(clippy::unnecessary_wraps)]
-fn int_humanize(v: &Value, _hm: &std::collections::HashMap<String, Value>) -> tera::Result<Value> {
+fn int_humanize(v: &Value, _hm: &HashMap<String, Value>) -> tera::Result<Value> {
     let num = if let Value::Number(num) = v {
         if let Some(num) = num.as_f64() {
             num
@@ -192,12 +238,24 @@ pub enum Error {
     ParseInt(#[from] std::num::ParseIntError),
     #[error("Pixmap error: {0}")]
     Pixmap(#[from] png::EncodingError),
-    #[error("Rayon error: {0}")]
-    Rayon(#[from] rayon::ThreadPoolBuildError),
     #[error("Render result fetching error: {0}")]
     Recv(#[from] tokio::sync::oneshot::error::RecvError),
     #[error("Pixmap Creation error!")]
     PixmapCreation,
     #[error("Invalid length! Color hex data length must be exactly 6 characters!")]
     InvalidLength,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum NewSvgStateError {
+    #[error("Rayon error: {0:?}")]
+    Rayon(#[from] rayon::ThreadPoolBuildError),
+    #[error("File read error: {0:?}")]
+    FileRead(#[from] std::io::Error),
+    #[error("TOML deserialize error: {0:?}")]
+    Deserialize(#[from] toml::de::Error),
+    #[error("Template build error: {0:?}")]
+    Tera(#[from] tera::Error),
+    #[error("Unknown font name `{0}! Are you sure that the file-name font pairs match?")]
+    WrongFontName(String),
 }

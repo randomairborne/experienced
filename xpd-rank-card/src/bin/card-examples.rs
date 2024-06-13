@@ -1,12 +1,11 @@
 use std::thread::JoinHandle;
 
-use xpd_rank_card::*;
-
-use crate::cards::Card;
+use xpd_rank_card::{customizations::Customizations, *};
 
 const VALK_PFP: &str = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAYUExURXG0zgAAAFdXV6ampoaGhr6zpHxfQ2VPOt35dJcAAAABYktHRAH/Ai3eAAAAB3RJTUUH5wMDFSE5W/eo1AAAAQtJREFUeNrt1NENgjAUQFFXYAVWYAVXcAVXYH0hoQlpSqGY2Dae82WE9971x8cDAAAAAAAAAAAAAAAAAADgR4aNAAEC/jNgPTwuBAgQ8J8B69FpI0CAgL4DhozczLgjQICAPgPCkSkjtXg/I0CAgD4Dzg4PJ8YEAQIE9BEQLyg5cEWYFyBAQHsBVxcPN8U7BAgQ0FbAlcNhcLohjkn+egECBFQPKPE8cXpQgAABzQXkwsIfUElwblaAAAF9BeyP3Z396rgAAQJ+EvCqTIAAAfUD3pUJECCgvYB5kfp89N28yR3J7RQgQED9gPjhfmG8/Oh56r1UYOpdAQIEtBFwtLBUyY7wrgABAqoHfABW2cbX3ElRgQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMy0wMy0wM1QyMTozMzo1NiswMDowMNpnAp0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjMtMDMtMDNUMjE6MzM6NTYrMDA6MDCrOrohAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIzLTAzLTAzVDIxOjMzOjU3KzAwOjAwWliQSgAAAABJRU5ErkJggg==";
 
 fn main() {
+    std::fs::remove_dir_all("rendered-cards").ok();
     std::fs::create_dir_all("rendered-cards").unwrap();
     render_classic_l().unwrap();
     render_classic_r().unwrap();
@@ -14,11 +13,17 @@ fn main() {
     render_vertical_procedural();
 }
 
+fn new_state() -> SvgState {
+    SvgState::new("xpd-card-resources").unwrap()
+}
+
 fn render_classic_l() -> Result<(), Error> {
-    let state = SvgState::new();
+    let state = new_state();
     let xp = 49;
-    let mut customizations = Card::Classic.default_customizations();
-    customizations.toy = Some(Toy::Bee);
+    let customizations = Customizations {
+        toy: Some("bee.png".to_string()),
+        ..Customizations::default()
+    };
     let context = Context {
         level: 1,
         rank: 1,
@@ -35,10 +40,10 @@ fn render_classic_l() -> Result<(), Error> {
 }
 
 fn render_classic_r() -> Result<(), Error> {
-    let state = SvgState::new();
+    let state = new_state();
     let xp = 51;
-    let mut customizations = Card::Classic.default_customizations();
-    customizations.toy = Some(Toy::Bee);
+    let mut customizations = Customizations::default();
+    customizations.toy = Some("cow.png".to_string());
     let context = Context {
         level: 1,
         rank: 1,
@@ -55,10 +60,12 @@ fn render_classic_r() -> Result<(), Error> {
 }
 
 fn render_vertical() -> Result<(), Error> {
-    let state = SvgState::new();
+    let state = new_state();
     let xp = 99;
-    let mut customizations = Card::Vertical.default_customizations();
-    customizations.font = Font::MontserratAlt1;
+    let customizations = Customizations {
+        font: "Montserrat-Alt1".to_string(),
+        ..Customizations::vertical_default()
+    };
     let context = Context {
         level: 420,
         rank: 100_000,
@@ -81,7 +88,7 @@ fn render_vertical_procedural() {
     std::fs::create_dir_all("rendered-cards/test-procedural/").unwrap();
     for xp in (1..=100).step_by(2) {
         let spawn = std::thread::spawn(move || {
-            let state = SvgState::new();
+            let state = new_state();
             let context = Context {
                 level: 69,
                 rank: 1_000_000,
@@ -89,7 +96,7 @@ fn render_vertical_procedural() {
                 percentage: xp,
                 current: xp,
                 needed: 100 - xp,
-                customizations: Card::Vertical.default_customizations(),
+                customizations: Customizations::vertical_default(),
                 avatar: VALK_PFP.to_string(),
             };
             let output = state.sync_render(&context).unwrap();

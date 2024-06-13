@@ -1,6 +1,6 @@
-use crate::{cards::Card, Error, Font, Toy};
+use crate::Error;
 
-#[derive(serde::Serialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Customizations {
     pub username: Color,
     pub rank: Color,
@@ -11,9 +11,56 @@ pub struct Customizations {
     pub progress_background: Color,
     pub background_xp_count: Color,
     pub foreground_xp_count: Color,
-    pub font: Font,
-    pub toy: Option<Toy>,
-    pub card: Card,
+    pub font: String,
+    pub toy: Option<String>,
+    pub card: String,
+}
+
+impl Default for Customizations {
+    fn default() -> Self {
+        Self {
+            username: Color::new(255, 255, 255),
+            rank: Color::new(255, 255, 255),
+            level: Color::new(143, 202, 92),
+            border: Color::new(133, 79, 43),
+            background: Color::new(97, 55, 31),
+            progress_foreground: Color::new(71, 122, 30),
+            progress_background: Color::new(143, 202, 92),
+            background_xp_count: Color::new(0, 0, 0),
+            foreground_xp_count: Color::new(255, 255, 255),
+            font: "Mojang".to_string(),
+            toy: None,
+            card: "classic.svg".to_string(),
+        }
+    }
+}
+
+impl Customizations {
+    #[must_use]
+    pub fn vertical_default() -> Self {
+        Self {
+            username: Color::new(255, 255, 255),
+            rank: Color::new(255, 255, 255),
+            level: Color::new(251, 72, 196),
+            border: Color::new(0, 0, 0),
+            background: Color::new(10, 10, 10),
+            progress_foreground: Color::new(251, 72, 196),
+            progress_background: Color::new(199, 58, 157),
+            background_xp_count: Color::new(255, 255, 255),
+            foreground_xp_count: Color::new(255, 255, 255),
+            font: "Roboto".to_string(),
+            toy: None,
+            card: "vertical.svg".to_string(),
+        }
+    }
+
+    #[must_use]
+    pub fn default_customizations(&self) -> Self {
+        match self.card.as_str() {
+            "vertical.svg" => Self::vertical_default(),
+            _ => Self::default(),
+        }
+    }
 }
 
 macro_rules! add_output {
@@ -29,7 +76,7 @@ macro_rules! add_output {
 
 impl std::fmt::Display for Customizations {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let defaults = self.card.default_customizations();
+        let defaults = self.default_customizations();
         add_output!(f, "Important text", self.username, defaults.username);
         add_output!(f, "Rank", self.rank, defaults.rank);
         add_output!(f, "Level", self.level, defaults.level);
@@ -64,7 +111,8 @@ impl std::fmt::Display for Customizations {
             f,
             "Toy: `{}`",
             self.toy
-                .map_or_else(|| "None".to_owned(), |v| v.to_string())
+                .as_ref()
+                .map_or_else(|| "None".to_owned(), ToString::to_string)
         )?;
         add_output!(f, "Card", self.card, defaults.card);
         Ok(())
