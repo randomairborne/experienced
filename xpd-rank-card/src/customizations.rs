@@ -56,7 +56,12 @@ impl Customizations {
 
     #[must_use]
     pub fn default_customizations(&self) -> Self {
-        match self.card.as_str() {
+        Self::default_customizations_str(&self.card)
+    }
+
+    #[must_use]
+    pub fn default_customizations_str(itm: &str) -> Self {
+        match itm {
             "vertical.svg" => Self::vertical_default(),
             _ => Self::default(),
         }
