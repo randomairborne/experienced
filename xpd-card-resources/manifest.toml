@@ -1,0 +1,109 @@
+[[fonts]]
+display_name = "JetBrains Mono"
+internal_name = "JetBrains Mono"
+file = "./fonts/JetBrainsMono.ttf"
+
+[[fonts]]
+display_name = "Mojangles"
+internal_name = "Mojang"
+file = "./fonts/Mojang.ttf"
+
+[[fonts]]
+display_name = "Montserrat Alt-1"
+internal_name = "Montserrat Alt1"
+file = "./fonts/MontserratAlt1.ttf"
+
+[[fonts]]
+display_name = "Roboto"
+internal_name = "Roboto"
+file = "./fonts/Roboto.ttf"
+
+[[cards]]
+display_name = "Classic"
+internal_name = "classic.svg"
+file = "./cards/classic.svg"
+
+[[cards]]
+display_name = "Vertical"
+internal_name = "vertical.svg"
+file = "./cards/vertical.svg"
+
+[[toys]]
+display_name = "Airplane"
+internal_name = "airplane.png"
+file = "./icons/valkyrie_pilot/airplane.png"
+
+[[toys]]
+display_name = "Bee"
+internal_name = "bee.png"
+file = "./icons/Cyana/bee.png"
+
+[[toys]]
+display_name = "Biscuit"
+internal_name = "biscuit.png"
+file = "./icons/Cyana/biscuit.png"
+
+[[toys]]
+display_name = "Chicken"
+internal_name = "chicken.png"
+file = "./icons/Cyana/chicken.png"
+
+[[toys]]
+display_name = "Cow"
+internal_name = "cow.png"
+file = "./icons/Cyana/cow.png"
+
+[[toys]]
+display_name = "Fox"
+internal_name = "fox.png"
+file = "./icons/Cyana/fox.png"
+
+[[toys]]
+display_name = "Grass Block"
+internal_name = "grassblock.png"
+file = "./icons/Cyana/grassblock.png"
+
+[[toys]]
+display_name = "Parrot"
+internal_name = "parrot.png"
+file = "./icons/Cyana/parrot.png"
+
+[[toys]]
+display_name = "Pickaxe"
+internal_name = "pickaxe.png"
+file = "./icons/Cyana/pickaxe.png"
+
+[[toys]]
+display_name = "Pig"
+internal_name = "pig.png"
+file = "./icons/Cyana/pig.png"
+
+[[toys]]
+display_name = "Potion (blue)"
+internal_name = "potion_blue.png"
+file = "./icons/Cyana/potion_blue.png"
+
+[[toys]]
+display_name = "Potion (purple)"
+internal_name = "potion_purple.png"
+file = "./icons/Cyana/potion_purple.png"
+
+[[toys]]
+display_name = "Potion (red)"
+internal_name = "potion_red.png"
+file = "./icons/Cyana/potion_red.png"
+
+[[toys]]
+display_name = "Sheep"
+internal_name = "sheep.png"
+file = "./icons/Cyana/sheep.png"
+
+[[toys]]
+display_name = "Steve Heart"
+internal_name = "steveheart.png"
+file = "./icons/Cyana/steveheart.png"
+
+[[toys]]
+display_name = "Cow"
+internal_name = "tree.png"
+file = "./icons/Cyana/tree.png"
