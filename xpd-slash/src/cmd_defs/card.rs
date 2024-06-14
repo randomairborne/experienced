@@ -2,6 +2,7 @@
 use twilight_interactions::command::{
     AutocompleteValue, CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
+use twilight_model::id::{marker::UserMarker, Id};
 use xpd_rank_card::customizations::Color;
 
 #[derive(CommandModel, CreateCommand)]
@@ -15,7 +16,7 @@ pub struct CardCommandReset;
 )]
 pub struct CardCommandFetch {
     #[command(desc = "User to fetch settings of")]
-    pub user: Option<ResolvedUser>,
+    pub user: Option<Id<UserMarker>>,
 }
 
 #[derive(CommandModel, CreateCommand)]

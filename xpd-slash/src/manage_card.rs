@@ -23,11 +23,12 @@ pub async fn user_card_update(
 ) -> Result<XpdSlashResponse, Error> {
     let contents = match command {
         CardCommand::Reset(_reset) => process_reset(state, invoker.id.cast()).await?,
-        CardCommand::Fetch(_fetch) => {
+        CardCommand::Fetch(fetch) => {
+            let target_id = fetch.user.unwrap_or(invoker.id);
             if let Some(guild_id) = guild_id {
-                process_fetch(state, &[invoker.id.cast(), guild_id.cast()]).await
+                process_fetch(state, &[target_id.cast(), guild_id.cast()]).await
             } else {
-                process_fetch(state, &[invoker.id.cast()]).await
+                process_fetch(state, &[target_id.cast()]).await
             }?
         }
         CardCommand::Edit(edit) => process_edit(edit, state, invoker.id.cast()).await?,
