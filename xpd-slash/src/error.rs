@@ -84,4 +84,8 @@ pub enum Error {
     UnknownCard,
     #[error("That toy does not exist!")]
     UnknownToy,
+    #[error("That font does not exist!")]
+    UnknownFont,
+    #[error("There is no autocomplete for that command.")]
+    NoAutocompleteForCommand,
 }

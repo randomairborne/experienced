@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 use twilight_interactions::command::{
-    CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
+    AutocompleteValue, CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
 use xpd_rank_card::customizations::Color;
 
@@ -49,13 +49,36 @@ pub struct CardCommandEdit {
     pub foreground_xp_count: Option<ColorOption>,
     #[command(desc = "What color to use for the xp count when in the progress bar's empty part")]
     pub background_xp_count: Option<ColorOption>,
-    #[command(desc = "What font to use in the card")]
+    #[command(desc = "What font to use in the card", autocomplete = true)]
     pub font: Option<String>,
-    #[command(desc = "What toy image to use in the card")]
+    #[command(desc = "What toy image to use in the card", autocomplete = true)]
     pub toy_image: Option<String>,
-    #[command(desc = "What layout to use for the card")]
+    #[command(desc = "What layout to use for the card", autocomplete = true)]
     pub card_layout: Option<String>,
 }
+
+#[derive(CommandModel, Debug)]
+#[command(autocomplete = true)]
+pub enum CardCommandAutocomplete {
+    #[command(name = "edit")]
+    Edit(CardCommandEditAutocomplete),
+    #[command(name = "fetch")]
+    Fetch(NoAutocomplete),
+    #[command(name = "reset")]
+    Reset(NoAutocomplete),
+}
+
+#[derive(CommandModel, Debug)]
+#[command(autocomplete = true)]
+pub struct CardCommandEditAutocomplete {
+    pub font: AutocompleteValue<String>,
+    pub toy_image: AutocompleteValue<String>,
+    pub card_layout: AutocompleteValue<String>,
+}
+
+#[derive(CommandModel, Debug)]
+#[command(autocomplete = true)]
+pub struct NoAutocomplete;
 
 pub struct ColorOption(Color);
 

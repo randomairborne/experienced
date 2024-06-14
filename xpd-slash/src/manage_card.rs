@@ -5,6 +5,7 @@ use twilight_model::id::{
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 use xpd_common::{id_to_db, MemberDisplayInfo};
+use xpd_rank_card::ConfigItem;
 
 use crate::{
     cmd_defs::{
@@ -86,34 +87,36 @@ pub async fn guild_card_update(
         .embeds([embed]))
 }
 
-macro_rules! process_edit_helper {
-    ($state:ident, $edit:ident, $edit_field:ident, $config_field:ident) => {{
-        let item = $edit.$edit_field.map(|chosen| {
-            $state
-                .svg
-                .config()
-                .$config_field
+fn process_edit_helper(
+    items: &[ConfigItem],
+    field: Option<String>,
+    error: Error,
+) -> Result<Option<String>, Error> {
+    field
+        .map(|chosen| {
+            items
                 .iter()
                 .find_map(|ci| matches_config_item(ci, &chosen))
-                .ok_or(Error::UnknownCard)
-        });
-        let item = match item {
-            Some(Err(e)) => return Err(e),
-            Some(Ok(v)) => Some(v),
-            None => None,
-        };
-        item
-    }};
+                .ok_or(error)
+        })
+        .transpose()
+        .map(|v| match v.as_deref() {
+            Some(CUSTOM_CARD_NULL_SENTINEL) | None => None,
+            Some(_) => v,
+        })
 }
+
+pub const CUSTOM_CARD_NULL_SENTINEL: &str = "NULL";
 
 async fn process_edit(
     edit: CardCommandEdit,
     state: &SlashState,
     id: Id<GenericMarker>,
 ) -> Result<String, Error> {
-    let toy_image = process_edit_helper!(state, edit, toy_image, toys);
-    let card_layout = process_edit_helper!(state, edit, card_layout, cards);
-    let font = process_edit_helper!(state, edit, font, fonts);
+    let items = state.svg.config();
+    let toy_image = process_edit_helper(&items.toys, edit.toy_image, Error::UnknownToy)?;
+    let card_layout = process_edit_helper(&items.cards, edit.card_layout, Error::UnknownCard)?;
+    let font = process_edit_helper(&items.fonts, edit.font, Error::UnknownFont)?;
 
     query!(
         "INSERT INTO custom_card (
@@ -165,8 +168,8 @@ async fn process_edit(
     Ok("Updated card!".to_string())
 }
 
-fn matches_config_item(ci: &xpd_rank_card::ConfigItem, ch: &str) -> Option<String> {
-    if ci.display_name == ch {
+fn matches_config_item(ci: &ConfigItem, choice: &str) -> Option<String> {
+    if ci.internal_name == choice {
         Some(ci.internal_name.clone())
     } else {
         None
