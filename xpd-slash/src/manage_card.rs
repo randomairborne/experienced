@@ -21,33 +21,31 @@ pub async fn user_card_update(
     state: &SlashState,
     guild_id: Option<Id<GuildMarker>>,
 ) -> Result<XpdSlashResponse, Error> {
-    let contents = match command {
-        CardCommand::Reset(_reset) => process_reset(state, invoker.id.cast()).await?,
+    let (contents, target) = match command {
+        CardCommand::Reset(_reset) => (process_reset(state, invoker.id.cast()).await?, invoker),
         CardCommand::Fetch(fetch) => {
-            let target_id = fetch.user.unwrap_or(invoker.id);
-            if let Some(guild_id) = guild_id {
-                process_fetch(state, &[target_id.cast(), guild_id.cast()]).await
+            let target = fetch
+                .user
+                .map_or(invoker, |v| MemberDisplayInfo::from(v.resolved));
+            let contents = if let Some(guild_id) = guild_id {
+                process_fetch(state, &[target.id.cast(), guild_id.cast()]).await
             } else {
-                process_fetch(state, &[target_id.cast()]).await
-            }?
+                process_fetch(state, &[target.id.cast()]).await
+            }?;
+            (contents, target)
         }
-        CardCommand::Edit(edit) => process_edit(edit, state, invoker.id.cast()).await?,
+        CardCommand::Edit(edit) => (process_edit(edit, state, invoker.id.cast()).await?, invoker),
     };
     let user_stats = if let Some(id) = guild_id {
-        state.get_user_stats(invoker.id, id).await?
+        state.get_user_stats(target.id, id).await?
     } else {
         // I am so mature.
         UserStats { xp: 420, rank: 69 }
     };
     let level_info = LevelInfo::new(u64::try_from(user_stats.xp).unwrap_or(0));
-    let card = crate::levels::gen_card(
-        state.clone(),
-        invoker,
-        guild_id,
-        level_info,
-        user_stats.rank,
-    )
-    .await?;
+    let card =
+        crate::levels::gen_card(state.clone(), target, guild_id, level_info, user_stats.rank)
+            .await?;
     let embed = EmbedBuilder::new()
         .description(contents)
         .image(ImageSource::attachment("card.png")?)

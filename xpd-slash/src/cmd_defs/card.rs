@@ -16,7 +16,7 @@ pub struct CardCommandReset;
 )]
 pub struct CardCommandFetch {
     #[command(desc = "User to fetch settings of")]
-    pub user: Option<Id<UserMarker>>,
+    pub user: Option<ResolvedUser>,
 }
 
 #[derive(CommandModel, CreateCommand)]
