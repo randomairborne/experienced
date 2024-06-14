@@ -58,7 +58,11 @@ pub struct UpdateChannels {
 }
 
 impl XpdSlash {
+    /// Creates a new xpd slash, which can be passed around
     /// Make sure to trim your ``root_url`` trailing slash.
+    ///
+    /// # Panics
+    /// If loading resources or connecting to a database fails, this function will panic.
     #[allow(clippy::too_many_arguments)]
     pub async fn new(
         http: reqwest::Client,
