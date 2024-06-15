@@ -29,7 +29,7 @@ in your server.
 
 ### Experience
 
-The `experience` command has six subcommands. They all manipulate the XP of the users in your server.
+The `xp experience` command has six subcommands. They all manipulate the XP of the users in your server.
 
 - `add`: Simple enough. Gives a user more XP. Events that trigger on level-up will not trigger until they next send a
   message (or in some cases, the next time they organically level up).
@@ -44,9 +44,18 @@ The `experience` command has six subcommands. They all manipulate the XP of the 
 
 ### XP import & export format
 
-The JSON format used by `xp experience import` and `xp experience export` is a list of structs, with the below definition:
+The JSON format used by `xp experience import` and `xp experience export` is a list of structs, with the below
+definition:
 
 | Key  |  Value   | Description                 |
-| :--: | :------: | --------------------------- |
+|:----:|:--------:|-----------------------------|
 | `id` | `string` | Stringified discord user ID |
 | `xp` |  `int`   | XP count for this user      |
+
+### Rewards
+
+The `xp rewards` command has three subcommands: `add`, `list`, and `remove.
+
+- `add`: Adds a role that will be given when you reach a specified level.
+- `remove`: Removes a role reward. You only need to specify either the level or the target role.
+- `list`: List currently active rewards
