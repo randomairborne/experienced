@@ -2,14 +2,14 @@
 import Wordmark from "./Wordmark.astro";
 import Linkbutton from "./LinkButton.astro";
 import LogoImage from "../images/logo.png";
-import { Image } from 'astro:assets';
+import { Image } from "astro:assets";
 ---
 
 <div class="nav-wrapper">
   <nav class="top-nav flex-grow">
     <a href="/" class="menu-title">
       <picture>
-        <Image width="128" height="128" src={LogoImage} alt="experienced orb" />
+        <Image src={LogoImage} alt="experienced orb" class="smaller-image" />
       </picture>
       <div class="tiny-spacer"></div>
       <Wordmark>EXPERIENCED</Wordmark>
@@ -89,7 +89,7 @@ import { Image } from 'astro:assets';
   }
 
   .menu-title {
-    font-size: xx-large;
+    font-size: 40px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -191,5 +191,15 @@ import { Image } from 'astro:assets';
     .menu > li:not(:last-child) {
       border-bottom: 1px solid #444;
     }
+  }
+  .smaller-image {
+    max-height: 50px;
+    width: auto;
+    height: auto;
+  }
+
+  picture {
+    display: flex;
+    align-items: center;
   }
 </style>
