@@ -11,10 +11,8 @@ services:
     env_file:
       - .env
     environment:
-      REDIS_URL: redis://redis:6379
       DATABASE_URL: "postgres://xpd:${POSTGRES_PASSWORD}@postgres:5432/xpd"
     depends_on:
-      - redis
       - postgres
 
   postgres:
