@@ -1,13 +1,15 @@
 ---
 import Wordmark from "./Wordmark.astro";
 import Linkbutton from "./LinkButton.astro";
+import LogoImage from "../images/logo.png";
+import { Image } from 'astro:assets';
 ---
 
 <div class="nav-wrapper">
   <nav class="top-nav flex-grow">
     <a href="/" class="menu-title">
       <picture>
-        <img width="50" height="50" src="/logo.png" alt="experienced orb" />
+        <Image width="50" height="50" src={LogoImage} alt="experienced orb" />
       </picture>
       <div class="tiny-spacer"></div>
       <Wordmark>EXPERIENCED</Wordmark>
