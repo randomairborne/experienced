@@ -1,26 +1,19 @@
-FROM rust:alpine AS builder
+ARG LLVMTARGETARCH
+FROM --platform=${BUILDPLATFORM} ghcr.io/randomairborne/cross-cargo-${LLVMTARGETARCH}:latest AS builder
+ARG LLVMTARGETARCH
 
 WORKDIR /build
+
 COPY . .
 
-RUN apk add musl-dev
-
-ENV SQLX_OFFLINE=1
-
-RUN \
-    --mount=type=cache,target=/build/target/ \
-    --mount=type=cache,target=/usr/local/cargo/registry/ \
-    cargo build --release
-
-RUN --mount=type=cache,target=/build/target/ cp /build/target/release/xpd-gateway /xpd-gateway
+RUN cargo build --release --target ${LLVMTARGETARCH}-unknown-linux-musl
 
 FROM alpine:latest
+ARG LLVMTARGETARCH
 
 WORKDIR /experienced/
 
-COPY --from=builder /xpd-gateway /usr/bin/xpd-gateway
+COPY --from=builder /build/target/${LLVMTARGETARCH}-unknown-linux-musl/release/xpd-gateway /usr/bin/xpd-gateway
 COPY xpd-card-resources xpd-card-resources
 
-EXPOSE 8080
-
-CMD [ "/usr/bin/xpd-gateway" ]
+ENTRYPOINT [ "/usr/bin/xpd-gateway" ]
