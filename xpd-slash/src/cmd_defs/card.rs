@@ -2,7 +2,6 @@
 use twilight_interactions::command::{
     AutocompleteValue, CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
-use twilight_model::id::{marker::UserMarker, Id};
 use xpd_rank_card::customizations::Color;
 
 #[derive(CommandModel, CreateCommand)]
