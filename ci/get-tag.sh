@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ ${GITHUB_REF} = 'prod' ];
 then
   echo "tag=latest" >> ${GITHUB_OUTPUT}
