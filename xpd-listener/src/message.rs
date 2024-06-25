@@ -158,6 +158,9 @@ impl XpdListenerInner {
         guild_id: Id<GuildMarker>,
         targets: &[Id<RoleMarker>],
     ) -> Result<CanAddRole, Error> {
+        if targets.is_empty() {
+            return Ok(CanAddRole::Yes);
+        }
         if !self
             .cache
             .permissions()
@@ -178,19 +181,23 @@ impl XpdListenerInner {
             .role(highest_role)
             .ok_or(Error::UnknownPositionForOwnHighestRole)?
             .position();
-        let max_target_position = {
+        let (max_position, max_role) = {
             let mut max_position = i64::MIN;
+            let mut max_role = targets[0];
             for role in targets {
                 let role = self.cache.role(*role).ok_or(Error::NoTargetRoleInCache)?;
                 if role.managed {
                     return Ok(CanAddRole::RoleIsManaged);
                 }
-                max_position = std::cmp::max(max_position, role.position())
+                if role.position() > max_position {
+                    max_position = role.position();
+                    max_role = role.id();
+                }
             }
-            max_position
+            (max_position, max_role)
         };
 
-        if my_position > max_target_position {
+        if my_position > max_position || max_role.get() < self.current_application_id.get() {
             Ok(CanAddRole::Yes)
         } else {
             Ok(CanAddRole::HighestRoleIsLowerRoleThanTarget)
