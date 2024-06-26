@@ -1,0 +1,18 @@
+---
+import Wordmark from "../components/Wordmark.astro";
+import LinkButton from "../components/LinkButton.astro";
+import TinySpacer from "../components/TinySpacer.astro";
+import Layout from "../layouts/Layout.astro";
+
+const title = "Page not found";
+const description = "This is awkward. That page doesn't exist.";
+---
+
+<Layout title={title} description={description}>
+  <div class="huge">404 page not found</div>
+</Layout>
+<style>
+  .huge {
+    font-size: min(10vh, 7vw);
+  }
+</style>
