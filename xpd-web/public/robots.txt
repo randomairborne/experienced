@@ -1,2 +1,4 @@
 User-Agent: *
 Allow: /
+
+Sitemap: https://xp.valk.sh/sitemap-index.xml
