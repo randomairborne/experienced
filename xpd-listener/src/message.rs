@@ -139,11 +139,16 @@ impl XpdListenerInner {
                     let message = template.render(&map);
                     let allowed_mentions = AllowedMentions {
                         replied_user: true,
+                        users: vec![msg.author.id],
                         ..AllowedMentions::default()
                     };
-                    self.http
-                        .create_message(msg.channel_id)
-                        .reply(msg.id)
+
+                    let mut congratulatory_msg = self.http.create_message(target_channel);
+                    if target_channel == msg.channel_id {
+                        // only reply to a message if it's in the same channel
+                        congratulatory_msg = congratulatory_msg.reply(msg.id);
+                    }
+                    congratulatory_msg
                         .allowed_mentions(Some(&allowed_mentions))
                         .content(&message)
                         .await?;
