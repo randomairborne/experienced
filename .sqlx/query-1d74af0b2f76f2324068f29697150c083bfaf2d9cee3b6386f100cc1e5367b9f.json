@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up FROM guild_configs WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "one_at_a_time",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "level_up_message",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "level_up_channel",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "ping_on_level_up",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "1d74af0b2f76f2324068f29697150c083bfaf2d9cee3b6386f100cc1e5367b9f"
+}
