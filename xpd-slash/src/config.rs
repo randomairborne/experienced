@@ -37,7 +37,7 @@ async fn process_rewards_config(
         "INSERT INTO guild_configs (id, one_at_a_time) VALUES ($1, $2) \
             ON CONFLICT (id) DO UPDATE SET \
             one_at_a_time = COALESCE($2, excluded.one_at_a_time) \
-            RETURNING one_at_a_time, level_up_message, level_up_channel",
+            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up",
         id_to_db(guild_id),
         options.one_at_a_time,
     )
@@ -79,7 +79,7 @@ async fn process_levels_config(
             ON CONFLICT (id) DO UPDATE SET \
             level_up_message = COALESCE($2, excluded.level_up_message), \
             level_up_channel = COALESCE($3, excluded.level_up_channel) \
-            RETURNING one_at_a_time, level_up_message, level_up_channel",
+            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up",
         id_to_db(guild_id),
         options.level_up_message,
         options.level_up_channel.as_ref().map(|ic| id_to_db(ic.id))
@@ -116,7 +116,7 @@ async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<St
 async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
     let config: GuildConfig = query_as!(
         RawGuildConfig,
-        "SELECT one_at_a_time, level_up_message, level_up_channel FROM guild_configs \
+        "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up FROM guild_configs \
         WHERE id = $1",
         id_to_db(guild_id),
     )

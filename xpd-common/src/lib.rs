@@ -169,6 +169,7 @@ pub struct RawGuildConfig {
     pub one_at_a_time: Option<bool>,
     pub level_up_message: Option<String>,
     pub level_up_channel: Option<i64>,
+    pub ping_on_level_up: Option<bool>,
 }
 
 impl TryFrom<RawGuildConfig> for GuildConfig {
@@ -185,6 +186,7 @@ impl TryFrom<RawGuildConfig> for GuildConfig {
             one_at_a_time: value.one_at_a_time,
             level_up_message,
             level_up_channel: value.level_up_channel.map(db_to_id),
+            ping_on_level_up: value.ping_on_level_up,
         };
         Ok(gc)
     }
@@ -195,6 +197,7 @@ pub struct GuildConfig {
     pub one_at_a_time: Option<bool>,
     pub level_up_message: Option<Interpolation>,
     pub level_up_channel: Option<Id<ChannelMarker>>,
+    pub ping_on_level_up: Option<bool>,
 }
 
 #[derive(Debug)]

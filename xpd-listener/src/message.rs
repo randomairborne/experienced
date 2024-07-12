@@ -137,10 +137,15 @@ impl XpdListenerInner {
                         ("level".to_string(), user_level.to_string()),
                     ]);
                     let message = template.render(&map);
-                    let allowed_mentions = AllowedMentions {
-                        replied_user: true,
-                        users: vec![msg.author.id],
-                        ..AllowedMentions::default()
+
+                    let allowed_mentions = if let Some(false) = guild_config.ping_on_level_up {
+                        AllowedMentions::default()
+                    } else {
+                        AllowedMentions {
+                            replied_user: true,
+                            users: vec![msg.author.id],
+                            ..AllowedMentions::default()
+                        }
                     };
 
                     let mut congratulatory_msg = self.http.create_message(target_channel);

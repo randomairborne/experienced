@@ -110,7 +110,8 @@ impl XpdListenerInner {
         }
         let config = query_as!(
             RawGuildConfig,
-            "SELECT one_at_a_time, level_up_message, level_up_channel FROM guild_configs WHERE id = $1",
+            "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up \
+             FROM guild_configs WHERE id = $1",
             id_to_db(guild)
         )
         .fetch_optional(&self.db)
