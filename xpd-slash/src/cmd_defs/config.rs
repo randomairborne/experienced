@@ -16,6 +16,8 @@ pub struct ConfigCommandLevels {
     pub level_up_message: Option<String>,
     #[command(desc = "Where to send level up messages", channel_types = "guild_text")]
     pub level_up_channel: Option<InteractionChannel>,
+    #[command(desc = "Enable push notifications to users when they level up and are mentioned")]
+    pub ping_users: Option<bool>,
 }
 
 #[derive(CommandModel, CreateCommand)]

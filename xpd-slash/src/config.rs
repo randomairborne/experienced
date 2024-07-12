@@ -75,14 +75,17 @@ async fn process_levels_config(
 
     let config: GuildConfig = query_as!(
         RawGuildConfig,
-        "INSERT INTO guild_configs (id, level_up_message, level_up_channel) VALUES ($1, $2, $3) \
+        "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up) \
+            VALUES ($1, $2, $3, $4) \
             ON CONFLICT (id) DO UPDATE SET \
             level_up_message = COALESCE($2, excluded.level_up_message), \
-            level_up_channel = COALESCE($3, excluded.level_up_channel) \
+            level_up_channel = COALESCE($3, excluded.level_up_channel), \
+            ping_on_level_up = COALESCE($4, excluded.ping_on_level_up) \
             RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up",
         id_to_db(guild_id),
         options.level_up_message,
-        options.level_up_channel.as_ref().map(|ic| id_to_db(ic.id))
+        options.level_up_channel.as_ref().map(|ic| id_to_db(ic.id)),
+        options.ping_users
     )
     .fetch_one(&state.db)
     .await?
