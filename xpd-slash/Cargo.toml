@@ -22,6 +22,7 @@ xpd-common = { path = "../xpd-common", version = "0.0.6" }
 simpleinterpolation = { path = "../simpleinterpolation" }
 serde = { version = "1", features = ["derive"] }
 twilight-interactions = "0.16.0-rc.1"
+twilight-validate = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
 http-body-util = "0.1"
 serde_json = "1"
@@ -30,6 +31,7 @@ base64 = "0.22"
 thiserror = "1"
 mee6 = "0.1"
 csv = "1"
+
 
 
 

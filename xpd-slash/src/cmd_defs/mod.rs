@@ -184,6 +184,11 @@ impl SlashState {
             CommandBuilder::new("Get level", "", CommandType::User).build(),
             CommandBuilder::new("Get author level", "", CommandType::Message).build(),
         ];
+        for command in &cmds {
+            if matches!(command.kind, CommandType::ChatInput) {
+                twilight_validate::command::command(command).expect("invalid command. idiot.");
+            }
+        }
         self.client
             .interaction(self.my_id)
             .set_global_commands(&cmds)
