@@ -192,9 +192,12 @@ impl SlashState {
             .set_global_commands(&cmds)
             .await
             .expect("Failed to set global commands for bot!");
+
+        let admin_command = AdminCommand::create_command().into();
+        twilight_validate::command::command(&admin_command).expect("invalid admin command. idiot.");
         self.client
             .interaction(self.my_id)
-            .set_guild_commands(self.control_guild, &[AdminCommand::create_command().into()])
+            .set_guild_commands(self.control_guild, &[admin_command])
             .await
             .expect("Failed to set admin commands");
     }
