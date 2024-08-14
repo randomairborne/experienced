@@ -64,8 +64,8 @@ async fn gen_leaderboard(
         USERS_PER_PAGE + 1,
         zpage * USERS_PER_PAGE
     )
-        .fetch_all(&db)
-        .await?;
+    .fetch_all(&db)
+    .await?;
     if users.is_empty() {
         return Err(Error::NoUsersForPage);
     }
