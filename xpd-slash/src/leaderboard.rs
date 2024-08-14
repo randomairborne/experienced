@@ -4,12 +4,18 @@ use twilight_model::{
     application::interaction::{
         message_component::MessageComponentInteractionData, modal::ModalInteractionData,
     },
-    channel::message::{
-        component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
-        Component, MessageFlags, ReactionType,
+    channel::{
+        message::{
+            component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
+            Component, MessageFlags, ReactionType,
+        },
+        Message,
     },
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
 };
 use twilight_util::builder::{
     embed::{EmbedBuilder, EmbedFooterBuilder},
@@ -58,8 +64,8 @@ async fn gen_leaderboard(
         USERS_PER_PAGE + 1,
         zpage * USERS_PER_PAGE
     )
-    .fetch_all(&db)
-    .await?;
+        .fetch_all(&db)
+        .await?;
     if users.is_empty() {
         return Err(Error::NoUsersForPage);
     }
@@ -131,6 +137,7 @@ pub async fn process_modal_submit(
     guild_id: Id<GuildMarker>,
     state: SlashState,
 ) -> Result<InteractionResponse, Error> {
+    // You can't get this modal unless you are the triggering user
     let actions = data.components.first().ok_or(Error::NoModalActionRow)?;
     let field = actions.components.first().ok_or(Error::NoFormField)?;
     let choice: i64 = field
@@ -147,9 +154,20 @@ pub async fn process_modal_submit(
 
 pub async fn process_message_component(
     data: MessageComponentInteractionData,
+    original_message: Message,
     guild_id: Id<GuildMarker>,
+    invoker_id: Id<UserMarker>,
     state: SlashState,
 ) -> Result<InteractionResponse, Error> {
+    if original_message
+        .interaction
+        .ok_or(Error::NoInteractionInvocationOnInteractionMessage)?
+        .user
+        .id
+        != invoker_id
+    {
+        return Err(Error::NotYourLeaderboard);
+    }
     if data.custom_id == "jump_modal" {
         let input = TextInput {
             custom_id: "jump_modal_input".to_string(),

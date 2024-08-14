@@ -58,7 +58,8 @@ pub enum Error {
     NotControlGuild,
     #[error("This command only works as a control user!")]
     NotControlUser,
-    #[error("That file is too big to import automatically. Please email valk@randomairborne.dev or [join our support server](https://discord.com/invite/KWkPYxqNKe) to set up imports for your server.")]
+    #[error("That file is too big to import automatically. Please email valk@randomairborne.dev or [join our support server](https://discord.com/invite/KWkPYxqNKe) to set up imports for your server."
+    )]
     ImportFileTooBig,
     #[error("This page does not exist!")]
     NoUsersForPage,
@@ -88,4 +89,10 @@ pub enum Error {
     UnknownFont,
     #[error("There is no autocomplete for that command.")]
     NoAutocompleteForCommand,
+    #[error("Discord didn't send an interaction message for that message component")]
+    NoInteractionMessage,
+    #[error("Discord sent an interaction response message without interaction invocation data")]
+    NoInteractionInvocationOnInteractionMessage,
+    #[error("You didn't create this leaderboard.")]
+    NotYourLeaderboard,
 }
