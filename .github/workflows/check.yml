@@ -29,7 +29,7 @@ jobs:
         run: npm run prettier-check
 
       - name: Check build
-        run: cargo clippy
+        run: cargo clippy -- -D warnings
 
       - name: Run tests
         run: cargo test --all
