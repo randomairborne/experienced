@@ -58,6 +58,8 @@ async fn gen_leaderboard(
     if zpage.is_negative() {
         return Err(Error::PageDoesNotExist);
     }
+    let is_ephemeral = !show_off.is_some_and(|v| v);
+
     let users = query!(
         "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
         id_to_db(guild_id),
@@ -118,15 +120,28 @@ async fn gen_leaderboard(
         style: ButtonStyle::Primary,
         url: None,
     });
-    let flags = if show_off.is_some_and(|v| v) {
-        MessageFlags::empty()
-    } else {
+
+    let mut components = vec![back_button, select_button, forward_button];
+    if !is_ephemeral {
+        let delete_button = Component::Button(Button {
+            custom_id: Some("delete_leaderboard".to_string()),
+            disabled: false,
+            emoji: Some(ReactionType::Unicode {
+                name: "🗑️".to_string(),
+            }),
+            label: Some("Delete".to_string()),
+            style: ButtonStyle::Danger,
+            url: None,
+        });
+        components.push(delete_button);
+    }
+    let flags = if is_ephemeral {
         MessageFlags::EPHEMERAL
+    } else {
+        MessageFlags::empty()
     };
     Ok(InteractionResponseDataBuilder::new()
-        .components([Component::ActionRow(ActionRow {
-            components: vec![back_button, select_button, forward_button],
-        })])
+        .components([Component::ActionRow(ActionRow { components })])
         .embeds([embed])
         .flags(flags)
         .build())
@@ -168,36 +183,55 @@ pub async fn process_message_component(
     {
         return Err(Error::NotYourLeaderboard);
     }
-    if data.custom_id == "jump_modal" {
-        let input = TextInput {
-            custom_id: "jump_modal_input".to_string(),
-            label: "Jump Destination".to_string(),
-            max_length: Some(8),
-            min_length: Some(1),
-            placeholder: Some("What page to jump to".to_string()),
-            required: Some(true),
-            style: TextInputStyle::Short,
-            value: None,
-        };
-        return Ok(InteractionResponse {
-            kind: InteractionResponseType::Modal,
-            data: Some(
-                InteractionResponseDataBuilder::new()
-                    .components([Component::ActionRow(ActionRow {
-                        components: vec![Component::TextInput(input)],
-                    })])
-                    .custom_id("jump_modal")
-                    .title("Go to page..")
-                    .build(),
-            ),
-        });
+    match data.custom_id.as_str() {
+        "jump_modal" => {
+            let input = TextInput {
+                custom_id: "jump_modal_input".to_string(),
+                label: "Jump Destination".to_string(),
+                max_length: Some(8),
+                min_length: Some(1),
+                placeholder: Some("What page to jump to".to_string()),
+                required: Some(true),
+                style: TextInputStyle::Short,
+                value: None,
+            };
+            Ok(InteractionResponse {
+                kind: InteractionResponseType::Modal,
+                data: Some(
+                    InteractionResponseDataBuilder::new()
+                        .components([Component::ActionRow(ActionRow {
+                            components: vec![Component::TextInput(input)],
+                        })])
+                        .custom_id("jump_modal")
+                        .title("Go to page..")
+                        .build(),
+                ),
+            })
+        }
+        "delete_leaderboard" => {
+            state
+                .client
+                .delete_message(original_message.channel_id, original_message.id)
+                .await?;
+            Ok(InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(
+                    InteractionResponseDataBuilder::new()
+                        .flags(MessageFlags::EPHEMERAL)
+                        .content("Deleted leaderboard")
+                        .build(),
+                ),
+            })
+        }
+        offset_str => {
+            // when we create the buttons, we set next and previous's custom IDs to the current page
+            // plus and minus 1. This means that we don't have to store which page which
+            // message is on, because the component will tell us exactly where it wants to go!
+            let offset: i64 = offset_str.parse()?;
+            Ok(InteractionResponse {
+                kind: InteractionResponseType::UpdateMessage,
+                data: Some(gen_leaderboard(guild_id, state.db, offset, Some(true)).await?),
+            })
+        }
     }
-    // when we create the buttons, we set next and previous's custom IDs to the current page
-    // plus and minus 1. This means that we don't have to store which page which
-    // message is on, because the component will tell us exactly where it wants to go!
-    let offset: i64 = data.custom_id.parse()?;
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::UpdateMessage,
-        data: Some(gen_leaderboard(guild_id, state.db, offset, Some(true)).await?),
-    })
 }
