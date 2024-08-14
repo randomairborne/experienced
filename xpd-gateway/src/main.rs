@@ -49,10 +49,10 @@ async fn main() {
         .connect(&pg)
         .await
         .expect("Failed to connect to database");
-    // sqlx::migrate!("../migrations")
-    //     .run(&db)
-    //     .await
-    //     .expect("Failed to run database migrations!");
+    sqlx::migrate!("../migrations")
+        .run(&db)
+        .await
+        .expect("Failed to run database migrations!");
 
     let client = Arc::new(DiscordClient::new(token.clone()));
     let intents = XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILDS;
@@ -111,7 +111,7 @@ async fn main() {
         owners,
         update_channels,
     )
-    .await;
+        .await;
     let config = Config::new(token.clone(), intents);
     let shards: Vec<Shard> =
         twilight_gateway::create_recommended(&client, config, |_, builder| builder.build())
@@ -231,9 +231,9 @@ async fn handle_event(
                 AND id = $1",
                 id_to_db(guild_add.id)
             )
-            .fetch_all(&db)
-            .await?
-            .is_empty()
+                .fetch_all(&db)
+                .await?
+                .is_empty()
             {
                 debug!(
                     id = guild_add.id.get(),
