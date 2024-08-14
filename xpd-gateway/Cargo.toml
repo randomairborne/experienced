@@ -8,6 +8,7 @@ repository = "https://github.com/randomairborne/experienced"
 license = "EUPL-1.2"
 categories = ["games"]
 keywords = ["discord-bot", "mee6"]
+build = "build.rs"
 
 [dependencies]
 twilight-gateway = { version = "0.16.0-rc.1", features = ["rustls-native-roots", "twilight-http"], default-features = false }
