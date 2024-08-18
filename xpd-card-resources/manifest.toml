@@ -18,6 +18,11 @@ display_name = "Roboto"
 internal_name = "Roboto"
 file = "./fonts/Roboto.ttf"
 
+[[fonts]]
+display_name = "Source Serif"
+internal_name = "Source Serif"
+file = "./fonts/SourceSerif.ttf"
+
 [[cards]]
 display_name = "Classic"
 internal_name = "classic.svg"
