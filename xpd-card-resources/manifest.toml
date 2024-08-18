@@ -20,7 +20,7 @@ file = "./fonts/Roboto.ttf"
 
 [[fonts]]
 display_name = "Source Serif"
-internal_name = "Source Serif"
+internal_name = "Source Serif 4"
 file = "./fonts/SourceSerif.ttf"
 
 [[cards]]
