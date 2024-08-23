@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ ${GITHUB_REF} = 'prod' ];
+if [ ${GITHUB_REF} = 'refs/heads/prod' ];
 then
   echo "tag=latest" >> ${GITHUB_OUTPUT}
 else

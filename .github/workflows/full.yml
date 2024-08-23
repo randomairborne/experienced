@@ -94,6 +94,8 @@ jobs:
         id: get_tag
         run: ./ci/get-tag.sh
         shell: bash
+        env:
+          GITHUB_REF: ${{ github.ref }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
