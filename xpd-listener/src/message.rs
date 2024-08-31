@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 
 use rand::Rng;
 use sqlx::query;
@@ -12,9 +12,9 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{id_to_db, RoleReward};
+use xpd_common::{id_to_db, snowflake_to_timestamp, RoleReward};
 
-const MESSAGE_COOLDOWN: Duration = Duration::from_secs(60);
+const MESSAGE_COOLDOWN: i64 = 60;
 
 use crate::{Error, XpdListenerInner};
 
@@ -37,13 +37,20 @@ impl XpdListenerInner {
         }
 
         let user_cooldown_key = (guild_id, msg.author.id);
-
-        // contains will only be true if the message also has not expired
-        if self.messages.read()?.contains(&user_cooldown_key) {
-            return Ok(());
-        }
+        let this_message_sts = snowflake_to_timestamp(msg.id);
 
         let guild_config = self.get_guild_config(guild_id).await?;
+
+        // if the last message timestamp plus the cooldown period is larger than the current sent at epoch,
+        // we want to return immediately because the "expiry time" is still in the future
+        if self
+            .messages
+            .read()?
+            .get(&user_cooldown_key)
+            .is_some_and(|last_message_sts| last_message_sts + MESSAGE_COOLDOWN > this_message_sts)
+        {
+            return Ok(());
+        }
 
         let xp_added: i64 = rand::thread_rng().gen_range(15..=25);
         let xp_record = query!(
@@ -63,7 +70,7 @@ impl XpdListenerInner {
 
         self.messages
             .write()?
-            .insert(user_cooldown_key, MESSAGE_COOLDOWN);
+            .insert(user_cooldown_key, this_message_sts);
 
         let level_info = mee6::LevelInfo::new(xp);
         let old_level_info = mee6::LevelInfo::new(old_xp);

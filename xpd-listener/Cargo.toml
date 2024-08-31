@@ -17,8 +17,8 @@ simpleinterpolation = { path = "../simpleinterpolation" }
 xpd-common = { path = "../xpd-common" }
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"
-expiringmap = "0.1"
 thiserror = "1"
 tracing = "0.1"
+ahash = "0.8"
 rand = "0.8"
 mee6 = "0.1"
