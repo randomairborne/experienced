@@ -83,8 +83,8 @@ impl XpdListenerInner {
             "Got & sorted rewards for guild"
         );
 
-        let user_level: i64 = level_info.level().try_into().unwrap_or(0);
-        let old_user_level: i64 = old_level_info.level().try_into().unwrap_or(0);
+        let user_level: i64 = level_info.level().try_into().unwrap_or(-1);
+        let old_user_level: i64 = old_level_info.level().try_into().unwrap_or(-1);
 
         let mut reward_idx = None;
         for (idx, data) in rewards.iter().enumerate() {
