@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up,max_xp_per_message, min_xp_per_message, message_cooldown FROM guild_configs WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "one_at_a_time",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "level_up_message",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "level_up_channel",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "ping_on_level_up",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "max_xp_per_message",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "min_xp_per_message",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 6,
+        "name": "message_cooldown",
+        "type_info": "Int2"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "bd7ffe9a9d2909d6abd5c3f6a9a91d079ed6d365981c88590a230194d42cd920"
+}
