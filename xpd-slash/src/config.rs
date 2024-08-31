@@ -3,7 +3,10 @@ use twilight_model::{
     channel::{message::MessageFlags, ChannelType},
     id::{marker::GuildMarker, Id},
 };
-use xpd_common::{id_to_db, GuildConfig, RawGuildConfig, TEMPLATE_VARIABLES};
+use xpd_common::{
+    id_to_db, GuildConfig, RawGuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE,
+    TEMPLATE_VARIABLES,
+};
 
 use crate::{
     cmd_defs::{
@@ -37,7 +40,8 @@ async fn process_rewards_config(
         "INSERT INTO guild_configs (id, one_at_a_time) VALUES ($1, $2) \
             ON CONFLICT (id) DO UPDATE SET \
             one_at_a_time = COALESCE($2, excluded.one_at_a_time) \
-            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up",
+            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
+            max_xp_per_message, min_xp_per_message, message_cooldown",
         id_to_db(guild_id),
         options.one_at_a_time,
     )
@@ -73,6 +77,12 @@ async fn process_levels_config(
         return Err(Error::LevelUpChannelMustBeText);
     }
 
+    let max_xp_per_message = safecast_to_i16(options.max_xp_per_message)?;
+    let min_xp_per_message = safecast_to_i16(options.min_xp_per_message)?;
+    let message_cooldown = safecast_to_i16(options.message_cooldown)?;
+
+    let mut txn = state.db.begin().await?;
+
     let config: GuildConfig = query_as!(
         RawGuildConfig,
         "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up) \
@@ -80,29 +90,35 @@ async fn process_levels_config(
             ON CONFLICT (id) DO UPDATE SET \
             level_up_message = COALESCE($2, excluded.level_up_message), \
             level_up_channel = COALESCE($3, excluded.level_up_channel), \
-            ping_on_level_up = COALESCE($4, excluded.ping_on_level_up) \
-            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up",
+            ping_on_level_up = COALESCE($4, excluded.ping_on_level_up), \
+            max_xp_per_message = COALESCE($5, excluded.max_xp_per_message), \
+            min_xp_per_message = COALESCE($6, excluded.min_xp_per_message), \
+            message_cooldown = COALESCE($7, excluded.message_cooldown) \
+            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
+            max_xp_per_message, min_xp_per_message, message_cooldown",
         id_to_db(guild_id),
         options.level_up_message,
         options.level_up_channel.as_ref().map(|ic| id_to_db(ic.id)),
-        options.ping_users
+        options.ping_users,
+        max_xp_per_message,
+        min_xp_per_message,
+        message_cooldown
     )
-    .fetch_one(&state.db)
+    .fetch_one(txn.as_mut())
     .await?
     .try_into()?;
 
-    let message = if let Some(message) = options.level_up_message {
-        let new_channel = if let Some(channel) = options.level_up_channel {
-            format!("<#{}>.", channel.id)
-        } else {
-            "the same channel as the message that caused the level-up".to_string()
-        };
-        format!("Level-up message is `{message}`, and it will be sent in {new_channel}.")
-    } else {
-        "Settings left unchanged.".to_string()
-    };
+    validate_config(&config)?;
+    let msg = config.to_string();
+    // commit config to memory, no turning back
+    txn.commit().await?;
     state.update_config(guild_id, config).await;
-    Ok(message)
+
+    Ok(msg)
+}
+
+fn safecast_to_i16(ou16: Option<i64>) -> Result<Option<i16>, Error> {
+    ou16.map(TryInto::try_into).transpose().map_err(Into::into)
 }
 
 async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
@@ -119,7 +135,8 @@ async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<St
 async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
     let config: GuildConfig = query_as!(
         RawGuildConfig,
-        "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up FROM guild_configs \
+        "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, \
+        min_xp_per_message, message_cooldown FROM guild_configs \
         WHERE id = $1",
         id_to_db(guild_id),
     )
@@ -127,4 +144,26 @@ async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<Stri
     .await?
     .map_or_else(|| Ok(GuildConfig::default()), TryInto::try_into)?;
     Ok(config.to_string())
+}
+
+fn validate_config(config: &GuildConfig) -> Result<(), GuildConfigErrorReport> {
+    let max_xp_per_msg = config
+        .max_xp_per_message
+        .unwrap_or(DEFAULT_MAX_XP_PER_MESSAGE);
+    let min_xp_per_msg = config
+        .min_xp_per_message
+        .unwrap_or(DEFAULT_MIN_XP_PER_MESSAGE);
+    if max_xp_per_msg < min_xp_per_msg {
+        return Err(GuildConfigErrorReport::MinXpIsMoreThanMax {
+            min: min_xp_per_msg,
+            max: max_xp_per_msg,
+        });
+    }
+    Ok(())
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum GuildConfigErrorReport {
+    #[error("The selected minimum XP value of {min} is more than the selected maximum of {max}")]
+    MinXpIsMoreThanMax { min: i16, max: i16 },
 }

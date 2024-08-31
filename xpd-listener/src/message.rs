@@ -12,9 +12,10 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{id_to_db, snowflake_to_timestamp, RoleReward};
-
-const MESSAGE_COOLDOWN: i64 = 60;
+use xpd_common::{
+    id_to_db, snowflake_to_timestamp, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
+    DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE,
+};
 
 use crate::{Error, XpdListenerInner};
 
@@ -40,19 +41,34 @@ impl XpdListenerInner {
         let this_message_sts = snowflake_to_timestamp(msg.id);
 
         let guild_config = self.get_guild_config(guild_id).await?;
+        let config_max_xp_per_msg = guild_config
+            .max_xp_per_message
+            .unwrap_or(DEFAULT_MAX_XP_PER_MESSAGE);
+        let config_min_xp_per_msg = guild_config
+            .min_xp_per_message
+            .unwrap_or(DEFAULT_MIN_XP_PER_MESSAGE);
 
         // if the last message timestamp plus the cooldown period is larger than the current sent at epoch,
         // we want to return immediately because the "expiry time" is still in the future
+        let cooldown: i64 = guild_config
+            .cooldown
+            .unwrap_or(DEFAULT_MESSAGE_COOLDOWN)
+            .into();
         if self
             .messages
             .read()?
             .get(&user_cooldown_key)
-            .is_some_and(|last_message_sts| last_message_sts + MESSAGE_COOLDOWN > this_message_sts)
+            .is_some_and(|last_message_sts| last_message_sts + cooldown > this_message_sts)
         {
             return Ok(());
         }
 
-        let xp_added: i64 = rand::thread_rng().gen_range(15..=25);
+        let xp_added: i64 = if config_max_xp_per_msg == config_min_xp_per_msg {
+            config_max_xp_per_msg
+        } else {
+            rand::thread_rng().gen_range(config_min_xp_per_msg..=config_max_xp_per_msg)
+        }
+        .into();
         let xp_record = query!(
             "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
                 ON CONFLICT (id, guild) \

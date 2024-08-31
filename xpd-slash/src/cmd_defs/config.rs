@@ -18,6 +18,24 @@ pub struct ConfigCommandLevels {
     pub level_up_channel: Option<InteractionChannel>,
     #[command(desc = "Enable push notifications to users when they level up and are mentioned")]
     pub ping_users: Option<bool>,
+    #[command(
+        desc = "Maximum amount of XP per message (Default 25)",
+        min_value = 0,
+        max_value = 32767
+    )]
+    pub max_xp_per_message: Option<i64>,
+    #[command(
+        desc = "Minimum amount of XP per message (Default 15)",
+        min_value = 0,
+        max_value = 32767
+    )]
+    pub min_xp_per_message: Option<i64>,
+    #[command(
+        desc = "How many seconds users must wait between messages that are able to earn XP",
+        min_value = 0,
+        max_value = 32767
+    )]
+    pub message_cooldown: Option<i64>,
 }
 
 #[derive(CommandModel, CreateCommand)]

@@ -163,6 +163,9 @@ pub fn db_to_id<T>(db: i64) -> Id<T> {
 }
 
 pub const TEMPLATE_VARIABLES: [&str; 2] = ["user_mention", "level"];
+pub const DEFAULT_MAX_XP_PER_MESSAGE: i16 = 25;
+pub const DEFAULT_MIN_XP_PER_MESSAGE: i16 = 15;
+pub const DEFAULT_MESSAGE_COOLDOWN: i16 = 60;
 
 #[derive(Clone, Default)]
 pub struct RawGuildConfig {
@@ -170,6 +173,9 @@ pub struct RawGuildConfig {
     pub level_up_message: Option<String>,
     pub level_up_channel: Option<i64>,
     pub ping_on_level_up: Option<bool>,
+    pub min_xp_per_message: Option<i16>,
+    pub max_xp_per_message: Option<i16>,
+    pub message_cooldown: Option<i16>,
 }
 
 impl TryFrom<RawGuildConfig> for GuildConfig {
@@ -187,6 +193,9 @@ impl TryFrom<RawGuildConfig> for GuildConfig {
             level_up_message,
             level_up_channel: value.level_up_channel.map(db_to_id),
             ping_on_level_up: value.ping_on_level_up,
+            min_xp_per_message: value.min_xp_per_message,
+            max_xp_per_message: value.max_xp_per_message,
+            cooldown: value.message_cooldown,
         };
         Ok(gc)
     }
@@ -198,6 +207,9 @@ pub struct GuildConfig {
     pub level_up_message: Option<Interpolation>,
     pub level_up_channel: Option<Id<ChannelMarker>>,
     pub ping_on_level_up: Option<bool>,
+    pub min_xp_per_message: Option<i16>,
+    pub max_xp_per_message: Option<i16>,
+    pub cooldown: Option<i16>,
 }
 
 #[derive(Debug)]
@@ -212,6 +224,7 @@ pub fn sort_rewards(a: &RoleReward, b: &RoleReward) -> std::cmp::Ordering {
     a.requirement.cmp(&b.requirement)
 }
 
+// TODO: Have this show the value when unset as well.
 #[inline]
 const fn tribool(data: Option<bool>) -> &'static str {
     match data {
@@ -255,10 +268,27 @@ impl Display for GuildConfig {
                     .as_deref()
             )
         )?;
-        write!(
+        writeln!(
             f,
             "Level-up channel: {}",
             opt_mention_str(self.level_up_channel, '#')
+        )?;
+        writeln!(
+            f,
+            "Maximum XP per message: {}",
+            self.max_xp_per_message
+                .unwrap_or(DEFAULT_MAX_XP_PER_MESSAGE)
+        )?;
+        writeln!(
+            f,
+            "Minimum XP per message: {}",
+            self.min_xp_per_message
+                .unwrap_or(DEFAULT_MIN_XP_PER_MESSAGE)
+        )?;
+        write!(
+            f,
+            "Cooldown (seconds): {}",
+            self.cooldown.unwrap_or(DEFAULT_MESSAGE_COOLDOWN)
         )?;
         Ok(())
     }

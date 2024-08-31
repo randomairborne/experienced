@@ -114,7 +114,8 @@ impl XpdListenerInner {
         }
         let config = query_as!(
             RawGuildConfig,
-            "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up \
+            "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up,\
+             max_xp_per_message, min_xp_per_message, message_cooldown \
              FROM guild_configs WHERE id = $1",
             id_to_db(guild)
         )

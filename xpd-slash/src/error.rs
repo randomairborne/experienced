@@ -22,6 +22,8 @@ pub enum Error {
     Fmt(#[from] std::fmt::Error),
     #[error("Could not convert string to int")]
     StrToInt(#[from] std::num::ParseIntError),
+    #[error("Could not convert one type of int to another")]
+    InvalidInt(#[from] std::num::TryFromIntError),
     #[error("CSV error")]
     Csv(#[from] csv::Error),
     #[error("JSON error")]
@@ -32,6 +34,8 @@ pub enum Error {
     SimpleInterpolation(#[from] simpleinterpolation::Error),
     #[error("Discord API decoding error")]
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
+    #[error("Invalid guild config: {0}")]
+    InvalidGuildConfig(#[from] crate::config::GuildConfigErrorReport),
     #[error("Discord sent a command that is not known!")]
     UnrecognizedCommand,
     #[error("Discord did not send a user object for the command invoker when it was required!")]
