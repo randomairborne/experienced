@@ -125,11 +125,15 @@ impl XpdListenerInner {
                 .copied()
                 .collect();
 
+            trace!(base_roles = ?base_roles, "got roles we cannot change");
+
             let new_roles = if guild_config.one_at_a_time.is_some_and(|v| v) {
                 vec![rewards[reward_idx].id]
             } else {
                 rewards[..=reward_idx].iter().map(|v| v.id).collect()
             };
+
+            trace!(new_roles = ?new_roles, "got roles we are trying to control");
 
             let mut complete_role_set: Vec<Id<RoleMarker>> =
                 Vec::with_capacity(new_roles.len() + base_roles.len());
@@ -145,7 +149,7 @@ impl XpdListenerInner {
                 debug!(user = ?msg.author.id, old = ?member.roles, new = ?new_roles, "Updating roles for user");
                 self.http
                     .update_guild_member(guild_id, msg.author.id)
-                    .roles(&new_roles)
+                    .roles(&complete_role_set)
                     .await?;
             }
         };
