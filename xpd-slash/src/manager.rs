@@ -84,7 +84,7 @@ async fn modify_user_xp(
 ) -> Result<String, Error> {
     let mut txn = state.db.begin().await?;
     let xp = query!(
-        "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+        "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) \
          ON CONFLICT (id, guild) DO UPDATE SET xp = excluded.xp + $3 \
          RETURNING xp",
         id_to_db(user_id),
