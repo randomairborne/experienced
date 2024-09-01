@@ -244,7 +244,6 @@ async fn handle_event(
             }
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
-        Event::VoiceStateUpdate(vsu) => {vsu.0.}
         _ => {}
     };
     Ok(())

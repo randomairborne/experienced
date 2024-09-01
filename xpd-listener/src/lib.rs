@@ -172,7 +172,7 @@ impl XpdListenerInner {
 
 impl RequiredEvents for XpdListenerInner {
     fn required_intents() -> Intents {
-        Intents::GUILDS | Intents::GUILD_MESSAGES | Intents::GUILD_VOICE_STATES
+        Intents::GUILDS | Intents::GUILD_MESSAGES
     }
 
     fn required_events() -> EventTypeFlags {
@@ -190,7 +190,6 @@ impl RequiredEvents for XpdListenerInner {
             | EventTypeFlags::THREAD_LIST_SYNC
             | EventTypeFlags::THREAD_DELETE
             | EventTypeFlags::MESSAGE_CREATE
-            | EventTypeFlags::VOICE_STATE_UPDATE
     }
 }
 
