@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp = excluded.xp + $3 RETURNING xp",
+  "query": "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp = excluded.xp + $3 RETURNING xp",
   "describe": {
     "columns": [
       {
@@ -20,5 +20,5 @@
       false
     ]
   },
-  "hash": "a20b39cf148e451f403a81866548d0ae993b406aee9e1796e71a771fd4ef2703"
+  "hash": "c679053a3dadbd3c0ada276c916e7c618aa99602dc259112649b996280a9fad5"
 }
