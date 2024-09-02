@@ -60,6 +60,8 @@ pub struct XpdListenerInner {
     db: PgPool,
     messages: RwLock<SentMessages>,
     http: Arc<twilight_http::Client>,
+    // https://github.com/twilight-rs/twilight/tree/main/examples/cache-optimization/models
+    // TODO: Use custom cache models
     cache: InMemoryCache,
     configs: LockingMap<Id<GuildMarker>, Arc<GuildConfig>>,
     rewards: LockingMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
