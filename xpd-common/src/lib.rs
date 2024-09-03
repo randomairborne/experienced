@@ -224,7 +224,6 @@ pub fn sort_rewards(a: &RoleReward, b: &RoleReward) -> std::cmp::Ordering {
     a.requirement.cmp(&b.requirement)
 }
 
-// TODO: Have this show the value when unset as well.
 #[inline]
 const fn tribool(data: Option<bool>, default: Option<bool>) -> &'static str {
     match (data, default) {
