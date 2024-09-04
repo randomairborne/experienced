@@ -23,18 +23,18 @@ fn empty_response<T: std::fmt::Debug>(error: T) -> InteractionResponse {
     }
 }
 
-pub fn autocomplete(state: SlashState, data: CommandData) -> InteractionResponse {
+pub fn autocomplete(state: &SlashState, data: CommandData) -> InteractionResponse {
     autocomplete_inner(state, data).unwrap_or_else(empty_response)
 }
 
 pub fn autocomplete_inner(
-    state: SlashState,
+    state: &SlashState,
     data: CommandData,
 ) -> Result<InteractionResponse, Error> {
     debug!(options = ?data, "Got autocomplete");
     let choices = match data.name.as_str() {
-        "card" => card_autocomplete(data, &state)?.into_iter(),
-        "guild-card" => card_autocomplete(data, &state)?.into_iter(),
+        "card" => card_autocomplete(data, state)?.into_iter(),
+        "guild-card" => card_autocomplete(data, state)?.into_iter(),
         _ => return Err(Error::NoAutocompleteForCommand),
     };
 

@@ -48,7 +48,7 @@ pub async fn process(
         InteractionType::ApplicationCommandAutocomplete
     ) {
         return if let InteractionData::ApplicationCommand(data) = data {
-            Ok(crate::autocomplete::autocomplete(state, *data))
+            Ok(crate::autocomplete::autocomplete(&state, *data))
         } else {
             Err(Error::WrongInteractionData)
         };

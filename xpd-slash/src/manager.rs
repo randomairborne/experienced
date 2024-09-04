@@ -151,6 +151,7 @@ pub struct ImportUser {
     xp: i64,
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn export_level_data(
     state: SlashState,
     respondable: Respondable,
@@ -192,6 +193,7 @@ async fn background_data_export(
         .attachments([attachment]))
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn import_level_data(
     state: SlashState,
     respondable: Respondable,
