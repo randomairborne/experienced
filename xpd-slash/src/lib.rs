@@ -15,12 +15,13 @@ mod manage_card;
 mod manager;
 mod response;
 
-use std::{sync::Arc, time::Instant};
+use std::{future::Future, sync::Arc, time::Instant};
 
 pub use error::Error;
 pub use response::XpdSlashResponse;
 use sqlx::PgPool;
-use tokio::sync::mpsc::Sender;
+use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
+use tokio_util::task::TaskTracker;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     application::interaction::Interaction,
@@ -69,17 +70,21 @@ impl XpdSlash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
+        task_tracker: TaskTracker,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
         update_channels: UpdateChannels,
     ) -> Self {
         let svg = SvgState::new("xpd-card-resources").unwrap();
+        let rt = Handle::current();
         let state = SlashState {
             db,
             client,
             my_id: id,
             svg,
+            task_tracker,
             http,
+            rt,
             control_guild,
             owners: owners.into(),
             update_channels,
@@ -151,7 +156,9 @@ pub struct SlashState {
     pub db: PgPool,
     pub client: Arc<twilight_http::Client>,
     pub my_id: Id<ApplicationMarker>,
+    pub task_tracker: TaskTracker,
     pub svg: SvgState,
+    pub rt: Handle,
     pub http: reqwest::Client,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
@@ -231,5 +238,13 @@ impl SlashState {
         {
             error!(?source, "Failed to respond to interaction");
         }
+    }
+
+    pub fn spawn<F>(&self, item: F) -> JoinHandle<F::Output>
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        self.task_tracker.spawn_on(item, &self.rt)
     }
 }

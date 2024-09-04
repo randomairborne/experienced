@@ -21,6 +21,7 @@ xpd-rank-card = { path = "../xpd-rank-card", version = "0.6" }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 simpleinterpolation = { path = "../simpleinterpolation" }
 serde = { version = "1", features = ["derive"] }
+tokio-util = { version = "0.7", features = ["rt"] }
 twilight-interactions = "0.16.0-rc.1"
 twilight-validate = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"

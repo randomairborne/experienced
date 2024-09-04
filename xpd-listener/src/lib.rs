@@ -6,6 +6,7 @@ use std::{
 
 use ahash::AHashMap;
 use sqlx::{query, query_as, PgPool};
+use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
@@ -33,8 +34,13 @@ type LockingMap<K, V> = RwLock<HashMap<K, V>>;
 pub struct XpdListener(Arc<XpdListenerInner>);
 
 impl XpdListener {
-    pub fn new(db: PgPool, http: Arc<twilight_http::Client>, me: Id<ApplicationMarker>) -> Self {
-        Self(Arc::new(XpdListenerInner::new(db, http, me)))
+    pub fn new(
+        db: PgPool,
+        http: Arc<twilight_http::Client>,
+        tasks: TaskTracker,
+        me: Id<ApplicationMarker>,
+    ) -> Self {
+        Self(Arc::new(XpdListenerInner::new(db, http, tasks, me)))
     }
 }
 
@@ -63,6 +69,8 @@ pub struct XpdListenerInner {
     // https://github.com/twilight-rs/twilight/tree/main/examples/cache-optimization/models
     // TODO: Use custom cache models
     cache: InMemoryCache,
+    #[allow(unused)]
+    task_tracker: TaskTracker,
     configs: LockingMap<Id<GuildMarker>, Arc<GuildConfig>>,
     rewards: LockingMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
     current_application_id: Id<ApplicationMarker>,
@@ -72,6 +80,7 @@ impl XpdListenerInner {
     pub(crate) fn new(
         db: PgPool,
         http: Arc<twilight_http::Client>,
+        task_tracker: TaskTracker,
         current_application_id: Id<ApplicationMarker>,
     ) -> Self {
         let messages = RwLock::new(SentMessages::new());
@@ -94,6 +103,7 @@ impl XpdListenerInner {
             configs,
             rewards,
             cache,
+            task_tracker,
             current_application_id,
         }
     }

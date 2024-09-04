@@ -23,14 +23,11 @@ fn empty_response<T: std::fmt::Debug>(error: T) -> InteractionResponse {
     }
 }
 
-pub async fn autocomplete(state: SlashState, data: CommandData) -> InteractionResponse {
-    autocomplete_inner(state, data)
-        .await
-        .unwrap_or_else(empty_response)
+pub fn autocomplete(state: SlashState, data: CommandData) -> InteractionResponse {
+    autocomplete_inner(state, data).unwrap_or_else(empty_response)
 }
 
-#[allow(clippy::unused_async)]
-pub async fn autocomplete_inner(
+pub fn autocomplete_inner(
     state: SlashState,
     data: CommandData,
 ) -> Result<InteractionResponse, Error> {
