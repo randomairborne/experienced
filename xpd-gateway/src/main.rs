@@ -127,9 +127,10 @@ async fn main() {
     let shutdown = Arc::new(AtomicBool::new(false));
     for shard in shards {
         let client = client.clone();
-        task_tracker.spawn(event_loop(
+        task_tracker.clone().spawn(event_loop(
             shard,
             client,
+            task_tracker.clone(),
             shutdown.clone(),
             listener.clone(),
             slash.clone(),
@@ -169,6 +170,7 @@ async fn main() {
 async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
+    task_tracker: TaskTracker,
     shutdown: Arc<AtomicBool>,
     listener: XpdListener,
     slash: XpdSlash,
@@ -200,7 +202,7 @@ async fn event_loop(
         let http = http.clone();
         let slash = slash.clone();
         let db = db.clone();
-        tokio::spawn(async move {
+        task_tracker.spawn(async move {
             if let Err(error) = handle_event(event, http, listener, slash, db).await {
                 // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                 error!(?error, "Handler error");
