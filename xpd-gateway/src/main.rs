@@ -23,7 +23,7 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{id_to_db, RequiredEvents};
+use xpd_common::{id_to_db, RequiredDiscordResources};
 use xpd_listener::XpdListener;
 use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
 

@@ -12,6 +12,7 @@ categories = ["multimedia::images"]
 [dependencies]
 tokio = { version = "1", features = ["sync", "fs"] }
 serde = { version = "1", features = ["derive"] }
+xpd-common = { workspace = true }
 thiserror = "1"
 tracing = "0.1"
 resvg = "0.43"

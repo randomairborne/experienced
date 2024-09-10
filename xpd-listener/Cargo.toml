@@ -10,11 +10,11 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
-sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 twilight-cache-inmemory = { version = "0.16.0-rc.1", features = ["permission-calculator"] }
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 simpleinterpolation = { path = "../simpleinterpolation" }
 tokio-util = { version = "0.7", features = ["rt"] }
+xpd-database = { path = "../xpd-database" }
 xpd-common = { path = "../xpd-common" }
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"

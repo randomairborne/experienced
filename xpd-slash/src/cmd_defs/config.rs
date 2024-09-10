@@ -56,3 +56,10 @@ pub struct ConfigCommandReset;
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "get", desc = "Get your guild's configuration")]
 pub struct ConfigCommandGet;
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "perms_checkup",
+    desc = "See if Experienced has the proper permissions in your server"
+)]
+pub struct ConfigCommandPermsCheckup;

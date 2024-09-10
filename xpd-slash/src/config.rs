@@ -1,8 +1,11 @@
 use simpleinterpolation::Interpolation;
+use tokio::try_join;
 use twilight_model::{
     channel::{message::MessageFlags, ChannelType},
+    guild::Permissions,
     id::{marker::GuildMarker, Id},
 };
+use twilight_util::permission_calculator::PermissionCalculator;
 use xpd_common::{
     id_to_db, GuildConfig, RawGuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE,
     TEMPLATE_VARIABLES,
@@ -23,9 +26,10 @@ pub async fn process_config(
 ) -> Result<XpdSlashResponse, Error> {
     match command {
         ConfigCommand::Reset(_) => reset_config(state, guild).await,
-        ConfigCommand::Get(_) => get_config(state, guild).await,
+        ConfigCommand::Get(_) => get_config(state, guild).await.map(|v| v.to_string()),
         ConfigCommand::Rewards(r) => process_rewards_config(state, guild, r).await,
         ConfigCommand::Levels(l) => process_levels_config(state, guild, l).await,
+        ConfigCommand::PermsCheckup(_) => process_perm_checkup(state, guild).await,
     }
     .map(|s| XpdSlashResponse::with_embed_text(s).flags(MessageFlags::EPHEMERAL))
 }
@@ -132,7 +136,7 @@ async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<St
     Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
 }
 
-async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
+async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<GuildConfig, Error> {
     let config: GuildConfig = query_as!(
         RawGuildConfig,
         "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, \
@@ -140,10 +144,9 @@ async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<Stri
         WHERE id = $1",
         id_to_db(guild_id),
     )
-    .fetch_optional(&state.db)
-    .await?
-    .map_or_else(|| Ok(GuildConfig::default()), TryInto::try_into)?;
-    Ok(config.to_string())
+        .fetch_optional(&state.db)
+        .await?.map_or_else(|| Ok(GuildConfig::default()), TryInto::try_into)?;
+    Ok(config)
 }
 
 fn validate_config(config: &GuildConfig) -> Result<(), GuildConfigErrorReport> {
@@ -166,4 +169,22 @@ fn validate_config(config: &GuildConfig) -> Result<(), GuildConfigErrorReport> {
 pub enum GuildConfigErrorReport {
     #[error("The selected minimum XP value of {min} is more than the selected maximum of {max}")]
     MinXpIsMoreThanMax { min: i16, max: i16 },
+}
+
+async fn process_perm_checkup(
+    state: SlashState,
+    guild_id: Id<GuildMarker>,
+) -> Result<String, Error> {
+    let config = get_config(state, guild_id).await?;
+    let can_msg_in_level_up = if let Some(level_up) = config.level_up_channel {
+        let perms = state
+            .cache
+            .permissions()
+            .in_channel(state.my_id.cast(), level_up)?;
+        Some(perms.contains(Permissions::SEND_MESSAGES))
+    } else {
+        None
+    };
+    let can_assign_roles = config;
+    Ok("".to_string())
 }

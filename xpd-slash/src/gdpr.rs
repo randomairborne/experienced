@@ -8,6 +8,7 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::{db_to_id, id_to_db, MemberDisplayInfo};
+use xpd_database::Database;
 
 use crate::{
     cmd_defs::{gdpr::GdprCommandDelete, GdprCommand},
@@ -31,24 +32,16 @@ async fn delete(
     invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
     if cmd.username != invoker.name {
-        return Ok(XpdSlashResponse::with_embed_text(
+        Ok(XpdSlashResponse::with_embed_text(
             "Please make sure the username you entered is correct!",
-        ));
+        ))
+    } else {
+        state.query_clear_all_user_data(invoker.id).await?;
+        Ok(
+            XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
+                .ephemeral(true),
+        )
     }
-    let levels =
-        query!("DELETE FROM levels WHERE id = $1", id_to_db(invoker.id)).execute(&state.db);
-    let custom_card = query!(
-        "DELETE FROM custom_card WHERE id = $1",
-        id_to_db(invoker.id)
-    )
-    .execute(&state.db);
-    let (levels, custom_card) = join!(levels, custom_card);
-    levels?;
-    custom_card?;
-    Ok(
-        XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
-            .ephemeral(true),
-    )
 }
 
 async fn download(
@@ -56,16 +49,10 @@ async fn download(
     invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
     let invoker = Arc::new(invoker);
-    let levels = query!(
-        "SELECT guild, xp FROM levels WHERE id = $1",
-        id_to_db(invoker.id)
-    )
-    .fetch_all(&state.db);
+    let levels = state.query_get_all_levels(invoker.id).await?;
+
     let invoker_id = &[invoker.id.cast()];
-    let (levels, custom_card) = try_join!(
-        async { levels.await.map_err(Into::into) },
-        crate::levels::get_customizations(state.clone(), invoker_id)
-    )?;
+    let custom_card = state.query_card_customizations(invoker_id);
 
     let levels: Vec<UserXpArchiveEntry> = levels
         .into_iter()

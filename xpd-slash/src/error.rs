@@ -14,7 +14,9 @@ pub enum Error {
     ),
     #[error("SVG renderer encountered an error!")]
     ImageGenerator(#[from] xpd_rank_card::Error),
-    #[error("SQLx encountered an error")]
+    #[error("Database encountered an error")]
+    Database(#[from] xpd_database::Error),
+    #[error("Manual SQLx use encountered an error")]
     Sqlx(#[from] sqlx::Error),
     #[error("Command had wrong number of arguments!")]
     WrongArgumentCount(&'static str),
@@ -36,6 +38,8 @@ pub enum Error {
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Invalid guild config: {0}")]
     InvalidGuildConfig(#[from] crate::config::GuildConfigErrorReport),
+    #[error("Channel permission fetch error: {0}")]
+    CacheChannel(#[from] twilight_cache_inmemory::permission::ChannelError),
     #[error("Discord sent a command that is not known!")]
     UnrecognizedCommand,
     #[error("Discord did not send a user object for the command invoker when it was required!")]

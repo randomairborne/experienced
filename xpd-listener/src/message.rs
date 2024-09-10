@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use rand::Rng;
-use sqlx::query;
 use twilight_cache_inmemory::CacheableRole;
 use twilight_model::{
     channel::message::AllowedMentions,
@@ -13,9 +12,10 @@ use twilight_model::{
     },
 };
 use xpd_common::{
-    id_to_db, snowflake_to_timestamp, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
-    DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE,
+    snowflake_to_timestamp, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN,
+    DEFAULT_MIN_XP_PER_MESSAGE,
 };
+use xpd_database::Database;
 
 use crate::{Error, XpdListenerInner};
 
@@ -69,20 +69,10 @@ impl XpdListenerInner {
             rand::thread_rng().gen_range(config_min_xp_per_msg..=config_max_xp_per_msg)
         }
         .into();
-        let xp_record = query!(
-            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
-                ON CONFLICT (id, guild) \
-                DO UPDATE SET xp=levels.xp+excluded.xp \
-                RETURNING xp",
-            id_to_db(msg.author.id),
-            xp_added,
-            id_to_db(guild_id)
-        )
-        .fetch_one(&self.db)
-        .await?;
 
-        let xp = u64::try_from(xp_record.xp).unwrap_or(0);
-        let old_xp = u64::try_from(xp_record.xp - xp_added).unwrap_or(0);
+        let xp_i64 = self.query_add_xp(msg.author.id, guild_id, xp_added).await?;
+        let xp = u64::try_from(xp_i64).unwrap_or(0);
+        let old_xp = u64::try_from(xp_i64 - xp_added).unwrap_or(0);
 
         self.messages
             .write()?

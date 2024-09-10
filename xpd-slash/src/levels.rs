@@ -11,6 +11,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{id_to_db, DisplayName, MemberDisplayInfo};
+use xpd_database::Database;
 use xpd_rank_card::customizations::{Color, Customizations};
 
 use crate::{Error, SlashState, XpdSlashResponse};
@@ -134,17 +135,7 @@ pub async fn get_customizations(
     state: SlashState,
     ids: &[Id<GenericMarker>],
 ) -> Result<Customizations, Error> {
-    let mut customizations = None;
-    for id in ids {
-        if let Some(custom_params) =
-            query!("SELECT * FROM custom_card WHERE id = $1", id_to_db(*id))
-                .fetch_optional(&state.db)
-                .await?
-        {
-            customizations = Some(custom_params);
-            break;
-        }
-    }
+    let customizations = state.query_card_customizations(ids).await?;
     let Some(customizations) = customizations else {
         return Ok(Customizations::default());
     };

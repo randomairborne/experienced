@@ -7,12 +7,13 @@ use std::{
 };
 
 use simpleinterpolation::Interpolation;
+use twilight_cache_inmemory::ResourceType;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::Intents,
     guild::Member,
     id::{
-        marker::{ChannelMarker, RoleMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
         Id,
     },
     user::User,
@@ -119,87 +120,10 @@ pub fn get_var(key: &str) -> String {
     std::env::var(key).unwrap_or_else(|e| panic!("Expected {key} in environment: {e}"))
 }
 
-pub trait ReinterpretPrimitiveBits<O> {
-    fn reinterpret_bits(&self) -> O;
-}
-
-macro_rules! impl_primitive_reinterpret {
-    ($from:ty, $to:ty) => {
-        impl ReinterpretPrimitiveBits<$to> for $from {
-            #[allow(clippy::cast_sign_loss, clippy::cast_possible_wrap)]
-            fn reinterpret_bits(&self) -> $to {
-                *self as $to
-            }
-        }
-    };
-}
-
-impl_primitive_reinterpret!(u8, i8);
-impl_primitive_reinterpret!(u16, i16);
-impl_primitive_reinterpret!(u32, i32);
-impl_primitive_reinterpret!(u64, i64);
-impl_primitive_reinterpret!(u128, i128);
-impl_primitive_reinterpret!(i8, u8);
-impl_primitive_reinterpret!(i16, u16);
-impl_primitive_reinterpret!(i32, u32);
-impl_primitive_reinterpret!(i64, u64);
-impl_primitive_reinterpret!(i128, u128);
-
-/// Fetches the raw ID data from Twilight and returns it as an i64, so it can be stored in Postgres
-/// easily.
-/// Essentially a no-op.
-#[must_use]
-#[inline]
-pub fn id_to_db<T>(id: Id<T>) -> i64 {
-    id.get().reinterpret_bits()
-}
-
-/// Create a new checked twilight id from an i64. Only get this from the DB!
-/// Essentially a no-op.
-#[inline]
-#[must_use]
-pub fn db_to_id<T>(db: i64) -> Id<T> {
-    Id::new(db.reinterpret_bits())
-}
-
 pub const TEMPLATE_VARIABLES: [&str; 2] = ["user_mention", "level"];
 pub const DEFAULT_MAX_XP_PER_MESSAGE: i16 = 25;
 pub const DEFAULT_MIN_XP_PER_MESSAGE: i16 = 15;
 pub const DEFAULT_MESSAGE_COOLDOWN: i16 = 60;
-
-#[derive(Clone, Default)]
-pub struct RawGuildConfig {
-    pub one_at_a_time: Option<bool>,
-    pub level_up_message: Option<String>,
-    pub level_up_channel: Option<i64>,
-    pub ping_on_level_up: Option<bool>,
-    pub min_xp_per_message: Option<i16>,
-    pub max_xp_per_message: Option<i16>,
-    pub message_cooldown: Option<i16>,
-}
-
-impl TryFrom<RawGuildConfig> for GuildConfig {
-    type Error = simpleinterpolation::Error;
-
-    fn try_from(value: RawGuildConfig) -> Result<Self, Self::Error> {
-        let level_up_message = if let Some(str) = value.level_up_message {
-            Some(Interpolation::new(str)?)
-        } else {
-            None
-        };
-
-        let gc = Self {
-            one_at_a_time: value.one_at_a_time,
-            level_up_message,
-            level_up_channel: value.level_up_channel.map(db_to_id),
-            ping_on_level_up: value.ping_on_level_up,
-            min_xp_per_message: value.min_xp_per_message,
-            max_xp_per_message: value.max_xp_per_message,
-            cooldown: value.message_cooldown,
-        };
-        Ok(gc)
-    }
-}
 
 #[derive(Default, Debug)]
 pub struct GuildConfig {
@@ -210,6 +134,13 @@ pub struct GuildConfig {
     pub min_xp_per_message: Option<i16>,
     pub max_xp_per_message: Option<i16>,
     pub cooldown: Option<i16>,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct UserStatus {
+    pub id: Id<UserMarker>,
+    pub guild: Id<GuildMarker>,
+    pub xp: i64,
 }
 
 #[derive(Debug)]
@@ -293,7 +224,8 @@ impl Display for GuildConfig {
     }
 }
 
-pub trait RequiredEvents {
+pub trait RequiredDiscordResources {
     fn required_intents() -> Intents;
     fn required_events() -> EventTypeFlags;
+    fn required_cache_types() -> ResourceType;
 }

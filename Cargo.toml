@@ -7,6 +7,17 @@ members = [
     "xpd-gateway",
     "xpd-common",
     "xpd-rank-card",
+    "xpd-database",
 ]
 resolver = "2"
 default-members = ["xpd-gateway"]
+
+[workspace.dependencies]
+mee6 = { path = "mee6" }
+simpleinterpolation = { path = "simpleinterpolation" }
+xpd-slash = { path = "xpd-slash" }
+xpd-listener = { path = "xpd-listener" }
+xpd-gateway = { path = "xpd-gateway" }
+xpd-common = { path = "xpd-common" }
+xpd-rank-card = { path = "xpd-rank-card" }
+xpd-database = { path = "xpd-database" }

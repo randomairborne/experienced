@@ -101,6 +101,8 @@ pub enum ConfigCommand {
     Rewards(config::ConfigCommandRewards),
     #[command(name = "levels")]
     Levels(config::ConfigCommandLevels),
+    #[command(name = "perms_checkup")]
+    PermsCheckup(config::ConfigCommandPermsCheckup),
 }
 
 impl ConfigCommand {

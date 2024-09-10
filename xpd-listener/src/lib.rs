@@ -5,7 +5,6 @@ use std::{
 };
 
 use ahash::AHashMap;
-use sqlx::{query, query_as, PgPool};
 use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
@@ -16,7 +15,8 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{db_to_id, id_to_db, GuildConfig, RawGuildConfig, RequiredEvents, RoleReward};
+use xpd_common::{GuildConfig, RequiredDiscordResources, RoleReward};
+use xpd_database::{Database, PgPool};
 
 mod message;
 
@@ -37,10 +37,11 @@ impl XpdListener {
     pub fn new(
         db: PgPool,
         http: Arc<twilight_http::Client>,
+        cache: Arc<InMemoryCache>,
         tasks: TaskTracker,
         me: Id<ApplicationMarker>,
     ) -> Self {
-        Self(Arc::new(XpdListenerInner::new(db, http, tasks, me)))
+        Self(Arc::new(XpdListenerInner::new(db, http, cache, tasks, me)))
     }
 }
 
@@ -52,7 +53,7 @@ impl Deref for XpdListener {
     }
 }
 
-impl RequiredEvents for XpdListener {
+impl RequiredDiscordResources for XpdListener {
     fn required_intents() -> Intents {
         XpdListenerInner::required_intents()
     }
@@ -60,15 +61,17 @@ impl RequiredEvents for XpdListener {
     fn required_events() -> EventTypeFlags {
         XpdListenerInner::required_events()
     }
+
+    fn required_cache_types() -> ResourceType {
+        XpdListenerInner::required_cache_types()
+    }
 }
 
 pub struct XpdListenerInner {
     db: PgPool,
     messages: RwLock<SentMessages>,
     http: Arc<twilight_http::Client>,
-    // https://github.com/twilight-rs/twilight/tree/main/examples/cache-optimization/models
-    // TODO: Use custom cache models
-    cache: InMemoryCache,
+    cache: Arc<InMemoryCache>,
     #[allow(unused)]
     task_tracker: TaskTracker,
     configs: LockingMap<Id<GuildMarker>, Arc<GuildConfig>>,
@@ -76,25 +79,23 @@ pub struct XpdListenerInner {
     current_application_id: Id<ApplicationMarker>,
 }
 
+impl Database for XpdListenerInner {
+    fn db(&self) -> &PgPool {
+        &self.db
+    }
+}
+
 impl XpdListenerInner {
     pub(crate) fn new(
         db: PgPool,
         http: Arc<twilight_http::Client>,
+        cache: Arc<InMemoryCache>,
         task_tracker: TaskTracker,
         current_application_id: Id<ApplicationMarker>,
     ) -> Self {
         let messages = RwLock::new(SentMessages::new());
         let configs = RwLock::new(HashMap::new());
         let rewards = RwLock::new(HashMap::new());
-        let resource_types = ResourceType::USER_CURRENT
-            | ResourceType::ROLE
-            | ResourceType::GUILD
-            | ResourceType::CHANNEL
-            | ResourceType::MEMBER;
-
-        let cache = InMemoryCache::builder()
-            .resource_types(resource_types)
-            .build();
 
         Self {
             db,
@@ -124,24 +125,14 @@ impl XpdListenerInner {
         if let Some(guild_config) = self.configs.read()?.get(&guild) {
             return Ok(guild_config.clone());
         }
-        let config = query_as!(
-            RawGuildConfig,
-            "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up,\
-             max_xp_per_message, min_xp_per_message, message_cooldown \
-             FROM guild_configs WHERE id = $1",
-            id_to_db(guild)
-        )
-        .fetch_optional(&self.db)
-        .await?
-        .unwrap_or_else(RawGuildConfig::default);
-        let config: GuildConfig = config.try_into()?;
+        let config = self.query_guild_config(guild).await?.unwrap_or_default();
         let config = Arc::new(config);
         self.configs.write()?.insert(guild, config.clone());
         Ok(config)
     }
 
     pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
-        let mut new_rewards = self.get_guild_rewards_uncached(guild).await?;
+        let mut new_rewards = self.query_guild_rewards(guild).await?;
         new_rewards.sort_by(xpd_common::sort_rewards);
         self.rewards.write()?.insert(guild, Arc::new(new_rewards));
         Ok(())
@@ -154,35 +145,16 @@ impl XpdListenerInner {
         if let Some(rewards) = self.rewards.read()?.get(&guild_id) {
             return Ok(rewards.clone());
         }
-        let mut rewards = self.get_guild_rewards_uncached(guild_id).await?;
+        let mut rewards = self.query_guild_rewards(guild_id).await?;
         rewards.sort_by(xpd_common::sort_rewards);
 
         let new_copy = Arc::new(rewards);
         self.rewards.write()?.insert(guild_id, new_copy.clone());
         Ok(new_copy)
     }
-
-    async fn get_guild_rewards_uncached(
-        &self,
-        guild_id: Id<GuildMarker>,
-    ) -> Result<Vec<RoleReward>, Error> {
-        let rewards: Vec<RoleReward> = query!(
-            "SELECT id, requirement FROM role_rewards WHERE guild = $1",
-            id_to_db(guild_id),
-        )
-        .fetch_all(&self.db)
-        .await?
-        .into_iter()
-        .map(|row| RoleReward {
-            id: db_to_id(row.id),
-            requirement: row.requirement,
-        })
-        .collect();
-        Ok(rewards)
-    }
 }
 
-impl RequiredEvents for XpdListenerInner {
+impl RequiredDiscordResources for XpdListenerInner {
     fn required_intents() -> Intents {
         Intents::GUILDS | Intents::GUILD_MESSAGES
     }
@@ -203,14 +175,22 @@ impl RequiredEvents for XpdListenerInner {
             | EventTypeFlags::THREAD_DELETE
             | EventTypeFlags::MESSAGE_CREATE
     }
+
+    fn required_cache_types() -> ResourceType {
+        ResourceType::USER_CURRENT
+            | ResourceType::ROLE
+            | ResourceType::GUILD
+            | ResourceType::CHANNEL
+            | ResourceType::MEMBER
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("SQL error")]
-    Sqlx(#[from] sqlx::Error),
     #[error("Discord error")]
     Twilight(#[from] twilight_http::Error),
+    #[error("database fetch fail: {0}")]
+    DatabaseAbstraction(#[from] xpd_database::Error),
     #[error("simpleinterpolation failed")]
     CouldNotInterpolate(#[from] simpleinterpolation::Error),
     #[error("Unknown permissions for role")]

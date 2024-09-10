@@ -22,6 +22,7 @@ pub use response::XpdSlashResponse;
 use sqlx::PgPool;
 use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
 use tokio_util::task::TaskTracker;
+use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     application::interaction::Interaction,
@@ -34,7 +35,8 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
-use xpd_common::{id_to_db, GuildConfig, RequiredEvents};
+use xpd_common::{id_to_db, GuildConfig, RequiredDiscordResources};
+use xpd_database::Database;
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -70,6 +72,7 @@ impl XpdSlash {
         client: Arc<twilight_http::Client>,
         id: Id<ApplicationMarker>,
         db: PgPool,
+        cache: Arc<InMemoryCache>,
         task_tracker: TaskTracker,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
@@ -85,6 +88,7 @@ impl XpdSlash {
             task_tracker,
             http,
             rt,
+            cache,
             control_guild,
             owners: owners.into(),
             update_channels,
@@ -139,13 +143,21 @@ impl XpdSlash {
     }
 }
 
-impl RequiredEvents for XpdSlash {
+impl RequiredDiscordResources for XpdSlash {
     fn required_intents() -> Intents {
         Intents::empty()
     }
 
     fn required_events() -> EventTypeFlags {
         EventTypeFlags::INTERACTION_CREATE
+    }
+
+    fn required_cache_types() -> ResourceType {
+        ResourceType::ROLE
+            | ResourceType::CHANNEL
+            | ResourceType::USER_CURRENT
+            | ResourceType::GUILD
+            | ResourceType::MEMBER
     }
 }
 
@@ -157,12 +169,19 @@ pub struct SlashState {
     pub client: Arc<twilight_http::Client>,
     pub my_id: Id<ApplicationMarker>,
     pub task_tracker: TaskTracker,
+    pub cache: Arc<InMemoryCache>,
     pub svg: SvgState,
     pub rt: Handle,
     pub http: reqwest::Client,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
     pub update_channels: UpdateChannels,
+}
+
+impl Database for SlashState {
+    fn db(&self) -> &PgPool {
+        &self.db
+    }
 }
 
 impl SlashState {
@@ -196,24 +215,11 @@ impl SlashState {
         id: Id<UserMarker>,
         guild_id: Id<GuildMarker>,
     ) -> Result<UserStats, Error> {
-        // Select current XP from the database, return 0 if there is no row
-        let xp = query!(
-            "SELECT xp FROM levels WHERE id = $1 AND guild = $2",
-            id_to_db(id),
-            id_to_db(guild_id)
-        )
-        .fetch_optional(&self.db)
-        .await?
-        .map_or(0, |v| v.xp);
-        let rank = query!(
-            "SELECT COUNT(*) as count FROM levels WHERE xp > $1 AND guild = $2",
-            xp,
-            id_to_db(guild_id)
-        )
-        .fetch_one(&self.db)
-        .await?
-        .count
-        .unwrap_or(0)
+        let xp = self.query_user_xp(guild_id, id).await?.unwrap_or(0);
+        let rank = self
+            .query_count_with_higher_xp(guild_id, xp)
+            .await?
+            .unwrap_or(0)
             + 1;
         Ok(UserStats { xp, rank })
     }
