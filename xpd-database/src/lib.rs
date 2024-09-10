@@ -158,6 +158,59 @@ pub trait Database {
         .await?;
         Ok(data)
     }
+
+    async fn query_delete_card_customizations(
+        &self,
+        target: Id<GenericMarker>,
+    ) -> Result<(), Error> {
+        query!("DELETE FROM custom_card WHERE id = $1", id_to_db(target))
+            .execute(self.db())
+            .await?;
+        Ok(())
+    }
+
+    async fn query_delete_levels_user(&self, id: Id<UserMarker>) -> Result<u64, Error> {
+        let rows = query!("DELETE FROM levels WHERE id = $1", id_to_db(id))
+            .execute(self.db())
+            .await?
+            .rows_affected();
+        Ok(rows)
+    }
+
+    async fn query_delete_levels_guild(&self, id: Id<GuildMarker>) -> Result<u64, Error> {
+        let rows = query!("DELETE FROM levels WHERE guild = $1", id_to_db(id))
+            .execute(self.db())
+            .await?
+            .rows_affected();
+        Ok(rows)
+    }
+
+    async fn query_ban_guild(
+        &self,
+        id: Id<GuildMarker>,
+        duration: Option<f64>,
+    ) -> Result<(), Error> {
+        query!(
+            "INSERT INTO guild_bans (id, expires) \
+            VALUES ($1, \
+            CASE WHEN $3 \
+            THEN NULL \
+            ELSE NOW() + interval '1' day * $2 END)",
+            id_to_db(id),
+            duration,
+            duration.is_none()
+        )
+        .execute(self.db())
+        .await?;
+        Ok(())
+    }
+
+    async fn query_pardon_guild(&self, id: Id<GuildMarker>) -> Result<(), Error> {
+        query!("DELETE FROM guild_bans WHERE id = $1", id_to_db(id))
+            .execute(self.db())
+            .await?;
+        Ok(())
+    }
 }
 
 pub struct RawCustomizations {

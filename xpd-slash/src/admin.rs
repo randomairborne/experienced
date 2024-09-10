@@ -3,7 +3,7 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::id_to_db;
+use xpd_database::Database;
 
 use crate::{
     cmd_defs::{
@@ -49,18 +49,17 @@ async fn leave_guild(state: SlashState, leave: AdminCommandLeave) -> Result<Stri
 
 async fn reset_guild(state: SlashState, leave: AdminCommandResetGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = leave.guild.parse()?;
-    query!("DELETE FROM levels WHERE guild = $1", id_to_db(guild))
-        .execute(&state.db)
-        .await?;
-    Ok(format!("Reset levels for guild {guild}"))
+    let rows = state.query_delete_levels_guild(guild).await?;
+    Ok(format!(
+        "Reset levels for guild {guild}. It had {rows} users worth of data."
+    ))
 }
 
 async fn reset_user(state: SlashState, leave: AdminCommandResetUser) -> Result<String, Error> {
-    let guild_db = id_to_db(leave.user);
-    query!("DELETE FROM levels WHERE id = $1", guild_db)
-        .execute(&state.db)
-        .await?;
-    Ok(format!("Reset global levels for <@{}>", leave.user))
+    let rows = state.query_delete_levels_user(leave.user).await?;
+    Ok(format!(
+        "Reset your levels. They had level data in {rows} guilds."
+    ))
 }
 
 async fn set_nick(state: SlashState, nick: AdminCommandSetNick) -> Result<String, Error> {
@@ -78,25 +77,12 @@ async fn set_nick(state: SlashState, nick: AdminCommandSetNick) -> Result<String
 
 async fn ban_guild(state: SlashState, ban: AdminCommandBanGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = ban.guild.parse()?;
-    query!(
-        "INSERT INTO guild_bans (id, expires) \
-            VALUES ($1, \
-            CASE WHEN $3 \
-            THEN NULL \
-            ELSE NOW() + interval '1' day * $2 END)",
-        id_to_db(guild),
-        ban.duration,
-        ban.duration.is_none()
-    )
-    .execute(&state.db)
-    .await?;
+    state.query_ban_guild(guild, ban.duration).await?;
     Ok(format!("Banned guild {guild}"))
 }
 
 async fn pardon_guild(state: SlashState, pardon: AdminCommandPardonGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = pardon.guild.parse()?;
-    query!("DELETE FROM guild_bans WHERE id = $1", id_to_db(guild))
-        .execute(&state.db)
-        .await?;
+    state.query_pardon_guild(guild).await?;
     Ok(format!("Pardoned guild {guild}"))
 }
