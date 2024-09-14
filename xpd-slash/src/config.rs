@@ -77,7 +77,7 @@ async fn process_levels_config(
     let max_xp_per_message = safecast_to_i16(options.max_xp_per_message)?;
     let min_xp_per_message = safecast_to_i16(options.min_xp_per_message)?;
     let message_cooldown = safecast_to_i16(options.message_cooldown)?;
-    
+
     let new_cfg = UpdateGuildConfig {
         level_up_message: options.level_up_message,
         level_up_channel: options.level_up_channel.map(|v| v.id),
@@ -87,7 +87,9 @@ async fn process_levels_config(
         message_cooldown,
         one_at_a_time: None,
     };
-    let config = state.query_update_guild_config(guild_id, new_cfg, validate_config).await?;
+    let config = state
+        .query_update_guild_config(guild_id, new_cfg, validate_config)
+        .await?;
     let msg = config.to_string();
     state.update_config(guild_id, config).await;
 
