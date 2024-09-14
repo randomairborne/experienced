@@ -10,7 +10,7 @@ use twilight_model::{
     util::ImageHash,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{id_to_db, DisplayName, MemberDisplayInfo};
+use xpd_common::{DisplayName, MemberDisplayInfo};
 use xpd_database::Database;
 use xpd_rank_card::customizations::{Color, Customizations};
 
