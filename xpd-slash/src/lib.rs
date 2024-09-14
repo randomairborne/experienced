@@ -42,9 +42,6 @@ use xpd_rank_card::SvgState;
 #[macro_use]
 extern crate tracing;
 
-#[macro_use]
-extern crate sqlx;
-
 pub type UpdateSender<T> = Sender<(Id<GuildMarker>, T)>;
 
 #[derive(Clone)]
