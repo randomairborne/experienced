@@ -22,6 +22,7 @@ use twilight_util::builder::{
     InteractionResponseDataBuilder,
 };
 use xpd_common::id_to_db;
+use xpd_database::Database;
 
 use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
 
@@ -50,8 +51,8 @@ const USERS_PER_PAGE_USIZE: usize = 10;
 const USERS_PER_PAGE: i64 = USERS_PER_PAGE_USIZE as i64;
 
 async fn gen_leaderboard(
+    state: &SlashState,
     guild_id: Id<GuildMarker>,
-    db: sqlx::PgPool,
     zpage: i64,
     show_off: Option<bool>,
 ) -> Result<InteractionResponseData, Error> {
@@ -59,15 +60,9 @@ async fn gen_leaderboard(
         return Err(Error::PageDoesNotExist);
     }
     let is_ephemeral = !show_off.is_some_and(|v| v);
-
-    let users = query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
-        id_to_db(guild_id),
-        USERS_PER_PAGE + 1,
-        zpage * USERS_PER_PAGE
-    )
-    .fetch_all(&db)
-    .await?;
+    let users = state
+        .query_get_leaderboard_page(guild_id, USERS_PER_PAGE + 1, zpage * USERS_PER_PAGE)
+        .await?;
     if users.is_empty() {
         return Err(Error::NoUsersForPage);
     }

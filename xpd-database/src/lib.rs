@@ -309,11 +309,37 @@ pub trait Database {
         txn.commit().await?;
         Ok(config)
     }
+
     async fn query_delete_guild_config(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
         query!("DELETE FROM guild_configs WHERE id = $1", id_to_db(guild))
             .execute(self.db())
             .await?;
         Ok(())
+    }
+
+    async fn query_get_leaderboard_page(
+        &self,
+        guild: Id<GuildMarker>,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<UserStatus>, Error> {
+        let mut users = query!(
+            "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
+            id_to_db(guild),
+            limit,
+            offset
+        )
+        .fetch(self.db());
+        let mut output = Vec::with_capacity(limit.try_into().unwrap_or(10));
+        while let Some(rec) = users.next().await.transpose()? {
+            let status = UserStatus {
+                id: db_to_id(rec.id),
+                guild,
+                xp: rec.xp,
+            };
+            output.push(status);
+        }
+        Ok(output)
     }
 }
 
