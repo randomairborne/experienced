@@ -13,8 +13,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{db_to_id, id_to_db};
-
+use xpd_database::Database;
 use crate::{
     cmd_defs::{
         manage::{
@@ -394,8 +393,6 @@ async fn reset_guild_xp(
     if confirmation != crate::cmd_defs::manage::CONFIRMATION_STRING {
         return Ok("Confirmation string did not match.".to_string());
     }
-    query!("DELETE FROM levels WHERE guild = $1", id_to_db(guild_id))
-        .execute(&state.db)
-        .await?;
+    state.query_delete_levels_guild(guild_id).await?;
     Ok("Done. Thank you for using Experienced.".to_string())
 }
