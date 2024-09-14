@@ -14,6 +14,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_database::Database;
+
 use crate::{
     cmd_defs::{
         manage::{
