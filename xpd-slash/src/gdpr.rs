@@ -8,10 +8,12 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::{db_to_id, id_to_db, MemberDisplayInfo};
-use xpd_database::Database;
+use xpd_database::{Database, RawCustomizations};
+use xpd_rank_card::customizations::Customizations;
 
 use crate::{
     cmd_defs::{gdpr::GdprCommandDelete, GdprCommand},
+    levels::get_customizations,
     Error, SlashState, XpdSlashResponse,
 };
 
@@ -52,7 +54,7 @@ async fn download(
     let levels = state.query_get_all_levels(invoker.id).await?;
 
     let invoker_id = &[invoker.id.cast()];
-    let custom_card = state.query_card_customizations(invoker_id);
+    let custom_card = get_customizations(&state, invoker_id).await?;
 
     let levels: Vec<UserXpArchiveEntry> = levels
         .into_iter()
@@ -93,11 +95,8 @@ struct UserXpArchiveEntry {
 }
 
 impl UserXpArchiveEntry {
-    fn from_record(guild: i64, xp: i64) -> Self {
-        Self {
-            guild: db_to_id(guild),
-            xp,
-        }
+    fn from_record(guild: Id<GuildMarker>, xp: i64) -> Self {
+        Self { guild, xp }
     }
 }
 

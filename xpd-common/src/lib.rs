@@ -2,7 +2,7 @@
 
 use std::{
     borrow::Cow,
-    fmt::{Display, Formatter},
+    fmt::{Debug, Display, Formatter},
     str::FromStr,
 };
 

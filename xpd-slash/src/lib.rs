@@ -19,7 +19,7 @@ use std::{future::Future, sync::Arc, time::Instant};
 
 pub use error::Error;
 pub use response::XpdSlashResponse;
-use sqlx::PgPool;
+use sqlx::{pool::PoolConnection, PgConnection, PgPool, Postgres};
 use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
 use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
@@ -35,7 +35,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
-use xpd_common::{id_to_db, GuildConfig, RequiredDiscordResources};
+use xpd_common::{GuildConfig, RequiredDiscordResources};
 use xpd_database::Database;
 use xpd_rank_card::SvgState;
 

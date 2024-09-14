@@ -85,9 +85,9 @@ async fn get_customizations_fields(
     guild_id: Option<Id<GuildMarker>>,
 ) -> Result<Customizations, Error> {
     if let Some(guild_id) = guild_id {
-        get_customizations(state.clone(), &[user_id.cast(), guild_id.cast()]).await
+        get_customizations(&state, &[user_id.cast(), guild_id.cast()]).await
     } else {
-        get_customizations(state.clone(), &[user_id.cast()]).await
+        get_customizations(&state, &[user_id.cast()]).await
     }
 }
 
@@ -132,7 +132,7 @@ pub async fn gen_card(
 }
 
 pub async fn get_customizations(
-    state: SlashState,
+    state: &SlashState,
     ids: &[Id<GenericMarker>],
 ) -> Result<Customizations, Error> {
     let customizations = state.query_card_customizations(ids).await?;

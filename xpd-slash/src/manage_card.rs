@@ -4,7 +4,8 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
-use xpd_common::{id_to_db, MemberDisplayInfo};
+use xpd_common::MemberDisplayInfo;
+use xpd_database::{CardUpdate, Database};
 use xpd_rank_card::ConfigItem;
 
 use crate::{
@@ -117,52 +118,23 @@ async fn process_edit(
     let card_layout = process_edit_helper(&items.cards, edit.card_layout, Error::UnknownCard)?;
     let font = process_edit_helper(&items.fonts, edit.font, Error::UnknownFont)?;
 
-    query!(
-        "INSERT INTO custom_card (
-            username,
-            rank,
-            level,
-            border,
-            background,
-            progress_foreground,
-            progress_background,
-            foreground_xp_count,
-            background_xp_count,
-            font,
-            toy_image,
-            card_layout,
-            id
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, COALESCE($12, 'classic.svg'), $13
-        ) ON CONFLICT (id) DO UPDATE SET
-            username = COALESCE($1, custom_card.username),
-            rank = COALESCE($2, custom_card.rank),
-            level = COALESCE($3, custom_card.level),
-            border = COALESCE($4, custom_card.border),
-            background = COALESCE($5, custom_card.background),
-            progress_foreground = COALESCE($6, custom_card.progress_foreground),
-            progress_background = COALESCE($7, custom_card.progress_background),
-            foreground_xp_count = COALESCE($8, custom_card.foreground_xp_count),
-            background_xp_count = COALESCE($9, custom_card.background_xp_count),
-            font = COALESCE($10, custom_card.font),
-            toy_image = COALESCE($11, custom_card.toy_image),
-            card_layout = COALESCE($12, custom_card.card_layout)",
-        edit.username.map(ColorOption::string),
-        edit.rank.map(ColorOption::string),
-        edit.level.map(ColorOption::string),
-        edit.border.map(ColorOption::string),
-        edit.background.map(ColorOption::string),
-        edit.progress_foreground.map(ColorOption::string),
-        edit.progress_background.map(ColorOption::string),
-        edit.foreground_xp_count.map(ColorOption::string),
-        edit.background_xp_count.map(ColorOption::string),
+    let update = CardUpdate {
+        username: edit.username.map(ColorOption::string),
+        rank: edit.rank.map(ColorOption::string),
+        level: edit.level.map(ColorOption::string),
+        border: edit.border.map(ColorOption::string),
+        background: edit.background.map(ColorOption::string),
+        progress_background: edit.progress_background.map(ColorOption::string),
+        progress_foreground: edit.progress_foreground.map(ColorOption::string),
+        foreground_xp_count: edit.foreground_xp_count.map(ColorOption::string),
+        background_xp_count: edit.background_xp_count.map(ColorOption::string),
         font,
         toy_image,
         card_layout,
-        id_to_db(id),
-    )
-    .execute(&state.db)
-    .await?;
+        card_layout_default: "classic.svg".to_string(),
+    };
+
+    state.query_update_card(id, &update).await?;
 
     Ok("Updated card!".to_string())
 }
@@ -176,14 +148,12 @@ fn matches_config_item(ci: &ConfigItem, choice: &str) -> Option<String> {
 }
 
 async fn process_reset(state: &SlashState, id: Id<GenericMarker>) -> Result<String, Error> {
-    query!("DELETE FROM custom_card WHERE id = $1", id_to_db(id))
-        .execute(&state.db)
-        .await?;
+    state.query_delete_card_customizations(id).await?;
     Ok("Card settings cleared!".to_string())
 }
 
 async fn process_fetch(state: &SlashState, ids: &[Id<GenericMarker>]) -> Result<String, Error> {
-    Ok(crate::levels::get_customizations(state.clone(), ids)
+    Ok(crate::levels::get_customizations(state, ids)
         .await?
         .to_string())
 }
