@@ -314,14 +314,10 @@ async fn process_rewards_add(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    query!(
-        "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)",
-        id_to_db(options.role.id),
-        options.level,
-        id_to_db(guild_id)
-    )
-    .execute(&state.db)
-    .await?;
+    // TODO: Do some perm checking perhaps.
+    state
+        .query_add_reward_role(guild_id, options.level, options.role.id)
+        .await?;
     state.invalidate_rewards(guild_id).await;
     Ok(format!(
         "Added role reward <@&{}> at level {}!",
@@ -334,29 +330,20 @@ async fn process_rewards_rm(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    if let Some(role) = options.role {
-        query!(
-            "DELETE FROM role_rewards WHERE id = $1 AND guild = $2",
-            id_to_db(role),
-            id_to_db(guild_id)
-        )
-        .execute(&state.db)
-        .await?;
-        return Ok(format!("Removed role reward <@&{role}>!"));
-    } else if let Some(level) = options.level {
-        query!(
-            "DELETE FROM role_rewards WHERE requirement = $1 AND guild = $2",
-            level,
-            id_to_db(guild_id)
-        )
-        .execute(&state.db)
-        .await?;
-        return Ok(format!("Removed role reward for level {level}!"));
-    };
-    state.invalidate_rewards(guild_id).await;
-    Err(Error::WrongArgumentCount(
-        "`/xp rewards remove` requires either a level or a role!",
-    ))
+    match state
+        .query_delete_reward_role(guild_id, options.level, options.role)
+        .await
+    {
+        Ok(count) => {
+            state.invalidate_rewards(guild_id).await;
+            let pluralizer = if count != 1 { "s" } else { "" };
+            Ok(format!("Deleted {count}{pluralizer} role rewards."))
+        }
+        Err(xpd_database::Error::UnspecifiedDelete) => Err(Error::WrongArgumentCount(
+            "`/xp rewards remove` requires either a level or a role!",
+        )),
+        Err(e) => Err(e.into()),
+    }
 }
 
 async fn process_rewards_list(

@@ -11,7 +11,7 @@ pub use sqlx::PgPool;
 use sqlx::{query, query_as};
 use tokio_stream::StreamExt;
 use twilight_model::id::{
-    marker::{ChannelMarker, GenericMarker, GuildMarker, UserMarker},
+    marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
     Id,
 };
 use util::{db_to_id, id_to_db};
@@ -341,6 +341,45 @@ pub trait Database {
         }
         Ok(output)
     }
+
+    async fn query_add_reward_role(
+        &self,
+        guild: Id<GuildMarker>,
+        requirement: i64,
+        role: Id<RoleMarker>,
+    ) -> Result<(), Error> {
+        query!(
+            "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)",
+            id_to_db(role),
+            requirement,
+            id_to_db(guild)
+        )
+        .execute(self.db())
+        .await?;
+        Ok(())
+    }
+
+    /// Returns number of rows affected.
+    async fn query_delete_reward_role(
+        &self,
+        guild: Id<GuildMarker>,
+        requirement: Option<i64>,
+        role: Option<Id<RoleMarker>>,
+    ) -> Result<u64, Error> {
+        if requirement.is_none() && role.is_none() {
+            return Err(Error::UnspecifiedDelete);
+        }
+        let rows = query!(
+            "DELETE FROM role_rewards WHERE guild = $1 AND (id = $2 OR requirement = $3)",
+            id_to_db(guild),
+            role.map(id_to_db),
+            requirement
+        )
+        .execute(self.db())
+        .await?
+        .rows_affected();
+        Ok(rows)
+    }
 }
 
 #[derive(Default)]
@@ -475,6 +514,7 @@ pub enum Error {
     Database(sqlx::Error),
     Interpolation(simpleinterpolation::Error),
     Validate(String),
+    UnspecifiedDelete,
 }
 
 impl Display for Error {
@@ -483,6 +523,7 @@ impl Display for Error {
             Self::Database(de) => write!(f, "{de}"),
             Self::Interpolation(ie) => write!(f, "{ie}"),
             Self::Validate(d) => f.write_str(d),
+            Self::UnspecifiedDelete => f.write_str("No constraints specified to delete by."),
         }
     }
 }
