@@ -1,15 +1,13 @@
 use simpleinterpolation::Interpolation;
-use tokio::try_join;
 use twilight_model::{
     channel::{message::MessageFlags, ChannelType},
     guild::Permissions,
     id::{marker::GuildMarker, Id},
 };
-use twilight_util::permission_calculator::PermissionCalculator;
 use xpd_common::{
-    id_to_db, GuildConfig, RawGuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE,
-    TEMPLATE_VARIABLES,
+    GuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, TEMPLATE_VARIABLES,
 };
+use xpd_database::{Database, UpdateGuildConfig};
 
 use crate::{
     cmd_defs::{
@@ -26,7 +24,11 @@ pub async fn process_config(
 ) -> Result<XpdSlashResponse, Error> {
     match command {
         ConfigCommand::Reset(_) => reset_config(state, guild).await,
-        ConfigCommand::Get(_) => get_config(state, guild).await.map(|v| v.to_string()),
+        ConfigCommand::Get(_) => state
+            .query_guild_config(guild)
+            .await
+            .map(|v| v.unwrap_or_default().to_string())
+            .map_err(Into::into),
         ConfigCommand::Rewards(r) => process_rewards_config(state, guild, r).await,
         ConfigCommand::Levels(l) => process_levels_config(state, guild, l).await,
         ConfigCommand::PermsCheckup(_) => process_perm_checkup(state, guild).await,
@@ -39,19 +41,10 @@ async fn process_rewards_config(
     guild_id: Id<GuildMarker>,
     options: ConfigCommandRewards,
 ) -> Result<String, Error> {
-    let config = query_as!(
-        RawGuildConfig,
-        "INSERT INTO guild_configs (id, one_at_a_time) VALUES ($1, $2) \
-            ON CONFLICT (id) DO UPDATE SET \
-            one_at_a_time = COALESCE($2, excluded.one_at_a_time) \
-            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
-            max_xp_per_message, min_xp_per_message, message_cooldown",
-        id_to_db(guild_id),
-        options.one_at_a_time,
-    )
-    .fetch_one(&state.db)
-    .await?
-    .try_into()?;
+    let new_cfg = UpdateGuildConfig::new().one_at_a_time(options.one_at_a_time);
+    let config = state
+        .query_update_guild_config(guild_id, new_cfg, validate_config)
+        .await?;
     state.update_config(guild_id, config).await;
     Ok("Updated rewards config!".to_string())
 }
@@ -84,38 +77,18 @@ async fn process_levels_config(
     let max_xp_per_message = safecast_to_i16(options.max_xp_per_message)?;
     let min_xp_per_message = safecast_to_i16(options.min_xp_per_message)?;
     let message_cooldown = safecast_to_i16(options.message_cooldown)?;
-
-    let mut txn = state.db.begin().await?;
-
-    let config: GuildConfig = query_as!(
-        RawGuildConfig,
-        "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up) \
-            VALUES ($1, $2, $3, $4) \
-            ON CONFLICT (id) DO UPDATE SET \
-            level_up_message = COALESCE($2, excluded.level_up_message), \
-            level_up_channel = COALESCE($3, excluded.level_up_channel), \
-            ping_on_level_up = COALESCE($4, excluded.ping_on_level_up), \
-            max_xp_per_message = COALESCE($5, excluded.max_xp_per_message), \
-            min_xp_per_message = COALESCE($6, excluded.min_xp_per_message), \
-            message_cooldown = COALESCE($7, excluded.message_cooldown) \
-            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
-            max_xp_per_message, min_xp_per_message, message_cooldown",
-        id_to_db(guild_id),
-        options.level_up_message,
-        options.level_up_channel.as_ref().map(|ic| id_to_db(ic.id)),
-        options.ping_users,
+    
+    let new_cfg = UpdateGuildConfig {
+        level_up_message: options.level_up_message,
+        level_up_channel: options.level_up_channel.map(|v| v.id),
+        ping_users: options.ping_users,
         max_xp_per_message,
         min_xp_per_message,
-        message_cooldown
-    )
-    .fetch_one(txn.as_mut())
-    .await?
-    .try_into()?;
-
-    validate_config(&config)?;
+        message_cooldown,
+        one_at_a_time: None,
+    };
+    let config = state.query_update_guild_config(guild_id, new_cfg, validate_config).await?;
     let msg = config.to_string();
-    // commit config to memory, no turning back
-    txn.commit().await?;
     state.update_config(guild_id, config).await;
 
     Ok(msg)
@@ -126,27 +99,9 @@ fn safecast_to_i16(ou16: Option<i64>) -> Result<Option<i16>, Error> {
 }
 
 async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
-    query!(
-        "DELETE FROM guild_configs WHERE id = $1",
-        id_to_db(guild_id)
-    )
-    .execute(&state.db)
-    .await?;
+    state.query_delete_guild_config(guild_id).await?;
     state.update_config(guild_id, GuildConfig::default()).await;
     Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
-}
-
-async fn get_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<GuildConfig, Error> {
-    let config: GuildConfig = query_as!(
-        RawGuildConfig,
-        "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, \
-        min_xp_per_message, message_cooldown FROM guild_configs \
-        WHERE id = $1",
-        id_to_db(guild_id),
-    )
-        .fetch_optional(&state.db)
-        .await?.map_or_else(|| Ok(GuildConfig::default()), TryInto::try_into)?;
-    Ok(config)
 }
 
 fn validate_config(config: &GuildConfig) -> Result<(), GuildConfigErrorReport> {
@@ -171,11 +126,20 @@ pub enum GuildConfigErrorReport {
     MinXpIsMoreThanMax { min: i16, max: i16 },
 }
 
+impl From<GuildConfigErrorReport> for xpd_database::Error {
+    fn from(value: GuildConfigErrorReport) -> Self {
+        Self::Validate(value.to_string())
+    }
+}
+
 async fn process_perm_checkup(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let config = get_config(state, guild_id).await?;
+    let config = state
+        .query_guild_config(guild_id)
+        .await?
+        .unwrap_or_default();
     let can_msg_in_level_up = if let Some(level_up) = config.level_up_channel {
         let perms = state
             .cache
@@ -186,5 +150,6 @@ async fn process_perm_checkup(
         None
     };
     let can_assign_roles = config;
-    Ok("".to_string())
+    // TODO: Finish this
+    Ok("Perm checkup is not implemented yet".to_string())
 }

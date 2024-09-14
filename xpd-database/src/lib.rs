@@ -11,7 +11,7 @@ pub use sqlx::PgPool;
 use sqlx::{query, query_as};
 use tokio_stream::StreamExt;
 use twilight_model::id::{
-    marker::{GenericMarker, GuildMarker, UserMarker},
+    marker::{ChannelMarker, GenericMarker, GuildMarker, UserMarker},
     Id,
 };
 use util::{db_to_id, id_to_db};
@@ -211,6 +211,171 @@ pub trait Database {
             .await?;
         Ok(())
     }
+
+    async fn query_update_card(
+        &self,
+        id: Id<GenericMarker>,
+        update: &CardUpdate,
+    ) -> Result<(), Error> {
+        query!(
+            "INSERT INTO custom_card (
+            username,
+            rank,
+            level,
+            border,
+            background,
+            progress_foreground,
+            progress_background,
+            foreground_xp_count,
+            background_xp_count,
+            font,
+            toy_image,
+            card_layout,
+            id
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, COALESCE($12, $13), $14
+        ) ON CONFLICT (id) DO UPDATE SET
+            username = COALESCE($1, custom_card.username),
+            rank = COALESCE($2, custom_card.rank),
+            level = COALESCE($3, custom_card.level),
+            border = COALESCE($4, custom_card.border),
+            background = COALESCE($5, custom_card.background),
+            progress_foreground = COALESCE($6, custom_card.progress_foreground),
+            progress_background = COALESCE($7, custom_card.progress_background),
+            foreground_xp_count = COALESCE($8, custom_card.foreground_xp_count),
+            background_xp_count = COALESCE($9, custom_card.background_xp_count),
+            font = COALESCE($10, custom_card.font),
+            toy_image = COALESCE($11, custom_card.toy_image),
+            card_layout = COALESCE($12, custom_card.card_layout, $13)",
+            update.username,
+            update.rank,
+            update.level,
+            update.border,
+            update.background,
+            update.progress_foreground,
+            update.progress_background,
+            update.foreground_xp_count,
+            update.background_xp_count,
+            update.font,
+            update.toy_image,
+            update.card_layout,
+            update.card_layout_default,
+            id_to_db(id)
+        )
+        .execute(self.db())
+        .await?;
+        Ok(())
+    }
+
+    async fn query_update_guild_config<V, E, R>(
+        &self,
+        guild: Id<GuildMarker>,
+        cfg: UpdateGuildConfig,
+        validate_cfg: V,
+    ) -> Result<GuildConfig, Error>
+    where
+        V: FnOnce(&GuildConfig) -> Result<R, E>,
+        E: Into<Error>,
+    {
+        let mut txn = self.db().begin().await?;
+
+        let config = query_as!(
+            RawGuildConfig,
+            "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, min_xp_per_message, message_cooldown, one_at_a_time) \
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) \
+            ON CONFLICT (id) DO UPDATE SET \
+            level_up_message = COALESCE($2, excluded.level_up_message), \
+            level_up_channel = COALESCE($3, excluded.level_up_channel), \
+            ping_on_level_up = COALESCE($4, excluded.ping_on_level_up), \
+            max_xp_per_message = COALESCE($5, excluded.max_xp_per_message), \
+            min_xp_per_message = COALESCE($6, excluded.min_xp_per_message), \
+            message_cooldown = COALESCE($7, excluded.message_cooldown), \
+            one_at_a_time = COALESCE($8, excluded.one_at_a_time) \
+            RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
+            max_xp_per_message, min_xp_per_message, message_cooldown",
+            id_to_db(guild),
+            cfg.level_up_message.map(|v| v),
+            cfg.level_up_channel.as_ref().map(|id| id_to_db(*id)),
+            cfg.ping_users,
+            cfg.max_xp_per_message,
+            cfg.min_xp_per_message,
+            cfg.message_cooldown,
+            cfg.one_at_a_time
+        )
+        .fetch_one(txn.as_mut())
+        .await?
+        .cook()?;
+        validate_cfg(&config).map_err(Into::into)?;
+        txn.commit().await?;
+        Ok(config)
+    }
+    async fn query_delete_guild_config(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
+        query!("DELETE FROM guild_configs WHERE id = $1", id_to_db(guild))
+            .execute(self.db())
+            .await?;
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+pub struct UpdateGuildConfig {
+    pub level_up_message: Option<String>,
+    pub level_up_channel: Option<Id<ChannelMarker>>,
+    pub ping_users: Option<bool>,
+    pub max_xp_per_message: Option<i16>,
+    pub min_xp_per_message: Option<i16>,
+    pub message_cooldown: Option<i16>,
+    pub one_at_a_time: Option<bool>,
+}
+
+macro_rules! setter {
+    ($name:ident, $kind:ty) => {
+        #[must_use]
+        #[allow(clippy::missing_const_for_fn)]
+        pub fn $name(mut self, p1: Option<$kind>) -> Self {
+            if p1.is_some() {
+                self.$name = p1;
+            }
+            self
+        }
+    };
+}
+
+impl UpdateGuildConfig {
+    setter!(level_up_message, String);
+
+    setter!(level_up_channel, Id<ChannelMarker>);
+
+    setter!(ping_users, bool);
+
+    setter!(max_xp_per_message, i16);
+
+    setter!(min_xp_per_message, i16);
+
+    setter!(message_cooldown, i16);
+
+    setter!(one_at_a_time, bool);
+
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+pub struct CardUpdate {
+    pub username: Option<String>,
+    pub rank: Option<String>,
+    pub level: Option<String>,
+    pub border: Option<String>,
+    pub background: Option<String>,
+    pub progress_background: Option<String>,
+    pub progress_foreground: Option<String>,
+    pub foreground_xp_count: Option<String>,
+    pub background_xp_count: Option<String>,
+    pub font: Option<String>,
+    pub toy_image: Option<String>,
+    pub card_layout: Option<String>,
+    pub card_layout_default: String,
 }
 
 pub struct RawCustomizations {
@@ -226,8 +391,11 @@ pub struct RawCustomizations {
     pub font: Option<String>,
     pub toy_image: Option<String>,
     pub card_layout: String,
+    #[allow(dead_code)]
     id: I64Placeholder,
+    #[allow(dead_code)]
     ord_id: I64Placeholder,
+    #[allow(dead_code)]
     ordinality: I64Placeholder,
 }
 
@@ -280,6 +448,7 @@ impl RawGuildConfig {
 pub enum Error {
     Database(sqlx::Error),
     Interpolation(simpleinterpolation::Error),
+    Validate(String),
 }
 
 impl Display for Error {
@@ -287,6 +456,7 @@ impl Display for Error {
         match self {
             Self::Database(de) => write!(f, "{de}"),
             Self::Interpolation(ie) => write!(f, "{ie}"),
+            Self::Validate(d) => f.write_str(d),
         }
     }
 }
