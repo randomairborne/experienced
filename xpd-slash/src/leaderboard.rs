@@ -158,7 +158,7 @@ pub async fn process_modal_submit(
     let zpage = choice - 1;
     Ok(InteractionResponse {
         kind: InteractionResponseType::UpdateMessage,
-        data: Some(gen_leaderboard(guild_id, state.db, zpage, Some(true)).await?),
+        data: Some(gen_leaderboard(&state, guild_id, zpage, Some(true)).await?),
     })
 }
 
@@ -225,7 +225,7 @@ pub async fn process_message_component(
             let offset: i64 = offset_str.parse()?;
             Ok(InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
-                data: Some(gen_leaderboard(guild_id, state.db, offset, Some(true)).await?),
+                data: Some(gen_leaderboard(&state, guild_id, offset, Some(true)).await?),
             })
         }
     }
