@@ -21,7 +21,6 @@ use twilight_util::builder::{
     embed::{EmbedBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
 };
-use xpd_common::id_to_db;
 use xpd_database::Database;
 
 use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
@@ -41,7 +40,7 @@ pub async fn leaderboard(
         0
     };
     Ok(InteractionResponse {
-        data: Some(gen_leaderboard(guild_id, state.db, zpage, guild_command.show_off).await?),
+        data: Some(gen_leaderboard(&state, guild_id, zpage, guild_command.show_off).await?),
         kind: InteractionResponseType::ChannelMessageWithSource,
     })
 }
