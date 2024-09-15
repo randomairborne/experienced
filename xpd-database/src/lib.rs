@@ -111,19 +111,6 @@ pub trait Database {
         Ok(xp)
     }
 
-    async fn query_clear_all_user_data(&self, user: Id<UserMarker>) -> Result<(), Error> {
-        let user_id = id_to_db(user);
-        let mut txn = self.db().begin().await?;
-        query!("DELETE FROM levels WHERE id = $1", user_id)
-            .execute(txn.as_mut())
-            .await?;
-        query!("DELETE FROM custom_card WHERE id = $1", user_id)
-            .execute(txn.as_mut())
-            .await?;
-        txn.commit().await?;
-        Ok(())
-    }
-
     async fn query_get_all_levels(&self, user: Id<UserMarker>) -> Result<Vec<UserStatus>, Error> {
         let mut raw_levels =
             query!("SELECT guild, xp FROM levels WHERE id = $1", id_to_db(user)).fetch(self.db());
@@ -267,18 +254,15 @@ pub trait Database {
         Ok(())
     }
 
-    async fn query_update_guild_config<V, E, R>(
+    async fn query_update_guild_config<V, R>(
         &self,
         guild: Id<GuildMarker>,
         cfg: UpdateGuildConfig,
-        validate_cfg: V,
     ) -> Result<GuildConfig, Error>
     where
         V: FnOnce(&GuildConfig) -> Result<R, E>,
         E: Into<Error>,
     {
-        let mut txn = self.db().begin().await?;
-
         let config = query_as!(
             RawGuildConfig,
             "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, min_xp_per_message, message_cooldown, one_at_a_time) \
@@ -302,11 +286,9 @@ pub trait Database {
             cfg.message_cooldown,
             cfg.one_at_a_time
         )
-        .fetch_one(txn.as_mut())
+        .fetch_one(self.db())
         .await?
         .cook()?;
-        validate_cfg(&config).map_err(Into::into)?;
-        txn.commit().await?;
         Ok(config)
     }
 
@@ -379,6 +361,47 @@ pub trait Database {
         .await?
         .rows_affected();
         Ok(rows)
+    }
+
+    async fn query_import_bulk_users(
+        &self,
+        guild: Id<GuildMarker>,
+        users: &[UserStatus],
+        overwrite: bool,
+    ) -> Result<(), Error> {
+        for user in users {
+            query!(
+                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
+                    ON CONFLICT (id, guild) \
+                    DO UPDATE SET xp = excluded.xp + CASE WHEN $4 = true THEN 0 ELSE levels.xp END",
+                id_to_db(user.id),
+                user.xp,
+                id_to_db(guild),
+                overwrite
+            ).execute(self.db()).await?;
+        }
+        Ok(())
+    }
+
+    async fn query_export_bulk_users(
+        &self,
+        guild: Id<GuildMarker>,
+    ) -> Result<Vec<UserStatus>, Error> {
+        let mut records = query!(
+            "SELECT id, xp FROM levels WHERE guild = $1",
+            id_to_db(guild)
+        )
+        .fetch(self.db());
+        let mut out = Vec::with_capacity(256);
+        while let Some(Ok(rec)) = records.next().await {
+            let status = UserStatus {
+                id: db_to_id(rec.id),
+                guild,
+                xp: rec.xp,
+            };
+            out.push(status);
+        }
+        Ok(out)
     }
 }
 
