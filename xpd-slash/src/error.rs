@@ -38,8 +38,8 @@ pub enum Error {
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Invalid guild config: {0}")]
     InvalidGuildConfig(#[from] crate::config::GuildConfigErrorReport),
-    #[error("Channel permission fetch error: {0}")]
-    CacheChannel(#[from] twilight_cache_inmemory::permission::ChannelError),
+    #[error("Permission fetch error: {0}")]
+    CacheChannel(#[from] xpd_util::PermissionCheckError),
     #[error("Discord sent a command that is not known!")]
     UnrecognizedCommand,
     #[error("Discord did not send a user object for the command invoker when it was required!")]

@@ -1,12 +1,16 @@
 use simpleinterpolation::Interpolation;
 use twilight_model::{
     channel::{message::MessageFlags, ChannelType},
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GuildMarker, RoleMarker},
+        Id,
+    },
 };
 use xpd_common::{
     GuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, TEMPLATE_VARIABLES,
 };
 use xpd_database::UpdateGuildConfig;
+use xpd_util::CanAddRole;
 
 use crate::{
     cmd_defs::{
@@ -129,22 +133,49 @@ pub enum GuildConfigErrorReport {
 }
 
 async fn process_perm_checkup(
-    _state: SlashState,
-    _guild_id: Id<GuildMarker>,
+    state: SlashState,
+    guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    // let config = xpd_database::guild_config(&state.db, guild_id)
-    //     .await?
-    //     .unwrap_or_default();
-    // let can_msg_in_level_up = if let Some(level_up) = config.level_up_channel {
-    //     let perms = state
-    //         .cache
-    //         .permissions()
-    //         .in_channel(state.my_id.cast(), level_up)?;
-    //     Some(perms.contains(Permissions::SEND_MESSAGES))
-    // } else {
-    //     None
-    // };
-    // let can_assign_roles = config;
-    // TODO: Finish this
-    Ok("Perm checkup is not implemented yet".to_string())
+    let config = xpd_database::guild_config(&state.db, guild_id)
+        .await?
+        .unwrap_or_default();
+    let can_msg_in_level_up = config
+        .level_up_channel
+        .map(|level_up| xpd_util::can_create_message(&state.cache, state.my_id.cast(), level_up))
+        .transpose()?;
+
+    let rewards: Vec<Id<RoleMarker>> = xpd_database::guild_rewards(&state.db, guild_id)
+        .await?
+        .iter()
+        .map(|v| v.id)
+        .collect();
+
+    let can_add_roles =
+        xpd_util::can_add_roles(&state.cache, state.my_id.cast(), guild_id, &rewards)?;
+    let good_msg_state = EmojiFormatBool(can_msg_in_level_up != Some(false));
+
+    let can_add_roles = match can_add_roles {
+        CanAddRole::Yes => "✅",
+        CanAddRole::NoManageRoles => "⚠️ No manage roles permission!",
+        CanAddRole::HighestRoleIsLowerRoleThanTarget => {
+            "⚠️ My highest role is lower than the ones I need to assign!"
+        }
+        CanAddRole::RoleIsManaged => "⚠️ That role is managed by another bot.",
+    };
+    Ok(format!(
+        "Can add roles: {can_add_roles}\nCan message in level up channel: {good_msg_state}"
+    ))
+}
+
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+struct EmojiFormatBool(pub bool);
+
+impl std::fmt::Display for EmojiFormatBool {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.0 {
+            f.write_str("✅")
+        } else {
+            f.write_str("❎")
+        }
+    }
 }

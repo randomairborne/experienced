@@ -3911,6 +3911,7 @@ dependencies = [
  "xpd-common",
  "xpd-database",
  "xpd-rank-card",
+ "xpd-util",
 ]
 
 [[package]]

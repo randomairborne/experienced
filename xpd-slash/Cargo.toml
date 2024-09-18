@@ -26,6 +26,7 @@ serde = { version = "1", features = ["derive"] }
 xpd-database = { path = "../xpd-database" }
 twilight-interactions = "0.16.0-rc.1"
 twilight-validate = "0.16.0-rc.1"
+xpd-util = { workspace = true }
 twilight-model = "0.16.0-rc.1"
 http-body-util = "0.1"
 serde_json = "1"
