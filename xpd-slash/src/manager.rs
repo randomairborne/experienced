@@ -129,6 +129,7 @@ async fn set_user_xp(
     setpoint: i64,
     state: SlashState,
 ) -> Result<String, Error> {
+    xpd_database::
     query!(
         "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp = $3",
         id_to_db(user_id),
@@ -227,14 +228,20 @@ async fn background_data_import(
         .map_err(|_| Error::RawHttpBody)?
         .to_bytes();
 
-    todo!();
-
     let data: Vec<ImportUser> = serde_json::from_slice(&body)?;
+    let user_count = data.len();
+    let mut txn = state.db.begin().await?;
+    for user in data {
+        if overwrite {
+            xpd_database::set_xp(txn.as_mut(), user.id, guild_id, user.xp).await?;
+        } else {
+            xpd_database::add_xp(txn.as_mut(), user.id, guild_id, user.xp).await?;
+        }
+    }
 
     let seconds = start.elapsed().as_secs_f64();
-    let users = data.len();
     Ok(XpdSlashResponse::with_embed_text(format!(
-        "Imported XP data for {users} users in {seconds:.2} seconds!"
+        "Imported XP data for {user_count} users in {seconds:.2} seconds!"
     )))
 }
 
