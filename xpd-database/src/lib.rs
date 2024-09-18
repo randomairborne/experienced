@@ -70,6 +70,7 @@ pub async fn guild_config<
     Ok(config)
 }
 
+/// Add (or, when given a negative, subtract) some amount of XP from a user in a guild.
 pub async fn add_xp<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
