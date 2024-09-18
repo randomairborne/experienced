@@ -10,12 +10,12 @@ mod util;
 
 use std::{
     fmt::Display,
-    ops::{Deref, DerefMut},
+    ops::DerefMut,
 };
 
 use simpleinterpolation::Interpolation;
 pub use sqlx::PgPool;
-use sqlx::{query, query_as, Acquire, PgConnection, PgExecutor, Postgres};
+use sqlx::{query, query_as, Acquire, PgConnection, Postgres};
 use tokio_stream::StreamExt;
 use twilight_model::id::{
     marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
