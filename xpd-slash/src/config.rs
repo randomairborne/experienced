@@ -7,7 +7,7 @@ use twilight_model::{
 use xpd_common::{
     GuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, TEMPLATE_VARIABLES,
 };
-use xpd_database::{Database, UpdateGuildConfig};
+use xpd_database::UpdateGuildConfig;
 
 use crate::{
     cmd_defs::{
@@ -127,12 +127,6 @@ fn validate_config(config: &GuildConfig) -> Result<(), GuildConfigErrorReport> {
 pub enum GuildConfigErrorReport {
     #[error("The selected minimum XP value of {min} is more than the selected maximum of {max}")]
     MinXpIsMoreThanMax { min: i16, max: i16 },
-}
-
-impl From<GuildConfigErrorReport> for xpd_database::Error {
-    fn from(value: GuildConfigErrorReport) -> Self {
-        Self::Validate(value.to_string())
-    }
 }
 
 async fn process_perm_checkup(
