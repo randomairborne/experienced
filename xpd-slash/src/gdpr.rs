@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use csv::{IntoInnerError as CsvIntoInnerError, Writer as CsvWriter};
 use serde::Serialize;
-use tokio::{join, try_join};
 use twilight_model::{
     http::attachment::Attachment,
     id::{marker::GuildMarker, Id},

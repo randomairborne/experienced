@@ -1,7 +1,6 @@
 use simpleinterpolation::Interpolation;
 use twilight_model::{
     channel::{message::MessageFlags, ChannelType},
-    guild::Permissions,
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::{

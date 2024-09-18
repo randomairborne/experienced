@@ -2,7 +2,6 @@ use std::fmt::Write;
 
 use http_body_util::{BodyExt, Limited};
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgPoolCopyExt, query, Executor};
 use tokio::time::Instant;
 use twilight_model::{
     channel::{message::AllowedMentions, Attachment},
@@ -13,7 +12,6 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::UserStatus;
 
 use crate::{
     cmd_defs::{

@@ -15,11 +15,11 @@ mod manage_card;
 mod manager;
 mod response;
 
-use std::{future::Future, ops::DerefMut, sync::Arc, time::Instant};
+use std::{future::Future, sync::Arc, time::Instant};
 
 pub use error::Error;
 pub use response::XpdSlashResponse;
-use sqlx::{pool::PoolConnection, PgConnection, PgExecutor, PgPool, Postgres};
+use sqlx::PgPool;
 use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
 use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
