@@ -11,6 +11,7 @@ use std::sync::{
 use sqlx::PgPool;
 use tokio_util::task::TaskTracker;
 use tracing::Level;
+use twilight_cache_inmemory::InMemoryCacheBuilder;
 use twilight_gateway::{
     error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
     MessageSender, Shard, StreamExt,
@@ -23,7 +24,7 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{id_to_db, RequiredDiscordResources};
+use xpd_common::RequiredDiscordResources;
 use xpd_listener::XpdListener;
 use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
 
@@ -71,12 +72,26 @@ async fn main() {
         .build()
         .unwrap();
 
+    let cache_resource_types =
+        XpdListener::required_cache_types() | XpdSlash::required_cache_types();
+    let cache = Arc::new(
+        InMemoryCacheBuilder::new()
+            .resource_types(cache_resource_types)
+            .build(),
+    );
+
     let task_tracker = TaskTracker::new();
 
     let (config_tx, mut config_rx) = tokio::sync::mpsc::channel(10);
     let (rewards_tx, mut rewards_rx) = tokio::sync::mpsc::channel(10);
 
-    let listener = XpdListener::new(db.clone(), client.clone(), task_tracker.clone(), my_id);
+    let listener = XpdListener::new(
+        db.clone(),
+        client.clone(),
+        cache.clone(),
+        task_tracker.clone(),
+        my_id,
+    );
 
     let updating_listener = listener.clone();
     let config_update = tokio::spawn(async move {
@@ -109,6 +124,7 @@ async fn main() {
         client.clone(),
         my_id,
         db.clone(),
+        cache,
         task_tracker.clone(),
         control_guild,
         owners,
@@ -230,16 +246,7 @@ async fn handle_event(
         }
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::GuildCreate(guild_add) => {
-            if !sqlx::query!(
-                "SELECT id FROM guild_bans WHERE
-                ((expires > NOW()) OR (expires IS NULL))
-                AND id = $1",
-                id_to_db(guild_add.id)
-            )
-            .fetch_all(&db)
-            .await?
-            .is_empty()
-            {
+            if !xpd_database::is_guild_banned(&db, guild_add.id).await? {
                 debug!(
                     id = guild_add.id.get(),
                     "Leaving guild because it is banned"
@@ -265,5 +272,5 @@ pub enum Error {
     #[error("Twilight-Http deserialization error: {0}")]
     DeserializeBody(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Postgres error: {0}")]
-    Postgres(#[from] sqlx::Error),
+    Postgres(#[from] xpd_database::Error),
 }

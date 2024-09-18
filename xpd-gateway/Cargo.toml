@@ -20,6 +20,8 @@ tracing-subscriber = { version = "0.3", features = ["json"] }
 xpd-slash = { path = "../xpd-slash", default-features = false }
 xpd-common = { path = "../xpd-common", version = "0.0.6" }
 tokio-util = { version = "0.7", features = ["rt"] }
+twilight-cache-inmemory = "0.16.0-rc.1"
+xpd-database = { workspace = true }
 twilight-validate = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"
