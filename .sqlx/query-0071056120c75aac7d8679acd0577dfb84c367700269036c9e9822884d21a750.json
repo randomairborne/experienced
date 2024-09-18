@@ -1,80 +1,92 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM custom_card WHERE id = $1",
+  "query": "SELECT * FROM UNNEST($1::INT8[]) WITH ORDINALITY AS ordering_ids(ord_id, ordinality) INNER JOIN custom_card ON ordering_ids.ord_id = custom_card.id ORDER BY ordering_ids.ordinality LIMIT 1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
+        "name": "ord_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "ordinality",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
         "name": "username",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 1,
+        "ordinal": 3,
         "name": "background_xp_count",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 2,
+        "ordinal": 4,
         "name": "rank",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 3,
+        "ordinal": 5,
         "name": "level",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 4,
+        "ordinal": 6,
         "name": "border",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "background",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 6,
+        "ordinal": 8,
         "name": "progress_foreground",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "progress_background",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "id",
         "type_info": "Int8"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "font",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 10,
+        "ordinal": 12,
         "name": "toy_image",
         "type_info": "Text"
       },
       {
-        "ordinal": 11,
+        "ordinal": 13,
         "name": "foreground_xp_count",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 12,
+        "ordinal": 14,
         "name": "card_layout",
         "type_info": "Varchar"
       }
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Int8Array"
       ]
     },
     "nullable": [
+      null,
+      null,
       true,
       true,
       true,
@@ -90,5 +102,5 @@
       false
     ]
   },
-  "hash": "2789a4214d7f7b16be1cf8b429e137fc676688ce0359ea70effa283c11ed990f"
+  "hash": "0071056120c75aac7d8679acd0577dfb84c367700269036c9e9822884d21a750"
 }

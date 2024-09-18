@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO custom_card (\n                username,\n                rank,\n                level,\n                border,\n                background,\n                progress_foreground,\n                progress_background,\n                foreground_xp_count,\n                background_xp_count,\n                font,\n                toy_image,\n                card_layout,\n                id\n            ) VALUES (\n                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, COALESCE($12, $13), $14\n            ) ON CONFLICT (id) DO UPDATE SET\n                username = COALESCE($1, custom_card.username),\n                rank = COALESCE($2, custom_card.rank),\n                level = COALESCE($3, custom_card.level),\n                border = COALESCE($4, custom_card.border),\n                background = COALESCE($5, custom_card.background),\n                progress_foreground = COALESCE($6, custom_card.progress_foreground),\n                progress_background = COALESCE($7, custom_card.progress_background),\n                foreground_xp_count = COALESCE($8, custom_card.foreground_xp_count),\n                background_xp_count = COALESCE($9, custom_card.background_xp_count),\n                font = COALESCE($10, custom_card.font),\n                toy_image = COALESCE($11, custom_card.toy_image),\n                card_layout = COALESCE($12, custom_card.card_layout, $13)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "275791c2a4c08c1ac2d5a56cbb33d046d49d5a9d13c8960dc26c2ba818be3c7a"
+}

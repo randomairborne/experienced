@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id FROM guild_bans WHERE\n                ((expires > NOW()) OR (expires IS NULL))\n                AND id = $1",
+  "query": "SELECT id FROM guild_bans WHERE\n            ((expires > NOW()) OR (expires IS NULL))\n            AND id = $1 LIMIT 1",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       false
     ]
   },
-  "hash": "c454d97e822f98c65583598ada1245b5c8f6bdc8015e68abe73d9f7b1ae61997"
+  "hash": "aadcd61295beb6345f707373907f6399660d1cf9447faa9834f28f840c9377e3"
 }

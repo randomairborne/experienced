@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM role_rewards WHERE guild = $1 AND (id = $2 OR requirement = $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a13562961f73135ad36251607a65718e2b9cfce83223f3bb5610a2ea9419b7c7"
+}
