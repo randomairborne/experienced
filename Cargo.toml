@@ -7,7 +7,7 @@ members = [
     "xpd-gateway",
     "xpd-common",
     "xpd-rank-card",
-    "xpd-database",
+    "xpd-database", "xpd-util",
 ]
 resolver = "2"
 default-members = ["xpd-gateway"]
@@ -21,3 +21,4 @@ xpd-gateway = { path = "xpd-gateway" }
 xpd-common = { path = "xpd-common" }
 xpd-rank-card = { path = "xpd-rank-card" }
 xpd-database = { path = "xpd-database" }
+xpd-util = { path = "xpd-util" }

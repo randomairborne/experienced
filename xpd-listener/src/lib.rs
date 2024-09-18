@@ -11,7 +11,7 @@ use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::{event::Event, Intents},
     id::{
-        marker::{ApplicationMarker, GuildMarker, RoleMarker, UserMarker},
+        marker::{ApplicationMarker, GuildMarker, UserMarker},
         Id,
     },
 };
@@ -193,18 +193,12 @@ pub enum Error {
     UnknownPermissionsForRole(#[from] twilight_cache_inmemory::permission::RootError),
     #[error("Unknown permissions for role")]
     UnknownPermissionsForMessage(#[from] twilight_cache_inmemory::permission::ChannelError),
+    #[error("Failed to check permissions: {0}")]
+    PermissionsCalculator(#[from] xpd_util::PermissionCheckError),
     #[error("RwLock Poisioned, please report: https://valk.sh/discord")]
     LockPoisoned,
     #[error("Discord did not send a member where they MUST send a member")]
     NoMember,
-    #[error("Unknown role: <@&{0}>")]
-    UnknownRole(Id<RoleMarker>),
-    #[error("Highest known role for self was not found in cache!")]
-    NoHighestRoleForSelf,
-    #[error("Target role was not found in cache!")]
-    NoTargetRoleInCache,
-    #[error("Got unknown role for own highest role!")]
-    UnknownPositionForOwnHighestRole,
 }
 
 impl<T> From<std::sync::PoisonError<T>> for Error {

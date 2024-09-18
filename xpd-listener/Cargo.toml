@@ -16,6 +16,7 @@ simpleinterpolation = { path = "../simpleinterpolation" }
 tokio-util = { version = "0.7", features = ["rt"] }
 xpd-database = { path = "../xpd-database" }
 xpd-common = { path = "../xpd-common" }
+xpd-util = { workspace = true }
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"
 thiserror = "1"

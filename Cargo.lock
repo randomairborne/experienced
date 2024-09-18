@@ -3863,6 +3863,7 @@ dependencies = [
  "twilight-model",
  "xpd-common",
  "xpd-database",
+ "xpd-util",
 ]
 
 [[package]]
@@ -3910,6 +3911,16 @@ dependencies = [
  "xpd-common",
  "xpd-database",
  "xpd-rank-card",
+]
+
+[[package]]
+name = "xpd-util"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+ "tracing",
+ "twilight-cache-inmemory",
+ "twilight-model",
 ]
 
 [[package]]

@@ -1,0 +1,10 @@
+[package]
+name = "xpd-util"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+twilight-cache-inmemory = { version = "0.16.0-rc.1", features = ["permission-calculator"] }
+twilight-model = "0.16.0-rc.1"
+thiserror = "1"
+tracing = "0.1"
