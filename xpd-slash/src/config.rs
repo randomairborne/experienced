@@ -24,7 +24,7 @@ pub async fn process_config(
 ) -> Result<XpdSlashResponse, Error> {
     match command {
         ConfigCommand::Reset(_) => reset_config(state, guild).await,
-        ConfigCommand::Get(_) => xpd_database::query_guild_config(&state.db, guild)
+        ConfigCommand::Get(_) => xpd_database::guild_config(&state.db, guild)
             .await
             .map(|v| v.unwrap_or_default().to_string())
             .map_err(Into::into),
