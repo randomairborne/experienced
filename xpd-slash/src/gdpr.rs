@@ -30,11 +30,7 @@ async fn delete(
     cmd: GdprCommandDelete,
     invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
-    if cmd.username != invoker.name {
-        Ok(XpdSlashResponse::with_embed_text(
-            "Please make sure the username you entered is correct!",
-        ))
-    } else {
+    if cmd.username == invoker.name {
         let mut txn = state.db.begin().await?;
         xpd_database::delete_levels_user(&mut txn, invoker.id).await?;
         xpd_database::delete_card_customizations(&mut txn, invoker.id.cast()).await?;
@@ -42,6 +38,10 @@ async fn delete(
             XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
                 .ephemeral(true),
         )
+    } else {
+        Ok(XpdSlashResponse::with_embed_text(
+            "Please make sure the username you entered is correct!",
+        ))
     }
 }
 
@@ -94,7 +94,7 @@ struct UserXpArchiveEntry {
 }
 
 impl UserXpArchiveEntry {
-    fn from_record(guild: Id<GuildMarker>, xp: i64) -> Self {
+    const fn from_record(guild: Id<GuildMarker>, xp: i64) -> Self {
         Self { guild, xp }
     }
 }

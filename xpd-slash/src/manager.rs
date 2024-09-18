@@ -279,7 +279,7 @@ async fn process_rewards_rm(
     match xpd_database::delete_reward_role(&state.db, guild_id, options.level, options.role).await {
         Ok(count) => {
             state.invalidate_rewards(guild_id).await;
-            let pluralizer = if count != 1 { "s" } else { "" };
+            let pluralizer = if count == 1 { "" } else { "s" };
             Ok(format!("Deleted {count}{pluralizer} role rewards."))
         }
         Err(xpd_database::Error::UnspecifiedDelete) => Err(Error::WrongArgumentCount(
