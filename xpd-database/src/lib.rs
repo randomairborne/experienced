@@ -8,10 +8,7 @@
 
 mod util;
 
-use std::{
-    fmt::Display,
-    ops::DerefMut,
-};
+use std::{fmt::Display, ops::DerefMut};
 
 use simpleinterpolation::Interpolation;
 pub use sqlx::PgPool;
