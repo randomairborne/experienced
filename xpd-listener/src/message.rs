@@ -15,7 +15,6 @@ use xpd_common::{
     snowflake_to_timestamp, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN,
     DEFAULT_MIN_XP_PER_MESSAGE,
 };
-use xpd_database::Database;
 
 use crate::{Error, XpdListenerInner};
 
@@ -70,7 +69,7 @@ impl XpdListenerInner {
         }
         .into();
 
-        let xp_i64 = self.query_add_xp(msg.author.id, guild_id, xp_added).await?;
+        let xp_i64 = xpd_database::add_xp(&self.db, msg.author.id, guild_id, xp_added).await?;
         let xp = u64::try_from(xp_i64).unwrap_or(0);
         let old_xp = u64::try_from(xp_i64 - xp_added).unwrap_or(0);
 

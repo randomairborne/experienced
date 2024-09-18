@@ -16,7 +16,7 @@ use twilight_model::{
     },
 };
 use xpd_common::{GuildConfig, RequiredDiscordResources, RoleReward};
-use xpd_database::{Database, PgPool};
+use xpd_database::PgPool;
 
 mod message;
 
@@ -79,12 +79,6 @@ pub struct XpdListenerInner {
     current_application_id: Id<ApplicationMarker>,
 }
 
-impl Database for XpdListenerInner {
-    fn db(&self) -> &PgPool {
-        &self.db
-    }
-}
-
 impl XpdListenerInner {
     pub(crate) fn new(
         db: PgPool,
@@ -125,14 +119,16 @@ impl XpdListenerInner {
         if let Some(guild_config) = self.configs.read()?.get(&guild) {
             return Ok(guild_config.clone());
         }
-        let config = self.query_guild_config(guild).await?.unwrap_or_default();
+        let config = xpd_database::guild_config(&self.db, guild)
+            .await?
+            .unwrap_or_default();
         let config = Arc::new(config);
         self.configs.write()?.insert(guild, config.clone());
         Ok(config)
     }
 
     pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
-        let mut new_rewards = self.query_guild_rewards(guild).await?;
+        let mut new_rewards = xpd_database::guild_rewards(&self.db, guild).await?;
         new_rewards.sort_by(xpd_common::sort_rewards);
         self.rewards.write()?.insert(guild, Arc::new(new_rewards));
         Ok(())
@@ -145,7 +141,7 @@ impl XpdListenerInner {
         if let Some(rewards) = self.rewards.read()?.get(&guild_id) {
             return Ok(rewards.clone());
         }
-        let mut rewards = self.query_guild_rewards(guild_id).await?;
+        let mut rewards = xpd_database::guild_rewards(&self.db, guild_id).await?;
         rewards.sort_by(xpd_common::sort_rewards);
 
         let new_copy = Arc::new(rewards);
