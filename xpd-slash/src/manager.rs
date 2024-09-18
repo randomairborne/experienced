@@ -80,17 +80,7 @@ async fn modify_user_xp(
     state: SlashState,
 ) -> Result<String, Error> {
     let mut txn = state.db.begin().await?;
-    let xp = query!(
-        "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) \
-         ON CONFLICT (id, guild) DO UPDATE SET xp = excluded.xp + $3 \
-         RETURNING xp",
-        id_to_db(user_id),
-        id_to_db(guild_id),
-        amount
-    )
-    .fetch_one(txn.as_mut())
-    .await?
-    .xp;
+    let xp = xpd_database::add_xp(txn.as_mut(), user_id, guild_id, amount).await?;
     if xp.is_negative() {
         txn.rollback().await?;
         return Err(Error::XpWouldBeNegative);
@@ -305,12 +295,10 @@ async fn process_rewards_list(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let mut roles = query!(
-        "SELECT id, requirement FROM role_rewards WHERE guild = $1",
-        id_to_db(guild_id)
-    )
-    .fetch_all(&state.db)
-    .await?;
+    let mut roles = xpd_database::guild_rewards(&state.db, guild_id).await?;
+    if roles.is_empty() {
+        return Ok("No role rewards set for this server".to_string());
+    }
     let mut data = String::new();
 
     roles.sort_by(|a, b| a.requirement.cmp(&b.requirement));
@@ -321,9 +309,6 @@ async fn process_rewards_list(
             "Role reward <@&{}> at level {}",
             role.id, role.requirement
         )?;
-    }
-    if data.is_empty() {
-        data = "No role rewards set for this server".to_string();
     }
     Ok(data)
 }
