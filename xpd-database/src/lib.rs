@@ -96,6 +96,54 @@ pub async fn add_xp<
     Ok(count)
 }
 
+pub async fn set_xp<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    user: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+    amount: i64,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    if amount > 0 {
+        query!(
+            "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) \
+                ON CONFLICT (id, guild) DO UPDATE SET xp=$3",
+            id_to_db(user),
+            id_to_db(guild),
+            amount
+        )
+        .execute(conn.as_mut())
+        .await?;
+    } else {
+        clear_xp(conn.as_mut(), user, guild).await?;
+    }
+
+    Ok(())
+}
+
+pub async fn clear_xp<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    user: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "DELETE FROM levels WHERE id = $1 AND guild = $2",
+        id_to_db(user),
+        id_to_db(guild)
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
 pub async fn count_with_higher_xp<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -465,33 +513,6 @@ pub async fn delete_reward_role<
     .await?
     .rows_affected();
     Ok(rows)
-}
-
-pub async fn import_bulk_users<
-    'a,
-    D: DerefMut<Target = PgConnection> + Send,
-    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
->(
-    conn: A,
-    guild: Id<GuildMarker>,
-    users: &[UserStatus],
-    overwrite: bool,
-) -> Result<(), Error> {
-    let mut txn = conn.begin().await?;
-    for user in users {
-        let q = query!(
-            "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
-                    ON CONFLICT (id, guild) \
-                    DO UPDATE SET xp = excluded.xp + CASE WHEN $4 = true THEN 0 ELSE levels.xp END",
-            id_to_db(user.id),
-            user.xp,
-            id_to_db(guild),
-            overwrite
-        )
-        .execute(txn.as_mut());
-    }
-    txn.commit().await?;
-    Ok(())
 }
 
 pub async fn export_bulk_users<
