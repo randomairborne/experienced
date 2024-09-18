@@ -129,15 +129,7 @@ async fn set_user_xp(
     setpoint: i64,
     state: SlashState,
 ) -> Result<String, Error> {
-    xpd_database::
-    query!(
-        "INSERT INTO levels (id, guild, xp) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET xp = $3",
-        id_to_db(user_id),
-        id_to_db(guild_id),
-        setpoint
-    )
-    .execute(&state.db)
-    .await?;
+    xpd_database::set_xp(&state.db, user_id, guild_id, setpoint).await?;
     let level = mee6::LevelInfo::new(setpoint.try_into().unwrap_or(0));
     Ok(format!(
         "Set <@{user_id}>'s XP to {}, leaving them at level {}",
