@@ -323,6 +323,27 @@ pub async fn pardon_guild<
     Ok(())
 }
 
+pub async fn is_guild_banned<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild: Id<GuildMarker>,
+) -> Result<bool, Error> {
+    let mut conn = conn.acquire().await?;
+    let banned = query!(
+        "SELECT id FROM guild_bans WHERE
+            ((expires > NOW()) OR (expires IS NULL))
+            AND id = $1 LIMIT 1",
+        id_to_db(guild)
+    )
+    .fetch_optional(conn.as_mut())
+    .await?
+    .is_some();
+    Ok(banned)
+}
+
 pub async fn update_card<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
