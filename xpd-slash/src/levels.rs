@@ -11,7 +11,6 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{DisplayName, MemberDisplayInfo};
-use xpd_database::Database;
 use xpd_rank_card::customizations::{Color, Customizations};
 
 use crate::{Error, SlashState, XpdSlashResponse};

@@ -21,7 +21,6 @@ use twilight_util::builder::{
     embed::{EmbedBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
 };
-use xpd_database::Database;
 
 use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
 

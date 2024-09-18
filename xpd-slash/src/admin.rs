@@ -3,7 +3,6 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_database::Database;
 
 use crate::{
     cmd_defs::{

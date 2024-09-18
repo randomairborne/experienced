@@ -5,7 +5,7 @@ use twilight_model::id::{
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 use xpd_common::MemberDisplayInfo;
-use xpd_database::{CardUpdate, Database};
+use xpd_database::CardUpdate;
 use xpd_rank_card::ConfigItem;
 
 use crate::{

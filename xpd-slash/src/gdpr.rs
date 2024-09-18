@@ -8,8 +8,6 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::MemberDisplayInfo;
-use xpd_database::{Database, RawCustomizations};
-use xpd_rank_card::customizations::Customizations;
 
 use crate::{
     cmd_defs::{gdpr::GdprCommandDelete, GdprCommand},

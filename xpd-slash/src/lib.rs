@@ -174,12 +174,6 @@ pub struct SlashState {
     pub update_channels: UpdateChannels,
 }
 
-impl xpd_database::Database for SlashState {
-    async fn conn(&mut self) -> Result<&mut PgConnection, xpd_database::Error> {
-        Ok(self.db.acquire().await?.deref_mut())
-    }
-}
-
 impl SlashState {
     pub async fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) {
         let _ = self.update_channels.config.send((guild, config)).await;
