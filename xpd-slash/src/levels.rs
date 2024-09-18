@@ -135,10 +135,10 @@ pub async fn get_customizations(
     state: &SlashState,
     ids: &[Id<GenericMarker>],
 ) -> Result<Customizations, Error> {
-    let customizations = state.query_card_customizations(ids).await?;
-    let Some(customizations) = customizations else {
+    let Some(customizations) = xpd_database::card_customizations(&state.db, ids).await? else {
         return Ok(Customizations::default());
     };
+
     let defaults = Customizations::default_customizations_str(&customizations.card_layout);
     Ok(Customizations {
         username: color_or_default(&customizations.username, defaults.username)?,

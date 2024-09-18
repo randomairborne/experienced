@@ -134,7 +134,7 @@ async fn process_edit(
         card_layout_default: "classic.svg".to_string(),
     };
 
-    state.query_update_card(id, &update).await?;
+    xpd_database::update_card(&state.db, id, &update).await?;
 
     Ok("Updated card!".to_string())
 }
@@ -148,7 +148,7 @@ fn matches_config_item(ci: &ConfigItem, choice: &str) -> Option<String> {
 }
 
 async fn process_reset(state: &SlashState, id: Id<GenericMarker>) -> Result<String, Error> {
-    state.query_delete_card_customizations(id).await?;
+    xpd_database::delete_card_customizations(&state.db, id).await?;
     Ok("Card settings cleared!".to_string())
 }
 

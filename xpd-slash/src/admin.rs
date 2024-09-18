@@ -49,14 +49,14 @@ async fn leave_guild(state: SlashState, leave: AdminCommandLeave) -> Result<Stri
 
 async fn reset_guild(state: SlashState, leave: AdminCommandResetGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = leave.guild.parse()?;
-    let rows = state.query_delete_levels_guild(guild).await?;
+    let rows = xpd_database::delete_levels_guild(&state.db, guild).await?;
     Ok(format!(
         "Reset levels for guild {guild}. It had {rows} users worth of data."
     ))
 }
 
 async fn reset_user(state: SlashState, leave: AdminCommandResetUser) -> Result<String, Error> {
-    let rows = state.query_delete_levels_user(leave.user).await?;
+    let rows = xpd_database::delete_levels_user(&state.db, leave.user).await?;
     Ok(format!(
         "Reset your levels. They had level data in {rows} guilds."
     ))
@@ -77,12 +77,12 @@ async fn set_nick(state: SlashState, nick: AdminCommandSetNick) -> Result<String
 
 async fn ban_guild(state: SlashState, ban: AdminCommandBanGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = ban.guild.parse()?;
-    state.query_ban_guild(guild, ban.duration).await?;
+    xpd_database::ban_guild(&state.db, guild, ban.duration).await?;
     Ok(format!("Banned guild {guild}"))
 }
 
 async fn pardon_guild(state: SlashState, pardon: AdminCommandPardonGuild) -> Result<String, Error> {
     let guild: Id<GuildMarker> = pardon.guild.parse()?;
-    state.query_pardon_guild(guild).await?;
+    xpd_database::pardon_guild(&state.db, guild).await?;
     Ok(format!("Pardoned guild {guild}"))
 }

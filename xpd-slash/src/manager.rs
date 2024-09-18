@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use http_body_util::{BodyExt, Limited};
 use serde::{Deserialize, Serialize};
-use sqlx::{query, Executor};
+use sqlx::{postgres::PgPoolCopyExt, query, Executor};
 use tokio::time::Instant;
 use twilight_model::{
     channel::{message::AllowedMentions, Attachment},
@@ -13,7 +13,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_database::Database;
+use xpd_common::UserStatus;
 
 use crate::{
     cmd_defs::{
@@ -174,18 +174,14 @@ async fn background_data_export(
     state: &SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<XpdSlashResponse, Error> {
-    let levels: Vec<ImportUser> = query!(
-        "SELECT id, xp FROM levels WHERE guild = $1",
-        id_to_db(guild_id)
-    )
-    .fetch_all(&state.db)
-    .await?
-    .into_iter()
-    .map(|v| ImportUser {
-        id: db_to_id(v.id),
-        xp: v.xp,
-    })
-    .collect();
+    let levels: Vec<ImportUser> = xpd_database::export_bulk_users(&state.db, guild_id)
+        .await?
+        .iter()
+        .map(|us| ImportUser {
+            id: us.id,
+            xp: us.xp,
+        })
+        .collect();
     let file = serde_json::to_vec_pretty(&levels)?;
     let attachment = HttpAttachment::from_bytes(format!("export-{guild_id}.json"), file, 0);
     Ok(XpdSlashResponse::new()
@@ -231,38 +227,9 @@ async fn background_data_import(
         .map_err(|_| Error::RawHttpBody)?
         .to_bytes();
 
+    todo!();
+
     let data: Vec<ImportUser> = serde_json::from_slice(&body)?;
-
-    let mut txn = state.db.begin().await?;
-
-    let db_guild = id_to_db(guild_id);
-    for user in &data {
-        let query = if overwrite {
-            query!(
-                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
-                ON CONFLICT (id, guild) \
-                DO UPDATE SET xp=excluded.xp",
-                id_to_db(user.id),
-                user.xp,
-                db_guild,
-            )
-        } else {
-            query!(
-                "INSERT INTO levels (id, xp, guild) VALUES ($1, $2, $3) \
-                ON CONFLICT (id, guild) \
-                DO UPDATE SET xp=levels.xp+excluded.xp",
-                id_to_db(user.id),
-                user.xp,
-                db_guild,
-            )
-        };
-        if let Err(err) = txn.execute(query).await {
-            txn.rollback().await?;
-            return Err(err.into());
-        };
-    }
-
-    txn.commit().await?;
 
     let seconds = start.elapsed().as_secs_f64();
     let users = data.len();
@@ -315,9 +282,7 @@ async fn process_rewards_add(
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
     // TODO: Do some perm checking perhaps.
-    state
-        .query_add_reward_role(guild_id, options.level, options.role.id)
-        .await?;
+    xpd_database::add_reward_role(&state.db, guild_id, options.level, options.role.id).await?;
     state.invalidate_rewards(guild_id).await;
     Ok(format!(
         "Added role reward <@&{}> at level {}!",
@@ -330,10 +295,7 @@ async fn process_rewards_rm(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    match state
-        .query_delete_reward_role(guild_id, options.level, options.role)
-        .await
-    {
+    match xpd_database::delete_reward_role(&state.db, guild_id, options.level, options.role).await {
         Ok(count) => {
             state.invalidate_rewards(guild_id).await;
             let pluralizer = if count != 1 { "s" } else { "" };
@@ -381,6 +343,6 @@ async fn reset_guild_xp(
     if confirmation != crate::cmd_defs::manage::CONFIRMATION_STRING {
         return Ok("Confirmation string did not match.".to_string());
     }
-    state.query_delete_levels_guild(guild_id).await?;
+    xpd_database::delete_levels_guild(&state.db, guild_id).await?;
     Ok("Done. Thank you for using Experienced.".to_string())
 }

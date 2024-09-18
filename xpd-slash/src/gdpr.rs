@@ -38,7 +38,9 @@ async fn delete(
             "Please make sure the username you entered is correct!",
         ))
     } else {
-        state.query_clear_all_user_data(invoker.id).await?;
+        let mut txn = state.db.begin().await?;
+        xpd_database::delete_levels_user(&mut txn, invoker.id).await?;
+        xpd_database::delete_card_customizations(&mut txn, invoker.id.cast()).await?;
         Ok(
             XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
                 .ephemeral(true),
@@ -51,7 +53,7 @@ async fn download(
     invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
     let invoker = Arc::new(invoker);
-    let levels = state.query_get_all_levels(invoker.id).await?;
+    let levels = xpd_database::get_all_levels(&state.db, invoker.id).await?;
 
     let invoker_id = &[invoker.id.cast()];
     let custom_card = get_customizations(&state, invoker_id).await?;

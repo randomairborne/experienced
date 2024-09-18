@@ -15,11 +15,11 @@ mod manage_card;
 mod manager;
 mod response;
 
-use std::{future::Future, sync::Arc, time::Instant};
+use std::{future::Future, ops::DerefMut, sync::Arc, time::Instant};
 
 pub use error::Error;
 pub use response::XpdSlashResponse;
-use sqlx::{pool::PoolConnection, PgConnection, PgPool, Postgres};
+use sqlx::{pool::PoolConnection, PgConnection, PgExecutor, PgPool, Postgres};
 use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
 use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
@@ -36,7 +36,6 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_common::{GuildConfig, RequiredDiscordResources};
-use xpd_database::Database;
 use xpd_rank_card::SvgState;
 
 #[macro_use]
@@ -175,9 +174,9 @@ pub struct SlashState {
     pub update_channels: UpdateChannels,
 }
 
-impl Database for SlashState {
-    fn db(&self) -> &PgPool {
-        &self.db
+impl xpd_database::Database for SlashState {
+    async fn conn(&mut self) -> Result<&mut PgConnection, xpd_database::Error> {
+        Ok(self.db.acquire().await?.deref_mut())
     }
 }
 
@@ -212,9 +211,10 @@ impl SlashState {
         id: Id<UserMarker>,
         guild_id: Id<GuildMarker>,
     ) -> Result<UserStats, Error> {
-        let xp = self.query_user_xp(guild_id, id).await?.unwrap_or(0);
-        let rank = self
-            .query_count_with_higher_xp(guild_id, xp)
+        let xp = xpd_database::user_xp(&self.db, guild_id, id)
+            .await?
+            .unwrap_or(0);
+        let rank = xpd_database::count_with_higher_xp(&self.db, guild_id, xp)
             .await?
             .unwrap_or(0)
             + 1;

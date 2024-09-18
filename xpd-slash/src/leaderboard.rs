@@ -59,9 +59,13 @@ async fn gen_leaderboard(
         return Err(Error::PageDoesNotExist);
     }
     let is_ephemeral = !show_off.is_some_and(|v| v);
-    let users = state
-        .query_get_leaderboard_page(guild_id, USERS_PER_PAGE + 1, zpage * USERS_PER_PAGE)
-        .await?;
+    let users = xpd_database::get_leaderboard_page(
+        &state.db,
+        guild_id,
+        USERS_PER_PAGE + 1,
+        zpage * USERS_PER_PAGE,
+    )
+    .await?;
     if users.is_empty() {
         return Err(Error::NoUsersForPage);
     }

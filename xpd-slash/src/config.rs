@@ -24,8 +24,7 @@ pub async fn process_config(
 ) -> Result<XpdSlashResponse, Error> {
     match command {
         ConfigCommand::Reset(_) => reset_config(state, guild).await,
-        ConfigCommand::Get(_) => state
-            .query_guild_config(guild)
+        ConfigCommand::Get(_) => xpd_database::query_guild_config(&state.db, guild)
             .await
             .map(|v| v.unwrap_or_default().to_string())
             .map_err(Into::into),
@@ -42,9 +41,10 @@ async fn process_rewards_config(
     options: ConfigCommandRewards,
 ) -> Result<String, Error> {
     let new_cfg = UpdateGuildConfig::new().one_at_a_time(options.one_at_a_time);
-    let config = state
-        .query_update_guild_config(guild_id, new_cfg, validate_config)
-        .await?;
+    let mut update_txn = state.db.begin().await?;
+    let config = xpd_database::update_guild_config(&mut update_txn, guild_id, new_cfg).await?;
+    validate_config(&config)?;
+    update_txn.commit().await?;
     state.update_config(guild_id, config).await;
     Ok("Updated rewards config!".to_string())
 }
@@ -87,9 +87,10 @@ async fn process_levels_config(
         message_cooldown,
         one_at_a_time: None,
     };
-    let config = state
-        .query_update_guild_config(guild_id, new_cfg, validate_config)
-        .await?;
+    let mut validate_txn = state.db.begin().await?;
+    let config = xpd_database::update_guild_config(&mut validate_txn, guild_id, new_cfg).await?;
+    validate_config(&config)?;
+    validate_txn.commit().await?;
     let msg = config.to_string();
     state.update_config(guild_id, config).await;
 
@@ -101,7 +102,7 @@ fn safecast_to_i16(ou16: Option<i64>) -> Result<Option<i16>, Error> {
 }
 
 async fn reset_config(state: SlashState, guild_id: Id<GuildMarker>) -> Result<String, Error> {
-    state.query_delete_guild_config(guild_id).await?;
+    xpd_database::delete_guild_config(&state.db, guild_id).await?;
     state.update_config(guild_id, GuildConfig::default()).await;
     Ok("Reset guild reward config, but NOT rewards themselves!".to_string())
 }
@@ -135,23 +136,22 @@ impl From<GuildConfigErrorReport> for xpd_database::Error {
 }
 
 async fn process_perm_checkup(
-    state: SlashState,
-    guild_id: Id<GuildMarker>,
+    _state: SlashState,
+    _guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    let config = state
-        .query_guild_config(guild_id)
-        .await?
-        .unwrap_or_default();
-    let can_msg_in_level_up = if let Some(level_up) = config.level_up_channel {
-        let perms = state
-            .cache
-            .permissions()
-            .in_channel(state.my_id.cast(), level_up)?;
-        Some(perms.contains(Permissions::SEND_MESSAGES))
-    } else {
-        None
-    };
-    let can_assign_roles = config;
+    // let config = xpd_database::guild_config(&state.db, guild_id)
+    //     .await?
+    //     .unwrap_or_default();
+    // let can_msg_in_level_up = if let Some(level_up) = config.level_up_channel {
+    //     let perms = state
+    //         .cache
+    //         .permissions()
+    //         .in_channel(state.my_id.cast(), level_up)?;
+    //     Some(perms.contains(Permissions::SEND_MESSAGES))
+    // } else {
+    //     None
+    // };
+    // let can_assign_roles = config;
     // TODO: Finish this
     Ok("Perm checkup is not implemented yet".to_string())
 }
