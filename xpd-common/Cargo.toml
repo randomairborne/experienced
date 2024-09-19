@@ -11,6 +11,6 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
+simpleinterpolation = { workspace = true }
 twilight-cache-inmemory = "0.16.0-rc.1"
-simpleinterpolation = { path = "../simpleinterpolation" }
 twilight-model = "0.16.0-rc.1"

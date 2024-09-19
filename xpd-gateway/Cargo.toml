@@ -15,13 +15,13 @@ twilight-gateway = { version = "0.16.0-rc.1", features = ["rustls-native-roots",
 reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots", "hickory-dns"], default-features = false }
 sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-xpd-listener = { path = "../xpd-listener", default-features = false }
 tracing-subscriber = { version = "0.3", features = ["json"] }
-xpd-slash = { path = "../xpd-slash", default-features = false }
-xpd-common = { path = "../xpd-common", version = "0.0.6" }
+xpd-listener = { workspace = true, default-features = false }
+xpd-slash = { workspace = true, default-features = false }
 tokio-util = { version = "0.7", features = ["rt"] }
 twilight-cache-inmemory = "0.16.0-rc.1"
 xpd-database = { workspace = true }
+xpd-common = { workspace = true }
 twilight-validate = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"
