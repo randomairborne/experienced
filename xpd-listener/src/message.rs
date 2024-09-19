@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use rand::Rng;
-use twilight_cache_inmemory::CacheableRole;
 use twilight_model::{
     channel::message::AllowedMentions,
     gateway::payload::incoming::MessageCreate,
