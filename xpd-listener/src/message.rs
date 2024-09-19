@@ -5,9 +5,8 @@ use twilight_cache_inmemory::CacheableRole;
 use twilight_model::{
     channel::message::AllowedMentions,
     gateway::payload::incoming::MessageCreate,
-    guild::Permissions,
     id::{
-        marker::{ChannelMarker, GuildMarker, RoleMarker},
+        marker::{GuildMarker, RoleMarker},
         Id,
     },
 };
