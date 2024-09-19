@@ -3805,7 +3805,6 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 name = "xpd-common"
 version = "0.0.6"
 dependencies = [
- "serde",
  "simpleinterpolation",
  "twilight-cache-inmemory",
  "twilight-gateway",
@@ -3879,7 +3878,6 @@ dependencies = [
  "tokio",
  "toml",
  "tracing",
- "xpd-common",
 ]
 
 [[package]]

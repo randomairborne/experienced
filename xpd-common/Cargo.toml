@@ -14,4 +14,3 @@ twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 twilight-cache-inmemory = "0.16.0-rc.1"
 simpleinterpolation = { path = "../simpleinterpolation" }
 twilight-model = "0.16.0-rc.1"
-serde = { version = "1", features = ["derive"] }
