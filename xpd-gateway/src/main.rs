@@ -247,7 +247,7 @@ async fn handle_event(
         }
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::GuildCreate(guild_add) => {
-            if !xpd_database::is_guild_banned(&db, guild_add.id).await? {
+            if xpd_database::is_guild_banned(&db, guild_add.id).await? {
                 debug!(
                     id = guild_add.id.get(),
                     "Leaving guild because it is banned"
