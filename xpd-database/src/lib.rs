@@ -416,13 +416,13 @@ pub async fn update_guild_config<
                 "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, min_xp_per_message, message_cooldown, one_at_a_time) \
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) \
                 ON CONFLICT (id) DO UPDATE SET \
-                level_up_message = COALESCE($2, excluded.level_up_message), \
-                level_up_channel = COALESCE($3, excluded.level_up_channel), \
-                ping_on_level_up = COALESCE($4, excluded.ping_on_level_up), \
-                max_xp_per_message = COALESCE($5, excluded.max_xp_per_message), \
-                min_xp_per_message = COALESCE($6, excluded.min_xp_per_message), \
-                message_cooldown = COALESCE($7, excluded.message_cooldown), \
-                one_at_a_time = COALESCE($8, excluded.one_at_a_time) \
+                level_up_message = COALESCE($2, guild_configs.level_up_message), \
+                level_up_channel = COALESCE($3, guild_configs.level_up_channel), \
+                ping_on_level_up = COALESCE($4, guild_configs.ping_on_level_up), \
+                max_xp_per_message = COALESCE($5, guild_configs.max_xp_per_message), \
+                min_xp_per_message = COALESCE($6, guild_configs.min_xp_per_message), \
+                message_cooldown = COALESCE($7, guild_configs.message_cooldown), \
+                one_at_a_time = COALESCE($8, guild_configs.one_at_a_time) \
                 RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
                 max_xp_per_message, min_xp_per_message, message_cooldown",
                 id_to_db(guild),
