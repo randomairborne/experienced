@@ -34,6 +34,7 @@ async fn delete(
         let mut txn = state.db.begin().await?;
         xpd_database::delete_levels_user(&mut txn, invoker.id).await?;
         xpd_database::delete_card_customizations(&mut txn, invoker.id.cast()).await?;
+        txn.commit().await?;
         Ok(
             XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
                 .ephemeral(true),
