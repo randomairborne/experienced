@@ -41,7 +41,8 @@ async fn delete(
     } else {
         Ok(XpdSlashResponse::with_embed_text(
             "Please make sure the username you entered is correct!",
-        ))
+        )
+        .ephemeral(true))
     }
 }
 
