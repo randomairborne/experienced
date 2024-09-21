@@ -9,7 +9,7 @@ use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
-    gateway::{event::Event, Intents},
+    gateway::Intents,
     id::{
         marker::{ApplicationMarker, GuildMarker, UserMarker},
         Id,
@@ -101,10 +101,6 @@ impl XpdListenerInner {
             task_tracker,
             current_application_id,
         }
-    }
-
-    pub fn update_cache(&self, uc: &Event) {
-        self.cache.update(uc);
     }
 
     pub fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) -> Result<(), Error> {

@@ -11,7 +11,7 @@ use std::sync::{
 use sqlx::PgPool;
 use tokio_util::task::TaskTracker;
 use tracing::Level;
-use twilight_cache_inmemory::InMemoryCacheBuilder;
+use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
     error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
     MessageSender, Shard, StreamExt,
@@ -125,7 +125,7 @@ async fn main() {
         client.clone(),
         my_id,
         db.clone(),
-        cache,
+        cache.clone(),
         task_tracker.clone(),
         control_guild,
         owners,
@@ -151,6 +151,7 @@ async fn main() {
             shutdown.clone(),
             listener.clone(),
             slash.clone(),
+            cache.clone(),
             db.clone(),
         ));
     }
@@ -184,6 +185,7 @@ async fn main() {
     info!("Done, see ya!");
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
@@ -191,6 +193,7 @@ async fn event_loop(
     shutdown: Arc<AtomicBool>,
     listener: XpdListener,
     slash: XpdSlash,
+    cache: Arc<InMemoryCache>,
     db: PgPool,
 ) {
     let event_flags = XpdListener::required_events()
@@ -219,8 +222,9 @@ async fn event_loop(
         let http = http.clone();
         let slash = slash.clone();
         let db = db.clone();
+        let cache = cache.clone();
         task_tracker.spawn(async move {
-            if let Err(error) = handle_event(event, http, listener, slash, db).await {
+            if let Err(error) = handle_event(event, http, listener, slash, cache, db).await {
                 // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
                 error!(?error, "Handler error");
             }
@@ -233,9 +237,10 @@ async fn handle_event(
     http: Arc<DiscordClient>,
     listener: XpdListener,
     slash: XpdSlash,
+    cache: Arc<InMemoryCache>,
     db: PgPool,
 ) -> Result<(), Error> {
-    listener.update_cache(&event);
+    cache.update(&event);
     match event {
         Event::Ready(ready) => {
             info!(

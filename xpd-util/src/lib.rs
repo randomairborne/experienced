@@ -19,6 +19,7 @@ pub fn can_add_roles(
     if targets.is_empty() {
         return Ok(CanAddRole::Yes);
     }
+
     if !cache
         .permissions()
         .root(bot_id, guild_id)?
