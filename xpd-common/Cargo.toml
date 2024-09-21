@@ -10,7 +10,10 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
+# twilight
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
-simpleinterpolation = { workspace = true }
 twilight-cache-inmemory = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
+
+# internal
+simpleinterpolation = { workspace = true }

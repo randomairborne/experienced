@@ -12,15 +12,23 @@ keywords = ["discord-bot", "mee6"]
 [dependencies]
 twilight-cache-inmemory = { version = "0.16.0-rc.1", features = ["permission-calculator"] }
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
+twilight-model = "0.16.0-rc.1"
+twilight-http = "0.16.0-rc.1"
+
+# tokio
 tokio-util = { version = "0.7", features = ["rt"] }
+
+# error handling
+tracing = "0.1"
+thiserror = "1"
+
+# xpd utils
 simpleinterpolation = { workspace = true }
 xpd-database = { workspace = true }
 xpd-common = { workspace = true }
 xpd-util = { workspace = true }
-twilight-model = "0.16.0-rc.1"
-twilight-http = "0.16.0-rc.1"
-thiserror = "1"
-tracing = "0.1"
+mee6 = "0.1"
+
+# general utils
 ahash = "0.8"
 rand = "0.8"
-mee6 = "0.1"

@@ -11,30 +11,43 @@ keywords = ["discord-bot", "mee6"]
 # SO MANY DEPENDENCIES
 
 [dependencies]
-reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots", "stream"], default-features = false }
+# twilight
 twilight-http = { version = "0.16.0-rc.1", features = ["rustls-native-roots"], default-features = false }
-sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 twilight-cache-inmemory = { version = "0.16.0-rc.1", features = ["permission-calculator"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
-tokio-util = { version = "0.7", features = ["rt"] }
-serde = { version = "1", features = ["derive"] }
-simpleinterpolation = { workspace = true }
 twilight-interactions = "0.16.0-rc.1"
+twilight-validate = "0.16.0-rc.1"
+twilight-model = "0.16.0-rc.1"
+
+# tokio
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+
+# http
+reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots", "stream"], default-features = false }
+http-body-util = "0.1"
+
+# internal crates
+simpleinterpolation = { workspace = true }
 xpd-rank-card = { workspace = true }
 xpd-database = { workspace = true }
-twilight-validate = "0.16.0-rc.1"
 xpd-common = { workspace = true }
 xpd-util = { workspace = true }
-twilight-model = "0.16.0-rc.1"
-http-body-util = "0.1"
-serde_json = "1"
-tracing = "0.1"
-base64 = "0.22"
-thiserror = "1"
 mee6 = "0.1"
+
+# data formats
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
 csv = "1"
+
+# sqlx
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
+
+# error handling
+thiserror = "1"
+tracing = "0.1"
 
 [dev-dependencies]
 rand = "0.8"

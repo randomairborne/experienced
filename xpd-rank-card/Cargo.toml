@@ -10,12 +10,24 @@ keywords = ["svg"]
 categories = ["multimedia::images"]
 
 [dependencies]
-tokio = { version = "1", features = ["sync", "fs"] }
-serde = { version = "1", features = ["derive"] }
-thiserror = "1"
-tracing = "0.1"
+# tokio
+tokio = { version = "1", features = ["sync"] }
+
+# image formats
 resvg = "0.43"
 png = "0.17"
+
+# error handling
+tracing = "0.1"
+thiserror = "1"
+
+# serde
+serde = { version = "1", features = ["derive"] }
 toml = "0.8"
-rayon = "1"
 tera = "1"
+
+# misc
+rayon = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["fs"] }
