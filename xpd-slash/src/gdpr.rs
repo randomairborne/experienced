@@ -30,7 +30,7 @@ async fn delete(
     cmd: GdprCommandDelete,
     invoker: MemberDisplayInfo,
 ) -> Result<XpdSlashResponse, Error> {
-    if cmd.username == invoker.name {
+    if cmd.user == invoker.id {
         let mut txn = state.db.begin().await?;
         xpd_database::delete_levels_user(&mut txn, invoker.id).await?;
         xpd_database::delete_card_customizations(&mut txn, invoker.id.cast()).await?;
