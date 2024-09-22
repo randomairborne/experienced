@@ -141,7 +141,7 @@ async fn process_perm_checkup(
         .unwrap_or_default();
     let can_msg_in_level_up = config
         .level_up_channel
-        .map(|level_up| xpd_util::can_create_message(&state.cache, state.my_id.cast(), level_up))
+        .map(|level_up| xpd_util::can_create_message(&state.cache, state.bot_id, level_up))
         .transpose()?;
 
     let rewards: Vec<Id<RoleMarker>> = xpd_database::guild_rewards(&state.db, guild_id)
@@ -150,8 +150,7 @@ async fn process_perm_checkup(
         .map(|v| v.id)
         .collect();
 
-    let can_add_roles =
-        xpd_util::can_add_roles(&state.cache, state.my_id.cast(), guild_id, &rewards)?;
+    let can_add_roles = xpd_util::can_add_roles(&state.cache, state.bot_id, guild_id, &rewards)?;
     let good_msg_state = EmojiFormatBool(can_msg_in_level_up != Some(false));
 
     let can_add_roles = match can_add_roles {

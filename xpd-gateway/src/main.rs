@@ -19,10 +19,7 @@ use twilight_gateway::{
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
     gateway::ShardId,
-    id::{
-        marker::{GuildMarker, UserMarker},
-        Id,
-    },
+    id::{marker::GuildMarker, Id},
 };
 use xpd_common::RequiredDiscordResources;
 use xpd_listener::XpdListener;
@@ -37,14 +34,6 @@ async fn main() {
     let token = xpd_common::get_var("DISCORD_TOKEN");
     let pg = xpd_common::get_var("DATABASE_URL");
     let control_guild: Id<GuildMarker> = xpd_common::parse_var("CONTROL_GUILD");
-    let owners: Vec<Id<UserMarker>> = xpd_common::get_var("OWNERS")
-        .split(',')
-        .map(|v| {
-            v.trim()
-                .parse::<Id<UserMarker>>()
-                .expect("One of the values in OWNERS was not a valid ID!")
-        })
-        .collect();
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
         .connect(&pg)
@@ -58,14 +47,26 @@ async fn main() {
     let client = Arc::new(DiscordClient::new(token.clone()));
     let intents = XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILDS;
     // TODO: Get both bot and application IDs
-    let my_id = client
+    let current_app = client
         .current_user_application()
         .await
         .expect("Failed to get own app ID!")
         .model()
         .await
-        .expect("Failed to convert own app ID!")
-        .id;
+        .expect("Failed to convert own app ID!");
+    let app_id = current_app.id;
+    let bot_id = current_app.bot.expect("There has to be a bot here").id;
+    let owners = if let Some(owner) = current_app.owner {
+        vec![owner.id]
+    } else {
+        current_app
+            .team
+            .expect("No team or owner for app")
+            .members
+            .iter()
+            .map(|v| v.user.id)
+            .collect()
+    };
 
     let http = reqwest::Client::builder()
         .user_agent("randomairborne/experienced")
@@ -91,7 +92,7 @@ async fn main() {
         client.clone(),
         cache.clone(),
         task_tracker.clone(),
-        my_id,
+        bot_id,
     );
 
     let updating_listener = listener.clone();
@@ -123,7 +124,8 @@ async fn main() {
     let slash = XpdSlash::new(
         http,
         client.clone(),
-        my_id,
+        app_id,
+        bot_id,
         db.clone(),
         cache.clone(),
         task_tracker.clone(),

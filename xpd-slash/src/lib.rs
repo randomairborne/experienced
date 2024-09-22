@@ -66,7 +66,8 @@ impl XpdSlash {
     pub async fn new(
         http: reqwest::Client,
         client: Arc<twilight_http::Client>,
-        id: Id<ApplicationMarker>,
+        app_id: Id<ApplicationMarker>,
+        bot_id: Id<UserMarker>,
         db: PgPool,
         cache: Arc<InMemoryCache>,
         task_tracker: TaskTracker,
@@ -79,7 +80,8 @@ impl XpdSlash {
         let state = SlashState {
             db,
             client,
-            my_id: id,
+            app_id,
+            bot_id,
             svg,
             task_tracker,
             http,
@@ -103,7 +105,7 @@ impl XpdSlash {
         info!(?total_time, "processed interaction in time");
         if let Err(error) = self
             .client()
-            .interaction(self.id())
+            .interaction(self.state.app_id)
             .create_response(ic_id, &interaction_token, &response)
             .await
         {
@@ -132,11 +134,6 @@ impl XpdSlash {
     pub fn client(&self) -> Arc<twilight_http::Client> {
         self.state.client.clone()
     }
-
-    #[must_use]
-    pub const fn id(&self) -> Id<ApplicationMarker> {
-        self.state.my_id
-    }
 }
 
 impl RequiredDiscordResources for XpdSlash {
@@ -163,8 +160,9 @@ const THEME_COLOR: u32 = 0x33_33_66;
 pub struct SlashState {
     pub db: PgPool,
     pub client: Arc<twilight_http::Client>,
-    pub my_id: Id<ApplicationMarker>,
+    pub app_id: Id<ApplicationMarker>,
     pub task_tracker: TaskTracker,
+    pub bot_id: Id<UserMarker>,
     pub cache: Arc<InMemoryCache>,
     pub svg: SvgState,
     pub rt: Handle,
@@ -222,7 +220,7 @@ impl SlashState {
         trace!(?response, "sending followup message");
         if let Err(source) = self
             .client
-            .interaction(self.my_id)
+            .interaction(self.app_id)
             .create_followup(token)
             .allowed_mentions(response.allowed_mentions.as_ref())
             .attachments(&response.attachments.unwrap_or_default())

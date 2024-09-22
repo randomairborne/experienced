@@ -129,13 +129,9 @@ impl XpdListenerInner {
             complete_role_set.extend(&new_roles);
 
             // make sure we don't make useless requests to the API
-            let can_add_role = xpd_util::can_add_roles(
-                &self.cache,
-                self.current_application_id.cast(),
-                guild_id,
-                new_roles.as_slice(),
-            )?
-            .can_add_role();
+            let can_add_role =
+                xpd_util::can_add_roles(&self.cache, self.bot_id, guild_id, new_roles.as_slice())?
+                    .can_add_role();
             if member.roles != new_roles && can_add_role {
                 debug!(user = ?msg.author.id, old = ?member.roles, new = ?new_roles, "Updating roles for user");
                 self.http
@@ -149,11 +145,7 @@ impl XpdListenerInner {
             if let Some(template) = guild_config.level_up_message.as_ref() {
                 let target_channel = guild_config.level_up_channel.unwrap_or(msg.channel_id);
                 debug!(user = ?msg.author.id, channel = ?msg.channel_id, ?target_channel, old = old_user_level, new = user_level, "Congratulating user");
-                if xpd_util::can_create_message(
-                    &self.cache,
-                    self.current_application_id.cast(),
-                    target_channel,
-                )? {
+                if xpd_util::can_create_message(&self.cache, self.bot_id, target_channel)? {
                     let map = HashMap::from([
                         ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
                         ("level".to_string(), user_level.to_string()),

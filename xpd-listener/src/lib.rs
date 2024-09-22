@@ -11,7 +11,7 @@ use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::Intents,
     id::{
-        marker::{ApplicationMarker, GuildMarker, UserMarker},
+        marker::{GuildMarker, UserMarker},
         Id,
     },
 };
@@ -39,7 +39,7 @@ impl XpdListener {
         http: Arc<twilight_http::Client>,
         cache: Arc<InMemoryCache>,
         tasks: TaskTracker,
-        me: Id<ApplicationMarker>,
+        me: Id<UserMarker>,
     ) -> Self {
         Self(Arc::new(XpdListenerInner::new(db, http, cache, tasks, me)))
     }
@@ -76,7 +76,7 @@ pub struct XpdListenerInner {
     task_tracker: TaskTracker,
     configs: LockingMap<Id<GuildMarker>, Arc<GuildConfig>>,
     rewards: LockingMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
-    current_application_id: Id<ApplicationMarker>,
+    bot_id: Id<UserMarker>,
 }
 
 impl XpdListenerInner {
@@ -85,7 +85,7 @@ impl XpdListenerInner {
         http: Arc<twilight_http::Client>,
         cache: Arc<InMemoryCache>,
         task_tracker: TaskTracker,
-        current_application_id: Id<ApplicationMarker>,
+        bot_id: Id<UserMarker>,
     ) -> Self {
         let messages = RwLock::new(SentMessages::new());
         let configs = RwLock::new(HashMap::new());
@@ -99,7 +99,7 @@ impl XpdListenerInner {
             rewards,
             cache,
             task_tracker,
-            current_application_id,
+            bot_id,
         }
     }
 
