@@ -46,7 +46,7 @@ async fn main() {
 
     let client = Arc::new(DiscordClient::new(token.clone()));
     let intents = XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILDS;
-    // TODO: Get both bot and application IDs
+
     let current_app = client
         .current_user_application()
         .await
