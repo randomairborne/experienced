@@ -262,7 +262,6 @@ async fn process_rewards_add(
     state: SlashState,
     guild_id: Id<GuildMarker>,
 ) -> Result<String, Error> {
-    // TODO: Do some perm checking perhaps.
     xpd_database::add_reward_role(&state.db, guild_id, options.level, options.role.id).await?;
     state.invalidate_rewards(guild_id).await;
     Ok(format!(
