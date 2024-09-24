@@ -2,6 +2,7 @@
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 const { title, description } = Astro.props;
+import logo from "../images/logo.png"
 ---
 
 <!doctype html>
@@ -9,7 +10,7 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <title>Experienced - {title}</title>
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type=`image/${logo.format}` href={logo.src} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="sitemap" href="/sitemap-index.xml" />
