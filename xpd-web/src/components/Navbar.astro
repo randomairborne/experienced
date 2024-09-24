@@ -9,7 +9,12 @@ import { Image } from "astro:assets";
   <nav class="top-nav flex-grow">
     <a href="/" class="menu-title">
       <picture>
-        <Image src={LogoImage} alt="experienced orb" class="smaller-image" />
+        <Image
+          src={LogoImage}
+          alt="experienced orb"
+          class="smaller-image"
+          widths={[64, 128, 256, 512, 1024]}
+        />
       </picture>
       <div class="tiny-spacer"></div>
       <Wordmark>EXPERIENCED</Wordmark>
