@@ -8,9 +8,14 @@ use std::sync::{
     Arc,
 };
 
+use opentelemetry::KeyValue;
+use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::{logs::LoggerProvider, Resource};
 use sqlx::PgPool;
 use tokio_util::task::TaskTracker;
-use tracing::Level;
+use tracing::error;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
 use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
     error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
@@ -27,10 +32,8 @@ use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::TRACE)
-        .json()
-        .init();
+    let tracer_shutdown = init_tracing();
+
     let token = xpd_common::get_var("DISCORD_TOKEN");
     let pg = xpd_common::get_var("DATABASE_URL");
     let control_guild: Id<GuildMarker> = xpd_common::parse_var("CONTROL_GUILD");
@@ -184,6 +187,10 @@ async fn main() {
         error!(?source, "Could not shut down config updater");
     }
 
+    if let Some(tracer) = tracer_shutdown {
+        tracer.shutdown().expect("Failed to shut down tracer");
+    }
+
     info!("Done, see ya!");
 }
 
@@ -267,6 +274,38 @@ async fn handle_event(
         _ => {}
     };
     Ok(())
+}
+
+#[must_use]
+fn init_tracing() -> Option<LoggerProvider> {
+    let logger = std::env::var("OLTP_ENDPOINT").ok().map(|v| make_oltp(&v));
+
+    let layer = logger.as_ref().map(OpenTelemetryTracingBridge::new);
+    let fmt = tracing_subscriber::fmt::layer();
+
+    // Use the tracing subscriber `Registry`, or any other subscriber
+    // that impls `LookupSpan`
+    Registry::default().with(layer).with(fmt).init();
+    logger
+}
+
+#[must_use]
+fn make_oltp(endpoint: &str) -> LoggerProvider {
+    let svc_name = Resource::new(vec![KeyValue::new(
+        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+        env!("CARGO_PKG_NAME"),
+    )]);
+    // Create a new OpenTelemetry trace pipeline that prints to stdout
+    opentelemetry_otlp::new_pipeline()
+        .logging()
+        .with_resource(svc_name.clone())
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint(endpoint),
+        )
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .unwrap()
 }
 
 #[derive(Debug, thiserror::Error)]
