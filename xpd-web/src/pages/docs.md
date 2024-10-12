@@ -13,7 +13,8 @@ reset your settings if you wish to disable a setting. This will be improved soon
 ### Leveling
 
 The variables available in level up messages are `user_mention` and `level`. These are a ping for the user who leveled
-up, and the numeric value of the user's level, respectively.
+up, and the numeric value of the user's level, respectively. You can use the variables like so:
+`{user_mention} has leveled up to level {level}!`.
 The level-up channel may only be enabled if the level-up message is set.
 
 ### Rewards
