@@ -19,12 +19,14 @@ page = 0
 
 headers = {
     "Authorization": mee6_auth,
+    "Referer": f"https://mee6.xyz/en/leaderboard/{guild}",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:131.0) Gecko/20100101 Firefox/131.0"
 }
 
 players = []
 
 while last_len != 0:
-    url = f"https://mee6.xyz/api/plugins/levels/leaderboard/{guild}?page={page}"
+    url = f"https://mee6.xyz/api/plugins/levels/leaderboard/{guild}?page={page}&limit=1000"
     req = urllib.request.Request(url, headers=headers)
     resp = urllib.request.urlopen(req)
     apiresp = json.loads(resp.read())
