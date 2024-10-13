@@ -6,7 +6,7 @@ import urllib.request
 
 mee6_auth = os.getenv("MEE6_AUTH")
 if mee6_auth is None:
-    print("Please set MEE6_AUTH environment variable to the Authorization token from mee6.com")
+    print("Please set MEE6_AUTH environment variable to the Authorization token from mee6.xyz")
     sys.exit(1)
 
 if len(sys.argv) != 2:
