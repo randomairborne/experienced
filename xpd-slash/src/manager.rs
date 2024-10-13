@@ -212,6 +212,8 @@ async fn background_data_import(
             xpd_database::add_xp(txn.as_mut(), user.id, guild_id, user.xp).await?;
         }
     }
+    
+    txn.commit().await?;
 
     let seconds = start.elapsed().as_secs_f64();
     Ok(XpdSlashResponse::with_embed_text(format!(
