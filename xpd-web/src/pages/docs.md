@@ -49,13 +49,13 @@ The JSON format used by `xp experience import` and `xp experience export` is a l
 definition:
 
 | Key  |  Value   | Description                 |
-| :--: | :------: | --------------------------- |
+|:----:|:--------:|-----------------------------|
 | `id` | `string` | Stringified discord user ID |
 | `xp` |  `int`   | XP count for this user      |
 
 ### Rewards
 
-The `xp rewards` command has three subcommands: `add`, `list`, and `remove.
+The `xp rewards` command has three subcommands: `add`, `list`, and `remove`.
 
 - `add`: Adds a role that will be given when you reach a specified level.
 - `remove`: Removes a role reward. You only need to specify either the level or the target role.
