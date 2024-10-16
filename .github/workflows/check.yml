@@ -19,17 +19,9 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Check Rust formatting
-        run: cargo fmt --check
-
-      - name: Install prettier
+      - name: Install NPM deps
         run: npm install
 
-      - name: Check web formatting
-        run: npm run prettier-check
-
-      - name: Check build
-        run: cargo clippy -- -D warnings
-
-      - name: Run tests
-        run: cargo test --all
+      - name: Run verifications
+        run: ./ci/lint.sh
+        shell: bash
