@@ -22,7 +22,7 @@ use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{logs::LoggerProvider, Resource};
 use sqlx::PgPool;
 use tokio_util::task::TaskTracker;
-use tracing::{error, log::Level, Metadata};
+use tracing::{error, Level, Metadata};
 use tracing_subscriber::{
     layer::{Context, Filter, SubscriberExt},
     util::SubscriberInitExt,
@@ -292,7 +292,7 @@ struct PrefixFilter;
 
 impl<S> Filter<S> for PrefixFilter {
     fn enabled(&self, meta: &Metadata<'_>, cx: &Context<'_, S>) -> bool {
-        meta.level().ge(&Level::Info) || meta.module_path().is_some_and(|mp| mp.starts_with("xpd"))
+        *meta.level() >= Level::INFO || meta.module_path().is_some_and(|mp| mp.starts_with("xpd"))
     }
 }
 
