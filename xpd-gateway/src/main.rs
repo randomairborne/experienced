@@ -314,7 +314,8 @@ fn make_otlp(endpoint: &str) -> LoggerProvider {
             opentelemetry_otlp::new_exporter()
                 .http()
                 .with_endpoint(endpoint)
-                .with_headers(headers),
+                .with_headers(headers)
+                .with_http_client(reqwest::Client::new()),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .unwrap()
