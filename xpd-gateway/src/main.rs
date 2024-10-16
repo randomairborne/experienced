@@ -291,7 +291,7 @@ async fn handle_event(
 struct PrefixFilter;
 
 impl<S> Filter<S> for PrefixFilter {
-    fn enabled(&self, meta: &Metadata<'_>, cx: &Context<'_, S>) -> bool {
+    fn enabled(&self, meta: &Metadata<'_>, _cx: &Context<'_, S>) -> bool {
         *meta.level() >= Level::INFO || meta.module_path().is_some_and(|mp| mp.starts_with("xpd"))
     }
 }
