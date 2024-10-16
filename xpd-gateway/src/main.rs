@@ -332,7 +332,7 @@ fn make_otlp_headers() -> HashMap<String, String> {
         .expect("OTLP_BASIC_USERNAME was set, but OTLP_BASIC_PASSWORD was not!");
 
     const B64_ENGINE: Base64Engine =
-        Base64Engine::new(&base64::alphabet::STANDARD, Base64Config::new());
+        Base64Engine::new(&base64::alphabet::URL_SAFE, Base64Config::new());
 
     let basic_string = B64_ENGINE.encode(format!("{username}:{password}"));
     let mut out_map = HashMap::new();
