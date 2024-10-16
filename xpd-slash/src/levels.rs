@@ -140,25 +140,25 @@ pub async fn get_customizations(
 
     let defaults = Customizations::default_customizations_str(&customizations.card_layout);
     Ok(Customizations {
-        username: color_or_default(&customizations.username, defaults.username)?,
-        rank: color_or_default(&customizations.rank, defaults.rank)?,
-        level: color_or_default(&customizations.level, defaults.level)?,
-        border: color_or_default(&customizations.border, defaults.border)?,
-        background: color_or_default(&customizations.background, defaults.background)?,
+        username: color_or_default(customizations.username.as_deref(), defaults.username)?,
+        rank: color_or_default(customizations.rank.as_deref(), defaults.rank)?,
+        level: color_or_default(customizations.level.as_deref(), defaults.level)?,
+        border: color_or_default(customizations.border.as_deref(), defaults.border)?,
+        background: color_or_default(customizations.background.as_deref(), defaults.background)?,
         progress_foreground: color_or_default(
-            &customizations.progress_foreground,
+            customizations.progress_foreground.as_deref(),
             defaults.progress_foreground,
         )?,
         progress_background: color_or_default(
-            &customizations.progress_background,
+            customizations.progress_background.as_deref(),
             defaults.progress_background,
         )?,
         background_xp_count: color_or_default(
-            &customizations.background_xp_count,
+            customizations.background_xp_count.as_deref(),
             defaults.background_xp_count,
         )?,
         foreground_xp_count: color_or_default(
-            &customizations.foreground_xp_count,
+            customizations.foreground_xp_count.as_deref(),
             defaults.foreground_xp_count,
         )?,
         font: customizations.font.unwrap_or(defaults.font),
@@ -167,7 +167,7 @@ pub async fn get_customizations(
     })
 }
 
-fn color_or_default(color: &Option<String>, default: Color) -> Result<Color, Error> {
+fn color_or_default(color: Option<&str>, default: Color) -> Result<Color, Error> {
     if let Some(color) = &color {
         Ok(Color::from_hex(color)?)
     } else {
