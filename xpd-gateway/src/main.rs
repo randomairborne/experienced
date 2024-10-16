@@ -3,11 +3,20 @@
 #[macro_use]
 extern crate tracing;
 
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
+use std::{
+    collections::HashMap,
+    env::VarError,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
+use base64::{
+    alphabet::Alphabet,
+    engine::{GeneralPurpose as Base64Engine, GeneralPurposeConfig as Base64Config},
+    Engine,
+};
 use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::WithExportConfig;
@@ -278,7 +287,7 @@ async fn handle_event(
 
 #[must_use]
 fn init_tracing() -> Option<LoggerProvider> {
-    let logger = std::env::var("OLTP_ENDPOINT").ok().map(|v| make_oltp(&v));
+    let logger = std::env::var("OTLP_ENDPOINT").ok().map(|v| make_otlp(&v));
 
     let layer = logger.as_ref().map(OpenTelemetryTracingBridge::new);
     let fmt = tracing_subscriber::fmt::layer();
@@ -290,22 +299,45 @@ fn init_tracing() -> Option<LoggerProvider> {
 }
 
 #[must_use]
-fn make_oltp(endpoint: &str) -> LoggerProvider {
+fn make_otlp(endpoint: &str) -> LoggerProvider {
     let svc_name = Resource::new(vec![KeyValue::new(
         opentelemetry_semantic_conventions::resource::SERVICE_NAME,
         env!("CARGO_PKG_NAME"),
     )]);
+
+    let headers = make_otlp_headers();
+
     // Create a new OpenTelemetry trace pipeline that prints to stdout
     opentelemetry_otlp::new_pipeline()
         .logging()
         .with_resource(svc_name.clone())
         .with_exporter(
             opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_endpoint(endpoint),
+                .http()
+                .with_endpoint(endpoint)
+                .with_headers(headers),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .unwrap()
+}
+
+fn make_otlp_headers() -> HashMap<String, String> {
+    let username = std::env::var("OTLP_BASIC_USERNAME");
+    let username = match username {
+        Ok(name) => name,
+        Err(VarError::NotPresent) => return HashMap::new(),
+        Err(VarError::NotUnicode(_)) => panic!("Failed to parse OTLP_BASIC_USERNAME"),
+    };
+    let password = std::env::var("OTLP_BASIC_PASSWORD")
+        .expect("OTLP_BASIC_USERNAME was set, but OTLP_BASIC_PASSWORD was not!");
+
+    const B64_ENGINE: Base64Engine =
+        Base64Engine::new(&base64::alphabet::STANDARD, Base64Config::new());
+
+    let basic_string = B64_ENGINE.encode(format!("{username}:{password}"));
+    let mut out_map = HashMap::new();
+    out_map.insert("Authorization".to_string(), format!("Basic {basic_string}"));
+    out_map
 }
 
 #[derive(Debug, thiserror::Error)]
