@@ -76,7 +76,6 @@ impl XpdSlashResponse {
 
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
-
     pub fn custom_id_o(self, custom_id: Option<String>) -> Self {
         Self { custom_id, ..self }
     }
