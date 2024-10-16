@@ -22,8 +22,12 @@ use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{logs::LoggerProvider, Resource};
 use sqlx::PgPool;
 use tokio_util::task::TaskTracker;
-use tracing::error;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
+use tracing::{error, log::Level, Metadata};
+use tracing_subscriber::{
+    layer::{Context, Filter, SubscriberExt},
+    util::SubscriberInitExt,
+    Layer, Registry,
+};
 use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
     error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
@@ -284,16 +288,27 @@ async fn handle_event(
     Ok(())
 }
 
+struct PrefixFilter;
+
+impl<S> Filter<S> for PrefixFilter {
+    fn enabled(&self, meta: &Metadata<'_>, cx: &Context<'_, S>) -> bool {
+        meta.level().ge(&Level::Info) || meta.module_path().is_some_and(|mp| mp.starts_with("xpd"))
+    }
+}
+
 #[must_use]
 fn init_tracing() -> Option<LoggerProvider> {
     let logger = std::env::var("OTLP_ENDPOINT").ok().map(|v| make_otlp(&v));
 
-    let layer = logger.as_ref().map(OpenTelemetryTracingBridge::new);
+    let layer = logger
+        .as_ref()
+        .map(OpenTelemetryTracingBridge::new)
+        .map(|v| v.with_filter(PrefixFilter));
     let fmt = tracing_subscriber::fmt::layer();
 
     // Use the tracing subscriber `Registry`, or any other subscriber
     // that impls `LookupSpan`
-    Registry::default().with(layer).with(fmt).init();
+    Registry::default().with(fmt).with(layer).init();
     logger
 }
 
