@@ -13,7 +13,6 @@ use std::{
 };
 
 use base64::{
-    alphabet::Alphabet,
     engine::{GeneralPurpose as Base64Engine, GeneralPurposeConfig as Base64Config},
     Engine,
 };
