@@ -68,23 +68,11 @@ async fn download(
     let level_file = Attachment::from_bytes(format!("leveling-{}.csv", invoker.id), levels, 1);
     let card_file = Attachment::from_bytes(format!("card-{}.csv", invoker.id), custom_card, 2);
 
-    let dm_channel = state
-        .client
-        .create_private_channel(invoker.id)
-        .await?
-        .model()
-        .await?;
-
-    state
-        .client
-        .create_message(dm_channel.id)
-        .attachments(&[level_file, card_file])
-        .await?;
-
     Ok(
         XpdSlashResponse::with_embed_text(
             "Check your DMs, your data package has been sent to you!",
         )
+        .attachments([level_file, card_file])
         .ephemeral(true),
     )
 }
