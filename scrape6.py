@@ -6,11 +6,11 @@ import urllib.request
 
 mee6_auth = os.getenv("MEE6_AUTH")
 if mee6_auth is None:
-    print("Please set MEE6_AUTH environment variable to the Authorization token from mee6.xyz")
+    print("Please set MEE6_AUTH environment variable to the Authorization token from mee6.xyz", file=sys.stderr)
     sys.exit(1)
 
 if len(sys.argv) != 2:
-    print("Usage: python3 scrape6.py <url> > export.json")
+    print("Usage: python3 scrape6.py <url> > export.json", file=sys.stderr)
     sys.exit(1)
 guild = sys.argv[1]
 
