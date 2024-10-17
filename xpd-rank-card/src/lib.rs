@@ -214,17 +214,17 @@ fn int_humanize(v: &Value, _hm: &HashMap<String, Value>) -> tera::Result<Value> 
     } else {
         return Ok(v.clone());
     };
-    let (suffix, xp) = if (1_000.0..1_000_000.0).contains(&num) {
-        ("k", num / 1_000.0)
+    let (suffix, xp, precision) = if (1_000.0..1_000_000.0).contains(&num) {
+        ("k", num / 1_000.0, 1)
     } else if (1_000_000.0..1_000_000_000.0).contains(&num) {
-        ("m", num / 1_000_000.0)
+        ("m", num / 1_000_000.0, 3)
     } else if (1_000_000_000.0..1_000_000_000_000.0).contains(&num) {
-        ("b", num / 1_000_000_000.0)
+        ("b", num / 1_000_000_000.0, 3)
     } else {
-        ("", num)
+        ("", num, 0)
     };
-    let xp_untrim = format!("{xp:.1}");
-    let xp_trim = xp_untrim.trim_end_matches(".0");
+    let xp_untrim = format!("{xp:.precision$}");
+    let xp_trim = xp_untrim.trim_end_matches('0').trim_end_matches('.');
     Ok(Value::String(format!("{xp_trim}{suffix}")))
 }
 
