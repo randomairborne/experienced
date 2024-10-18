@@ -63,7 +63,7 @@ async fn download(
         .collect();
 
     let levels = multicsv(&levels)?;
-    let custom_card = unicsv(custom_card)?;
+    let custom_card = multicsv(&[custom_card])?;
 
     let level_file = Attachment::from_bytes(format!("leveling-{}.csv", invoker.id), levels, 1);
     let card_file = Attachment::from_bytes(format!("card-{}.csv", invoker.id), custom_card, 2);
@@ -87,14 +87,6 @@ impl UserXpArchiveEntry {
     const fn from_record(guild: Id<GuildMarker>, xp: i64) -> Self {
         Self { guild, xp }
     }
-}
-
-fn unicsv<T: Serialize>(data: T) -> Result<Vec<u8>, Error> {
-    let mut data_wtr = CsvWriter::from_writer(Vec::new());
-    data_wtr.serialize(data)?;
-    Ok(data_wtr
-        .into_inner()
-        .map_err(CsvIntoInnerError::into_error)?)
 }
 
 fn multicsv<T: Serialize>(data: &[T]) -> Result<Vec<u8>, Error> {
