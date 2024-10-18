@@ -222,6 +222,13 @@ fn get_role_changes(
     } else {
         &rewards[..=reward_idx]
     };
+    let roles_to_add = achieved_roles.iter().filter_map(|v| {
+        if !member.roles.contains(&v.id) {
+            Some(v.id)
+        } else {
+            None
+        }
+    });
 
     let mut changed_roles = Vec::with_capacity(8);
 
@@ -229,7 +236,7 @@ fn get_role_changes(
         .roles
         .iter()
         .copied()
-        .chain(achieved_roles.iter().map(|v| v.id))
+        .chain(roles_to_add)
         // if we're not doing one at a time, we always return true.
         // If the reward index is 0, we won't be removing any roles ever.
         // Otherwise, we return true if v is not the previous role.
@@ -352,6 +359,15 @@ mod tests {
         let changes = get_role_changes(&GuildConfig::default(), &member, &TEST_REWARDS, reward_idx);
         assert_eq!(changes.changed_roles, [Id::new(2)]);
         assert_eq!(changes.total_roles, [Id::new(1), Id::new(2)]);
+    }
+
+    #[test]
+    fn conf_many_adds_many() {
+        let reward_idx = get_reward_idx(&TEST_REWARDS, 11).unwrap();
+        let member = member_with_roles([]);
+        let changes = get_role_changes(&GuildConfig::default(), &member, &TEST_REWARDS, reward_idx);
+        assert_eq!(changes.changed_roles, [Id::new(1), Id::new(2), Id::new(3)]);
+        assert_eq!(changes.total_roles, [Id::new(1), Id::new(2), Id::new(3)]);
     }
 
     #[test]
