@@ -123,6 +123,7 @@ impl XpdListenerInner {
         user_level: i64,
     ) -> Result<(), Error> {
         let Some(reward_idx) = get_reward_idx(rewards, user_level) else {
+            // This ensures we don't delete roles or otherwise edit them if none are earned.
             return Ok(());
         };
         let roles = get_role_changes(guild_config, member, rewards, reward_idx);
@@ -353,5 +354,14 @@ mod tests {
         let changes = get_role_changes(&GuildConfig::default(), &member, &TEST_REWARDS, reward_idx);
         assert_eq!(changes.changed_roles, [Id::new(2)]);
         assert_eq!(changes.total_roles, [Id::new(1), Id::new(2)]);
+    }
+
+    #[test]
+    fn leave_alone_higher_roles() {
+        let reward_idx = get_reward_idx(&TEST_REWARDS, 3).unwrap();
+        let member = member_with_roles([Id::new(3)]);
+        let changes = get_role_changes(&GuildConfig::default(), &member, &TEST_REWARDS, reward_idx);
+        assert_eq!(changes.changed_roles, [Id::new(1)]);
+        assert_eq!(changes.total_roles, [Id::new(3), Id::new(1)]);
     }
 }
