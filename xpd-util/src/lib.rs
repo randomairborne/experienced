@@ -71,7 +71,7 @@ pub enum CanAddRole {
 }
 
 impl CanAddRole {
-    pub fn can_add_role(&self) -> bool {
+    pub fn can_update_roles(&self) -> bool {
         matches!(self, CanAddRole::Yes)
     }
 }
