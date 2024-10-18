@@ -150,7 +150,7 @@ async fn process_perm_checkup(
         .map(|v| v.id)
         .collect();
 
-    let can_add_roles = xpd_util::can_add_roles(&state.cache, state.bot_id, guild_id, &rewards)?;
+    let can_add_roles = xpd_util::can_manage_roles(&state.cache, state.bot_id, guild_id, &rewards)?;
     let good_msg_state = EmojiFormatBool(can_msg_in_level_up != Some(false));
 
     let can_add_roles = match can_add_roles {

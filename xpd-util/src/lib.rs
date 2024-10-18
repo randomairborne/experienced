@@ -10,7 +10,7 @@ use twilight_model::{
 #[macro_use]
 extern crate tracing;
 
-pub fn can_add_roles(
+pub fn can_manage_roles(
     cache: &InMemoryCache,
     bot_id: Id<UserMarker>,
     guild_id: Id<GuildMarker>,
