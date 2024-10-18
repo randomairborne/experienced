@@ -17,8 +17,13 @@ use xpd_common::{
 
 use crate::{Error, XpdListenerInner};
 
+type RoleList = Vec<Id<RoleMarker>>;
+
 impl XpdListenerInner {
     pub async fn save(&self, msg: MessageCreate) -> Result<(), Error> {
+        if msg.author.bot {
+            return Ok(());
+        }
         if let Some(guild_id) = msg.guild_id {
             self.save_msg_send(guild_id, msg).await?;
         }
@@ -31,10 +36,6 @@ impl XpdListenerInner {
         guild_id: Id<GuildMarker>,
         msg: MessageCreate,
     ) -> Result<(), Error> {
-        if msg.author.bot {
-            return Ok(());
-        }
-
         let Some(member) = &msg.member else {
             return Err(Error::NoMember);
         };
@@ -124,43 +125,21 @@ impl XpdListenerInner {
         let Some(reward_idx) = get_reward_idx(rewards, user_level) else {
             return Ok(());
         };
-
-        let previous_role = rewards[reward_idx.saturating_sub(1)].id;
-        let current_role = rewards[reward_idx].id;
-
-        let one_at_a_time = guild_config.one_at_a_time.is_some_and(|v| v);
-
-        let mut edited_roles = Vec::with_capacity(8);
-
-        let roles: Vec<Id<RoleMarker>> = member
-            .roles
-            .iter()
-            .copied()
-            // if we're not doing one at a time, we always return true.
-            // If the reward index is 0, we won't be removing any roles ever.
-            // Otherwise, we return true if v is not the previous role.
-            // If we return false, we want to know that we are REMOVING that role.
-            .filter(|v| {
-                let keeper = !one_at_a_time || reward_idx == 0 || *v != previous_role;
-                if !keeper {
-                    edited_roles.push(*v);
-                };
-                keeper
-            })
-            .chain([current_role])
-            .collect();
-
-        edited_roles.push(current_role);
+        let roles = get_role_changes(guild_config, member, rewards, reward_idx);
 
         // make sure we don't make useless error requests to the API
-        let can_add_role =
-            xpd_util::can_manage_roles(&self.cache, self.bot_id, guild_id, roles.as_slice())?
-                .can_add_role();
-        if can_add_role {
+        let can_update_roles = xpd_util::can_manage_roles(
+            &self.cache,
+            self.bot_id,
+            guild_id,
+            roles.changed_roles.as_slice(),
+        )?
+        .can_update_roles();
+        if can_update_roles {
             debug!(user = ?user_id, old = ?member.roles, new = ?roles, "Updating roles for user");
             self.http
                 .update_guild_member(guild_id, user_id)
-                .roles(&roles)
+                .roles(&roles.total_roles)
                 .await?;
         }
         Ok(())
@@ -220,4 +199,159 @@ fn get_reward_idx(rewards: &[RoleReward], user_level: i64) -> Option<usize> {
         reward_idx = Some(idx);
     }
     reward_idx
+}
+
+#[derive(Debug)]
+struct RoleChangeList {
+    total_roles: RoleList,
+    changed_roles: RoleList,
+}
+
+fn get_role_changes(
+    guild_config: &GuildConfig,
+    member: &PartialMember,
+    rewards: &[RoleReward],
+    reward_idx: usize,
+) -> RoleChangeList {
+    let previous_role = rewards[reward_idx.saturating_sub(1)].id;
+    let current_role = rewards[reward_idx].id;
+
+    let one_at_a_time = guild_config.one_at_a_time.is_some_and(|v| v);
+
+    if member.roles.contains(&current_role) {
+        return RoleChangeList {
+            total_roles: member.roles.clone(),
+            changed_roles: Vec::new(),
+        };
+    }
+
+    let mut changed_roles = Vec::with_capacity(8);
+
+    let total_roles: RoleList = member
+        .roles
+        .iter()
+        .copied()
+        // if we're not doing one at a time, we always return true.
+        // If the reward index is 0, we won't be removing any roles ever.
+        // Otherwise, we return true if v is not the previous role.
+        // If we return false, we want to know that we are REMOVING that role.
+        .filter(|v| {
+            let keeper = !one_at_a_time || reward_idx == 0 || *v != previous_role;
+            if !keeper {
+                changed_roles.push(*v);
+            };
+            keeper
+        })
+        .chain([current_role])
+        .collect();
+
+    changed_roles.push(current_role);
+    RoleChangeList {
+        total_roles,
+        changed_roles,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use twilight_model::guild::MemberFlags;
+
+    use super::*;
+
+    fn member_with_roles(roles: impl Into<RoleList>) -> PartialMember {
+        PartialMember {
+            avatar: None,
+            communication_disabled_until: None,
+            deaf: false,
+            flags: MemberFlags::empty(),
+            joined_at: None,
+            mute: false,
+            nick: None,
+            permissions: None,
+            premium_since: None,
+            roles: roles.into(),
+            user: None,
+        }
+    }
+
+    // Non-one at a time only changes the behavior to not remove the previous role
+    fn conf_one_at_time() -> GuildConfig {
+        GuildConfig {
+            one_at_a_time: Some(true),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn no_changes() {
+        let rewards = [RoleReward {
+            id: Id::new(1),
+            requirement: 2,
+        }];
+        let reward_idx = get_reward_idx(&rewards, 2).unwrap();
+        let member = member_with_roles([Id::new(1)]);
+        let changes = get_role_changes(&conf_one_at_time(), &member, &rewards, reward_idx);
+        assert_eq!(changes.changed_roles, RoleList::new());
+        assert_eq!(changes.total_roles, [Id::new(1)]);
+    }
+
+    #[test]
+    fn add_one_role() {
+        let rewards = [
+            RoleReward {
+                id: Id::new(1),
+                requirement: 2,
+            },
+            RoleReward {
+                id: Id::new(2),
+                requirement: 10,
+            },
+        ];
+        let reward_idx = get_reward_idx(&rewards, 4).unwrap();
+        let member = member_with_roles([]);
+        let changes = get_role_changes(&conf_one_at_time(), &member, &rewards, reward_idx);
+        assert_eq!(changes.changed_roles, vec![Id::new(1)]);
+        assert_eq!(changes.total_roles, [Id::new(1)]);
+    }
+
+    const TEST_REWARDS: [RoleReward; 3] = [
+        RoleReward {
+            id: Id::new(1),
+            requirement: 2,
+        },
+        RoleReward {
+            id: Id::new(2),
+            requirement: 4,
+        },
+        RoleReward {
+            id: Id::new(3),
+            requirement: 10,
+        },
+    ];
+
+    #[test]
+    fn skip_roles() {
+        let reward_idx = get_reward_idx(&TEST_REWARDS, 10).unwrap();
+        let member = member_with_roles([]);
+        let changes = get_role_changes(&conf_one_at_time(), &member, &TEST_REWARDS, reward_idx);
+        assert_eq!(changes.changed_roles, [Id::new(3)]);
+        assert_eq!(changes.total_roles, [Id::new(3)]);
+    }
+    #[test]
+    fn stop_on_role() {
+        let reward_idx = get_reward_idx(&TEST_REWARDS, 5).unwrap();
+        let member = member_with_roles([Id::new(1)]);
+        let changes = get_role_changes(&conf_one_at_time(), &member, &TEST_REWARDS, reward_idx);
+        assert_eq!(changes.changed_roles, [Id::new(1), Id::new(2)]);
+        assert_eq!(changes.total_roles, [Id::new(2)]);
+    }
+
+    #[test]
+    fn conf_many_doesnt_nuke() {
+        let reward_idx = get_reward_idx(&TEST_REWARDS, 5).unwrap();
+        let member = member_with_roles([Id::new(1)]);
+        let changes = get_role_changes(&GuildConfig::default(), &member, &TEST_REWARDS, reward_idx);
+        assert_eq!(changes.changed_roles, [Id::new(2)]);
+        assert_eq!(changes.total_roles, [Id::new(1), Id::new(2)]);
+    }
 }
