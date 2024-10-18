@@ -214,17 +214,14 @@ fn get_role_changes(
     rewards: &[RoleReward],
     reward_idx: usize,
 ) -> RoleChangeList {
-    let previous_role = rewards[reward_idx.saturating_sub(1)].id;
-    let current_role = rewards[reward_idx].id;
-
     let one_at_a_time = guild_config.one_at_a_time.is_some_and(|v| v);
 
-    if member.roles.contains(&current_role) {
-        return RoleChangeList {
-            total_roles: member.roles.clone(),
-            changed_roles: Vec::new(),
-        };
-    }
+    let previous_role = rewards[reward_idx.saturating_sub(1)].id;
+    let achieved_roles = if one_at_a_time {
+        &rewards[reward_idx..=reward_idx]
+    } else {
+        &rewards[..=reward_idx]
+    };
 
     let mut changed_roles = Vec::with_capacity(8);
 
@@ -232,21 +229,22 @@ fn get_role_changes(
         .roles
         .iter()
         .copied()
+        .chain(achieved_roles.iter().map(|v| v.id))
         // if we're not doing one at a time, we always return true.
         // If the reward index is 0, we won't be removing any roles ever.
         // Otherwise, we return true if v is not the previous role.
+        // If we're removing it, or the member didn't have it before
+        // because it was added in the chain, we also add it to the changelist.
         // If we return false, we want to know that we are REMOVING that role.
         .filter(|v| {
             let keeper = !one_at_a_time || reward_idx == 0 || *v != previous_role;
-            if !keeper {
+            if !keeper || !member.roles.contains(v) {
                 changed_roles.push(*v);
             };
             keeper
         })
-        .chain([current_role])
         .collect();
 
-    changed_roles.push(current_role);
     RoleChangeList {
         total_roles,
         changed_roles,
