@@ -221,8 +221,9 @@ fn int_humanize(v: &Value, _hm: &HashMap<String, Value>) -> tera::Result<Value> 
     } else if (1_000_000_000.0..1_000_000_000_000.0).contains(&num) {
         ("b", num / 1_000_000_000.0, 3)
     } else {
-        ("", num, 0)
+        ("", num, 1)
     };
+    debug_assert!(precision > 0);
     let xp_untrim = format!("{xp:.precision$}");
     let xp_trim = xp_untrim.trim_end_matches('0').trim_end_matches('.');
     Ok(Value::String(format!("{xp_trim}{suffix}")))
