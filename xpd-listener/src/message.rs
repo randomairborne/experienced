@@ -4,14 +4,15 @@ use rand::Rng;
 use twilight_model::{
     channel::message::AllowedMentions,
     gateway::payload::incoming::MessageCreate,
+    guild::PartialMember,
     id::{
-        marker::{GuildMarker, RoleMarker},
+        marker::{GuildMarker, RoleMarker, UserMarker},
         Id,
     },
 };
 use xpd_common::{
-    snowflake_to_timestamp, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN,
-    DEFAULT_MIN_XP_PER_MESSAGE,
+    snowflake_to_timestamp, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
+    DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE,
 };
 
 use crate::{Error, XpdListenerInner};
@@ -33,6 +34,10 @@ impl XpdListenerInner {
         if msg.author.bot {
             return Ok(());
         }
+
+        let Some(member) = &msg.member else {
+            return Err(Error::NoMember);
+        };
 
         let user_cooldown_key = (guild_id, msg.author.id);
         let this_message_sts = snowflake_to_timestamp(msg.id);
@@ -80,7 +85,7 @@ impl XpdListenerInner {
 
         let rewards = self.get_guild_rewards(guild_id).await?;
 
-        trace!(
+        debug!(
             ?rewards,
             guild_id = guild_id.get(),
             "Got & sorted rewards for guild"
@@ -89,98 +94,130 @@ impl XpdListenerInner {
         let user_level: i64 = level_info.level().try_into().unwrap_or(-1);
         let old_user_level: i64 = old_level_info.level().try_into().unwrap_or(-1);
 
-        let mut reward_idx = None;
-        for (idx, data) in rewards.iter().enumerate() {
-            if data.requirement > user_level {
-                break;
-            }
-            reward_idx = Some(idx);
-        }
-
-        let Some(member) = &msg.member else {
-            return Err(Error::NoMember);
-        };
-
         debug!(user = ?msg.author.id, channel = ?msg.channel_id, old_xp, new_xp = xp, user_level, old_user_level, config = ?guild_config, "Preparing to update user");
 
-        if let Some(reward_idx) = reward_idx {
-            // remove all role IDs which are in our rewards list
-            let base_roles: Vec<Id<RoleMarker>> = member
-                .roles
-                .iter()
-                .filter(|role_id| !contains(&rewards, **role_id))
-                .copied()
-                .collect();
+        if user_level > old_user_level {
+            self.congratulate_user(&guild_config, &msg, user_level, old_user_level)
+                .await?;
+        }
+        self.add_user_role(
+            guild_id,
+            &guild_config,
+            msg.author.id,
+            member,
+            &rewards,
+            user_level,
+        )
+        .await?;
+        Ok(())
+    }
 
-            trace!(base_roles = ?base_roles, "got roles we cannot change");
+    async fn add_user_role(
+        &self,
+        guild_id: Id<GuildMarker>,
+        guild_config: &GuildConfig,
+        user_id: Id<UserMarker>,
+        member: &PartialMember,
+        rewards: &[RoleReward],
+        user_level: i64,
+    ) -> Result<(), Error> {
+        let Some(reward_idx) = get_reward_idx(rewards, user_level) else {
+            return Ok(());
+        };
 
-            let new_roles = if guild_config.one_at_a_time.is_some_and(|v| v) {
-                vec![rewards[reward_idx].id]
-            } else {
-                rewards[..=reward_idx].iter().map(|v| v.id).collect()
-            };
+        let previous_role = rewards[reward_idx.saturating_sub(1)].id;
+        let current_role = rewards[reward_idx].id;
 
-            trace!(new_roles = ?new_roles, "got roles we are trying to control");
+        let one_at_a_time = guild_config.one_at_a_time.is_some_and(|v| v);
 
-            let mut complete_role_set: Vec<Id<RoleMarker>> =
-                Vec::with_capacity(new_roles.len() + base_roles.len());
+        let mut edited_roles = Vec::with_capacity(8);
 
-            complete_role_set.extend(&base_roles);
-            complete_role_set.extend(&new_roles);
+        let roles: Vec<Id<RoleMarker>> = member
+            .roles
+            .iter()
+            .copied()
+            // if we're not doing one at a time, we always return true.
+            // If the reward index is 0, we won't be removing any roles ever.
+            // Otherwise, we return true if v is not the previous role.
+            // If we return false, we want to know that we are REMOVING that role.
+            .filter(|v| {
+                let keeper = !one_at_a_time || reward_idx == 0 || *v != previous_role;
+                if !keeper {
+                    edited_roles.push(*v);
+                };
+                keeper
+            })
+            .chain([current_role])
+            .collect();
 
-            // make sure we don't make useless requests to the API
-            let can_add_role =
-                xpd_util::can_add_roles(&self.cache, self.bot_id, guild_id, new_roles.as_slice())?
-                    .can_add_role();
-            if member.roles != new_roles && can_add_role {
-                debug!(user = ?msg.author.id, old = ?member.roles, new = ?new_roles, "Updating roles for user");
-                self.http
-                    .update_guild_member(guild_id, msg.author.id)
-                    .roles(&complete_role_set)
-                    .await?;
+        edited_roles.push(current_role);
+
+        // make sure we don't make useless error requests to the API
+        let can_add_role =
+            xpd_util::can_manage_roles(&self.cache, self.bot_id, guild_id, roles.as_slice())?
+                .can_add_role();
+        if can_add_role {
+            debug!(user = ?user_id, old = ?member.roles, new = ?roles, "Updating roles for user");
+            self.http
+                .update_guild_member(guild_id, user_id)
+                .roles(&roles)
+                .await?;
+        }
+        Ok(())
+    }
+
+    async fn congratulate_user(
+        &self,
+        guild_config: &GuildConfig,
+        msg: &MessageCreate,
+        user_level: i64,
+        old_user_level: i64,
+    ) -> Result<(), Error> {
+        let Some(template) = guild_config.level_up_message.as_ref() else {
+            return Ok(());
+        };
+        let target_channel = guild_config.level_up_channel.unwrap_or(msg.channel_id);
+        debug!(user = ?msg.author.id, channel = ?msg.channel_id, ?target_channel, old = old_user_level, new = user_level, "Congratulating user");
+        if !xpd_util::can_create_message(&self.cache, self.bot_id, target_channel)? {
+            warn!(channel = ?msg.channel_id, user = ?msg.author.id, guild = ?msg.guild_id, "Could not congratulate user");
+            return Ok(());
+        }
+        let map = HashMap::from([
+            ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
+            ("level".to_string(), user_level.to_string()),
+        ]);
+        let message = template.render(&map);
+
+        let allowed_mentions = if let Some(false) = guild_config.ping_on_level_up {
+            AllowedMentions::default()
+        } else {
+            AllowedMentions {
+                replied_user: true,
+                users: vec![msg.author.id],
+                ..AllowedMentions::default()
             }
         };
 
-        if user_level > old_user_level {
-            if let Some(template) = guild_config.level_up_message.as_ref() {
-                let target_channel = guild_config.level_up_channel.unwrap_or(msg.channel_id);
-                debug!(user = ?msg.author.id, channel = ?msg.channel_id, ?target_channel, old = old_user_level, new = user_level, "Congratulating user");
-                if xpd_util::can_create_message(&self.cache, self.bot_id, target_channel)? {
-                    let map = HashMap::from([
-                        ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
-                        ("level".to_string(), user_level.to_string()),
-                    ]);
-                    let message = template.render(&map);
-
-                    let allowed_mentions = if let Some(false) = guild_config.ping_on_level_up {
-                        AllowedMentions::default()
-                    } else {
-                        AllowedMentions {
-                            replied_user: true,
-                            users: vec![msg.author.id],
-                            ..AllowedMentions::default()
-                        }
-                    };
-
-                    let mut congratulatory_msg = self.http.create_message(target_channel);
-                    if target_channel == msg.channel_id {
-                        // only reply to a message if it's in the same channel
-                        congratulatory_msg = congratulatory_msg.reply(msg.id);
-                    }
-                    congratulatory_msg
-                        .allowed_mentions(Some(&allowed_mentions))
-                        .content(&message)
-                        .await?;
-                } else {
-                    warn!(channel = ?msg.channel_id, "Could not congratulate user")
-                }
-            }
+        let mut congratulatory_msg = self.http.create_message(target_channel);
+        if target_channel == msg.channel_id {
+            // only reply to a message if it's in the same channel
+            congratulatory_msg = congratulatory_msg.reply(msg.id);
         }
+        congratulatory_msg
+            .allowed_mentions(Some(&allowed_mentions))
+            .content(&message)
+            .await?;
         Ok(())
     }
 }
 
-// any of the items in list are equal to item
-fn contains(list: &[RoleReward], item: Id<RoleMarker>) -> bool {
-    list.iter().any(|v| v.id == item)
+fn get_reward_idx(rewards: &[RoleReward], user_level: i64) -> Option<usize> {
+    let mut reward_idx = None;
+    for (idx, data) in rewards.iter().enumerate() {
+        if data.requirement > user_level {
+            break;
+        }
+        reward_idx = Some(idx);
+    }
+    reward_idx
 }
