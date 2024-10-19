@@ -282,7 +282,7 @@ async fn handle_event(
                 return Ok(());
             }
         }
-        Event::GuildDelete(del) => {}
+        Event::GuildDelete(_del) => {}
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         _ => {}
     };
