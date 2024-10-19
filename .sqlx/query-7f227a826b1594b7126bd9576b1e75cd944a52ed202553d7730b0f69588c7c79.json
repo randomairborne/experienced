@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT guild FROM guild_cleanups WHERE removed_at + interval '30 days' < NOW()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7f227a826b1594b7126bd9576b1e75cd944a52ed202553d7730b0f69588c7c79"
+}

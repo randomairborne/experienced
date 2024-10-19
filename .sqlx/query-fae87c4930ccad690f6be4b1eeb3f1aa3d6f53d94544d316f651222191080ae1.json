@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO guild_cleanups (guild, removed_at) VALUES ($1, NOW())\n        ON CONFLICT (guild) DO UPDATE SET removed_at = excluded.removed_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fae87c4930ccad690f6be4b1eeb3f1aa3d6f53d94544d316f651222191080ae1"
+}

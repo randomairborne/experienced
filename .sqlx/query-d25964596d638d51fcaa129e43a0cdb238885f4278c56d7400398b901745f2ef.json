@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM guild_cleanups WHERE guild = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d25964596d638d51fcaa129e43a0cdb238885f4278c56d7400398b901745f2ef"
+}
