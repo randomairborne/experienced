@@ -455,6 +455,69 @@ pub async fn delete_guild_config<
     Ok(())
 }
 
+pub async fn add_guild_cleanup<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild: Id<GuildMarker>,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "INSERT INTO guild_cleanups (guild, removed_at) VALUES ($1, NOW())
+        ON CONFLICT (guild) DO UPDATE SET removed_at = excluded.removed_at",
+        id_to_db(guild)
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
+pub async fn remove_guild_cleanup<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild: Id<GuildMarker>,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "DELETE FROM guild_cleanups WHERE guild = $1",
+        id_to_db(guild)
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
+pub async fn get_active_guild_cleanups<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+) -> Result<Vec<Id<GuildMarker>>, Error> {
+    let mut conn = conn.acquire().await?;
+    let mut records =
+        query!("SELECT guild FROM guild_cleanups WHERE removed_at + interval '30 days' < NOW()")
+            .fetch(conn.as_mut());
+
+    let mut output = Vec::with_capacity(16);
+    while let Some(v) = records.next().await {
+        let v = match v {
+            Ok(v) => v,
+            Err(source) => {
+                tracing::error!(?source, "Error getting guild cleanups");
+                continue;
+            }
+        };
+        output.push(db_to_id(v.guild));
+    }
+    Ok(output)
+}
+
 pub async fn get_leaderboard_page<
     'a,
     D: DerefMut<Target = PgConnection> + Send,

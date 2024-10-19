@@ -8,6 +8,7 @@ edition = "2021"
 sqlx = { version = "0.8", features = ["postgres", "tls-rustls", "runtime-tokio"] }
 twilight-model = "0.16.0-rc.1"
 tokio-stream = "0.1"
+tracing = "0.1"
 
 # internal
 simpleinterpolation = { workspace = true }
