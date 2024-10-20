@@ -48,7 +48,8 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.package.name }}
+          file: ./${{ matrix.package.name }}/Dockerfile
+          context: .
           platforms: ${{ matrix.platform.docker }}
           build-args: |
             LLVMTARGETARCH=${{ matrix.platform.llvm }}
@@ -63,7 +64,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.package.image }}-${{ matrix.platform.llvm }}
+          name: digests-${{ matrix.package.name }}-${{ matrix.platform.llvm }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -87,7 +88,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: /tmp/digests
-          pattern: digests-${{ matrix.package.image }}-*
+          pattern: digests-${{ matrix.package.name }}-*
           merge-multiple: true
 
       - name: Set up Docker Buildx
