@@ -33,6 +33,7 @@ jobs:
 
       - name: Install system libraries
         run: apt-get update && apt-get install -y build-essential curl
+        shell: bash
 
       - name: Install cargo
         uses: dtolnay/rust-toolchain@nightly
@@ -44,6 +45,7 @@ jobs:
 
       - name: Install NPM deps
         run: npm install
+        shell: bash
 
       - name: Run verifications
         run: ./ci/lint.sh
