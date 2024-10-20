@@ -106,3 +106,15 @@ pub enum PermissionCheckError {
     #[error("Got unknown role for own highest role!")]
     UnknownPositionForOwnHighestRole,
 }
+
+pub trait LogError {
+    fn log_error(&self, msg: &str);
+}
+
+impl<T, E: std::fmt::Debug> LogError for Result<T, E> {
+    fn log_error(&self, msg: &str) {
+        if let Err(source) = self {
+            error!(?source, "{}", msg);
+        }
+    }
+}
