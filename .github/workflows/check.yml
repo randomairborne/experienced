@@ -27,17 +27,26 @@ jobs:
       - name: Check out code into the proper directory
         uses: actions/checkout@v4
 
-      - name: Install cargo
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: rustfmt, clippy
-
       - name: Set up node
         uses: actions/setup-node@v4
 
       - name: Install NPM deps
         run: npm install
         shell: bash
+
+      - name: Install cargo
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache rust binaries
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli
+
+      - name: Run SQLx migrations before build
+        run: cargo sqlx migrate run
 
       - name: Run verifications
         run: ./ci/lint.sh
