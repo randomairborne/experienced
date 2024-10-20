@@ -43,4 +43,4 @@ jobs:
         run: ./ci/lint.sh
         shell: bash
         env:
-          DATABASE_URL: postgres://postgres:postgres@postgres/postgres
+          DATABASE_URL: postgres://postgres:postgres@localhost/postgres
