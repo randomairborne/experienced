@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install system libraries
-        run: apt-get install build-essential curl
+        run: apt-get update && apt-get install build-essential curl
 
       - name: Install cargo
         uses: dtolnay/rust-toolchain@nightly
