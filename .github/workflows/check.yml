@@ -10,6 +10,23 @@ env:
 jobs:
   check:
     runs-on: ubuntu-latest
+    container: ubuntu:latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:latest
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Check out code into the proper directory
         uses: actions/checkout@v4
@@ -19,9 +36,14 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Set up node
+        uses: actions/setup-node@v4
+
       - name: Install NPM deps
         run: npm install
 
       - name: Run verifications
         run: ./ci/lint.sh
         shell: bash
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres/postgres

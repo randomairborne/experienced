@@ -6,6 +6,8 @@
     clippy::missing_panics_doc
 )]
 
+#[cfg(test)]
+mod test;
 mod util;
 
 use std::{fmt::Display, ops::DerefMut};
