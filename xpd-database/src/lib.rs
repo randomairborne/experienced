@@ -571,6 +571,8 @@ pub async fn add_reward_role<
 }
 
 /// Returns number of rows affected.
+/// If two Some values are passed in, all the values that match *either* will be deleted.
+/// TODO: Consider if this behavior makes sense. Maybe it should be and.
 pub async fn delete_reward_role<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
