@@ -3,14 +3,7 @@
 #[macro_use]
 extern crate tracing;
 
-use std::{
-    collections::HashMap,
-    env::VarError,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-};
+use std::{collections::HashMap, env::VarError, sync::Arc};
 
 use base64::{
     engine::{GeneralPurpose as Base64Engine, GeneralPurposeConfig as Base64Config},
@@ -21,7 +14,7 @@ use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{logs::LoggerProvider, Resource};
 use sqlx::PgPool;
-use tokio_util::task::TaskTracker;
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{error, Level, Metadata};
 use tracing_subscriber::{
     layer::{Context, Filter, SubscriberExt},
@@ -41,6 +34,7 @@ use twilight_model::{
 use xpd_common::RequiredDiscordResources;
 use xpd_listener::XpdListener;
 use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
+use xpd_util::LogError;
 
 #[tokio::main]
 async fn main() {
@@ -114,7 +108,7 @@ async fn main() {
     let config_update = tokio::spawn(async move {
         while let Some((guild, config)) = config_rx.recv().await {
             if let Err(source) = updating_listener.update_config(guild, config) {
-                error!(?guild, ?source, "Unable to update config for guild");
+                error!(%guild, ?source, "Unable to update config for guild");
             }
         }
     });
@@ -125,7 +119,7 @@ async fn main() {
             let updating_listener = updating_listener.clone();
             tokio::spawn(async move {
                 if let Err(source) = updating_listener.invalidate_rewards(guild).await {
-                    error!(?guild, ?source, "Unable to invalidate rewards for guild");
+                    error!(%guild, ?source, "Unable to invalidate rewards for guild");
                 }
             });
         }
@@ -158,7 +152,7 @@ async fn main() {
     let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
     info!("Connecting to discord");
 
-    let shutdown = Arc::new(AtomicBool::new(false));
+    let shutdown = CancellationToken::new();
     for shard in shards {
         let client = client.clone();
         task_tracker.clone().spawn(event_loop(
@@ -177,7 +171,7 @@ async fn main() {
     warn!("Shutting down..");
     debug!("Informing shards of shutdown");
     // Let the shards know not to reconnect
-    shutdown.store(true, Ordering::Release);
+    shutdown.cancel();
 
     debug!("Informing discord of shutdown");
     // Tell the shards to shut down
@@ -192,12 +186,12 @@ async fn main() {
 
     drop(slash); // Must be dropped before awaiting config shutdown, to allow the recv loop to end
     debug!("Waiting for listener updater to close");
-    if let Err(source) = config_update.await {
-        error!(?source, "Could not shut down config updater");
-    }
-    if let Err(source) = rewards_update.await {
-        error!(?source, "Could not shut down config updater");
-    }
+    config_update
+        .await
+        .log_error("Could not shut down config updater");
+    rewards_update
+        .await
+        .log_error("Could not shut down rewards updater");
 
     if let Some(tracer) = tracer_shutdown {
         tracer.shutdown().expect("Failed to shut down tracer");
@@ -211,7 +205,7 @@ async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
     task_tracker: TaskTracker,
-    shutdown: Arc<AtomicBool>,
+    shutdown: CancellationToken,
     listener: XpdListener,
     slash: XpdSlash,
     cache: Arc<InMemoryCache>,
@@ -226,7 +220,7 @@ async fn event_loop(
         let event = match next {
             Ok(event) => event,
             Err(source) => {
-                if shutdown.load(Ordering::Acquire)
+                if shutdown.is_cancelled()
                     && matches!(source.kind(), ReceiveMessageErrorType::WebSocket)
                 {
                     break;
@@ -235,7 +229,7 @@ async fn event_loop(
                 continue;
             }
         };
-        if matches!(event, Event::GatewayClose(_)) && shutdown.load(Ordering::Acquire) {
+        if matches!(event, Event::GatewayClose(_)) && shutdown.is_cancelled() {
             break;
         }
         trace!(?event, "got event");
@@ -245,10 +239,9 @@ async fn event_loop(
         let db = db.clone();
         let cache = cache.clone();
         task_tracker.spawn(async move {
-            if let Err(error) = handle_event(event, http, listener, slash, cache, db).await {
-                // this includes even user caused errors. User beware. Don't set up automatic emails or anything.
-                error!(?error, "Handler error");
-            }
+            handle_event(event, http, listener, slash, cache, db)
+                .await
+                .log_error("Handler error");
         });
     }
 }
@@ -281,8 +274,15 @@ async fn handle_event(
                 http.leave_guild(guild_add.id).await?;
                 return Ok(());
             }
+            xpd_database::remove_guild_cleanup(&db, guild_add.id)
+                .await
+                .log_error("Failed to add guild to cleanup system");
         }
-        Event::GuildDelete(_del) => {}
+        Event::GuildDelete(del) => {
+            xpd_database::add_guild_cleanup(&db, del.id)
+                .await
+                .log_error("Failed to add guild to cleanup system");
+        }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         _ => {}
     };

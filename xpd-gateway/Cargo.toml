@@ -42,6 +42,7 @@ xpd-database = { workspace = true }
 xpd-listener = { workspace = true }
 xpd-common = { workspace = true }
 xpd-slash = { workspace = true }
+xpd-util = { workspace = true }
 
 # utilities
 vss = "0.1"
