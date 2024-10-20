@@ -42,7 +42,7 @@ fn render_classic_l() -> Result<(), Error> {
 fn render_classic_r() -> Result<(), Error> {
     let state = new_state();
     let xp = 51;
-    let mut customizations = Customizations {
+    let customizations = Customizations {
         toy: Some("cow.png".to_string()),
         ..Default::default()
     };
