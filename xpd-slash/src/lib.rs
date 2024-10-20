@@ -216,8 +216,7 @@ impl SlashState {
     /// Its failures are generally not recoverable to that task, though.
     pub async fn send_followup(&self, response: XpdSlashResponse, token: &str) {
         trace!(?response, "sending followup message");
-        self
-            .client
+        self.client
             .interaction(self.app_id)
             .create_followup(token)
             .allowed_mentions(response.allowed_mentions.as_ref())
@@ -227,7 +226,8 @@ impl SlashState {
             .embeds(&response.embeds.unwrap_or_default())
             .tts(response.tts.unwrap_or(false))
             .flags(response.flags.unwrap_or(MessageFlags::empty()))
-            .await.log_error("Failed to respond to interaction");
+            .await
+            .log_error("Failed to respond to interaction");
     }
 
     pub fn spawn<F>(&self, item: F) -> JoinHandle<F::Output>
