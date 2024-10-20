@@ -274,7 +274,7 @@ async fn handle_event(
                 http.leave_guild(guild_add.id).await?;
                 return Ok(());
             }
-            xpd_database::remove_guild_cleanup(&db, guild_add.id)
+            xpd_database::delete_guild_cleanup(&db, guild_add.id)
                 .await
                 .log_error("Failed to add guild to cleanup system");
         }

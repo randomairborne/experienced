@@ -474,7 +474,7 @@ pub async fn add_guild_cleanup<
     Ok(())
 }
 
-pub async fn remove_guild_cleanup<
+pub async fn delete_guild_cleanup<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
