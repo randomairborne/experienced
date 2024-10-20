@@ -37,6 +37,7 @@ use twilight_model::{
 use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_common::{GuildConfig, RequiredDiscordResources};
 use xpd_rank_card::SvgState;
+use xpd_util::LogError;
 
 #[macro_use]
 extern crate tracing;
@@ -103,14 +104,11 @@ impl XpdSlash {
         let response = self.run(interaction_create.0).await;
         let total_time = process_start.elapsed();
         info!(?total_time, "processed interaction in time");
-        if let Err(error) = self
-            .client()
+        self.client()
             .interaction(self.state.app_id)
             .create_response(ic_id, &interaction_token, &response)
             .await
-        {
-            error!(?error, "Failed to ack discord gateway message");
-        };
+            .log_error("Failed to ack discord gateway message");
     }
 
     async fn run(&self, interaction: Interaction) -> InteractionResponse {
@@ -218,7 +216,7 @@ impl SlashState {
     /// Its failures are generally not recoverable to that task, though.
     pub async fn send_followup(&self, response: XpdSlashResponse, token: &str) {
         trace!(?response, "sending followup message");
-        if let Err(source) = self
+        self
             .client
             .interaction(self.app_id)
             .create_followup(token)
@@ -229,10 +227,7 @@ impl SlashState {
             .embeds(&response.embeds.unwrap_or_default())
             .tts(response.tts.unwrap_or(false))
             .flags(response.flags.unwrap_or(MessageFlags::empty()))
-            .await
-        {
-            error!(?source, "Failed to respond to interaction");
-        }
+            .await.log_error("Failed to respond to interaction");
     }
 
     pub fn spawn<F>(&self, item: F) -> JoinHandle<F::Output>
