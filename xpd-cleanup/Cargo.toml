@@ -4,3 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# async
+tokio = { version = "1", features = ["rt"] }
+
+# utilities
+valk-utils = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json"] }
+
+# db interaction
+sqlx = { version = "0.8", features = ["postgres", "macros", "runtime-tokio", "tls-rustls"] }
+xpd-database = { workspace = true }
+twilight-model = "0.16.0-rc.1"

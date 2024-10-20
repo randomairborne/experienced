@@ -8,8 +8,9 @@ members = [
     "xpd-common",
     "xpd-rank-card",
     "xpd-database",
-    "xpd-util"
-, "xpd-cleanup"]
+    "xpd-util",
+    "xpd-cleanup"
+]
 resolver = "2"
 default-members = ["xpd-gateway"]
 
