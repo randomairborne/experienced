@@ -12,7 +12,6 @@ members = [
     "xpd-cleanup"
 ]
 resolver = "2"
-default-members = ["xpd-gateway"]
 
 [workspace.dependencies]
 mee6 = { path = "mee6" }
