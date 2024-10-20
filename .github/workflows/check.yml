@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   workflow_call:
 
-env:
-  SQLX_OFFLINE: true
-
 jobs:
   check:
     runs-on: ubuntu-latest

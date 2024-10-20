@@ -5,6 +5,6 @@ cargo +nightly fmt --check --all
 echo "Checking web formatting..."
 npm run prettier-check
 echo "Checking build..."
-cargo +nightly clippy --all -- -D warnings
+SQLX_OFFLINE=true cargo +nightly clippy --all -- -D warnings
 echo "Running tests..."
 cargo +nightly test --all
