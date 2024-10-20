@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   workflow_call:
 
+
+env:
+  DATABASE_URL: postgres://postgres:postgres@localhost/postgres
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -51,5 +55,3 @@ jobs:
       - name: Run verifications
         run: ./ci/lint.sh
         shell: bash
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost/postgres
