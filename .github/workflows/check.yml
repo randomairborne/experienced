@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
   workflow_call:
 
-
 env:
   DATABASE_URL: postgres://postgres:postgres@localhost/postgres
 
