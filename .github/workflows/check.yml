@@ -10,7 +10,6 @@ env:
 jobs:
   check:
     runs-on: ubuntu-latest
-    container: debian:latest
     services:
       # Label used to access the service container
       postgres:
@@ -30,10 +29,6 @@ jobs:
     steps:
       - name: Check out code into the proper directory
         uses: actions/checkout@v4
-
-      - name: Install system libraries
-        run: apt-get update && apt-get install -y build-essential curl
-        shell: bash
 
       - name: Install cargo
         uses: dtolnay/rust-toolchain@nightly
