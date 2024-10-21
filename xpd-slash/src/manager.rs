@@ -281,7 +281,7 @@ async fn process_rewards_rm(
         Ok(count) => {
             state.invalidate_rewards(guild_id).await;
             let pluralizer = if count == 1 { "" } else { "s" };
-            Ok(format!("Deleted {count}{pluralizer} role rewards."))
+            Ok(format!("Deleted {count} role reward{pluralizer}."))
         }
         Err(xpd_database::Error::UnspecifiedDelete) => Err(Error::WrongArgumentCount(
             "`/xp rewards remove` requires either a level or a role!",
