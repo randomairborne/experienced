@@ -41,9 +41,9 @@ use xpd_util::LogError;
 async fn main() {
     let tracer_shutdown = init_tracing();
 
-    let token = xpd_common::get_var("DISCORD_TOKEN");
-    let pg = xpd_common::get_var("DATABASE_URL");
-    let control_guild: Id<GuildMarker> = xpd_common::parse_var("CONTROL_GUILD");
+    let token = valk_utils::get_var("DISCORD_TOKEN");
+    let pg = valk_utils::get_var("DATABASE_URL");
+    let control_guild: Id<GuildMarker> = valk_utils::parse_var("CONTROL_GUILD");
     let db = sqlx::postgres::PgPoolOptions::new()
         .max_connections(50)
         .connect(&pg)

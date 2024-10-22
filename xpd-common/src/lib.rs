@@ -98,28 +98,6 @@ impl MemberDisplayInfo {
     }
 }
 
-/// Get environment variable and parse it, panicking on failure
-/// # Panics
-/// If the environment variable cannot be found or parsed
-#[must_use]
-pub fn parse_var<T>(key: &str) -> T
-where
-    T: FromStr,
-    T::Err: Display,
-{
-    get_var(key)
-        .parse()
-        .unwrap_or_else(|e| panic!("{key} could not be parsed: {e}"))
-}
-
-/// Get environment variable and parse it, panicking on failure
-/// # Panics
-/// If the environment variable cannot be found or parsed
-#[must_use]
-pub fn get_var(key: &str) -> String {
-    std::env::var(key).unwrap_or_else(|e| panic!("Expected {key} in environment: {e}"))
-}
-
 pub const TEMPLATE_VARIABLES: [&str; 2] = ["user_mention", "level"];
 pub const DEFAULT_MAX_XP_PER_MESSAGE: i16 = 25;
 pub const DEFAULT_MIN_XP_PER_MESSAGE: i16 = 15;
