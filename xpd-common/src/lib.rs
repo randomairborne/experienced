@@ -3,7 +3,6 @@
 use std::{
     borrow::Cow,
     fmt::{Debug, Display, Formatter},
-    str::FromStr,
 };
 
 use simpleinterpolation::Interpolation;
@@ -19,6 +18,8 @@ use twilight_model::{
     user::User,
     util::ImageHash,
 };
+
+pub const CURRENT_GIT_SHA: &str = env!("GIT_HASH_EXPERIENCED");
 
 pub trait DisplayName {
     #[must_use]

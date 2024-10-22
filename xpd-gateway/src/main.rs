@@ -40,6 +40,10 @@ use xpd_util::LogError;
 #[tokio::main]
 async fn main() {
     let tracer_shutdown = init_tracing();
+    info!(
+        version = xpd_common::CURRENT_GIT_SHA,
+        "Starting experienced!"
+    );
 
     let token = valk_utils::get_var("DISCORD_TOKEN");
     let pg = valk_utils::get_var("DATABASE_URL");

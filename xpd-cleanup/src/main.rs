@@ -8,6 +8,10 @@ extern crate tracing;
 
 fn main() -> Result<(), Error> {
     tracing_subscriber::fmt().json().init();
+    info!(
+        version = xpd_common::CURRENT_GIT_SHA,
+        "Starting experienced cleanup!"
+    );
     let database_url = valk_utils::get_var("DATABASE_URL");
     tokio::runtime::Builder::new_current_thread()
         .enable_all()

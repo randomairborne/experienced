@@ -17,3 +17,6 @@ twilight-model = "0.16.0-rc.1"
 
 # internal
 simpleinterpolation = { workspace = true }
+
+[build-dependencies]
+git2 = "0.19"
