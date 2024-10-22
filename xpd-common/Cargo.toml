@@ -19,4 +19,4 @@ twilight-model = "0.16.0-rc.1"
 simpleinterpolation = { workspace = true }
 
 [build-dependencies]
-git2 = "0.19"
+git2 = { version = "0.19", default-features = false }
