@@ -28,6 +28,7 @@ use twilight_gateway::{
 };
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
+    channel::message::AllowedMentions,
     gateway::ShardId,
     id::{marker::GuildMarker, Id},
 };
@@ -53,7 +54,12 @@ async fn main() {
         .await
         .expect("Failed to run database migrations!");
 
-    let client = Arc::new(DiscordClient::new(token.clone()));
+    let client = Arc::new(
+        DiscordClient::builder()
+            .default_allowed_mentions(AllowedMentions::default())
+            .token(token.clone())
+            .build(),
+    );
     let intents = XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILDS;
 
     let current_app = client
