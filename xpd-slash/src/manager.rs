@@ -48,6 +48,9 @@ async fn process_experience(
     guild_id: Id<GuildMarker>,
     state: SlashState,
 ) -> Result<String, Error> {
+    if !allowed_command_for_target(&data) {
+        return Err(Error::BotsDontLevel);
+    }
     match data {
         XpCommandExperience::Import(import) => import_level_data(
             state,
@@ -58,16 +61,33 @@ async fn process_experience(
         ),
         XpCommandExperience::Export(_) => export_level_data(state, respondable, guild_id),
         XpCommandExperience::Add(add) => {
-            modify_user_xp(guild_id, add.user, add.amount, state).await
+            modify_user_xp(guild_id, add.user.resolved.id, add.amount, state).await
         }
         XpCommandExperience::Remove(rm) => {
-            modify_user_xp(guild_id, rm.user, -rm.amount, state).await
+            modify_user_xp(guild_id, rm.user.resolved.id, -rm.amount, state).await
         }
-        XpCommandExperience::Reset(rst) => reset_user_xp(guild_id, rst.user, state).await,
-        XpCommandExperience::Set(st) => set_user_xp(guild_id, st.user, st.xp, state).await,
+        XpCommandExperience::Reset(rst) => {
+            reset_user_xp(guild_id, rst.user.resolved.id, state).await
+        }
+        XpCommandExperience::Set(st) => {
+            set_user_xp(guild_id, st.user.resolved.id, st.xp, state).await
+        }
         XpCommandExperience::ResetGuild(rst) => {
             reset_guild_xp(guild_id, rst.confirm_message, state).await
         }
+    }
+}
+
+/// For commands that target a specific user, other than reset, prevent commands from being used on a bot.
+const fn allowed_command_for_target(data: &XpCommandExperience) -> bool {
+    match data {
+        XpCommandExperience::Add(add) => !add.user.resolved.bot,
+        XpCommandExperience::Remove(rm) => !rm.user.resolved.bot,
+        XpCommandExperience::Set(set) => !set.user.resolved.bot,
+        XpCommandExperience::Import(_)
+        | XpCommandExperience::Export(_)
+        | XpCommandExperience::Reset(_)
+        | XpCommandExperience::ResetGuild(_) => true,
     }
 }
 

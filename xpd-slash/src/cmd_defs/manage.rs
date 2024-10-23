@@ -1,11 +1,8 @@
-use twilight_interactions::command::{CommandModel, CreateCommand};
+use twilight_interactions::command::{CommandModel, CreateCommand, ResolvedUser};
 use twilight_model::{
     channel::Attachment,
     guild::Role,
-    id::{
-        marker::{RoleMarker, UserMarker},
-        Id,
-    },
+    id::{marker::RoleMarker, Id},
 };
 
 #[derive(CommandModel, CreateCommand)]
@@ -88,7 +85,7 @@ pub enum XpCommandExperience {
 )]
 pub struct XpCommandExperienceAdd {
     #[command(desc = "User to add experience to")]
-    pub user: Id<UserMarker>,
+    pub user: ResolvedUser,
     #[command(desc = "Amount of experience to add", min_value = 1)]
     pub amount: i64,
 }
@@ -101,7 +98,7 @@ pub struct XpCommandExperienceAdd {
 )]
 pub struct XpCommandExperienceRemove {
     #[command(desc = "User to remove experience from")]
-    pub user: Id<UserMarker>,
+    pub user: ResolvedUser,
     #[command(desc = "Amount of experience to remove", min_value = 1)]
     pub amount: i64,
 }
@@ -114,7 +111,7 @@ pub struct XpCommandExperienceRemove {
 )]
 pub struct XpCommandExperienceReset {
     #[command(desc = "User to remove")]
-    pub user: Id<UserMarker>,
+    pub user: ResolvedUser,
 }
 
 #[derive(CommandModel, CreateCommand)]
@@ -125,7 +122,7 @@ pub struct XpCommandExperienceReset {
 )]
 pub struct XpCommandExperienceSet {
     #[command(desc = "User to set XP of")]
-    pub user: Id<UserMarker>,
+    pub user: ResolvedUser,
     #[command(desc = "value to set their current XP to", min_value = 1)]
     pub xp: i64,
 }

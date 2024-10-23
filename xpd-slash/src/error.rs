@@ -103,4 +103,6 @@ pub enum Error {
     NoInteractionInvocationOnInteractionMessage,
     #[error("You didn't create this leaderboard.")]
     NotYourLeaderboard,
+    #[error("Bots do not have leveling data. If one does somehow, you can still use /xp experience reset on it.")]
+    BotsDontLevel,
 }
