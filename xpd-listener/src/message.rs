@@ -304,6 +304,19 @@ mod tests {
     }
 
     #[test]
+    fn minecraft_discord() {
+        let rewards = [RoleReward {
+            id: Id::new(1),
+            requirement: 5,
+        }];
+        let reward_idx = get_reward_idx(&rewards, 5).unwrap();
+        let member = member_with_roles([]);
+        let changes = get_role_changes(&conf_one_at_time(), &member, &rewards, reward_idx);
+        assert_eq!(changes.changed_roles, [Id::new(1)]);
+        assert_eq!(changes.total_roles, [Id::new(1)]);
+    }
+
+    #[test]
     fn add_one_role() {
         let rewards = [
             RoleReward {
