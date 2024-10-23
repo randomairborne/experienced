@@ -112,7 +112,7 @@ impl XpdListenerInner {
         .await?;
         Ok(())
     }
-    
+
     #[tracing::instrument(skip(self, member))]
     async fn add_user_role(
         &self,
