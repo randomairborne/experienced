@@ -142,6 +142,8 @@ impl XpdListenerInner {
                 .update_guild_member(guild_id, user_id)
                 .roles(&roles.total_roles)
                 .await?;
+        } else {
+            warn!(user = ?user_id, old = ?member.roles, new = ?roles, "Could not update roles for user");
         }
         Ok(())
     }
