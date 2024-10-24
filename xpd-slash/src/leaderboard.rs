@@ -211,13 +211,8 @@ pub async fn process_message_component(
                 .delete_message(original_message.channel_id, original_message.id)
                 .await?;
             Ok(InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(
-                    InteractionResponseDataBuilder::new()
-                        .flags(MessageFlags::EPHEMERAL)
-                        .content("Deleted leaderboard")
-                        .build(),
-                ),
+                kind: InteractionResponseType::DeferredUpdateMessage,
+                data: Some(InteractionResponseDataBuilder::new().build()),
             })
         }
         offset_str => {
@@ -225,9 +220,12 @@ pub async fn process_message_component(
             // plus and minus 1. This means that we don't have to store which page which
             // message is on, because the component will tell us exactly where it wants to go!
             let offset: i64 = offset_str.parse()?;
+            let show_delete_btn = original_message
+                .flags
+                .map_or(true, |f| !f.contains(MessageFlags::EPHEMERAL));
             Ok(InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
-                data: Some(gen_leaderboard(&state, guild_id, offset, Some(true)).await?),
+                data: Some(gen_leaderboard(&state, guild_id, offset, Some(show_delete_btn)).await?),
             })
         }
     }

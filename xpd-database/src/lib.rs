@@ -532,7 +532,7 @@ pub async fn get_leaderboard_page<
 ) -> Result<Vec<UserStatus>, Error> {
     let mut conn = conn.acquire().await?;
     let mut users = query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY xp DESC LIMIT $2 OFFSET $3",
+        "SELECT * FROM levels WHERE guild = $1 ORDER BY (xp, id) DESC LIMIT $2 OFFSET $3",
         id_to_db(guild),
         limit,
         offset
