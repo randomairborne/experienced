@@ -10,7 +10,10 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{snowflake_to_timestamp, DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE};
+use xpd_common::{
+    snowflake_to_timestamp, DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
+    DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE,
+};
 
 use crate::{Error, XpdListenerInner};
 
