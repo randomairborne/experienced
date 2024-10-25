@@ -165,6 +165,43 @@ pub async fn count_with_higher_xp<
     Ok(count)
 }
 
+pub async fn levels_in_guild<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild: Id<GuildMarker>,
+) -> Result<i64, Error> {
+    let mut conn = conn.acquire().await?;
+    let count = query!(
+        "SELECT COUNT(id) as count FROM levels WHERE guild = $1",
+        id_to_db(guild)
+    )
+    .fetch_one(conn.as_mut())
+    .await?
+    .count;
+    Ok(count.unwrap_or(0))
+}
+
+pub async fn total_levels<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+) -> Result<i64, Error> {
+    let mut conn = conn.acquire().await?;
+    let count = query!(
+        "SELECT reltuples::bigint AS count FROM pg_class
+        WHERE oid = 'public.levels'::regclass",
+    )
+    .fetch_one(conn.as_mut())
+    .await?
+    .count;
+    Ok(count.unwrap_or(0))
+}
+
 pub async fn user_xp<
     'a,
     D: DerefMut<Target = PgConnection> + Send,

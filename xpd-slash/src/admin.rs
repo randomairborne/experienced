@@ -3,12 +3,14 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_common::CURRENT_GIT_SHA;
 
 use crate::{
     cmd_defs::{
         admin::{
-            AdminCommandBanGuild, AdminCommandLeave, AdminCommandPardonGuild,
-            AdminCommandResetGuild, AdminCommandResetUser, AdminCommandSetNick,
+            AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandLeave,
+            AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
+            AdminCommandSetNick,
         },
         AdminCommand,
     },
@@ -34,6 +36,10 @@ pub async fn process_admin(
         AdminCommand::SetNick(sn) => set_nick(state, sn).await,
         AdminCommand::BanGuild(bg) => ban_guild(state, bg).await,
         AdminCommand::PardonGuild(pg) => pardon_guild(state, pg).await,
+        AdminCommand::GuildStats(gs) => get_guild_stats(state, gs).await,
+        AdminCommand::Stats(crate::cmd_defs::admin::AdminCommandStats) => {
+            get_bot_stats(state).await
+        }
     }?;
     Ok(XpdSlashResponse::new()
         .ephemeral(true)
@@ -84,4 +90,34 @@ async fn pardon_guild(state: SlashState, pardon: AdminCommandPardonGuild) -> Res
     let guild: Id<GuildMarker> = pardon.guild.parse()?;
     xpd_database::pardon_guild(&state.db, guild).await?;
     Ok(format!("Pardoned guild {guild}"))
+}
+
+async fn get_guild_stats(state: SlashState, gs: AdminCommandGuildStats) -> Result<String, Error> {
+    let guild_id: Id<GuildMarker> = gs.guild.parse()?;
+    let levels = xpd_database::levels_in_guild(&state.db, guild_id).await?;
+
+    let guild = state
+        .client
+        .guild(guild_id)
+        .with_counts(true)
+        .await?
+        .model()
+        .await?;
+
+    let large = if guild.large { "large" } else { "" };
+    let name = &guild.name;
+    let joined_at = guild.joined_at;
+    let online = guild.approximate_presence_count;
+    let members = guild.approximate_member_count;
+
+    Ok(format!(
+        "{levels} levels in database for {large} guild {name}. Roughly {online:?} members online of {members:?} total members. I was added there {joined_at:?}",
+    ))
+}
+
+async fn get_bot_stats(state: SlashState) -> Result<String, Error> {
+    let levels_held = xpd_database::total_levels(&state.db).await?;
+    Ok(format!(
+        "Roughly {levels_held} levels in database. Bot version {CURRENT_GIT_SHA}"
+    ))
 }

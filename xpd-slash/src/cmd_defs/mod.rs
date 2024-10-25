@@ -66,6 +66,10 @@ pub enum AdminCommand {
     BanGuild(admin::AdminCommandBanGuild),
     #[command(name = "pardonguild")]
     PardonGuild(admin::AdminCommandPardonGuild),
+    #[command(name = "guildstats")]
+    GuildStats(admin::AdminCommandGuildStats),
+    #[command(name = "stats")]
+    Stats(admin::AdminCommandStats),
 }
 
 #[derive(CommandModel, CreateCommand)]

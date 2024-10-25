@@ -16,6 +16,17 @@ pub struct AdminCommandResetGuild {
 }
 
 #[derive(CommandModel, CreateCommand)]
+#[command(name = "guildstats", desc = "Reset the stats of a guild")]
+pub struct AdminCommandGuildStats {
+    #[command(desc = "Guild to reset")]
+    pub guild: String,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "stats", desc = "Reset the stats of a guild")]
+pub struct AdminCommandStats;
+
+#[derive(CommandModel, CreateCommand)]
 #[command(name = "resetuser", desc = "Reset the stats of a user")]
 pub struct AdminCommandResetUser {
     #[command(desc = "User to reset")]

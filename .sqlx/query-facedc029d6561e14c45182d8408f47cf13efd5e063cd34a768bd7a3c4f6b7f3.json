@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT reltuples::bigint AS count FROM pg_class\n        WHERE oid = 'public.levels'::regclass",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "facedc029d6561e14c45182d8408f47cf13efd5e063cd34a768bd7a3c4f6b7f3"
+}
