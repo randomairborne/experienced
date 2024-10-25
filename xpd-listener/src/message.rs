@@ -167,16 +167,22 @@ impl XpdListenerInner {
             return Ok(());
         }
         let map = HashMap::from([
-            ("user_id".to_string(), msg.author.id.to_string()), 
+            ("user_id".to_string(), msg.author.id.to_string()),
             ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
-            ("user_name".to_string(), msg.author.display_name().to_string()),
-            ("user_nickname".to_string(), match &msg.member {
-                Some(member) => match &member.nick {
-                    Some(nick) => nick.to_string(),
+            (
+                "user_name".to_string(),
+                msg.author.display_name().to_string(),
+            ),
+            (
+                "user_nickname".to_string(),
+                match &msg.member {
+                    Some(member) => match &member.nick {
+                        Some(nick) => nick.to_string(),
+                        None => msg.author.display_name().to_string(),
+                    },
                     None => msg.author.display_name().to_string(),
                 },
-                None => msg.author.display_name().to_string(),
-            }),
+            ),
             ("old_level".to_string(), old_user_level.to_string()),
             ("level".to_string(), user_level.to_string()),
             ("xp".to_string(), xp.to_string()),
