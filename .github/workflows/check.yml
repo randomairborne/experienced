@@ -32,7 +32,10 @@ jobs:
       - name: Run tests
         run: cargo test --all
         env:
+          # this seems weird, but I don't want to run the migrations for the build, so we do the build offline and then
+          # connect to the database for tests
           DATABASE_URL: postgres://postgres:postgres@postgres/postgres
+          SQLX_OFFLINE: true
 
   rust-clippy:
     runs-on: ubuntu-latest
