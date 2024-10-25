@@ -99,7 +99,7 @@ impl MemberDisplayInfo {
     }
 }
 
-pub const TEMPLATE_VARIABLES: [&str; 2] = ["user_mention", "level"];
+pub const TEMPLATE_VARIABLES: [&str; 7] = ["user_id", "user_mention", "user_name", "user_nickname", "old_level", "level", "xp",];
 pub const DEFAULT_MAX_XP_PER_MESSAGE: i16 = 25;
 pub const DEFAULT_MIN_XP_PER_MESSAGE: i16 = 15;
 pub const DEFAULT_MESSAGE_COOLDOWN: i16 = 60;
