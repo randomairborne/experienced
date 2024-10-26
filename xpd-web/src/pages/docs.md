@@ -60,7 +60,7 @@ The JSON format used by `xp experience import` and `xp experience export` is a l
 definition:
 
 | Key  |  Value   | Description                 |
-|:----:|:--------:|-----------------------------|
+| :--: | :------: | --------------------------- |
 | `id` | `string` | Stringified discord user ID |
 | `xp` |  `int`   | XP count for this user      |
 
