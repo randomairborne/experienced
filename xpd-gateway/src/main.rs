@@ -75,16 +75,10 @@ async fn main() {
         .expect("Failed to convert own app ID!");
     let app_id = current_app.id;
     let bot_id = current_app.bot.expect("There has to be a bot here").id;
-    let owners = if let Some(owner) = current_app.owner {
-        vec![owner.id]
+    let owners = if let Some(team) = current_app.team {
+        team.members.iter().map(|v| v.user.id).collect()
     } else {
-        current_app
-            .team
-            .expect("No team or owner for app")
-            .members
-            .iter()
-            .map(|v| v.user.id)
-            .collect()
+        vec![current_app.owner.expect("No team or owner for app").id]
     };
 
     info!(?owners, "Got list of owners");
