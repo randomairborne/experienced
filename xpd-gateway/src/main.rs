@@ -87,6 +87,8 @@ async fn main() {
             .collect()
     };
 
+    info!(?owners, "Got list of owners");
+
     let http = reqwest::Client::builder()
         .user_agent("randomairborne/experienced")
         .https_only(true)
