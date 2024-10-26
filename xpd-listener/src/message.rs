@@ -98,7 +98,7 @@ impl XpdListenerInner {
         debug!(user = ?msg.author.id, channel = ?msg.channel_id, old_xp, new_xp = xp, user_level, old_user_level, config = ?guild_config, "Preparing to update user");
 
         if user_level > old_user_level {
-            self.congratulate_user(&guild_config, &msg, user_level, old_user_level, xp)
+            self.congratulate_user(&guild_config, &msg, user_level, old_user_level, xp, old_xp)
                 .await?;
         }
         self.add_user_role(
@@ -156,6 +156,7 @@ impl XpdListenerInner {
         user_level: i64,
         old_user_level: i64,
         xp: u64,
+        old_xp: u64,
     ) -> Result<(), Error> {
         let Some(template) = guild_config.level_up_message.as_ref() else {
             return Ok(());
@@ -169,23 +170,22 @@ impl XpdListenerInner {
         let map = HashMap::from([
             ("user_id".to_string(), msg.author.id.to_string()),
             ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
+            ("user_username".to_string(), msg.author.name.clone()),
             (
-                "user_name".to_string(),
+                "user_display_name".to_string(),
                 msg.author.display_name().to_string(),
             ),
             (
                 "user_nickname".to_string(),
-                match &msg.member {
-                    Some(member) => match &member.nick {
-                        Some(nick) => nick.to_string(),
-                        None => msg.author.display_name().to_string(),
-                    },
-                    None => msg.author.display_name().to_string(),
-                },
+                msg.member
+                    .as_ref()
+                    .and_then(|v| v.nick.clone())
+                    .unwrap_or_else(|| msg.author.display_name().to_string()),
             ),
             ("old_level".to_string(), old_user_level.to_string()),
             ("level".to_string(), user_level.to_string()),
-            ("xp".to_string(), xp.to_string()),
+            ("old_xp".to_string(), xp.to_string()),
+            ("xp".to_string(), old_xp.to_string()),
         ]);
         let message = template.render(&map);
 
