@@ -21,7 +21,7 @@ The variables available in level up messages are:
 - `user_nickname` The current guild nickname of the user who leveled up, or their normal name if no nick exists.
 - `user_id` The ID of the user who leveled up.
 
-You can use the variables by surounding hteir name in curly brackets, like so: 
+You can use the variables by surounding their names in curly brackets, like so:
 `{user_mention} has leveled up to level {level}!`.
 The level-up channel may only be enabled if the level-up message is set.
 
