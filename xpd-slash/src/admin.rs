@@ -1,3 +1,5 @@
+use std::{borrow::Cow, fmt::Display};
+
 use twilight_model::id::{
     marker::{GuildMarker, UserMarker},
     Id,
@@ -8,7 +10,7 @@ use xpd_common::CURRENT_GIT_SHA;
 use crate::{
     cmd_defs::{
         admin::{
-            AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandLeave,
+            self, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandLeave,
             AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
             AdminCommandSetNick,
         },
@@ -37,9 +39,7 @@ pub async fn process_admin(
         AdminCommand::BanGuild(bg) => ban_guild(state, bg).await,
         AdminCommand::PardonGuild(pg) => pardon_guild(state, pg).await,
         AdminCommand::GuildStats(gs) => get_guild_stats(state, gs).await,
-        AdminCommand::Stats(crate::cmd_defs::admin::AdminCommandStats) => {
-            get_bot_stats(state).await
-        }
+        AdminCommand::Stats(admin::AdminCommandStats) => get_bot_stats(state).await,
     }?;
     Ok(XpdSlashResponse::new()
         .ephemeral(true)
@@ -106,18 +106,21 @@ async fn get_guild_stats(state: SlashState, gs: AdminCommandGuildStats) -> Resul
 
     let large = if guild.large { "large" } else { "" };
     let name = &guild.name;
-    let joined_at = guild.joined_at;
-    let online = guild.approximate_presence_count;
-    let members = guild.approximate_member_count;
+    let online = fmt_opt_u64(guild.approximate_presence_count);
+    let members = fmt_opt_u64(guild.approximate_member_count);
 
     Ok(format!(
-        "{levels} levels in database for {large} guild {name}. Roughly {online:?} members online of {members:?} total members. I was added there {joined_at:?}",
+        "{levels} levels in database for {large} guild {name}. Roughly {online} members online of {members} total members.",
     ))
+}
+
+fn fmt_opt_u64(item: Option<u64>) -> impl Display {
+    item.map_or_else(|| Cow::Borrowed("unknown"), |v| Cow::Owned(v.to_string()))
 }
 
 async fn get_bot_stats(state: SlashState) -> Result<String, Error> {
     let levels_held = xpd_database::total_levels(&state.db).await?;
     Ok(format!(
-        "Roughly {levels_held} levels in database. Bot version {CURRENT_GIT_SHA}"
+        "Roughly {levels_held} levels in database. Bot version `git-{CURRENT_GIT_SHA}`"
     ))
 }
