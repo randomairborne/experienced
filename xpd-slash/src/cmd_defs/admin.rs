@@ -30,7 +30,7 @@ pub struct AdminCommandGuildStats {
 pub struct AdminCommandStats;
 
 #[derive(CommandModel, CreateCommand)]
-#[command(name = "resetuser", desc = "Reset the stats of a user")]
+#[command(name = "resetuser", desc = "Reset the stats & custom card of a user")]
 pub struct AdminCommandResetUser {
     #[command(desc = "User to reset")]
     pub user: Id<UserMarker>,

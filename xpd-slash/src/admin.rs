@@ -61,9 +61,11 @@ async fn reset_guild(state: SlashState, leave: AdminCommandResetGuild) -> Result
 }
 
 async fn reset_user(state: SlashState, leave: AdminCommandResetUser) -> Result<String, Error> {
-    let rows = xpd_database::delete_levels_user(&state.db, leave.user).await?;
+    let mut tx = state.db.begin().await?;
+    let rows = xpd_database::delete_levels_user(tx.as_mut(), leave.user).await?;
+    xpd_database::delete_card_customizations(tx.as_mut(), leave.user.cast()).await?;
     Ok(format!(
-        "Reset your levels. They had level data in {rows} guilds."
+        "Reset this user's levels. They had level data in {rows} guilds."
     ))
 }
 
