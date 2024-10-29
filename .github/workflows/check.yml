@@ -48,7 +48,7 @@ jobs:
         with:
           components: clippy
 
-      - name: Install NPM deps
+      - name: Run clippy
         run: cargo +nightly clippy --all -- -D warnings
         env:
           SQLX_OFFLINE: true
@@ -64,7 +64,7 @@ jobs:
         with:
           components: rustfmt
 
-      - name: Install NPM deps
+      - name: Check rust formatting
         run: cargo +nightly fmt --check --all
 
   js-fmt:
