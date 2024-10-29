@@ -105,4 +105,6 @@ pub enum Error {
     NotYourLeaderboard,
     #[error("Bots do not have leveling data. If one does somehow, you can still use /xp experience reset on it.")]
     BotsDontLevel,
+    #[error("Nobody in this server is ranked yet.")]
+    NoRanksYet,
 }

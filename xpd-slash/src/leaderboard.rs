@@ -7,7 +7,7 @@ use twilight_model::{
     channel::{
         message::{
             component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
-            Component, MessageFlags, ReactionType,
+            AllowedMentions, Component, MessageFlags, ReactionType,
         },
         Message,
     },
@@ -17,10 +17,7 @@ use twilight_model::{
         Id,
     },
 };
-use twilight_util::builder::{
-    embed::{EmbedBuilder, EmbedFooterBuilder},
-    InteractionResponseDataBuilder,
-};
+use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
 
@@ -65,9 +62,15 @@ async fn gen_leaderboard(
         zpage * USERS_PER_PAGE,
     )
     .await?;
+
     if users.is_empty() {
-        return Err(Error::NoUsersForPage);
+        return Err(if zpage == 0 {
+            Error::NoUsersForPage
+        } else {
+            Error::NoRanksYet
+        });
     }
+
     let one_more_page_bro = users.len() >= (USERS_PER_PAGE_USIZE + 1);
     let last_user_idx = users.len().clamp(0, USERS_PER_PAGE_USIZE);
     let users = &users[0..last_user_idx];
@@ -79,48 +82,75 @@ async fn gen_leaderboard(
         let rank: i64 = i
             .try_into()
             .map_or(-1, |v: i64| v + (zpage * USERS_PER_PAGE) + 1);
-        writeln!(description, "**#{rank}.** <@{}> - Level {level}", user.id).ok();
+        writeln!(
+            description,
+            "-# **#{rank}.** <@{}> - Level {level}",
+            user.id
+        )?;
     }
-    if description.is_empty() {
-        description += "Nobody is ranked yet.";
-    }
-    let embed = EmbedBuilder::new()
-        .description(description)
-        .footer(EmbedFooterBuilder::new(format!("Page {}", zpage + 1)).build())
-        .color(crate::THEME_COLOR)
-        .build();
-    let back_button = Component::Button(Button {
-        custom_id: Some((zpage - 1).to_string()),
-        disabled: zpage == 0,
-        emoji: Some(ReactionType::Unicode {
-            name: "⬅".to_string(),
-        }),
-        label: Some("Previous".to_string()),
-        style: ButtonStyle::Primary,
-        url: None,
-    });
-    let select_button = Component::Button(Button {
-        custom_id: Some("jump_modal".to_string()),
-        disabled: !one_more_page_bro && zpage == 0,
+
+    let control_options = control_options(zpage, one_more_page_bro);
+
+    let (control_row, flags) = if is_ephemeral {
+        (&control_options[..3], MessageFlags::EPHEMERAL)
+    } else {
+        (control_options.as_slice(), MessageFlags::empty())
+    };
+
+    let page_number = [Component::Button(Button {
+        custom_id: Some("page_indicator".to_string()),
+        disabled: true,
         emoji: None,
-        label: Some("Go to page".to_string()),
-        style: ButtonStyle::Primary,
+        label: Some(format!("Page {}", zpage + 1)),
+        style: ButtonStyle::Secondary,
         url: None,
-    });
-    let forward_button = Component::Button(Button {
-        custom_id: Some((zpage + 1).to_string()),
-        disabled: !one_more_page_bro,
-        emoji: Some(ReactionType::Unicode {
-            name: "➡️".to_string(),
-        }),
-        label: Some("Next".to_string()),
-        style: ButtonStyle::Primary,
-        url: None,
+    })];
+
+    let components = [control_row, &page_number].map(|row| {
+        Component::ActionRow(ActionRow {
+            components: row.to_vec(),
+        })
     });
 
-    let mut components = vec![back_button, select_button, forward_button];
-    if !is_ephemeral {
-        let delete_button = Component::Button(Button {
+    Ok(InteractionResponseDataBuilder::new()
+        .allowed_mentions(AllowedMentions::default())
+        .components(components)
+        .content(description)
+        .flags(flags)
+        .build())
+}
+
+fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 4] {
+    [
+        Button {
+            custom_id: Some((zpage - 1).to_string()),
+            disabled: zpage == 0,
+            emoji: Some(ReactionType::Unicode {
+                name: "⬅".to_string(),
+            }),
+            label: Some("Previous".to_string()),
+            style: ButtonStyle::Primary,
+            url: None,
+        },
+        Button {
+            custom_id: Some("jump_modal".to_string()),
+            disabled: !next_page_exists && zpage == 0,
+            emoji: None,
+            label: Some("Go to page".to_string()),
+            style: ButtonStyle::Primary,
+            url: None,
+        },
+        Button {
+            custom_id: Some((zpage + 1).to_string()),
+            disabled: !next_page_exists,
+            emoji: Some(ReactionType::Unicode {
+                name: "➡️".to_string(),
+            }),
+            label: Some("Next".to_string()),
+            style: ButtonStyle::Primary,
+            url: None,
+        },
+        Button {
             custom_id: Some("delete_leaderboard".to_string()),
             disabled: false,
             emoji: Some(ReactionType::Unicode {
@@ -129,19 +159,9 @@ async fn gen_leaderboard(
             label: Some("Delete".to_string()),
             style: ButtonStyle::Danger,
             url: None,
-        });
-        components.push(delete_button);
-    }
-    let flags = if is_ephemeral {
-        MessageFlags::EPHEMERAL
-    } else {
-        MessageFlags::empty()
-    };
-    Ok(InteractionResponseDataBuilder::new()
-        .components([Component::ActionRow(ActionRow { components })])
-        .embeds([embed])
-        .flags(flags)
-        .build())
+        },
+    ]
+    .map(Component::Button)
 }
 
 pub async fn process_modal_submit(
