@@ -76,52 +76,47 @@ async fn gen_leaderboard(
     let users = &users[0..last_user_idx];
     // this is kinda the only way to do this
     // It's designed to only allocate once, at the start here
-    let mut description = String::with_capacity(users.len() * 128);
+    let mut description = String::with_capacity(256 + users.len() * 128);
+    writeln!(description, "### Leaderboard")?;
     for (i, user) in users.iter().enumerate() {
         let level = mee6::LevelInfo::new(user.xp.try_into().unwrap_or(0)).level();
         let rank: i64 = i
             .try_into()
             .map_or(-1, |v: i64| v + (zpage * USERS_PER_PAGE) + 1);
-        writeln!(
-            description,
-            "-# **#{rank}.** <@{}> - Level {level}",
-            user.id
-        )?;
+        writeln!(description, "**#{rank}.** <@{}> - Level {level}", user.id)?;
     }
 
     let control_options = control_options(zpage, one_more_page_bro);
 
-    let (control_row, flags) = if is_ephemeral {
-        (&control_options[..3], MessageFlags::EPHEMERAL)
+    let (components, flags) = if is_ephemeral {
+        let second_last_idx = control_options.len() - 2;
+        (&control_options[..second_last_idx], MessageFlags::EPHEMERAL)
     } else {
         (control_options.as_slice(), MessageFlags::empty())
     };
 
-    let page_number = [Component::Button(Button {
-        custom_id: Some("page_indicator".to_string()),
-        disabled: true,
-        emoji: None,
-        label: Some(format!("Page {}", zpage + 1)),
-        style: ButtonStyle::Secondary,
-        url: None,
-    })];
-
-    let components = [control_row, &page_number].map(|row| {
-        Component::ActionRow(ActionRow {
-            components: row.to_vec(),
-        })
+    let components = Component::ActionRow(ActionRow {
+        components: components.to_vec(),
     });
 
     Ok(InteractionResponseDataBuilder::new()
         .allowed_mentions(AllowedMentions::default())
-        .components(components)
+        .components([components])
         .content(description)
         .flags(flags)
         .build())
 }
 
-fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 4] {
+fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
     [
+        Button {
+            custom_id: Some("page_indicator".to_string()),
+            disabled: true,
+            emoji: None,
+            label: Some(format!("Page {}", zpage + 1)),
+            style: ButtonStyle::Secondary,
+            url: None,
+        },
         Button {
             custom_id: Some((zpage - 1).to_string()),
             disabled: zpage == 0,
