@@ -90,7 +90,10 @@ async fn gen_leaderboard(
 
     let (components, flags) = if is_ephemeral {
         let second_last_idx = control_options.len() - 2;
-        (&control_options[..=second_last_idx], MessageFlags::EPHEMERAL)
+        (
+            &control_options[..=second_last_idx],
+            MessageFlags::EPHEMERAL,
+        )
     } else {
         (control_options.as_slice(), MessageFlags::empty())
     };
