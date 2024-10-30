@@ -118,13 +118,13 @@ pub async fn set_xp<
         .execute(conn.as_mut())
         .await?;
     } else {
-        clear_xp(conn.as_mut(), user, guild).await?;
+        delete_user_guild_xp(conn.as_mut(), user, guild).await?;
     }
 
     Ok(())
 }
 
-pub async fn clear_xp<
+pub async fn delete_user_guild_xp<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,

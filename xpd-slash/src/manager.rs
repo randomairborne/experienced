@@ -119,7 +119,7 @@ async fn reset_user_xp(
     user_id: Id<UserMarker>,
     state: SlashState,
 ) -> Result<String, Error> {
-    xpd_database::clear_xp(&state.db, user_id, guild_id).await?;
+    xpd_database::delete_user_guild_xp(&state.db, user_id, guild_id).await?;
     Ok(format!(
         "Deleted <@{user_id}> from my database in this server!"
     ))
