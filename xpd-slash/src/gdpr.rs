@@ -68,13 +68,10 @@ async fn download(
     let level_file = Attachment::from_bytes(format!("leveling-{}.csv", invoker.id), levels, 1);
     let card_file = Attachment::from_bytes(format!("card-{}.csv", invoker.id), custom_card, 2);
 
-    Ok(
-        XpdSlashResponse::with_embed_text(
-            "Check your DMs, your data package has been sent to you!",
-        )
+    Ok(XpdSlashResponse::new()
+        .content("Here you go!".to_string())
         .attachments([level_file, card_file])
-        .ephemeral(true),
-    )
+        .ephemeral(true))
 }
 
 #[derive(Serialize)]
