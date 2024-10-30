@@ -290,6 +290,9 @@ async fn handle_event(
                 .log_error("Failed to add guild to cleanup system");
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
+        Event::BanAdd(ban) => {
+            xpd_database::delete_levels_user_guild(&db, ban.user.id, ban.guild_id).await?
+        }
         _ => {}
     };
     Ok(())
