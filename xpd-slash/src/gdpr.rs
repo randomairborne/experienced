@@ -9,7 +9,7 @@ use twilight_model::{
 use xpd_common::MemberDisplayInfo;
 
 use crate::{
-    cmd_defs::{gdpr::GdprCommandDelete, GdprCommand},
+    cmd_defs::gdpr::{GdprCommand, GdprCommandDelete},
     levels::get_customizations,
     Error, SlashState, XpdSlashResponse,
 };

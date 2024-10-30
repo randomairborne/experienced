@@ -1,5 +1,33 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::interaction::InteractionChannel;
+use twilight_model::{application::interaction::InteractionChannel, guild::Permissions};
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "config",
+    desc = "Configure the behavior of the bot in your server",
+    dm_permission = false,
+    default_permissions = "Self::default_permissions"
+)]
+#[allow(clippy::large_enum_variant)]
+pub enum ConfigCommand {
+    #[command(name = "reset")]
+    Reset(ConfigCommandReset),
+    #[command(name = "get")]
+    Get(ConfigCommandGet),
+    #[command(name = "rewards")]
+    Rewards(ConfigCommandRewards),
+    #[command(name = "levels")]
+    Levels(ConfigCommandLevels),
+    #[command(name = "perms_checkup")]
+    PermsCheckup(ConfigCommandPermsCheckup),
+}
+
+impl ConfigCommand {
+    #[inline]
+    const fn default_permissions() -> Permissions {
+        Permissions::ADMINISTRATOR
+    }
+}
 
 #[derive(CommandModel, CreateCommand)]
 #[command(

@@ -19,7 +19,7 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-use crate::{cmd_defs::LeaderboardCommand, Error, SlashState};
+use crate::{cmd_defs::levels::LeaderboardCommand, Error, SlashState};
 
 pub async fn leaderboard(
     state: SlashState,

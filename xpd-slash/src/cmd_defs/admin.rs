@@ -1,5 +1,42 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::{marker::UserMarker, Id};
+use twilight_model::{
+    guild::Permissions,
+    id::{marker::UserMarker, Id},
+};
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "admin",
+    desc = "Globally manage the bot",
+    dm_permission = false,
+    default_permissions = "Self::default_permissions"
+)]
+#[allow(clippy::large_enum_variant)]
+pub enum AdminCommand {
+    #[command(name = "leave")]
+    Leave(AdminCommandLeave),
+    #[command(name = "resetguild")]
+    ResetGuild(AdminCommandResetGuild),
+    #[command(name = "resetuser")]
+    ResetUser(AdminCommandResetUser),
+    #[command(name = "setnick")]
+    SetNick(AdminCommandSetNick),
+    #[command(name = "banguild")]
+    BanGuild(AdminCommandBanGuild),
+    #[command(name = "pardonguild")]
+    PardonGuild(AdminCommandPardonGuild),
+    #[command(name = "guildstats")]
+    GuildStats(AdminCommandGuildStats),
+    #[command(name = "stats")]
+    Stats(AdminCommandStats),
+}
+
+impl AdminCommand {
+    #[inline]
+    const fn default_permissions() -> Permissions {
+        Permissions::ADMINISTRATOR
+    }
+}
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "leave", desc = "Leave a guild")]

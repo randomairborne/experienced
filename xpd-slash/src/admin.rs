@@ -8,13 +8,10 @@ use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::CURRENT_GIT_SHA;
 
 use crate::{
-    cmd_defs::{
-        admin::{
-            self, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandLeave,
-            AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
-            AdminCommandSetNick,
-        },
-        AdminCommand,
+    cmd_defs::admin::{
+        self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandLeave,
+        AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
+        AdminCommandSetNick,
     },
     Error, SlashState, XpdSlashResponse,
 };

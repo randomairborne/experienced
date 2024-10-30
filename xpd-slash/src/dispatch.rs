@@ -13,8 +13,14 @@ use xpd_common::MemberDisplayInfo;
 
 use crate::{
     cmd_defs::{
-        AdminCommand, CardCommand, ConfigCommand, GdprCommand, GuildCardCommand,
-        LeaderboardCommand, XpCommand,
+        admin::AdminCommand,
+        card::{CardCommand, GuildCardCommand},
+        config::ConfigCommand,
+        experience::XpCommand,
+        gdpr::GdprCommand,
+        levels::{LeaderboardCommand, RankCommand},
+        manage::ManageCommand,
+        rewards::RewardsCommand,
     },
     leaderboard::{process_message_component, process_modal_submit},
     Error, SlashState, XpdSlashResponse,
@@ -122,7 +128,7 @@ async fn process_slash_cmd(
     match data.name.as_str() {
         "help" => Ok(crate::help::help().into()),
         "rank" => {
-            let data = crate::cmd_defs::RankCommand::from_interaction(data.into())?;
+            let data = RankCommand::from_interaction(data.into())?;
             let target = data.user.map_or_else(
                 || invoker.clone(),
                 |ru| {
@@ -150,10 +156,9 @@ async fn process_slash_cmd(
             .await
             .map(Into::into)
         }
-        "xp" => crate::manager::process_xp(
+        "xp" => crate::experience::process_xp(
             XpCommand::from_interaction(data.into())?,
             guild_id.ok_or(Error::NoGuildId)?,
-            respondable,
             state,
         )
         .await
@@ -197,6 +202,21 @@ async fn process_slash_cmd(
             state,
             guild_id.ok_or(Error::NoGuildId)?,
             LeaderboardCommand::from_interaction(data.into())?,
+        )
+        .await
+        .map(Into::into),
+        "manage" => crate::manager::process_manage(
+            ManageCommand::from_interaction(data.into())?,
+            guild_id.ok_or(Error::NoGuildId)?,
+            respondable,
+            state,
+        )
+        .await
+        .map(Into::into),
+        "rewards" => crate::rewards::process_rewards(
+            RewardsCommand::from_interaction(data.into())?,
+            guild_id.ok_or(Error::NoGuildId)?,
+            state,
         )
         .await
         .map(Into::into),

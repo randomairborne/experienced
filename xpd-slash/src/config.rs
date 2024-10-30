@@ -13,10 +13,7 @@ use xpd_database::UpdateGuildConfig;
 use xpd_util::CanAddRole;
 
 use crate::{
-    cmd_defs::{
-        config::{ConfigCommandLevels, ConfigCommandRewards},
-        ConfigCommand,
-    },
+    cmd_defs::config::{ConfigCommand, ConfigCommandLevels, ConfigCommandRewards},
     Error, SlashState, XpdSlashResponse,
 };
 

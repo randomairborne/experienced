@@ -2,7 +2,48 @@
 use twilight_interactions::command::{
     AutocompleteValue, CommandModel, CommandOption, CreateCommand, CreateOption, ResolvedUser,
 };
+use twilight_model::guild::Permissions;
 use xpd_rank_card::customizations::Color;
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "card",
+    desc = "Set hex codes for different color schemes in your rank card.",
+    dm_permission = true
+)]
+#[allow(clippy::large_enum_variant)]
+pub enum CardCommand {
+    #[command(name = "reset")]
+    Reset(CardCommandReset),
+    #[command(name = "fetch")]
+    Fetch(CardCommandFetch),
+    #[command(name = "edit")]
+    Edit(CardCommandEdit),
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(
+    name = "guild-card",
+    desc = "Set hex codes for different color schemes in your server's default rank card.",
+    dm_permission = false,
+    default_permissions = "Self::default_permissions"
+)]
+#[allow(clippy::large_enum_variant)]
+pub enum GuildCardCommand {
+    #[command(name = "reset")]
+    Reset(CardCommandReset),
+    #[command(name = "fetch")]
+    Fetch(GuildCardCommandFetch),
+    #[command(name = "edit")]
+    Edit(CardCommandEdit),
+}
+
+impl GuildCardCommand {
+    #[inline]
+    const fn default_permissions() -> Permissions {
+        Permissions::ADMINISTRATOR
+    }
+}
 
 #[derive(CommandModel, CreateCommand)]
 #[command(name = "reset", desc = "Reset your card to defaults")]
