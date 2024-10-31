@@ -9,10 +9,7 @@ use xpd_database::CardUpdate;
 use xpd_rank_card::ConfigItem;
 
 use crate::{
-    cmd_defs::{
-        card::{CardCommandEdit, ColorOption},
-        CardCommand, GuildCardCommand,
-    },
+    cmd_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand},
     Error, SlashState, UserStats, XpdSlashResponse,
 };
 

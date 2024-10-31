@@ -9,7 +9,7 @@ use twilight_model::{
 use xpd_common::MemberDisplayInfo;
 
 use crate::{
-    cmd_defs::{gdpr::GdprCommandDelete, GdprCommand},
+    cmd_defs::gdpr::{GdprCommand, GdprCommandDelete},
     levels::get_customizations,
     Error, SlashState, XpdSlashResponse,
 };
@@ -68,13 +68,15 @@ async fn download(
     let level_file = Attachment::from_bytes(format!("leveling-{}.csv", invoker.id), levels, 1);
     let card_file = Attachment::from_bytes(format!("card-{}.csv", invoker.id), custom_card, 2);
 
-    Ok(
-        XpdSlashResponse::with_embed_text(
-            "Check your DMs, your data package has been sent to you!",
-        )
-        .attachments([level_file, card_file])
-        .ephemeral(true),
-    )
+    let attachments: Vec<Attachment> = [level_file, card_file]
+        .into_iter()
+        .filter(|v| !v.file.is_empty())
+        .collect();
+
+    Ok(XpdSlashResponse::new()
+        .content("Here you go!".to_string())
+        .attachments(attachments)
+        .ephemeral(true))
 }
 
 #[derive(Serialize)]

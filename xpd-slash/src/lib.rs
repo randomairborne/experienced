@@ -7,6 +7,7 @@ mod cmd_defs;
 mod config;
 mod dispatch;
 mod error;
+mod experience;
 mod gdpr;
 mod help;
 mod leaderboard;
@@ -14,6 +15,7 @@ mod levels;
 mod manage_card;
 mod manager;
 mod response;
+mod rewards;
 
 use std::{future::Future, sync::Arc, time::Instant};
 
@@ -151,8 +153,6 @@ impl RequiredDiscordResources for XpdSlash {
             | ResourceType::MEMBER
     }
 }
-
-const THEME_COLOR: u32 = 0x33_33_66;
 
 #[derive(Clone)]
 pub struct SlashState {
