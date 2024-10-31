@@ -10,7 +10,7 @@
 mod test;
 mod util;
 
-use std::{fmt::Display, ops::DerefMut, time::Duration};
+use std::{fmt::Display, ops::DerefMut};
 
 use simpleinterpolation::Interpolation;
 pub use sqlx::PgPool;
@@ -131,65 +131,13 @@ pub enum OnCooldown {
 }
 
 impl OnCooldown {
-    pub fn xp_increased(self) -> bool {
-        match self {
-            Self::Yes => false,
-            Self::No => true,
-        }
-    }
-
-    pub fn was_on_cooldown(self) -> bool {
+    #[must_use]
+    pub const fn was_on_cooldown(self) -> bool {
         match self {
             Self::Yes => true,
             Self::No => false,
         }
     }
-}
-
-pub async fn set_cooldown<
-    'a,
-    D: DerefMut<Target = PgConnection> + Send,
-    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
->(
-    conn: A,
-    user: Id<UserMarker>,
-    guild: Id<GuildMarker>,
-    timestamp: i64,
-    cooldown_duration: i64,
-) -> Result<OnCooldown, Error> {
-    let mut conn = conn.acquire().await?;
-    let rows = query!(
-        "INSERT INTO cooldowns (guild_id, user_id, last_message) VALUES ($1, $2, $3) \
-            ON CONFLICT (guild_id, user_id) DO UPDATE SET last_message=excluded.last_message \
-            WHERE (cooldowns.last_message + $4) < excluded.last_message",
-        id_to_db(guild),
-        id_to_db(user),
-        timestamp,
-        cooldown_duration
-    )
-    .execute(conn.as_mut())
-    .await?
-    .rows_affected();
-    if rows == 0 {}
-
-    Ok(unimplemented!())
-}
-
-pub async fn clean_cooldowns<
-    'a,
-    D: DerefMut<Target = PgConnection> + Send,
-    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
->(
-    conn: A,
-    user: Id<UserMarker>,
-    guild: Id<GuildMarker>,
-    timestamp: i64,
-    cooldown: Duration,
-) -> Result<OnCooldown, Error> {
-    let mut conn = conn.acquire().await?;
-    //query!("guild_id, user_id, last_message");
-
-    Ok(unimplemented!())
 }
 
 pub async fn delete_levels_user_guild<
