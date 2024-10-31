@@ -61,7 +61,7 @@ pub struct ConfigCommandLevels {
     #[command(
         desc = "How many seconds users must wait between messages that are able to earn XP",
         min_value = 0,
-        max_value = 32767
+        max_value = 28800
     )]
     pub message_cooldown: Option<i64>,
 }
