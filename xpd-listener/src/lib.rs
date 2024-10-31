@@ -4,6 +4,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
+use ahash::AHashMap;
 use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
@@ -22,6 +23,11 @@ mod message;
 #[macro_use]
 extern crate tracing;
 
+// TODO: Maybe we can improve the locking on this. Have one task per guild or something.
+// Go philosophy is good, we want to share memory by communicating.
+// We use i64 here, because it makes some database stuff easier and
+// it's impossible for a discord snowflake timestamp to exceed i64
+type SentMessages = AHashMap<(Id<GuildMarker>, Id<UserMarker>), i64>;
 type LockingMap<K, V> = RwLock<HashMap<K, V>>;
 
 #[derive(Clone)]
@@ -63,6 +69,7 @@ impl RequiredDiscordResources for XpdListener {
 
 pub struct XpdListenerInner {
     db: PgPool,
+    messages: RwLock<SentMessages>,
     http: Arc<twilight_http::Client>,
     cache: Arc<InMemoryCache>,
     #[allow(unused)]
@@ -80,11 +87,13 @@ impl XpdListenerInner {
         task_tracker: TaskTracker,
         bot_id: Id<UserMarker>,
     ) -> Self {
+        let messages = RwLock::new(SentMessages::new());
         let configs = RwLock::new(HashMap::new());
         let rewards = RwLock::new(HashMap::new());
 
         Self {
             db,
+            messages,
             http,
             configs,
             rewards,
