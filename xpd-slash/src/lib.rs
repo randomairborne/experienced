@@ -154,8 +154,6 @@ impl RequiredDiscordResources for XpdSlash {
     }
 }
 
-const THEME_COLOR: u32 = 0x33_33_66;
-
 #[derive(Clone)]
 pub struct SlashState {
     pub db: PgPool,
