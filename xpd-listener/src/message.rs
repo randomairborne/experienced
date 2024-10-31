@@ -40,7 +40,6 @@ impl XpdListenerInner {
             return Err(Error::NoMember);
         };
 
-        let user_cooldown_key = (guild_id, msg.author.id);
         let this_message_sts = snowflake_to_timestamp(msg.id);
 
         let guild_config = self.get_guild_config(guild_id).await?;
@@ -57,11 +56,15 @@ impl XpdListenerInner {
             .cooldown
             .unwrap_or(DEFAULT_MESSAGE_COOLDOWN)
             .into();
-        if self
-            .messages
-            .read()?
-            .get(&user_cooldown_key)
-            .is_some_and(|last_message_sts| last_message_sts + cooldown > this_message_sts)
+        if xpd_database::set_cooldown(
+            &self.db,
+            msg.author.id,
+            guild_id,
+            this_message_sts,
+            cooldown,
+        )
+        .await?
+        .was_on_cooldown()
         {
             return Ok(());
         }
@@ -76,10 +79,6 @@ impl XpdListenerInner {
         let xp_i64 = xpd_database::add_xp(&self.db, msg.author.id, guild_id, xp_added).await?;
         let xp = u64::try_from(xp_i64).unwrap_or(0);
         let old_xp = u64::try_from(xp_i64 - xp_added).unwrap_or(0);
-
-        self.messages
-            .write()?
-            .insert(user_cooldown_key, this_message_sts);
 
         let level_info = mee6::LevelInfo::new(xp);
         let old_level_info = mee6::LevelInfo::new(old_xp);

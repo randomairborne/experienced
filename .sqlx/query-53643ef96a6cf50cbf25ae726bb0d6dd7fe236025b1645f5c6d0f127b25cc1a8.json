@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM cooldowns WHERE last_message < $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "53643ef96a6cf50cbf25ae726bb0d6dd7fe236025b1645f5c6d0f127b25cc1a8"
+}

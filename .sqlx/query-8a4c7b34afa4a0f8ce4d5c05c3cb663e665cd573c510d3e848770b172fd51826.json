@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO cooldowns (guild_id, user_id, last_message) VALUES ($1, $2, $3)\n        ON CONFLICT (guild_id, user_id) DO UPDATE SET last_message=excluded.last_message\n        WHERE cooldowns.guild_id = excluded.guild_id AND cooldowns.user_id = excluded.user_id AND\n        (cooldowns.last_message + $4) < excluded.last_message",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8a4c7b34afa4a0f8ce4d5c05c3cb663e665cd573c510d3e848770b172fd51826"
+}

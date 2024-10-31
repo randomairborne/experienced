@@ -124,6 +124,70 @@ pub async fn set_xp<
     Ok(())
 }
 
+#[derive(Debug, Copy, Clone, Hash)]
+pub enum OnCooldown {
+    Yes,
+    No,
+}
+
+impl OnCooldown {
+    #[must_use]
+    pub const fn was_on_cooldown(self) -> bool {
+        match self {
+            Self::Yes => true,
+            Self::No => false,
+        }
+    }
+}
+
+pub async fn set_cooldown<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    user: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+    timestamp: i64,
+    cooldown_duration: i64,
+) -> Result<OnCooldown, Error> {
+    let mut conn = conn.acquire().await?;
+    let rows_affected = query!(
+        "INSERT INTO cooldowns (guild_id, user_id, last_message) VALUES ($1, $2, $3)
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET last_message=excluded.last_message
+        WHERE cooldowns.guild_id = excluded.guild_id AND cooldowns.user_id = excluded.user_id AND
+        (cooldowns.last_message + $4) < excluded.last_message",
+        id_to_db(guild),
+        id_to_db(user),
+        timestamp,
+        cooldown_duration
+    )
+    .execute(conn.as_mut())
+    .await?
+    .rows_affected();
+    let output = if rows_affected > 0 {
+        OnCooldown::No
+    } else {
+        OnCooldown::Yes
+    };
+    Ok(output)
+}
+
+pub async fn delete_cooldowns_expiring_before<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    timestamp: i64,
+) -> Result<u64, Error> {
+    let mut conn = conn.acquire().await?;
+    let db_resp = query!("DELETE FROM cooldowns WHERE last_message < $1", timestamp)
+        .execute(conn.as_mut())
+        .await?;
+    Ok(db_resp.rows_affected())
+}
+
 pub async fn delete_levels_user_guild<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -473,9 +537,9 @@ pub async fn update_guild_config<
                 cfg.message_cooldown,
                 cfg.one_at_a_time
             )
-            .fetch_one(conn.as_mut())
-            .await?
-            .cook()?;
+        .fetch_one(conn.as_mut())
+        .await?
+        .cook()?;
     Ok(config)
 }
 
