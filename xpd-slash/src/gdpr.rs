@@ -68,9 +68,14 @@ async fn download(
     let level_file = Attachment::from_bytes(format!("leveling-{}.csv", invoker.id), levels, 1);
     let card_file = Attachment::from_bytes(format!("card-{}.csv", invoker.id), custom_card, 2);
 
+    let attachments: Vec<Attachment> = [level_file, card_file]
+        .into_iter()
+        .filter(|v| !v.file.is_empty())
+        .collect();
+
     Ok(XpdSlashResponse::new()
         .content("Here you go!".to_string())
-        .attachments([level_file, card_file])
+        .attachments(attachments)
         .ephemeral(true))
 }
 
