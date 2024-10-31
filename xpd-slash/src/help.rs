@@ -1,7 +1,3 @@
-use twilight_util::builder::embed::{
-    EmbedAuthorBuilder, EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder, ImageSource,
-};
-
 use crate::XpdSlashResponse;
 
 pub fn help() -> XpdSlashResponse {
