@@ -1,5 +1,5 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::application::command::{CommandOptionChoiceValue, CommandOptionValue, CommandType};
+use twilight_model::application::command::CommandType;
 use twilight_util::builder::command::CommandBuilder;
 
 use crate::{
@@ -71,10 +71,19 @@ impl SlashState {
 
 #[test]
 fn ensure_limits_match() {
+    use twilight_model::application::command::CommandOptionValue;
     let cmd = ConfigCommand::create_command();
     eprintln!("{cmd:?}");
     let levels_cmd = cmd.options.iter().find(|v| v.name == "levels").unwrap();
     let levels_cmd_opts = levels_cmd.options.as_ref().unwrap();
-    let cooldown_value = levels_cmd_opts.iter().find(|v| v.name == "message_cooldown").unwrap().max_value.unwrap();
-    assert_eq!(cooldown_value, CommandOptionValue::Integer(xpd_common::MAX_MESSAGE_COOLDOWN.into()));
+    let cooldown_value = levels_cmd_opts
+        .iter()
+        .find(|v| v.name == "message_cooldown")
+        .unwrap()
+        .max_value
+        .unwrap();
+    assert_eq!(
+        cooldown_value,
+        CommandOptionValue::Integer(xpd_common::MAX_MESSAGE_COOLDOWN.into())
+    );
 }
