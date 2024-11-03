@@ -111,6 +111,7 @@ pub const TEMPLATE_VARIABLES: [&str; 7] = [
 pub const DEFAULT_MAX_XP_PER_MESSAGE: i16 = 25;
 pub const DEFAULT_MIN_XP_PER_MESSAGE: i16 = 15;
 pub const DEFAULT_MESSAGE_COOLDOWN: i16 = 60;
+pub const MAX_MESSAGE_COOLDOWN: i16 = 28800;
 
 #[derive(Default, Debug)]
 pub struct GuildConfig {
