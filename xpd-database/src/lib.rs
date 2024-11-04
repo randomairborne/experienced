@@ -173,6 +173,27 @@ pub async fn set_cooldown<
     Ok(output)
 }
 
+pub async fn get_last_message<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    user: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+) -> Result<Option<i64>, Error> {
+    let mut conn = conn.acquire().await?;
+    let last_message = query!(
+        "SELECT last_message FROM cooldowns WHERE guild_id = $1 AND user_id = $2",
+        id_to_db(guild),
+        id_to_db(user),
+    )
+    .fetch_optional(conn.as_mut())
+    .await?
+    .map(|v| v.last_message);
+    Ok(last_message)
+}
+
 pub async fn delete_cooldowns_expiring_before<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
