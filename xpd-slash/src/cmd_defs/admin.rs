@@ -29,6 +29,8 @@ pub enum AdminCommand {
     GuildStats(AdminCommandGuildStats),
     #[command(name = "stats")]
     Stats(AdminCommandStats),
+    #[command(name = "inspectcooldown")]
+    InspectCooldown(AdminCommandInspectCooldown),
 }
 
 impl AdminCommand {
@@ -96,4 +98,13 @@ pub struct AdminCommandSetNick {
     pub guild: String,
     #[command(desc = "Name to set", max_length = 32, min_length = 1)]
     pub name: Option<String>,
+}
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "inspectcooldown", desc = "Find cooldown for user in guild")]
+pub struct AdminCommandInspectCooldown {
+    #[command(desc = "Guild to inspect cooldown in")]
+    pub guild: String,
+    #[command(desc = "User ID")]
+    pub user: Id<UserMarker>,
 }

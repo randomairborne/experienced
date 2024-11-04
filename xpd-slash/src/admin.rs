@@ -5,13 +5,13 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::CURRENT_GIT_SHA;
+use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN};
 
 use crate::{
     cmd_defs::admin::{
-        self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandLeave,
-        AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
-        AdminCommandSetNick,
+        self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats,
+        AdminCommandInspectCooldown, AdminCommandLeave, AdminCommandPardonGuild,
+        AdminCommandResetGuild, AdminCommandResetUser, AdminCommandSetNick,
     },
     Error, SlashState, XpdSlashResponse,
 };
@@ -37,6 +37,7 @@ pub async fn process_admin(
         AdminCommand::PardonGuild(pg) => pardon_guild(state, pg).await,
         AdminCommand::GuildStats(gs) => get_guild_stats(state, gs).await,
         AdminCommand::Stats(admin::AdminCommandStats) => get_bot_stats(state).await,
+        AdminCommand::InspectCooldown(ic) => inspect_cooldown(state, ic).await,
     }?;
     Ok(XpdSlashResponse::new()
         .ephemeral(true)
@@ -122,4 +123,19 @@ async fn get_bot_stats(state: SlashState) -> Result<String, Error> {
     Ok(format!(
         "Roughly {levels_held} levels in database. Bot version `git-{CURRENT_GIT_SHA}`"
     ))
+}
+
+async fn inspect_cooldown(
+    state: SlashState,
+    inspect: AdminCommandInspectCooldown,
+) -> Result<String, Error> {
+    const DISCORD_EPOCH: i64 = 1_420_070_400_000;
+    let guild: Id<GuildMarker> = inspect.guild.parse()?;
+    let last_message_ts = xpd_database::get_last_message(&state.db, inspect.user, guild).await?.ok_or(Error::NoLastMessage)?;
+    let guild_config = xpd_database::guild_config(&state.db, guild)
+        .await?
+        .unwrap_or_default();
+    let guild_cooldown = guild_config.cooldown.unwrap_or(DEFAULT_MESSAGE_COOLDOWN);
+    let unix_lm_timestamp = (DISCORD_EPOCH + last_message_ts) / 1000;
+    Ok(format!("Last message detected <t:{unix_lm_timestamp}:R>. Guild cooldown {guild_cooldown}s."))
 }

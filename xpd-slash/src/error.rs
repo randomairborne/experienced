@@ -107,4 +107,6 @@ pub enum Error {
     BotsDontLevel,
     #[error("Nobody in this server is ranked yet.")]
     NoRanksYet,
+    #[error("This user does not have a most recent message.")]
+    NoLastMessage
 }
