@@ -136,6 +136,6 @@ async fn inspect_cooldown(
         .await?
         .unwrap_or_default();
     let guild_cooldown = guild_config.cooldown.unwrap_or(DEFAULT_MESSAGE_COOLDOWN);
-    let unix_lm_timestamp = (DISCORD_EPOCH + last_message_ts) / 1000;
+    let unix_lm_timestamp = (DISCORD_EPOCH / 1000) + last_message_ts;
     Ok(format!("Last message detected <t:{unix_lm_timestamp}:R>. Guild cooldown {guild_cooldown}s."))
 }
