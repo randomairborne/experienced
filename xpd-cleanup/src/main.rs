@@ -1,7 +1,11 @@
-use std::process::{ExitCode, Termination};
+use std::{
+    process::{ExitCode, Termination},
+    time::{Duration, UNIX_EPOCH},
+};
 
 use sqlx::{Connection, PgConnection, Postgres, Transaction};
 use twilight_model::id::{marker::GuildMarker, Id};
+use xpd_common::DISCORD_EPOCH_SECS;
 
 #[macro_use]
 extern crate tracing;
@@ -39,6 +43,26 @@ async fn async_main(database_url: &str) -> Result<(), Error> {
         }
         info!(%guild, "Cleaned guild");
     }
+    cleanup_cooldowns(&mut conn).await?;
+    info!("Done!");
+    Ok(())
+}
+
+async fn cleanup_cooldowns(db: &mut PgConnection) -> Result<(), Error> {
+    let discord_epoch = Duration::from_secs(DISCORD_EPOCH_SECS.try_into().unwrap());
+    let max_message_cooldown =
+        Duration::from_secs(xpd_common::MAX_MESSAGE_COOLDOWN.try_into().unwrap());
+
+    let now_discord = UNIX_EPOCH
+        .elapsed()?
+        .checked_add(discord_epoch)
+        .and_then(|v| v.checked_sub(max_message_cooldown))
+        .ok_or(Error::GenericTime)?
+        .as_secs()
+        .try_into()
+        .unwrap_or(0); // nothing can start before 0
+    warn!(now_discord, "Deleting cooldowns starting before");
+    xpd_database::delete_cooldowns_starting_before(db, now_discord).await?;
     Ok(())
 }
 
@@ -68,6 +92,8 @@ async fn cleanup_guild(
 pub enum Error {
     Sqlx(sqlx::Error),
     DbReq(xpd_database::Error),
+    SystemTime(std::time::SystemTimeError),
+    GenericTime,
 }
 
 impl From<sqlx::Error> for Error {
@@ -79,6 +105,12 @@ impl From<sqlx::Error> for Error {
 impl From<xpd_database::Error> for Error {
     fn from(value: xpd_database::Error) -> Self {
         Self::DbReq(value)
+    }
+}
+
+impl From<std::time::SystemTimeError> for Error {
+    fn from(value: std::time::SystemTimeError) -> Self {
+        Self::SystemTime(value)
     }
 }
 
