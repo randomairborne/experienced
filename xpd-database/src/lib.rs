@@ -194,7 +194,7 @@ pub async fn get_last_message<
     Ok(last_message)
 }
 
-pub async fn delete_cooldowns_expiring_before<
+pub async fn delete_cooldowns_starting_before<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
