@@ -5,7 +5,7 @@ use twilight_model::id::{
     Id,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN};
+use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS};
 
 use crate::{
     cmd_defs::admin::{
@@ -129,7 +129,6 @@ async fn inspect_cooldown(
     state: SlashState,
     inspect: AdminCommandInspectCooldown,
 ) -> Result<String, Error> {
-    const DISCORD_EPOCH: i64 = 1_420_070_400_000;
     let guild: Id<GuildMarker> = inspect.guild.parse()?;
     let last_message_ts = xpd_database::get_last_message(&state.db, inspect.user, guild)
         .await?
@@ -138,7 +137,7 @@ async fn inspect_cooldown(
         .await?
         .unwrap_or_default();
     let guild_cooldown = guild_config.cooldown.unwrap_or(DEFAULT_MESSAGE_COOLDOWN);
-    let unix_lm_timestamp = (DISCORD_EPOCH / 1000) + last_message_ts;
+    let unix_lm_timestamp = DISCORD_EPOCH_SECS + last_message_ts;
     Ok(format!(
         "Last message detected <t:{unix_lm_timestamp}:R>. Guild cooldown {guild_cooldown}s."
     ))
