@@ -131,11 +131,15 @@ async fn inspect_cooldown(
 ) -> Result<String, Error> {
     const DISCORD_EPOCH: i64 = 1_420_070_400_000;
     let guild: Id<GuildMarker> = inspect.guild.parse()?;
-    let last_message_ts = xpd_database::get_last_message(&state.db, inspect.user, guild).await?.ok_or(Error::NoLastMessage)?;
+    let last_message_ts = xpd_database::get_last_message(&state.db, inspect.user, guild)
+        .await?
+        .ok_or(Error::NoLastMessage)?;
     let guild_config = xpd_database::guild_config(&state.db, guild)
         .await?
         .unwrap_or_default();
     let guild_cooldown = guild_config.cooldown.unwrap_or(DEFAULT_MESSAGE_COOLDOWN);
     let unix_lm_timestamp = (DISCORD_EPOCH / 1000) + last_message_ts;
-    Ok(format!("Last message detected <t:{unix_lm_timestamp}:R>. Guild cooldown {guild_cooldown}s."))
+    Ok(format!(
+        "Last message detected <t:{unix_lm_timestamp}:R>. Guild cooldown {guild_cooldown}s."
+    ))
 }
