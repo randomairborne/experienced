@@ -1,7 +1,6 @@
 ---
 import Wordmark from "../components/Wordmark.astro";
 import LinkButton from "../components/LinkButton.astro";
-import TinySpacer from "../components/TinySpacer.astro";
 import Layout from "../layouts/Layout.astro";
 
 const title = "The best leveling bot on discord.";
@@ -29,19 +28,7 @@ const description =
   </ul>
 
   <div class="rows">
-    <LinkButton
-      href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
-      filled={true}
-    >
-      Add to discord
-    </LinkButton>
-    <TinySpacer />
-    <LinkButton
-      href="https://github.com/randomairborne/experienced/tree/prod#how-to-self-host-experienced"
-      filled={false}
-    >
-      Selfhost
-    </LinkButton>
+    <LinkButton href="/invite/" filled={true}> Add to discord </LinkButton>
   </div>
 
   <h2>Why Experienced?</h2>
@@ -89,12 +76,7 @@ const description =
       >Join our discord</a
     > if you need help!
   </p>
-  <LinkButton
-    href="https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands"
-    filled={true}
-  >
-    Add to discord
-  </LinkButton>
+  <LinkButton href="/invite/" filled={true}> Add to discord </LinkButton>
 </Layout>
 <style>
   .rows {
