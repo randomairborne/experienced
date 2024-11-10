@@ -1,11 +1,15 @@
-//! SimpleInterpolation
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
+//! # SimpleInterpolation
 //!
 //! A dead simple interpolation format
 //! `this is an {interpolated} string`
-//! Variable names may have `-` `_`, `a-z`, and `A-Z`, any other characters will cause errors.
+//! Variable names may have `-`, `_`, `0-9`, `a-z`, and `A-Z`, any other characters will cause errors.
 //!
 use std::{collections::HashMap, fmt::Formatter};
 
+/// The main entrypoint for this crate.
+/// Created with [`Interpolation::new`], this represents
+/// a template that can be supplied variables to render.
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Interpolation {
     // The first value is the raw value that will be appended
@@ -19,10 +23,15 @@ pub struct Interpolation {
 impl Interpolation {
     const REASONABLE_INTERPOLATION_PREALLOC_BYTES: usize = 128;
 
-    pub fn new(input: impl AsRef<str>) -> Result<Self, Error> {
+    /// Create a new [`Interpolation`].
+    /// # Errors
+    /// This function usually errors when there is a syntax error
+    /// in the interpolation compiler, e.g. an unclosed identifier or an invalid escape.
+    pub fn new(input: impl AsRef<str>) -> Result<Self, ParseError> {
         InterpolationCompiler::compile(input.as_ref())
     }
 
+    /// Create a new string with capacity to be reasonably rendered into.
     fn output_string(&self) -> String {
         String::with_capacity(
             self.parts
@@ -32,6 +41,9 @@ impl Interpolation {
         )
     }
 
+    /// Renders this template, using the `args` hashmap to fetch
+    /// interpolation values from. Said values *must* be strings.
+    /// If an interpolation value is not found, it is replaced with an empty string.
     pub fn render(&self, args: &HashMap<String, String>) -> String {
         let mut output = self.output_string();
         for (raw, interpolation_key) in &self.parts {
@@ -43,6 +55,37 @@ impl Interpolation {
         output
     }
 
+    /// Renders this template, using the `args` hashmap to fetch
+    /// interpolation values from. Said values *must* be strings.
+    /// If an interpolation value is not found, it is added to the [`RenderError`].
+    pub fn try_render(&self, args: &HashMap<String, String>) -> Result<String, RenderError> {
+        let mut output = self.output_string();
+        for (raw, interpolation_key) in &self.parts {
+            output.push_str(raw);
+            let Some(interpolation_value) = args.get(interpolation_key) else {
+                return Err(RenderError::UnknownVariables(
+                    self.listify_unknown_args(args),
+                ));
+            };
+            output.push_str(interpolation_value);
+        }
+        output.push_str(&self.end);
+        Ok(output)
+    }
+
+    // this is the cold path. intentionally inefficient.
+    fn listify_unknown_args<T>(&self, args: &HashMap<String, T>) -> Vec<&str> {
+        let mut output = Vec::with_capacity(args.len());
+        for (_, key) in &self.parts {
+            if !args.contains_key(key) {
+                output.push(key.as_str());
+            }
+        }
+        output
+    }
+
+    /// Returns an iterator over all variables used in this interpolation.
+    /// Useful if you have a non hashmap item you wish to get items from.
     pub fn variables_used(&self) -> impl Iterator<Item = &str> {
         UsedVariablesIterator {
             inner: self.parts.as_slice(),
@@ -50,6 +93,7 @@ impl Interpolation {
         }
     }
 
+    // Rebuilds the value you put into the interpolation.
     pub fn input_value(&self) -> String {
         fn push_escape(s: &mut String, txt: &str) {
             for next in txt.chars() {
@@ -96,7 +140,7 @@ struct InterpolationCompiler {
 }
 
 impl InterpolationCompiler {
-    fn compile(input: &str) -> Result<Interpolation, Error> {
+    fn compile(input: &str) -> Result<Interpolation, ParseError> {
         let mut compiler = Self {
             chars: input.chars().collect(),
             parts: Vec::new(),
@@ -118,9 +162,9 @@ impl InterpolationCompiler {
         })
     }
 
-    fn handle_char(&mut self, ch: char) -> Result<(), Error> {
+    fn handle_char(&mut self, ch: char) -> Result<(), ParseError> {
         if self.escaped && ch != '{' && ch != '\\' {
-            return Err(Error::InvalidEscape(ch, self.index));
+            return Err(ParseError::InvalidEscape(ch, self.index));
         } else if self.escaped {
             self.next.push(ch);
             self.escaped = false;
@@ -142,10 +186,10 @@ impl InterpolationCompiler {
 
     #[inline]
     fn valid_ident_char(ch: char) -> bool {
-        matches!(ch, 'A'..='Z' | 'a'..='z' | '_' | '-')
+        matches!(ch, 'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-')
     }
 
-    fn make_identifier(&mut self) -> Result<String, Error> {
+    fn make_identifier(&mut self) -> Result<String, ParseError> {
         let mut identifier = String::new();
         let start = self.index;
         loop {
@@ -153,15 +197,15 @@ impl InterpolationCompiler {
                 .chars
                 .get(self.index)
                 .copied()
-                .ok_or(Error::UnclosedIdentifier(start))?;
+                .ok_or(ParseError::UnclosedIdentifier(start))?;
             if identifier_part == '}' {
                 break;
             }
-            if self.index >= self.chars.len() {
-                return Err(Error::UnclosedIdentifier(start));
-            }
             if !Self::valid_ident_char(identifier_part) {
-                return Err(Error::InvalidCharInIdentifier(identifier_part, self.index));
+                return Err(ParseError::InvalidCharInIdentifier(
+                    identifier_part,
+                    self.index,
+                ));
             }
             identifier.push(identifier_part);
             self.index += 1;
@@ -170,14 +214,18 @@ impl InterpolationCompiler {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum Error {
+/// Error returned in the parsing stage.
+#[derive(Debug, PartialEq, Eq)]
+pub enum ParseError {
+    /// Unclosed identifier found at a specific spot.
     UnclosedIdentifier(usize),
+    /// Invalid char (.0) in identifier, located at .1
     InvalidCharInIdentifier(char, usize),
+    /// Invalid value (.0) escaped at usize (.1)
     InvalidEscape(char, usize),
 }
 
-impl std::fmt::Display for Error {
+impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::UnclosedIdentifier(at) => {
@@ -197,7 +245,34 @@ impl std::fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error {}
+impl std::error::Error for ParseError {}
+
+/// Errors returned by the [`Interpolation::try_render`] function.
+#[derive(Debug, PartialEq, Eq)]
+pub enum RenderError<'a> {
+    /// Unknown variables used in the interpolation. Contains a list of them.
+    UnknownVariables(Vec<&'a str>),
+}
+
+impl<'a> std::fmt::Display for RenderError<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownVariables(vars) => {
+                write!(f, "Unknown variables used: ")?;
+                for (idx, item) in vars.iter().enumerate() {
+                    if idx == vars.len() - 1 {
+                        write!(f, "{item}")?;
+                    } else {
+                        write!(f, "{item}, ")?;
+                    };
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl std::error::Error for RenderError<'_> {}
 
 #[cfg(test)]
 mod tests {
@@ -273,5 +348,49 @@ mod tests {
         let interpolation = Interpolation::new(unchanged).unwrap();
         println!("{interpolation:?}");
         assert_eq!(unchanged, interpolation.render(&HashMap::new()));
+    }
+    #[test]
+    fn error_nonexistents_found() {
+        let one_interp = "{nonexistent}";
+        let interpolation = Interpolation::new(one_interp).unwrap();
+        println!("{interpolation:?}");
+        assert_eq!(
+            Err(RenderError::UnknownVariables(vec!["nonexistent"])),
+            interpolation.try_render(&HashMap::new())
+        );
+    }
+    #[test]
+    fn error_nonexistents_found_2() {
+        let one_interp = "{nonexistent} {nonexistent2}";
+        let interpolation = Interpolation::new(one_interp).unwrap();
+        println!("{interpolation:?}");
+        assert_eq!(
+            Err(RenderError::UnknownVariables(vec![
+                "nonexistent",
+                "nonexistent2"
+            ])),
+            interpolation.try_render(&HashMap::new())
+        );
+    }
+    #[test]
+    fn error_bad_ident() {
+        let bad_template = "{a)";
+        let interpolation = Interpolation::new(bad_template);
+        assert_eq!(
+            interpolation,
+            Err(ParseError::InvalidCharInIdentifier(')', 2))
+        );
+    }
+    #[test]
+    fn error_unclosed() {
+        let bad_template = "{a";
+        let interpolation = Interpolation::new(bad_template);
+        assert_eq!(interpolation, Err(ParseError::UnclosedIdentifier(1)));
+    }
+    #[test]
+    fn error_bad_escape() {
+        let bad_template = "\\a";
+        let interpolation = Interpolation::new(bad_template);
+        assert_eq!(interpolation, Err(ParseError::InvalidEscape('a', 1)));
     }
 }
