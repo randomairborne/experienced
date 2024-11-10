@@ -1,5 +1,5 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
-//! # SimpleInterpolation
+//! # `SimpleInterpolation`
 //!
 //! A dead simple interpolation format
 //! `this is an {interpolated} string`
@@ -12,11 +12,11 @@ use std::{collections::HashMap, fmt::Formatter};
 /// a template that can be supplied variables to render.
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Interpolation {
-    // The first value is the raw value that will be appended
-    // to the final string. The second value will go AFTER this string,
-    // but it is dynamic
+    /// The first value is the raw value that will be appended
+    /// to the final string. The second value will go AFTER this string,
+    /// but it is dynamic
     parts: Vec<(String, String)>,
-    // The value which is placed after the otherwise rendered interpolation
+    /// The value which is placed after the otherwise rendered interpolation
     end: String,
 }
 
@@ -44,6 +44,7 @@ impl Interpolation {
     /// Renders this template, using the `args` hashmap to fetch
     /// interpolation values from. Said values *must* be strings.
     /// If an interpolation value is not found, it is replaced with an empty string.
+    #[must_use]
     pub fn render(&self, args: &HashMap<String, String>) -> String {
         let mut output = self.output_string();
         for (raw, interpolation_key) in &self.parts {
@@ -57,6 +58,7 @@ impl Interpolation {
 
     /// Renders this template, using the `args` hashmap to fetch
     /// interpolation values from. Said values *must* be strings.
+    /// # Errors
     /// If an interpolation value is not found, it is added to the [`RenderError`].
     pub fn try_render(&self, args: &HashMap<String, String>) -> Result<String, RenderError> {
         let mut output = self.output_string();
@@ -94,6 +96,7 @@ impl Interpolation {
     }
 
     // Rebuilds the value you put into the interpolation.
+    #[must_use]
     pub fn input_value(&self) -> String {
         fn push_escape(s: &mut String, txt: &str) {
             for next in txt.chars() {
@@ -185,7 +188,7 @@ impl InterpolationCompiler {
     }
 
     #[inline]
-    fn valid_ident_char(ch: char) -> bool {
+    const fn valid_ident_char(ch: char) -> bool {
         matches!(ch, 'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-')
     }
 
