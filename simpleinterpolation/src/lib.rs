@@ -5,7 +5,7 @@
 //! `this is an {interpolated} string`
 //! Variable names may have `-`, `_`, `0-9`, `a-z`, and `A-Z`, any other characters will cause errors.
 //!
-use std::{collections::HashMap, fmt::Formatter};
+use std::{borrow::Cow, collections::HashMap, fmt::Formatter};
 
 /// The main entrypoint for this crate.
 /// Created with [`Interpolation::new`], this represents
@@ -45,12 +45,12 @@ impl Interpolation {
     /// interpolation values from. Said values *must* be strings.
     /// If an interpolation value is not found, it is replaced with an empty string.
     #[must_use]
-    pub fn render(&self, args: &HashMap<String, String>) -> String {
+    pub fn render(&self, args: &HashMap<Cow<str>, Cow<str>>) -> String {
         let mut output = self.output_string();
         for (raw, interpolation_key) in &self.parts {
             output.push_str(raw);
-            let interpolation_value = args.get(interpolation_key);
-            output.push_str(interpolation_value.unwrap_or(&String::new()));
+            let interpolation_value = args.get(interpolation_key.as_str());
+            output.push_str(interpolation_value.unwrap_or(&Cow::Borrowed("")));
         }
         output.push_str(&self.end);
         output
@@ -60,11 +60,11 @@ impl Interpolation {
     /// interpolation values from. Said values *must* be strings.
     /// # Errors
     /// If an interpolation value is not found, it is added to the [`RenderError`].
-    pub fn try_render(&self, args: &HashMap<String, String>) -> Result<String, RenderError> {
+    pub fn try_render(&self, args: &HashMap<Cow<str>, Cow<str>>) -> Result<String, RenderError> {
         let mut output = self.output_string();
         for (raw, interpolation_key) in &self.parts {
             output.push_str(raw);
-            let Some(interpolation_value) = args.get(interpolation_key) else {
+            let Some(interpolation_value) = args.get(interpolation_key.as_str()) else {
                 return Err(RenderError::UnknownVariables(
                     self.listify_unknown_args(args),
                 ));
@@ -76,10 +76,10 @@ impl Interpolation {
     }
 
     // this is the cold path. intentionally inefficient.
-    fn listify_unknown_args<T>(&self, args: &HashMap<String, T>) -> Vec<&str> {
+    fn listify_unknown_args<T>(&self, args: &HashMap<Cow<str>, T>) -> Vec<&str> {
         let mut output = Vec::with_capacity(args.len());
         for (_, key) in &self.parts {
-            if !args.contains_key(key) {
+            if !args.contains_key(key.as_str()) {
                 output.push(key.as_str());
             }
         }
@@ -283,10 +283,10 @@ mod tests {
 
     use super::*;
 
-    fn get_example_args() -> HashMap<String, String> {
+    fn get_example_args() -> HashMap<Cow<'static, str>, Cow<'static, str>> {
         let mut hm = HashMap::new();
-        hm.insert("interpolation".to_string(), "Interpolation".to_string());
-        hm.insert("unused".to_string(), "ERROR".to_string());
+        hm.insert(Cow::Borrowed("interpolation"), Cow::Borrowed("Interpolation"));
+        hm.insert(Cow::Borrowed("unused"), Cow::Borrowed("ERROR"));
         hm
     }
     #[test]
@@ -295,7 +295,7 @@ mod tests {
             Interpolation::new("This is an example string for {interpolation}!").unwrap();
         println!("{interpolation:?}");
         let rendered = interpolation.render(&get_example_args());
-        assert_eq!("This is an example string for Interpolation!", rendered)
+        assert_eq!("This is an example string for Interpolation!", rendered);
     }
     #[test]
     fn escapes() {

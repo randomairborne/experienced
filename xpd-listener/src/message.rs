@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use rand::Rng;
 use twilight_model::{
@@ -166,25 +166,31 @@ impl XpdListenerInner {
             warn!(channel = ?msg.channel_id, user = ?msg.author.id, guild = ?msg.guild_id, "Could not congratulate user");
             return Ok(());
         }
-        let map = HashMap::from([
-            ("user_id".to_string(), msg.author.id.to_string()),
-            ("user_mention".to_string(), format!("<@{}>", msg.author.id)),
-            ("user_username".to_string(), msg.author.name.clone()),
-            (
-                "user_display_name".to_string(),
-                msg.author.display_name().to_string(),
-            ),
-            (
-                "user_nickname".to_string(),
-                msg.member
+        let mention = format!("<@{}>", msg.author.id);
+        // this is horrible but i love it.
+        let author_id_str = &mention[2..=mention.len() - 2];
+
+        let nickname = msg.member
                     .as_ref()
-                    .and_then(|v| v.nick.clone())
-                    .unwrap_or_else(|| msg.author.display_name().to_string()),
+                    .and_then(|v| v.nick.as_deref().map(Cow::Borrowed))
+                    .unwrap_or_else(|| Cow::Borrowed(msg.author.display_name()));
+
+        let map: HashMap<Cow<str>, Cow<str>> = HashMap::from([
+            (Cow::Borrowed("user_id"), Cow::Borrowed(author_id_str)),
+            ("user_mention".into(), mention.as_str().into()),
+            ("user_username".into(), msg.author.name.as_str().into()),
+            (
+                "user_display_name".into(),
+                msg.author.display_name().into(),
             ),
-            ("old_level".to_string(), old_user_level.to_string()),
-            ("level".to_string(), user_level.to_string()),
-            ("old_xp".to_string(), xp.to_string()),
-            ("xp".to_string(), old_xp.to_string()),
+            (
+                "user_nickname".into(),
+                nickname,
+            ),
+            ("old_level".into(), old_user_level.to_string().into()),
+            ("level".into(), user_level.to_string().into()),
+            ("old_xp".into(), xp.to_string().into()),
+            ("xp".into(), old_xp.to_string().into()),
         ]);
         let message = template.render(&map);
 
