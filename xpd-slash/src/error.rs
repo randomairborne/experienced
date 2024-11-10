@@ -33,7 +33,7 @@ pub enum Error {
     #[error("I/O error")]
     Io(#[from] std::io::Error),
     #[error("Could not build template: {0}")]
-    SimpleInterpolation(#[from] simpleinterpolation::Error),
+    SimpleInterpolation(#[from] simpleinterpolation::ParseError),
     #[error("Discord API decoding error")]
     DiscordApiDeserialization(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Invalid guild config: {0}")]

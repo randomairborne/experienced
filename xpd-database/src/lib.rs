@@ -856,7 +856,7 @@ pub struct RawGuildConfig {
 }
 
 impl RawGuildConfig {
-    fn cook(self) -> Result<GuildConfig, simpleinterpolation::Error> {
+    fn cook(self) -> Result<GuildConfig, simpleinterpolation::ParseError> {
         let level_up_message = if let Some(str) = self.level_up_message {
             Some(Interpolation::new(str)?)
         } else {
@@ -879,7 +879,7 @@ impl RawGuildConfig {
 #[derive(Debug)]
 pub enum Error {
     Database(sqlx::Error),
-    Interpolation(simpleinterpolation::Error),
+    Interpolation(simpleinterpolation::ParseError),
     UnspecifiedDelete,
 }
 
@@ -906,4 +906,4 @@ macro_rules! gen_from {
 }
 
 gen_from!(sqlx::Error, Error, Database);
-gen_from!(simpleinterpolation::Error, Error, Interpolation);
+gen_from!(simpleinterpolation::ParseError, Error, Interpolation);

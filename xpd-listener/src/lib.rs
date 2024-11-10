@@ -175,7 +175,7 @@ pub enum Error {
     #[error("database fetch fail: {0}")]
     DatabaseAbstraction(#[from] xpd_database::Error),
     #[error("simpleinterpolation failed")]
-    CouldNotInterpolate(#[from] simpleinterpolation::Error),
+    CouldNotInterpolate(#[from] simpleinterpolation::ParseError),
     #[error("Unknown permissions for role")]
     UnknownPermissionsForRole(#[from] twilight_cache_inmemory::permission::RootError),
     #[error("Unknown permissions for role")]
