@@ -2,5 +2,12 @@
 name = "simpleinterpolation"
 version = "0.1.0"
 edition = "2021"
+authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
+description = "Dead simple string interpolation"
+keywords = ["interpolation", "templating", "format"]
+categories = ["template-engine"]
+repository = "https://github.com/randomairborne/experienced"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
