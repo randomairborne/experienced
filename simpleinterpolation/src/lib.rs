@@ -257,7 +257,7 @@ pub enum RenderError<'a> {
     UnknownVariables(Vec<&'a str>),
 }
 
-impl<'a> std::fmt::Display for RenderError<'a> {
+impl std::fmt::Display for RenderError<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::UnknownVariables(vars) => {
