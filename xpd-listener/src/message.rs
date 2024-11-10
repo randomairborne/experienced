@@ -170,23 +170,18 @@ impl XpdListenerInner {
         // this is horrible but i love it.
         let author_id_str = &mention[2..=mention.len() - 2];
 
-        let nickname = msg.member
-                    .as_ref()
-                    .and_then(|v| v.nick.as_deref().map(Cow::Borrowed))
-                    .unwrap_or_else(|| Cow::Borrowed(msg.author.display_name()));
+        let nickname = msg
+            .member
+            .as_ref()
+            .and_then(|v| v.nick.as_deref().map(Cow::Borrowed))
+            .unwrap_or_else(|| Cow::Borrowed(msg.author.display_name()));
 
         let map: HashMap<Cow<str>, Cow<str>> = HashMap::from([
             (Cow::Borrowed("user_id"), Cow::Borrowed(author_id_str)),
             ("user_mention".into(), mention.as_str().into()),
             ("user_username".into(), msg.author.name.as_str().into()),
-            (
-                "user_display_name".into(),
-                msg.author.display_name().into(),
-            ),
-            (
-                "user_nickname".into(),
-                nickname,
-            ),
+            ("user_display_name".into(), msg.author.display_name().into()),
+            ("user_nickname".into(), nickname),
             ("old_level".into(), old_user_level.to_string().into()),
             ("level".into(), user_level.to_string().into()),
             ("old_xp".into(), xp.to_string().into()),

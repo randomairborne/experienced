@@ -285,7 +285,10 @@ mod tests {
 
     fn get_example_args() -> HashMap<Cow<'static, str>, Cow<'static, str>> {
         let mut hm = HashMap::new();
-        hm.insert(Cow::Borrowed("interpolation"), Cow::Borrowed("Interpolation"));
+        hm.insert(
+            Cow::Borrowed("interpolation"),
+            Cow::Borrowed("Interpolation"),
+        );
         hm.insert(Cow::Borrowed("unused"), Cow::Borrowed("ERROR"));
         hm
     }
