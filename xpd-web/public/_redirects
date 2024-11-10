@@ -1,3 +1,3 @@
-/leaderboard/* /leaderboards/ 301
+/leaderboard/{*a} /leaderboards/ 301
 /invite/ /invite 302
 /invite https://discord.com/api/oauth2/authorize?client_id=1035970092284002384&permissions=0&scope=bot%20applications.commands 302
