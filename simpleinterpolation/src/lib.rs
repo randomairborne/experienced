@@ -148,7 +148,12 @@ impl InterpolationCompiler {
     fn make_identifier(&mut self) -> Result<String, Error> {
         let mut identifier = String::new();
         let start = self.index;
-        while let Some(identifier_part) = self.chars.get(self.index).copied() {
+        loop {
+            let identifier_part = self
+                .chars
+                .get(self.index)
+                .copied()
+                .ok_or(Error::UnclosedIdentifier(start))?;
             if identifier_part == '}' {
                 break;
             }
