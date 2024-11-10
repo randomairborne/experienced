@@ -30,6 +30,8 @@ jobs:
             name: xpd-gateway
           - image: ghcr.io/randomairborne/experienced-cleanup
             name: xpd-cleanup
+          - image: ghcr.io/randomairborne/experienced-web
+            name: xpd-web
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -80,6 +82,8 @@ jobs:
             name: xpd-gateway
           - image: ghcr.io/randomairborne/experienced-cleanup
             name: xpd-cleanup
+          - image: ghcr.io/randomairborne/experienced-web
+            name: xpd-web
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -125,3 +129,10 @@ jobs:
           KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
         with:
           args: -n experienced set image statefulset/experienced-gateway experienced-gateway=ghcr.io/randomairborne/experienced:git-${{ github.sha }}
+      - uses: actions-hub/kubectl@master
+        env:
+          KUBE_HOST: ${{ secrets.KUBE_HOST }}
+          KUBE_CERTIFICATE: ${{ secrets.KUBE_CERTIFICATE }}
+          KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+        with:
+          args: -n experienced set image deployments/experienced-web experienced-web=ghcr.io/randomairborne/experienced-web:git-${{ github.sha }}
