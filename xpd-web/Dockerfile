@@ -1,6 +1,6 @@
 FROM node:alpine AS builder
 
-COPY . /build
+COPY ./xpd-web/ /build
 
 WORKDIR /build/
 
