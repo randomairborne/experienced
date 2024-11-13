@@ -9,7 +9,9 @@ members = [
     "xpd-rank-card",
     "xpd-database",
     "xpd-util",
-    "xpd-cleanup"
+    "xpd-cleanup",
+    "xpd-slash-defs",
+    "xpd-setcommands"
 ]
 resolver = "2"
 
@@ -23,3 +25,4 @@ xpd-common = { path = "xpd-common" }
 xpd-rank-card = { path = "xpd-rank-card" }
 xpd-database = { path = "xpd-database" }
 xpd-util = { path = "xpd-util" }
+xpd-slash-defs = { path = "xpd-slash-defs" }

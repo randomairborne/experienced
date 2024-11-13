@@ -10,12 +10,9 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_slash_defs::manage::{ManageCommand, CONFIRMATION_STRING};
 
-use crate::{
-    cmd_defs::manage::{ManageCommand, CONFIRMATION_STRING},
-    dispatch::Respondable,
-    Error, SlashState, XpdSlashResponse,
-};
+use crate::{dispatch::Respondable, Error, SlashState, XpdSlashResponse};
 
 pub async fn process_manage(
     data: ManageCommand,

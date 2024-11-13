@@ -147,8 +147,7 @@ async fn main() {
         control_guild,
         owners,
         update_channels,
-    )
-    .await;
+    );
     let config = Config::new(token.clone(), intents);
     let shards: Vec<Shard> =
         twilight_gateway::create_recommended(&client, config, |_, builder| builder.build())

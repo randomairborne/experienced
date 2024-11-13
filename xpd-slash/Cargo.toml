@@ -17,7 +17,6 @@ twilight-cache-inmemory = { version = "0.16.0-rc.1", features = ["permission-cal
 twilight-gateway = { version = "0.16.0-rc.1", default-features = false }
 twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
 twilight-interactions = "0.16.0-rc.1"
-twilight-validate = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
 
 # tokio
@@ -30,6 +29,7 @@ http-body-util = "0.1"
 
 # internal crates
 simpleinterpolation = { workspace = true }
+xpd-slash-defs = { workspace = true }
 xpd-rank-card = { workspace = true }
 xpd-database = { workspace = true }
 xpd-common = { workspace = true }

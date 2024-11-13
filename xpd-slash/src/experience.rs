@@ -6,8 +6,9 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_slash_defs::experience::XpCommand;
 
-use crate::{cmd_defs::experience::XpCommand, Error, SlashState, XpdSlashResponse};
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn process_xp(
     data: XpCommand,

@@ -7,11 +7,9 @@ use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 use xpd_common::MemberDisplayInfo;
 use xpd_database::CardUpdate;
 use xpd_rank_card::ConfigItem;
+use xpd_slash_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand};
 
-use crate::{
-    cmd_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand},
-    Error, SlashState, UserStats, XpdSlashResponse,
-};
+use crate::{Error, SlashState, UserStats, XpdSlashResponse};
 
 pub async fn user_card_update(
     command: CardCommand,

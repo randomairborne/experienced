@@ -3,7 +3,6 @@
 
 mod admin;
 mod autocomplete;
-mod cmd_defs;
 mod config;
 mod dispatch;
 mod error;
@@ -66,7 +65,7 @@ impl XpdSlash {
     /// # Panics
     /// If loading resources or connecting to a database fails, this function will panic.
     #[allow(clippy::too_many_arguments)]
-    pub async fn new(
+    pub fn new(
         http: reqwest::Client,
         client: Arc<twilight_http::Client>,
         app_id: Id<ApplicationMarker>,
@@ -78,7 +77,7 @@ impl XpdSlash {
         owners: Vec<Id<UserMarker>>,
         update_channels: UpdateChannels,
     ) -> Self {
-        let svg = SvgState::new("xpd-card-resources").unwrap();
+        let svg = SvgState::new("xpd-card-resources").expect("Failed to initialize card renderer");
         let rt = Handle::current();
         let state = SlashState {
             db,
@@ -94,8 +93,6 @@ impl XpdSlash {
             owners: owners.into(),
             update_channels,
         };
-        info!("Creating commands...");
-        state.register_slashes().await;
         Self { state }
     }
 

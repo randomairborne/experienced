@@ -6,15 +6,13 @@ use twilight_model::id::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS};
-
-use crate::{
-    cmd_defs::admin::{
-        self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats,
-        AdminCommandInspectCooldown, AdminCommandLeave, AdminCommandPardonGuild,
-        AdminCommandResetGuild, AdminCommandResetUser, AdminCommandSetNick,
-    },
-    Error, SlashState, XpdSlashResponse,
+use xpd_slash_defs::admin::{
+    self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandInspectCooldown,
+    AdminCommandLeave, AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
+    AdminCommandSetNick,
 };
+
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn process_admin(
     data: AdminCommand,

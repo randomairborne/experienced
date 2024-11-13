@@ -1,0 +1,14 @@
+[package]
+name = "xpd-setcommands"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["rt"] }
+
+xpd-slash-defs = { workspace = true }
+
+twilight-http = "0.16.0-rc.1"
+twilight-model = "0.16.0-rc.1"
+
+valk-utils = "0.1"

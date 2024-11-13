@@ -7,12 +7,9 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::MemberDisplayInfo;
+use xpd_slash_defs::gdpr::{GdprCommand, GdprCommandDelete};
 
-use crate::{
-    cmd_defs::gdpr::{GdprCommand, GdprCommandDelete},
-    levels::get_customizations,
-    Error, SlashState, XpdSlashResponse,
-};
+use crate::{levels::get_customizations, Error, SlashState, XpdSlashResponse};
 
 pub async fn process_gdpr(
     state: SlashState,

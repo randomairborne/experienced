@@ -1,0 +1,12 @@
+[package]
+name = "xpd-slash-defs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+twilight-interactions = "0.16.0-rc.1"
+twilight-validate = "0.16.0-rc.1"
+twilight-model = "0.16.0-rc.1"
+
+xpd-rank-card = { workspace = true }
+xpd-common = { workspace = true }

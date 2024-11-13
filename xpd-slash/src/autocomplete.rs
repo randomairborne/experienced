@@ -8,11 +8,9 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_rank_card::ConfigItem;
+use xpd_slash_defs::card::CardCommandAutocomplete;
 
-use crate::{
-    cmd_defs::card::CardCommandAutocomplete, manage_card::CUSTOM_CARD_NULL_SENTINEL, Error,
-    SlashState,
-};
+use crate::{manage_card::CUSTOM_CARD_NULL_SENTINEL, Error, SlashState};
 
 fn empty_response<T: std::fmt::Debug>(error: T) -> InteractionResponse {
     warn!(?error, "Failed to autocomplete");

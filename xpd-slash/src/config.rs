@@ -10,12 +10,10 @@ use xpd_common::{
     GuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, TEMPLATE_VARIABLES,
 };
 use xpd_database::UpdateGuildConfig;
+use xpd_slash_defs::config::{ConfigCommand, ConfigCommandLevels, ConfigCommandRewards};
 use xpd_util::CanAddRole;
 
-use crate::{
-    cmd_defs::config::{ConfigCommand, ConfigCommandLevels, ConfigCommandRewards},
-    Error, SlashState, XpdSlashResponse,
-};
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn process_config(
     command: ConfigCommand,

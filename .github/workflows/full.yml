@@ -32,6 +32,8 @@ jobs:
             name: xpd-cleanup
           - image: ghcr.io/randomairborne/experienced-web
             name: xpd-web
+          - image: ghcr.io/randomairborne/experienced-setcommands
+            name: xpd-setcommands
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -84,6 +86,8 @@ jobs:
             name: xpd-cleanup
           - image: ghcr.io/randomairborne/experienced-web
             name: xpd-web
+          - image: ghcr.io/randomairborne/experienced-setcommands
+            name: xpd-setcommands
     steps:
       - name: Check out code
         uses: actions/checkout@v4

@@ -10,18 +10,18 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::MemberDisplayInfo;
+use xpd_slash_defs::{
+    admin::AdminCommand,
+    card::{CardCommand, GuildCardCommand},
+    config::ConfigCommand,
+    experience::XpCommand,
+    gdpr::GdprCommand,
+    levels::{LeaderboardCommand, RankCommand},
+    manage::ManageCommand,
+    rewards::RewardsCommand,
+};
 
 use crate::{
-    cmd_defs::{
-        admin::AdminCommand,
-        card::{CardCommand, GuildCardCommand},
-        config::ConfigCommand,
-        experience::XpCommand,
-        gdpr::GdprCommand,
-        levels::{LeaderboardCommand, RankCommand},
-        manage::ManageCommand,
-        rewards::RewardsCommand,
-    },
     leaderboard::{process_message_component, process_modal_submit},
     Error, SlashState, XpdSlashResponse,
 };

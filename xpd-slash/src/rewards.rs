@@ -5,11 +5,9 @@ use twilight_model::{
     id::{marker::GuildMarker, Id},
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_slash_defs::rewards::{RewardsCommand, RewardsCommandAdd, RewardsCommandRemove};
 
-use crate::{
-    cmd_defs::rewards::{RewardsCommand, RewardsCommandAdd, RewardsCommandRemove},
-    Error, SlashState, XpdSlashResponse,
-};
+use crate::{Error, SlashState, XpdSlashResponse};
 
 pub async fn process_rewards(
     cmd: RewardsCommand,

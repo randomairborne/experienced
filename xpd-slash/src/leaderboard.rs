@@ -18,8 +18,9 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
+use xpd_slash_defs::levels::LeaderboardCommand;
 
-use crate::{cmd_defs::levels::LeaderboardCommand, Error, SlashState};
+use crate::{Error, SlashState};
 
 pub async fn leaderboard(
     state: SlashState,
