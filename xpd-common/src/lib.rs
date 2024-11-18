@@ -101,13 +101,15 @@ impl MemberDisplayInfo {
     }
 }
 
-pub const TEMPLATE_VARIABLES: [&str; 7] = [
+pub const TEMPLATE_VARIABLES: [&str; 9] = [
     "user_id",
     "user_mention",
-    "user_name",
+    "user_username",
+    "user_display_name",
     "user_nickname",
     "old_level",
     "level",
+    "old_xp",
     "xp",
 ];
 pub const DEFAULT_MAX_XP_PER_MESSAGE: i16 = 25;
