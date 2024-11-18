@@ -219,3 +219,8 @@ pub trait RequiredDiscordResources {
     fn required_events() -> EventTypeFlags;
     fn required_cache_types() -> ResourceType;
 }
+
+pub enum EventBusMessage {
+    InvalidateRewards(Id<GuildMarker>),
+    UpdateConfig(Id<GuildMarker>, GuildConfig),
+}

@@ -14,7 +14,7 @@ use twilight_model::{
         Id,
     },
 };
-use xpd_common::{GuildConfig, RequiredDiscordResources, RoleReward};
+use xpd_common::{EventBusMessage, GuildConfig, RequiredDiscordResources, RoleReward};
 use xpd_database::PgPool;
 
 mod message;
@@ -91,6 +91,17 @@ impl XpdListenerInner {
             cache,
             task_tracker,
             bot_id,
+        }
+    }
+
+    pub async fn bus(&self, msg: EventBusMessage) {
+        let res = match msg {
+            EventBusMessage::InvalidateRewards(id) => self.invalidate_rewards(id).await,
+            EventBusMessage::UpdateConfig(id, guild_config) => self.update_config(id, guild_config),
+        };
+        match res {
+            Ok(()) => {}
+            Err(err) => error!(message = %err, ?err, "Error processing on event bus"),
         }
     }
 

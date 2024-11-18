@@ -36,27 +36,19 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
-use xpd_common::{GuildConfig, RequiredDiscordResources};
+use xpd_common::{EventBusMessage, GuildConfig, RequiredDiscordResources};
 use xpd_rank_card::SvgState;
 use xpd_util::LogError;
 
 #[macro_use]
 extern crate tracing;
 
-pub type UpdateSender<T> = Sender<(Id<GuildMarker>, T)>;
-
 #[derive(Clone)]
 pub struct XpdSlash {
     state: SlashState,
 }
 
-pub struct InvalidateCache(pub Id<GuildMarker>);
-
-#[derive(Clone)]
-pub struct UpdateChannels {
-    pub config: UpdateSender<GuildConfig>,
-    pub rewards: Sender<InvalidateCache>,
-}
+pub type EventBus = Sender<EventBusMessage>;
 
 impl XpdSlash {
     /// Creates a new xpd slash, which can be passed around
@@ -75,7 +67,7 @@ impl XpdSlash {
         task_tracker: TaskTracker,
         control_guild: Id<GuildMarker>,
         owners: Vec<Id<UserMarker>>,
-        update_channels: UpdateChannels,
+        event_bus: EventBus,
     ) -> Self {
         let svg = SvgState::new("xpd-card-resources").expect("Failed to initialize card renderer");
         let rt = Handle::current();
@@ -91,7 +83,7 @@ impl XpdSlash {
             cache,
             control_guild,
             owners: owners.into(),
-            update_channels,
+            event_bus,
         };
         Self { state }
     }
@@ -164,19 +156,21 @@ pub struct SlashState {
     pub http: reqwest::Client,
     pub owners: Arc<[Id<UserMarker>]>,
     pub control_guild: Id<GuildMarker>,
-    pub update_channels: UpdateChannels,
+    pub event_bus: EventBus,
 }
 
 impl SlashState {
     pub async fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) {
-        let _ = self.update_channels.config.send((guild, config)).await;
+        let _ = self
+            .event_bus
+            .send(EventBusMessage::UpdateConfig(guild, config))
+            .await;
     }
 
     pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) {
         let _ = self
-            .update_channels
-            .rewards
-            .send(InvalidateCache(guild))
+            .event_bus
+            .send(EventBusMessage::InvalidateRewards(guild))
             .await;
     }
 }

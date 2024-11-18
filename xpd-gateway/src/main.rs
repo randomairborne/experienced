@@ -34,7 +34,7 @@ use twilight_model::{
 };
 use xpd_common::RequiredDiscordResources;
 use xpd_listener::XpdListener;
-use xpd_slash::{InvalidateCache, UpdateChannels, XpdSlash};
+use xpd_slash::XpdSlash;
 use xpd_util::LogError;
 
 #[tokio::main]
@@ -99,8 +99,7 @@ async fn main() {
 
     let task_tracker = TaskTracker::new();
 
-    let (config_tx, mut config_rx) = tokio::sync::mpsc::channel(10);
-    let (rewards_tx, mut rewards_rx) = tokio::sync::mpsc::channel(10);
+    let (event_bus_tx, mut event_bus_rx) = tokio::sync::mpsc::channel(10);
 
     let listener = XpdListener::new(
         db.clone(),
@@ -110,31 +109,26 @@ async fn main() {
         bot_id,
     );
 
-    let updating_listener = listener.clone();
-    let config_update = tokio::spawn(async move {
-        while let Some((guild, config)) = config_rx.recv().await {
-            if let Err(source) = updating_listener.update_config(guild, config) {
-                error!(%guild, ?source, "Unable to update config for guild");
-            }
-        }
-    });
+    let shutdown = CancellationToken::new();
 
     let updating_listener = listener.clone();
-    let rewards_update = tokio::spawn(async move {
-        while let Some(InvalidateCache(guild)) = rewards_rx.recv().await {
-            let updating_listener = updating_listener.clone();
-            tokio::spawn(async move {
-                if let Err(source) = updating_listener.invalidate_rewards(guild).await {
-                    error!(%guild, ?source, "Unable to invalidate rewards for guild");
-                }
+    let updating_task_tracker = task_tracker.clone();
+    let updating_shutdown = shutdown.clone();
+    let config_update = tokio::spawn(async move {
+        loop {
+            let event = tokio::select! {
+                _ = updating_shutdown.cancelled() => { break; },
+                event = event_bus_rx.recv() => { event },
+            };
+            let Some(event) = event else {
+                break;
+            };
+            let listener = updating_listener.clone();
+            updating_task_tracker.spawn(async move {
+                listener.bus(event).await;
             });
         }
     });
-
-    let update_channels = UpdateChannels {
-        config: config_tx,
-        rewards: rewards_tx,
-    };
 
     let slash = XpdSlash::new(
         http,
@@ -146,7 +140,7 @@ async fn main() {
         task_tracker.clone(),
         control_guild,
         owners,
-        update_channels,
+        event_bus_tx,
     );
     let config = Config::new(token.clone(), intents);
     let shards: Vec<Shard> =
@@ -157,7 +151,6 @@ async fn main() {
     let senders: Vec<MessageSender> = shards.iter().map(Shard::sender).collect();
     info!("Connecting to discord");
 
-    let shutdown = CancellationToken::new();
     for shard in shards {
         let client = client.clone();
         task_tracker.clone().spawn(event_loop(
@@ -194,9 +187,6 @@ async fn main() {
     config_update
         .await
         .log_error("Could not shut down config updater");
-    rewards_update
-        .await
-        .log_error("Could not shut down rewards updater");
 
     if let Some(tracer) = tracer_shutdown {
         tracer.shutdown().expect("Failed to shut down tracer");
