@@ -115,14 +115,11 @@ async fn main() {
     let updating_task_tracker = task_tracker.clone();
     let updating_shutdown = shutdown.clone();
     let config_update = tokio::spawn(async move {
-        loop {
-            let event = tokio::select! {
-                _ = updating_shutdown.cancelled() => { break; },
-                event = event_bus_rx.recv() => { event },
-            };
-            let Some(event) = event else {
-                break;
-            };
+        while let Some(event) = updating_shutdown
+            .run_until_cancelled(event_bus_rx.recv())
+            .await
+            .flatten()
+        {
             let listener = updating_listener.clone();
             updating_task_tracker.spawn(async move {
                 listener.bus(event).await;
