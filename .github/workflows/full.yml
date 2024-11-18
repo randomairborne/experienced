@@ -140,3 +140,10 @@ jobs:
           KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
         with:
           args: -n experienced set image deployments/experienced-web experienced-web=ghcr.io/randomairborne/experienced-web:git-${{ github.sha }}
+      - uses: actions-hub/kubectl@master
+        env:
+          KUBE_HOST: ${{ secrets.KUBE_HOST }}
+          KUBE_CERTIFICATE: ${{ secrets.KUBE_CERTIFICATE }}
+          KUBE_TOKEN: ${{ secrets.KUBE_TOKEN }}
+        with:
+          args: -n experienced create job --from=cronjob/experienced-setcommands update-commands-${{ github.sha }}
