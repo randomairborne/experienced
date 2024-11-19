@@ -1,8 +1,7 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 use std::{
-    borrow::Cow,
-    fmt::{Debug, Display, Formatter},
+    borrow::Cow, fmt::{Debug, Display, Formatter}
 };
 
 use simpleinterpolation::Interpolation;
@@ -128,72 +127,30 @@ pub struct GuildConfig {
     pub cooldown: Option<i16>,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct UserStatus {
-    pub id: Id<UserMarker>,
-    pub guild: Id<GuildMarker>,
-    pub xp: i64,
-}
-
-#[derive(Debug)]
-pub struct RoleReward {
-    pub id: Id<RoleMarker>,
-    pub requirement: i64,
-}
-
-#[must_use]
-#[inline]
-pub fn sort_rewards(a: &RoleReward, b: &RoleReward) -> std::cmp::Ordering {
-    a.requirement.cmp(&b.requirement)
-}
-
-#[inline]
-const fn tribool(data: Option<bool>, default: Option<bool>) -> &'static str {
-    match (data, default) {
-        (None, None) => "unset",
-        (Some(true), _) | (None, Some(true)) => "true",
-        (Some(false), _) | (None, Some(false)) => "false",
-    }
-}
-
-fn opt_code_str(data: Option<&str>) -> Cow<str> {
-    data.map_or(Cow::Borrowed("unset"), |v| Cow::Owned(format!("`{v}`")))
-}
-
-fn opt_mention_str<T>(data: Option<Id<T>>, mention_kind: char) -> Cow<'static, str> {
-    data.map_or(Cow::Borrowed("unset"), |v| {
-        Cow::Owned(format!("`<{mention_kind}{v}>`"))
-    })
-}
-
-/// Convert a discord message ID to a seconds value of when it was sent relative to the discord epoch
-#[must_use]
-pub fn snowflake_to_timestamp<T>(id: Id<T>) -> i64 {
-    // this is safe, because dividing an u64 by 1000 ensures it is a valid i64
-    ((id.get() >> 22) / 1000).try_into().unwrap_or(0)
-}
-
 impl Display for GuildConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
             "One reward role at a time: {}",
-            tribool(self.one_at_a_time, Some(false))
+            match self.one_at_a_time {
+                None => "unset",
+                Some(true) => "true",
+                Some(false) => "false"
+            }
         )?;
         writeln!(
             f,
             "Level-up message: {}",
-            opt_code_str(
                 self.level_up_message
                     .as_ref()
-                    .map(Interpolation::input_value)
-                    .as_deref()
-            )
+                    .map(Interpolation::input_value).map_or(Cow::Borrowed("unset"), |v| Cow::Owned(format!("`{v}`")))
         )?;
         writeln!(
             f,
             "Level-up channel: {}",
-            opt_mention_str(self.level_up_channel, '#')
+            self.level_up_channel.map_or(Cow::Borrowed("unset"), |v| {
+                Cow::Owned(format!("`<#{v}>`"))
+            })
         )?;
         writeln!(
             f,
@@ -214,6 +171,25 @@ impl Display for GuildConfig {
         )?;
         Ok(())
     }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct UserStatus {
+    pub id: Id<UserMarker>,
+    pub guild: Id<GuildMarker>,
+    pub xp: i64,
+}
+
+#[derive(Debug)]
+pub struct RoleReward {
+    pub id: Id<RoleMarker>,
+    pub requirement: i64,
+}
+
+#[inline]
+#[must_use]
+pub fn compare_rewards_requirement(a: &RoleReward, b: &RoleReward) -> std::cmp::Ordering {
+    a.requirement.cmp(&b.requirement)
 }
 
 pub trait RequiredDiscordResources {

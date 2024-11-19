@@ -118,3 +118,10 @@ impl<T, E: std::fmt::Debug> LogError for Result<T, E> {
         }
     }
 }
+
+/// Convert a discord message ID to a seconds value of when it was sent relative to the discord epoch
+#[must_use]
+pub fn snowflake_to_timestamp<T>(id: Id<T>) -> i64 {
+    // this is safe, because dividing an u64 by 1000 ensures it is a valid i64
+    ((id.get() >> 22) / 1000).try_into().unwrap_or(0)
+}

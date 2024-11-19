@@ -127,7 +127,7 @@ impl XpdListenerInner {
 
     pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
         let mut new_rewards = xpd_database::guild_rewards(&self.db, guild).await?;
-        new_rewards.sort_by(xpd_common::sort_rewards);
+        new_rewards.sort_by(xpd_common::compare_rewards_requirement);
         self.rewards.write()?.insert(guild, Arc::new(new_rewards));
         Ok(())
     }
@@ -140,7 +140,7 @@ impl XpdListenerInner {
             return Ok(rewards.clone());
         }
         let mut rewards = xpd_database::guild_rewards(&self.db, guild_id).await?;
-        rewards.sort_by(xpd_common::sort_rewards);
+        rewards.sort_by(xpd_common::compare_rewards_requirement);
 
         let new_copy = Arc::new(rewards);
         self.rewards.write()?.insert(guild_id, new_copy.clone());

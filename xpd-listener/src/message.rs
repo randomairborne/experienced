@@ -11,7 +11,7 @@ use twilight_model::{
     },
 };
 use xpd_common::{
-    snowflake_to_timestamp, DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
+    DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
     DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE,
 };
 
@@ -40,7 +40,7 @@ impl XpdListenerInner {
             return Err(Error::NoMember);
         };
 
-        let this_message_sts = snowflake_to_timestamp(msg.id);
+        let this_message_sts = xpd_util::snowflake_to_timestamp(msg.id);
 
         let guild_config = self.get_guild_config(guild_id).await?;
         let config_max_xp_per_msg = guild_config
