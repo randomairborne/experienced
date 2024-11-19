@@ -1,7 +1,8 @@
 #![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 
 use std::{
-    borrow::Cow, fmt::{Debug, Display, Formatter}
+    borrow::Cow,
+    fmt::{Debug, Display, Formatter},
 };
 
 use simpleinterpolation::Interpolation;
@@ -135,15 +136,16 @@ impl Display for GuildConfig {
             match self.one_at_a_time {
                 None => "unset",
                 Some(true) => "true",
-                Some(false) => "false"
+                Some(false) => "false",
             }
         )?;
         writeln!(
             f,
             "Level-up message: {}",
-                self.level_up_message
-                    .as_ref()
-                    .map(Interpolation::input_value).map_or(Cow::Borrowed("unset"), |v| Cow::Owned(format!("`{v}`")))
+            self.level_up_message
+                .as_ref()
+                .map(Interpolation::input_value)
+                .map_or(Cow::Borrowed("unset"), |v| Cow::Owned(format!("`{v}`")))
         )?;
         writeln!(
             f,

@@ -11,8 +11,8 @@ use twilight_model::{
     },
 };
 use xpd_common::{
-    DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE,
-    DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE,
+    DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN,
+    DEFAULT_MIN_XP_PER_MESSAGE,
 };
 
 use crate::{Error, XpdListenerInner};
