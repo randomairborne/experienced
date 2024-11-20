@@ -1,9 +1,6 @@
-use std::{
-    collections::HashMap,
-    ops::Deref,
-    sync::{Arc, RwLock},
-};
+use std::{ops::Deref, sync::Arc};
 
+use dashmap::DashMap;
 use tokio_util::task::TaskTracker;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::EventTypeFlags;
@@ -21,8 +18,6 @@ mod message;
 
 #[macro_use]
 extern crate tracing;
-
-type LockingMap<K, V> = RwLock<HashMap<K, V>>;
 
 #[derive(Clone)]
 pub struct XpdListener(Arc<XpdListenerInner>);
@@ -67,8 +62,8 @@ pub struct XpdListenerInner {
     cache: Arc<InMemoryCache>,
     #[allow(unused)]
     task_tracker: TaskTracker,
-    configs: LockingMap<Id<GuildMarker>, Arc<GuildConfig>>,
-    rewards: LockingMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
+    configs: DashMap<Id<GuildMarker>, Arc<GuildConfig>>,
+    rewards: DashMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
     bot_id: Id<UserMarker>,
 }
 
@@ -80,8 +75,8 @@ impl XpdListenerInner {
         task_tracker: TaskTracker,
         bot_id: Id<UserMarker>,
     ) -> Self {
-        let configs = RwLock::new(HashMap::new());
-        let rewards = RwLock::new(HashMap::new());
+        let configs = DashMap::new();
+        let rewards = DashMap::new();
 
         Self {
             db,
@@ -106,7 +101,7 @@ impl XpdListenerInner {
     }
 
     pub fn update_config(&self, guild: Id<GuildMarker>, config: GuildConfig) -> Result<(), Error> {
-        self.configs.write()?.insert(guild, Arc::new(config));
+        self.configs.insert(guild, Arc::new(config));
         Ok(())
     }
 
@@ -114,21 +109,21 @@ impl XpdListenerInner {
         &self,
         guild: Id<GuildMarker>,
     ) -> Result<Arc<GuildConfig>, Error> {
-        if let Some(guild_config) = self.configs.read()?.get(&guild) {
-            return Ok(guild_config.clone());
+        if let Some(guild_config) = self.configs.get(&guild) {
+            return Ok(Arc::clone(&guild_config));
         }
         let config = xpd_database::guild_config(&self.db, guild)
             .await?
             .unwrap_or_default();
         let config = Arc::new(config);
-        self.configs.write()?.insert(guild, config.clone());
+        self.configs.insert(guild, config.clone());
         Ok(config)
     }
 
     pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
         let mut new_rewards = xpd_database::guild_rewards(&self.db, guild).await?;
         new_rewards.sort_by(xpd_common::compare_rewards_requirement);
-        self.rewards.write()?.insert(guild, Arc::new(new_rewards));
+        self.rewards.insert(guild, Arc::new(new_rewards));
         Ok(())
     }
 
@@ -136,14 +131,14 @@ impl XpdListenerInner {
         &self,
         guild_id: Id<GuildMarker>,
     ) -> Result<Arc<Vec<RoleReward>>, Error> {
-        if let Some(rewards) = self.rewards.read()?.get(&guild_id) {
-            return Ok(rewards.clone());
+        if let Some(rewards) = self.rewards.get(&guild_id) {
+            return Ok(Arc::clone(&rewards));
         }
         let mut rewards = xpd_database::guild_rewards(&self.db, guild_id).await?;
         rewards.sort_by(xpd_common::compare_rewards_requirement);
 
         let new_copy = Arc::new(rewards);
-        self.rewards.write()?.insert(guild_id, new_copy.clone());
+        self.rewards.insert(guild_id, new_copy.clone());
         Ok(new_copy)
     }
 }
