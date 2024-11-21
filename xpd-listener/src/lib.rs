@@ -188,14 +188,6 @@ pub enum Error {
     UnknownPermissionsForMessage(#[from] twilight_cache_inmemory::permission::ChannelError),
     #[error("Failed to check permissions: {0}")]
     PermissionsCalculator(#[from] xpd_util::PermissionCheckError),
-    #[error("RwLock Poisioned, please report: https://valk.sh/discord")]
-    LockPoisoned,
     #[error("Discord did not send a member where they MUST send a member")]
     NoMember,
-}
-
-impl<T> From<std::sync::PoisonError<T>> for Error {
-    fn from(_: std::sync::PoisonError<T>) -> Self {
-        Self::LockPoisoned
-    }
 }
