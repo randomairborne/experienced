@@ -46,7 +46,7 @@ csv = "1"
 sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "macros"] }
 
 # error handling
-thiserror = "1"
+thiserror = "2"
 tracing = "0.1"
 
 [dev-dependencies]

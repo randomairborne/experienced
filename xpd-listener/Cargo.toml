@@ -20,7 +20,7 @@ tokio-util = { version = "0.7", features = ["rt"] }
 
 # error handling
 tracing = "0.1"
-thiserror = "1"
+thiserror = "2"
 
 # xpd utils
 simpleinterpolation = { workspace = true }

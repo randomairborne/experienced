@@ -19,7 +19,7 @@ png = "0.17"
 
 # error handling
 tracing = "0.1"
-thiserror = "1"
+thiserror = "2"
 
 # serde
 serde = { version = "1", features = ["derive"] }
