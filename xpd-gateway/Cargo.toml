@@ -27,7 +27,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 
 # tracing and logging
-opentelemetry-otlp = { version = "0.26.0", features = ["reqwest-rustls-webpki-roots", "http-proto"] }
+opentelemetry-otlp = { version = "0.27.0", features = ["reqwest-rustls-webpki-roots", "http-proto"] }
 opentelemetry_sdk = { version = "0.26.0", features = ["rt-tokio"] }
 opentelemetry-semantic-conventions = "0.26.0"
 opentelemetry-appender-tracing = "0.26.0"
