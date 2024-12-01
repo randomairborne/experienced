@@ -241,7 +241,7 @@ pub async fn process_message_component(
             let offset: i64 = offset_str.parse()?;
             let show_delete_btn = original_message
                 .flags
-                .map_or(true, |f| !f.contains(MessageFlags::EPHEMERAL));
+                .is_none_or(|f| !f.contains(MessageFlags::EPHEMERAL));
             Ok(InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
                 data: Some(gen_leaderboard(&state, guild_id, offset, Some(show_delete_btn)).await?),
