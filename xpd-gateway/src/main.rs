@@ -11,7 +11,7 @@ use base64::{
 };
 use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{LogExporter, WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{logs::LoggerProvider, Resource};
 use sqlx::PgPool;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
@@ -317,19 +317,19 @@ fn make_otlp(endpoint: &str) -> LoggerProvider {
 
     let headers = make_otlp_headers();
 
+    let exporter = LogExporter::builder()
+        .with_http()
+        .with_endpoint(endpoint)
+        .with_headers(headers)
+        .with_http_client(reqwest::Client::new())
+        .build()
+        .unwrap();
+
     // Create a new OpenTelemetry trace pipeline that prints to stdout
-    opentelemetry_otlp::new_pipeline()
-        .logging()
+    LoggerProvider::builder()
         .with_resource(svc_name.clone())
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .http()
-                .with_endpoint(endpoint)
-                .with_headers(headers)
-                .with_http_client(reqwest::Client::new()),
-        )
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
-        .unwrap()
+        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+        .build()
 }
 
 fn make_otlp_headers() -> HashMap<String, String> {
