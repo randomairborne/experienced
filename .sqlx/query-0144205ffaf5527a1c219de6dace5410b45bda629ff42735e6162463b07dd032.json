@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3) ON CONFLICT (id, guild) DO UPDATE SET requirement = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0144205ffaf5527a1c219de6dace5410b45bda629ff42735e6162463b07dd032"
+}
