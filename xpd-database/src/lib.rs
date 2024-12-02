@@ -684,7 +684,8 @@ pub async fn add_reward_role<
 ) -> Result<(), Error> {
     let mut conn = conn.acquire().await?;
     query!(
-        "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3)",
+        "INSERT INTO role_rewards (id, requirement, guild) VALUES ($1, $2, $3) \
+        ON CONFLICT (id, guild) DO UPDATE SET requirement = $2",
         id_to_db(role),
         requirement,
         id_to_db(guild)
