@@ -8,6 +8,7 @@ pub mod manage;
 pub mod rewards;
 
 use admin::AdminCommand;
+use rewards::RewardsCommand;
 use twilight_interactions::command::{CommandModel, CreateCommand};
 use twilight_model::{
     application::command::{Command, CommandType},
@@ -42,6 +43,7 @@ pub fn get_commands() -> Vec<Command> {
         ConfigCommand::create_command().into(),
         GuildCardCommand::create_command().into(),
         LeaderboardCommand::create_command().into(),
+        RewardsCommand::create_command().into(),
         context_cmd("Get level", CommandType::User),
         context_cmd("Get author level", CommandType::Message),
     ]
