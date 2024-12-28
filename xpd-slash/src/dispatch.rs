@@ -198,13 +198,14 @@ async fn process_slash_cmd(
                 .await
                 .map(Into::into)
         }
-        "leaderboard" => crate::leaderboard::leaderboard(
-            state,
-            guild_id.ok_or(Error::NoGuildId)?,
-            LeaderboardCommand::from_interaction(data.into())?,
-        )
-        .await
-        .map(Into::into),
+        "leaderboard" => {
+            crate::leaderboard::leaderboard(
+                state,
+                guild_id.ok_or(Error::NoGuildId)?,
+                LeaderboardCommand::from_interaction(data.into())?,
+            )
+            .await
+        }
         "manage" => crate::manager::process_manage(
             ManageCommand::from_interaction(data.into())?,
             guild_id.ok_or(Error::NoGuildId)?,
