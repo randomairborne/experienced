@@ -1,6 +1,8 @@
+use serde::{de::Visitor, Deserialize, Deserializer};
+
 use crate::Error;
 
-#[derive(serde::Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct Customizations {
     pub username: Color,
     pub rank: Color,
@@ -13,59 +15,7 @@ pub struct Customizations {
     pub foreground_xp_count: Color,
     pub font: String,
     pub toy: Option<String>,
-    pub card: String,
-}
-
-impl Default for Customizations {
-    fn default() -> Self {
-        Self {
-            username: Color::new(255, 255, 255),
-            rank: Color::new(255, 255, 255),
-            level: Color::new(143, 202, 92),
-            border: Color::new(133, 79, 43),
-            background: Color::new(97, 55, 31),
-            progress_foreground: Color::new(71, 122, 30),
-            progress_background: Color::new(143, 202, 92),
-            background_xp_count: Color::new(0, 0, 0),
-            foreground_xp_count: Color::new(255, 255, 255),
-            font: "Mojang".to_string(),
-            toy: None,
-            card: "classic.svg".to_string(),
-        }
-    }
-}
-
-impl Customizations {
-    #[must_use]
-    pub fn vertical_default() -> Self {
-        Self {
-            username: Color::new(255, 255, 255),
-            rank: Color::new(255, 255, 255),
-            level: Color::new(251, 72, 196),
-            border: Color::new(0, 0, 0),
-            background: Color::new(10, 10, 10),
-            progress_foreground: Color::new(251, 72, 196),
-            progress_background: Color::new(199, 58, 157),
-            background_xp_count: Color::new(255, 255, 255),
-            foreground_xp_count: Color::new(255, 255, 255),
-            font: "Roboto".to_string(),
-            toy: None,
-            card: "vertical.svg".to_string(),
-        }
-    }
-
-    #[must_use]
-    pub fn default_customizations(&self) -> Self {
-        Self::default_customizations_str(&self.card)
-    }
-
-    #[must_use]
-    pub fn default_customizations_str(itm: &str) -> Self {
-        match itm {
-            "vertical.svg" => Self::vertical_default(),
-            _ => Self::default(),
-        }
-    }
+    pub internal_name: String,
 }
 
 macro_rules! add_output {
@@ -79,9 +29,13 @@ macro_rules! add_output {
     };
 }
 
-impl std::fmt::Display for Customizations {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let defaults = self.default_customizations();
+impl Customizations {
+    /// Generate a user representation of their customizations
+    /// # Errors
+    /// Never, realistically. Just uses write! internally.
+    pub fn display(&self, defaults: &Self) -> Result<String, std::fmt::Error> {
+        use std::fmt::Write;
+        let mut f = String::with_capacity(256);
         add_output!(f, "Important text", self.username, defaults.username);
         add_output!(f, "Rank", self.rank, defaults.rank);
         add_output!(f, "Level", self.level, defaults.level);
@@ -119,8 +73,8 @@ impl std::fmt::Display for Customizations {
                 .as_ref()
                 .map_or_else(|| "None".to_owned(), ToString::to_string)
         )?;
-        add_output!(f, "Card", self.card, defaults.card);
-        Ok(())
+        add_output!(f, "Card", self.internal_name, defaults.internal_name);
+        Ok(f)
     }
 }
 
@@ -135,8 +89,8 @@ impl Color {
     /// Takes hex-color input and converts it to a Color.
     /// # Errors
     /// Errors if the hex color is invalid
-    pub fn from_hex(hex: &impl ToString) -> Result<Self, Error> {
-        let hex = hex.to_string();
+    pub fn from_hex(hex: &impl AsRef<str>) -> Result<Self, Error> {
+        let hex = hex.as_ref();
         let hex = hex.trim_start_matches('#');
         if hex.len() != 6 {
             return Err(Error::InvalidLength);
@@ -166,5 +120,97 @@ impl serde::Serialize for Color {
         S: serde::Serializer,
     {
         serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for Color {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_any(ColorVisitor)
+    }
+}
+
+struct ColorVisitor;
+
+impl<'de> Visitor<'de> for ColorVisitor {
+    type Value = Color;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a hex string or a 3-byte array")
+    }
+
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        let [r, g, b] = v else {
+            return Err(E::invalid_length(
+                v.len(),
+                &"must deserialize to a length 3 byte array",
+            ));
+        };
+        Ok(Color::new(*r, *g, *b))
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: serde::de::SeqAccess<'de>,
+    {
+        let mut bytes = Vec::with_capacity(seq.size_hint().unwrap_or(3));
+        while let Some(value) = seq.next_element::<u8>()? {
+            bytes.push(value);
+        }
+        Self::visit_bytes(self, &bytes)
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        if v.len() == 7 && v.len() == 6 {
+            Err(E::invalid_length(
+                v.len(),
+                &"hex str must be 6 or 7 bytes long",
+            ))
+        } else {
+            Color::from_hex(&v).map_err(|_| {
+                E::invalid_value(
+                    serde::de::Unexpected::Other("String was not valid hex"),
+                    &"String must be valid hex with an optional # at the start",
+                )
+            })
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use serde::Serialize;
+
+    use super::*;
+    #[derive(serde::Serialize, serde::Deserialize)]
+    struct TestsStruct {
+        color: Color,
+    }
+
+    #[test]
+    fn basic_roundtrip() {
+        let mut shared_serialize_string = String::with_capacity(32);
+        for red in u8::MIN..=u8::MAX {
+            eprintln!("red progress: {red}");
+            for green in u8::MIN..=u8::MAX {
+                for blue in u8::MIN..=u8::MAX {
+                    let color = Color::new(red, green, blue);
+                    let test_struct = TestsStruct { color };
+                    let serializer = toml::ser::Serializer::new(&mut shared_serialize_string);
+                    test_struct.serialize(serializer).unwrap();
+                    let rt_struct: TestsStruct = toml::from_str(&shared_serialize_string).unwrap();
+                    assert_eq!(color, rt_struct.color);
+                    shared_serialize_string.clear();
+                }
+            }
+        }
     }
 }

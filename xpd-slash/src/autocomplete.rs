@@ -7,7 +7,7 @@ use twilight_model::{
     http::interaction::{InteractionResponse, InteractionResponseType},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
-use xpd_rank_card::ConfigItem;
+use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::CardCommandAutocomplete;
 
 use crate::{manage_card::CUSTOM_CARD_NULL_SENTINEL, Error, SlashState};
@@ -65,9 +65,9 @@ fn card_autocomplete(
     Ok(choice_chain)
 }
 
-fn choices(
+fn choices<I: NameableItem>(
     auto: &AutocompleteValue<String>,
-    options: &[ConfigItem],
+    options: &[I],
     nullable: bool,
 ) -> Vec<CommandOptionChoice> {
     let AutocompleteValue::Focused(input) = auto else {
@@ -85,13 +85,13 @@ fn choices(
     }
 
     for item in options {
-        if !item.display_name.contains(input) {
+        if !item.display_name().contains(input) {
             continue;
         }
         let coc = CommandOptionChoice {
-            name: item.display_name.clone(),
+            name: item.display_name().to_owned(),
             name_localizations: None,
-            value: CommandOptionChoiceValue::String(item.internal_name.clone()),
+            value: CommandOptionChoiceValue::String(item.internal_name().to_owned()),
         };
         output.push(coc);
     }

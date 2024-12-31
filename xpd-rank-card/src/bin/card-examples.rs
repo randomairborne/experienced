@@ -22,7 +22,7 @@ fn render_classic_l() -> Result<(), Error> {
     let xp = 49;
     let customizations = Customizations {
         toy: Some("bee.png".to_string()),
-        ..Customizations::default()
+        ..state.customizations_for("classic.svg").unwrap().clone()
     };
     let context = Context {
         level: 1,
@@ -44,7 +44,7 @@ fn render_classic_r() -> Result<(), Error> {
     let xp = 51;
     let customizations = Customizations {
         toy: Some("cow.png".to_string()),
-        ..Default::default()
+        ..state.customizations_for("classic.svg").unwrap().clone()
     };
     let context = Context {
         level: 1,
@@ -66,7 +66,7 @@ fn render_vertical() -> Result<(), Error> {
     let xp = 99;
     let customizations = Customizations {
         font: "Montserrat-Alt1".to_string(),
-        ..Customizations::vertical_default()
+        ..state.customizations_for("vertical.svg").unwrap().clone()
     };
     let context = Context {
         level: 420,
@@ -98,7 +98,7 @@ fn render_vertical_procedural() {
                 percentage: xp,
                 current: xp,
                 needed: 100 - xp,
-                customizations: Customizations::vertical_default(),
+                customizations: state.customizations_for("vertical.svg").unwrap().clone(),
                 avatar: VALK_PFP.to_string(),
             };
             let output = state.sync_render(&context).unwrap();

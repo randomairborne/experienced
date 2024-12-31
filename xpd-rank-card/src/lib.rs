@@ -5,6 +5,7 @@ pub mod customizations;
 
 use std::{collections::HashMap, ops::Deref, path::Path, sync::Arc, time::Instant};
 
+use customizations::Customizations;
 use rayon::ThreadPoolBuilder;
 use resvg::usvg::{
     fontdb::{Database, Family, Query},
@@ -13,7 +14,7 @@ use resvg::usvg::{
 use tera::{Tera, Value};
 use tracing::debug;
 
-pub use crate::config::{Config, ConfigItem};
+pub use crate::config::{CardItem, Config, ConfigItem, NameableItem};
 
 /// Context is the main argument of [`InnerSvgState::render`], and takes parameters for what to put on
 /// the card.
@@ -78,6 +79,8 @@ pub struct InnerSvgState {
     tera: Tera,
     threads: rayon::ThreadPool,
     images: HashMap<String, Arc<Vec<u8>>>,
+    defaults: HashMap<String, Customizations>,
+    default: Customizations,
     config: Config,
 }
 
@@ -103,15 +106,31 @@ impl InnerSvgState {
                 .ok_or_else(|| NewSvgStateError::WrongFontName(font.internal_name.clone()))?;
         }
 
+        let mut defaults = HashMap::with_capacity(config.cards.len());
+
         let mut tera = Tera::default();
         tera.autoescape_on(vec!["svg", "html", "xml", "htm"]);
         tera.register_filter("integerhumanize", int_humanize);
-        let template_files = config
-            .cards
-            .clone()
-            .into_iter()
-            .map(|v| (data_dir.join(&v.file), Some(v.internal_name)));
+
+        let mut template_files = Vec::with_capacity(config.cards.len());
+        for card in &config.cards {
+            defaults.insert(
+                card.customizations.internal_name.clone(),
+                card.customizations.clone(),
+            );
+            template_files.push((
+                data_dir.join(&card.file),
+                Some(card.customizations.internal_name.clone()),
+            ));
+        }
         tera.add_template_files(template_files)?;
+
+        let default = defaults
+            .get(&config.defaults.card)
+            .ok_or(NewSvgStateError::InvalidDefault(
+                config.defaults.card.clone(),
+            ))?
+            .clone();
 
         let threads = ThreadPoolBuilder::new()
             .thread_name(|i| format!("svg-renderer-{i}"))
@@ -134,6 +153,8 @@ impl InnerSvgState {
             threads,
             images,
             config,
+            defaults,
+            default,
         })
     }
 
@@ -148,7 +169,9 @@ impl InnerSvgState {
     /// Errors if tera has a problem
     pub fn render_svg(&self, context: &Context) -> Result<String, Error> {
         let ctx = tera::Context::from_serialize(context)?;
-        Ok(self.tera.render(&context.customizations.card, &ctx)?)
+        Ok(self
+            .tera
+            .render(&context.customizations.internal_name, &ctx)?)
     }
 
     /// Render the PNG for a card.
@@ -195,6 +218,16 @@ impl InnerSvgState {
             "Rendered SVG image"
         );
         Ok(png)
+    }
+
+    #[must_use]
+    pub const fn default_customizations(&self) -> &Customizations {
+        &self.default
+    }
+
+    #[must_use]
+    pub fn customizations_for(&self, key: &str) -> Option<&Customizations> {
+        self.defaults.get(key)
     }
 }
 
@@ -259,4 +292,6 @@ pub enum NewSvgStateError {
     Tera(#[from] tera::Error),
     #[error("Unknown font name `{0}! Are you sure that the file-name font pairs match?")]
     WrongFontName(String),
+    #[error("Default customization (name `{0}`) not found")]
+    InvalidDefault(String),
 }

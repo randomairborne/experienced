@@ -1,3 +1,6 @@
+[defaults]
+card = "classic.svg"
+
 [[fonts]]
 display_name = "JetBrains Mono"
 internal_name = "JetBrains Mono"
@@ -27,11 +30,31 @@ file = "./fonts/SourceSerif.ttf"
 display_name = "Classic"
 internal_name = "classic.svg"
 file = "./cards/classic.svg"
+username = [255, 255, 255]
+rank = [255, 255, 255]
+level = [143, 202, 92]
+border = [133, 79, 43]
+background = [97, 55, 31]
+progress_foreground = [71, 122, 30]
+progress_background = [143, 202, 92]
+background_xp_count = [0, 0, 0]
+foreground_xp_count = [255, 255, 255]
+font = "Mojang"
 
 [[cards]]
 display_name = "Vertical"
 internal_name = "vertical.svg"
 file = "./cards/vertical.svg"
+username = [255, 255, 255]
+rank = [255, 255, 255]
+level = [251, 72, 196]
+border = [0, 0, 0]
+background = [10, 10, 10]
+progress_foreground = [251, 72, 196]
+progress_background = [199, 58, 157]
+background_xp_count = [255, 255, 255]
+foreground_xp_count = [255, 255, 255]
+font = "Roboto"
 
 [[toys]]
 display_name = "Airplane"

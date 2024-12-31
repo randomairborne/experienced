@@ -135,10 +135,13 @@ pub async fn get_customizations(
     ids: &[Id<GenericMarker>],
 ) -> Result<Customizations, Error> {
     let Some(customizations) = xpd_database::card_customizations(&state.db, ids).await? else {
-        return Ok(Customizations::default());
+        return Ok(state.svg.default_customizations().clone());
     };
+    let defaults = state
+        .svg
+        .customizations_for(&customizations.card_layout)
+        .ok_or(Error::UnknownCard)?;
 
-    let defaults = Customizations::default_customizations_str(&customizations.card_layout);
     Ok(Customizations {
         username: color_or_default(customizations.username.as_deref(), defaults.username)?,
         rank: color_or_default(customizations.rank.as_deref(), defaults.rank)?,
@@ -161,9 +164,9 @@ pub async fn get_customizations(
             customizations.foreground_xp_count.as_deref(),
             defaults.foreground_xp_count,
         )?,
-        font: customizations.font.unwrap_or(defaults.font),
+        font: customizations.font.unwrap_or_else(|| defaults.font.clone()),
         toy: customizations.toy_image,
-        card: customizations.card_layout,
+        internal_name: customizations.card_layout,
     })
 }
 

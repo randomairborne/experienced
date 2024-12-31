@@ -6,7 +6,7 @@ use twilight_model::id::{
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 use xpd_common::MemberDisplayInfo;
 use xpd_database::CardUpdate;
-use xpd_rank_card::ConfigItem;
+use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand};
 
 use crate::{Error, SlashState, UserStats, XpdSlashResponse};
@@ -82,8 +82,8 @@ pub async fn guild_card_update(
         .embeds([embed]))
 }
 
-fn process_edit_helper(
-    items: &[ConfigItem],
+fn process_edit_helper<I: NameableItem>(
+    items: &[I],
     field: Option<String>,
     error: Error,
 ) -> Result<Option<String>, Error> {
@@ -134,9 +134,9 @@ async fn process_edit(
     Ok("Updated card!".to_string())
 }
 
-fn matches_config_item(ci: &ConfigItem, choice: &str) -> Option<String> {
-    if ci.internal_name == choice {
-        Some(ci.internal_name.clone())
+fn matches_config_item<I: NameableItem>(ci: &I, choice: &str) -> Option<String> {
+    if ci.internal_name() == choice {
+        Some(ci.internal_name().to_owned())
     } else {
         None
     }
@@ -148,9 +148,12 @@ async fn process_reset(state: &SlashState, id: Id<GenericMarker>) -> Result<Stri
 }
 
 async fn process_fetch(state: &SlashState, ids: &[Id<GenericMarker>]) -> Result<String, Error> {
-    Ok(crate::levels::get_customizations(state, ids)
-        .await?
-        .to_string())
+    let card = crate::levels::get_customizations(state, ids).await?;
+    let defaults = state
+        .svg
+        .customizations_for(&card.internal_name)
+        .ok_or(Error::UnknownCard)?;
+    Ok(card.display(defaults)?)
 }
 
 fn fake_user(id: Id<GenericMarker>) -> MemberDisplayInfo {
