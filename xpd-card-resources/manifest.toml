@@ -135,3 +135,8 @@ file = "./icons/Cyana/steveheart.png"
 display_name = "Cow"
 internal_name = "tree.png"
 file = "./icons/Cyana/tree.png"
+
+[[toys]]
+display_name = "Miku"
+internal_name = "miku.png"
+file = "./icons/Fripe/miku.png"
