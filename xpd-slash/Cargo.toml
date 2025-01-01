@@ -48,7 +48,3 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres",
 # error handling
 thiserror = "2"
 tracing = "0.1"
-
-[dev-dependencies]
-rand = "0.8"
-cargo_metadata = "0.18"
