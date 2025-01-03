@@ -1,2 +1,2 @@
 #!/bin/sh
-cargo sqlx prepare --workspace -- --all-targets
+cargo sqlx prepare --workspace -- --all-features --all-targets
