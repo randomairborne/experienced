@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id, moderator,\n        timestamp, previous, delta, reset, set\n        FROM audit_logs WHERE guild_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "moderator",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "timestamp",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "previous",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "delta",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "reset",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "set",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "197f9be1a027b284f8bd920b6c463e422ad74f8f450173ab97be52a7be671535"
+}
