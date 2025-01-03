@@ -175,6 +175,18 @@ impl Display for GuildConfig {
     }
 }
 
+#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AuditLogEvent {
+    pub guild_id: Id<GuildMarker>,
+    pub user_id: Id<UserMarker>,
+    pub moderator: Id<UserMarker>,
+    pub timestamp: i64,
+    pub previous: i64,
+    pub delta: i64,
+    pub reset: bool,
+    pub set: bool,
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct UserStatus {
     pub id: Id<UserMarker>,

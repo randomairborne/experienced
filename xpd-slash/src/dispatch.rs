@@ -7,7 +7,10 @@ use twilight_model::{
         },
     },
     http::interaction::InteractionResponse,
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{GuildMarker, InteractionMarker},
+        Id,
+    },
 };
 use xpd_common::MemberDisplayInfo;
 use xpd_slash_defs::{
@@ -22,6 +25,7 @@ use xpd_slash_defs::{
 };
 
 use crate::{
+    experience::XpAuditData,
     leaderboard::{process_message_component, process_modal_submit},
     Error, SlashState, XpdSlashResponse,
 };
@@ -29,6 +33,7 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct Respondable {
     token: String,
+    id: Id<InteractionMarker>,
 }
 
 impl Respondable {
@@ -44,6 +49,7 @@ pub async fn process(
     trace!(?interaction, "got interaction");
     let respondable = Respondable {
         token: interaction.token.clone(),
+        id: interaction.id,
     };
     let Some(data) = interaction.data else {
         return Err(Error::NoInteractionData);
@@ -118,6 +124,7 @@ async fn process_app_cmd(
     }
 }
 
+#[allow(clippy::too_many_lines)]
 async fn process_slash_cmd(
     data: CommandData,
     guild_id: Option<Id<GuildMarker>>,
@@ -158,8 +165,12 @@ async fn process_slash_cmd(
         }
         "xp" => crate::experience::process_xp(
             XpCommand::from_interaction(data.into())?,
-            guild_id.ok_or(Error::NoGuildId)?,
             state,
+            guild_id.ok_or(Error::NoGuildId)?,
+            XpAuditData {
+                interaction: respondable.id,
+                invoker: invoker.id,
+            },
         )
         .await
         .map(Into::into),

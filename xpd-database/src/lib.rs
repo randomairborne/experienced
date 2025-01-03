@@ -21,7 +21,7 @@ use twilight_model::id::{
     Id,
 };
 use util::{db_to_id, id_to_db};
-use xpd_common::{GuildConfig, RoleReward, UserStatus};
+use xpd_common::{AuditLogEvent, GuildConfig, RoleReward, UserStatus};
 pub async fn guild_rewards<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -173,6 +173,76 @@ pub async fn set_cooldown<
     Ok(output)
 }
 
+pub async fn add_audit_log_event<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    event: AuditLogEvent,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "INSERT INTO audit_logs \
+            (guild_id, user_id, moderator,
+                timestamp, previous, delta, reset, set)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+        id_to_db(event.guild_id),
+        id_to_db(event.user_id),
+        id_to_db(event.moderator),
+        event.timestamp,
+        event.previous,
+        event.delta,
+        event.reset,
+        event.set
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
+pub async fn get_audit_log_events<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild_id: Id<GuildMarker>,
+    actions_on_user: Option<Id<UserMarker>>,
+    actions_by_moderator: Option<Id<UserMarker>>,
+) -> Result<Vec<AuditLogEvent>, Error> {
+    let mut conn = conn.acquire().await?;
+    let mut stream = query!(
+        "SELECT user_id, moderator,
+        timestamp, previous, delta, reset, set
+        FROM audit_logs WHERE guild_id = $1",
+        id_to_db(guild_id)
+    )
+    .fetch(conn.as_mut());
+    let mut logs = Vec::new();
+    while let Some(row) = stream.next().await.transpose()? {
+        let user_id = db_to_id(row.user_id);
+        let moderator = db_to_id(row.moderator);
+        if actions_by_moderator.is_some_and(|requested_moderator| requested_moderator != moderator)
+            || actions_on_user.is_some_and(|requested_user| requested_user != user_id)
+        {
+            continue;
+        }
+        let log = AuditLogEvent {
+            guild_id,
+            user_id,
+            moderator: db_to_id(row.moderator),
+            timestamp: row.timestamp,
+            previous: row.previous,
+            delta: row.delta,
+            reset: row.reset,
+            set: row.set,
+        };
+        logs.push(log);
+    }
+    Ok(logs)
+}
+
 pub async fn get_last_message<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -217,16 +287,16 @@ pub async fn delete_levels_user_guild<
     conn: A,
     user: Id<UserMarker>,
     guild: Id<GuildMarker>,
-) -> Result<(), Error> {
+) -> Result<i64, Error> {
     let mut conn = conn.acquire().await?;
-    query!(
-        "DELETE FROM levels WHERE id = $1 AND guild = $2",
+    let output = query!(
+        "DELETE FROM levels WHERE id = $1 AND guild = $2 RETURNING xp",
         id_to_db(user),
         id_to_db(guild)
     )
-    .execute(conn.as_mut())
+    .fetch_one(conn.as_mut())
     .await?;
-    Ok(())
+    Ok(output.xp)
 }
 
 pub async fn count_with_higher_xp<
