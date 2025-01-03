@@ -278,7 +278,7 @@ async fn handle_event(
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         Event::BanAdd(ban) => {
-            xpd_database::delete_levels_user_guild(&db, ban.user.id, ban.guild_id).await?
+            xpd_database::delete_levels_user_guild(&db, ban.user.id, ban.guild_id).await?;
         }
         _ => {}
     };
