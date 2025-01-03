@@ -15,6 +15,7 @@ use twilight_model::{
 use xpd_common::MemberDisplayInfo;
 use xpd_slash_defs::{
     admin::AdminCommand,
+    audit::AuditLogCommand,
     card::{CardCommand, GuildCardCommand},
     config::ConfigCommand,
     experience::XpCommand,
@@ -185,6 +186,13 @@ async fn process_slash_cmd(
             AdminCommand::from_interaction(data.into())?,
             guild_id.ok_or(Error::NoGuildId)?,
             invoker.id,
+            state,
+        )
+        .await
+        .map(Into::into),
+        "audit" => crate::audit::process_audit_logs(
+            AuditLogCommand::from_interaction(data.into())?,
+            guild_id.ok_or(Error::NoGuildId)?,
             state,
         )
         .await

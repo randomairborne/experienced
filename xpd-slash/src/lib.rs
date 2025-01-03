@@ -2,6 +2,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 mod admin;
+mod audit;
 mod autocomplete;
 mod config;
 mod dispatch;

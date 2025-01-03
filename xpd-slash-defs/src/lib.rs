@@ -1,4 +1,5 @@
 pub mod admin;
+pub mod audit;
 pub mod card;
 pub mod config;
 pub mod experience;
