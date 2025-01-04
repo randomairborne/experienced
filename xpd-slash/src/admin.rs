@@ -1,8 +1,11 @@
 use std::{borrow::Cow, fmt::Display};
 
-use twilight_model::id::{
-    marker::{GuildMarker, UserMarker},
-    Id,
+use twilight_model::{
+    http::interaction::InteractionResponseType,
+    id::{
+        marker::{GuildMarker, UserMarker},
+        Id,
+    },
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS};
@@ -12,14 +15,14 @@ use xpd_slash_defs::admin::{
     AdminCommandSetNick,
 };
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
 
 pub async fn process_admin(
     data: AdminCommand,
     guild_id: Id<GuildMarker>,
     invoker: Id<UserMarker>,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     if guild_id != state.control_guild {
         return Err(Error::NotControlGuild);
     };
@@ -39,7 +42,8 @@ pub async fn process_admin(
     }?;
     Ok(XpdSlashResponse::new()
         .ephemeral(true)
-        .embeds([EmbedBuilder::new().description(contents).build()]))
+        .embeds([EmbedBuilder::new().description(contents).build()])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 async fn leave_guild(state: SlashState, leave: AdminCommandLeave) -> Result<String, Error> {

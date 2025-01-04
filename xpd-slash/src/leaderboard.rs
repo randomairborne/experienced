@@ -11,22 +11,23 @@ use twilight_model::{
         },
         Message,
     },
-    http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
         marker::{GuildMarker, UserMarker},
         Id,
     },
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_slash_defs::levels::LeaderboardCommand;
 
-use crate::{Error, SlashState};
+use crate::{
+    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse,
+};
 
 pub async fn leaderboard(
     state: SlashState,
     guild_id: Id<GuildMarker>,
     guild_command: LeaderboardCommand,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     // "zpage" means "zero-indexed page", which is how this is represented internally.
     // We add one whenever we show it to the user, and subtract one every time we get it from the user.
     let zpage = if let Some(pick) = guild_command.page {
@@ -36,10 +37,10 @@ pub async fn leaderboard(
     } else {
         0
     };
-    Ok(InteractionResponse {
-        data: Some(gen_leaderboard(&state, guild_id, zpage, guild_command.show_off).await?),
-        kind: InteractionResponseType::ChannelMessageWithSource,
-    })
+    Ok(XpdInteractionResponse::new(
+        InteractionResponseType::ChannelMessageWithSource,
+        gen_leaderboard(&state, guild_id, zpage, guild_command.show_off).await?,
+    ))
 }
 
 const USERS_PER_PAGE_USIZE: usize = 10;
@@ -51,7 +52,7 @@ async fn gen_leaderboard(
     guild_id: Id<GuildMarker>,
     zpage: i64,
     show_off: Option<bool>,
-) -> Result<InteractionResponseData, Error> {
+) -> Result<XpdSlashResponse, Error> {
     if zpage.is_negative() {
         return Err(Error::PageDoesNotExist);
     }
@@ -103,12 +104,11 @@ async fn gen_leaderboard(
         components: components.to_vec(),
     });
 
-    Ok(InteractionResponseDataBuilder::new()
+    Ok(XpdSlashResponse::new()
         .allowed_mentions(AllowedMentions::default())
         .components([components])
         .content(description)
-        .flags(flags)
-        .build())
+        .flags(flags))
 }
 
 fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
@@ -167,7 +167,7 @@ pub async fn process_modal_submit(
     data: ModalInteractionData,
     guild_id: Id<GuildMarker>,
     state: SlashState,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     // You can't get this modal unless you are the triggering user
     let actions = data.components.first().ok_or(Error::NoModalActionRow)?;
     let field = actions.components.first().ok_or(Error::NoFormField)?;
@@ -177,10 +177,10 @@ pub async fn process_modal_submit(
         .ok_or(Error::NoDestinationInComponent)?
         .parse()?;
     let zpage = choice - 1;
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::UpdateMessage,
-        data: Some(gen_leaderboard(&state, guild_id, zpage, Some(true)).await?),
-    })
+    Ok(XpdInteractionResponse::new(
+        InteractionResponseType::UpdateMessage,
+        gen_leaderboard(&state, guild_id, zpage, Some(true)).await?,
+    ))
 }
 
 pub async fn process_message_component(
@@ -189,7 +189,8 @@ pub async fn process_message_component(
     guild_id: Id<GuildMarker>,
     invoker_id: Id<UserMarker>,
     state: SlashState,
-) -> Result<InteractionResponse, Error> {
+    respondable: Respondable,
+) -> Result<XpdInteractionResponse, Error> {
     if original_message
         .interaction
         .ok_or(Error::NoInteractionInvocationOnInteractionMessage)?
@@ -211,28 +212,32 @@ pub async fn process_message_component(
                 style: TextInputStyle::Short,
                 value: None,
             };
-            Ok(InteractionResponse {
-                kind: InteractionResponseType::Modal,
-                data: Some(
-                    InteractionResponseDataBuilder::new()
-                        .components([Component::ActionRow(ActionRow {
-                            components: vec![Component::TextInput(input)],
-                        })])
-                        .custom_id("jump_modal")
-                        .title("Go to page..")
-                        .build(),
-                ),
-            })
+            Ok(XpdInteractionResponse::new(
+                InteractionResponseType::Modal,
+                XpdSlashResponse::new()
+                    .components([Component::ActionRow(ActionRow {
+                        components: vec![Component::TextInput(input)],
+                    })])
+                    .custom_id("jump_modal".to_string())
+                    .title("Go to page..".to_string()),
+            ))
         }
         "delete_leaderboard" => {
+            let deferred_update = InteractionResponse {
+                kind: InteractionResponseType::UpdateMessage,
+                data: None,
+            };
             state
                 .client
-                .delete_message(original_message.channel_id, original_message.id)
+                .interaction(state.app_id)
+                .create_response(respondable.id(), respondable.token(), &deferred_update)
                 .await?;
-            Ok(InteractionResponse {
-                kind: InteractionResponseType::DeferredUpdateMessage,
-                data: Some(InteractionResponseDataBuilder::new().build()),
-            })
+            state
+                .client
+                .interaction(state.app_id)
+                .delete_response(respondable.token())
+                .await?;
+            Ok(XpdInteractionResponse::inhibited())
         }
         offset_str => {
             // when we create the buttons, we set next and previous's custom IDs to the current page
@@ -242,10 +247,10 @@ pub async fn process_message_component(
             let show_delete_btn = original_message
                 .flags
                 .is_none_or(|f| !f.contains(MessageFlags::EPHEMERAL));
-            Ok(InteractionResponse {
-                kind: InteractionResponseType::UpdateMessage,
-                data: Some(gen_leaderboard(&state, guild_id, offset, Some(show_delete_btn)).await?),
-            })
+            Ok(XpdInteractionResponse::new(
+                InteractionResponseType::UpdateMessage,
+                gen_leaderboard(&state, guild_id, offset, Some(show_delete_btn)).await?,
+            ))
         }
     }
 }

@@ -2,18 +2,19 @@ use std::fmt::Write;
 
 use twilight_model::{
     channel::message::AllowedMentions,
+    http::interaction::InteractionResponseType,
     id::{marker::GuildMarker, Id},
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_slash_defs::rewards::{RewardsCommand, RewardsCommandAdd, RewardsCommandRemove};
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
 
 pub async fn process_rewards(
     cmd: RewardsCommand,
     guild_id: Id<GuildMarker>,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let contents = match cmd {
         RewardsCommand::Add(add) => process_rewards_add(add, state, guild_id).await,
         RewardsCommand::Remove(remove) => process_rewards_rm(remove, state, guild_id).await,
@@ -22,7 +23,8 @@ pub async fn process_rewards(
     Ok(XpdSlashResponse::new()
         .allowed_mentions(AllowedMentions::default())
         .ephemeral(true)
-        .embeds([EmbedBuilder::new().description(contents).build()]))
+        .embeds([EmbedBuilder::new().description(contents).build()])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 async fn process_rewards_add(

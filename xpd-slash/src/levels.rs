@@ -2,7 +2,7 @@ use base64::Engine;
 use tokio::try_join;
 use twilight_model::{
     channel::message::MessageFlags,
-    http::attachment::Attachment,
+    http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{
         marker::{GenericMarker, GuildMarker, UserMarker},
         Id,
@@ -13,7 +13,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{DisplayName, MemberDisplayInfo};
 use xpd_rank_card::customizations::{Color, Customizations};
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -21,7 +21,7 @@ pub async fn get_level(
     invoker: Id<UserMarker>,
     showoff: Option<bool>,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let rank_stats = state.get_user_stats(target.id, guild_id).await?;
     let flags = if showoff.is_some_and(|v| v) {
         MessageFlags::empty()
@@ -63,7 +63,10 @@ pub async fn get_level(
         .await;
     };
     let embed = EmbedBuilder::new().description(content).build();
-    Ok(XpdSlashResponse::new().embeds([embed]).flags(flags))
+    Ok(XpdSlashResponse::new()
+        .embeds([embed])
+        .flags(flags)
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 async fn generate_level_response(
@@ -73,9 +76,12 @@ async fn generate_level_response(
     level_info: mee6::LevelInfo,
     rank: i64,
     flags: MessageFlags,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let card = gen_card(state.clone(), user, Some(guild_id), level_info, rank).await?;
-    Ok(XpdSlashResponse::new().attachments([card]).flags(flags))
+    Ok(XpdSlashResponse::new()
+        .attachments([card])
+        .flags(flags)
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 async fn get_customizations_fields(

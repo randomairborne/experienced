@@ -3,19 +3,22 @@ use std::sync::Arc;
 use csv::{IntoInnerError as CsvIntoInnerError, Writer as CsvWriter};
 use serde::Serialize;
 use twilight_model::{
-    http::attachment::Attachment,
+    http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{marker::GuildMarker, Id},
 };
 use xpd_common::MemberDisplayInfo;
 use xpd_slash_defs::gdpr::{GdprCommand, GdprCommandDelete};
 
-use crate::{levels::get_customizations, Error, SlashState, XpdSlashResponse};
+use crate::{
+    levels::get_customizations, response::XpdInteractionResponse, Error, SlashState,
+    XpdSlashResponse,
+};
 
 pub async fn process_gdpr(
     state: SlashState,
     cmd: GdprCommand,
     invoker: MemberDisplayInfo,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     match cmd {
         GdprCommand::Delete(data) => delete(state, data, invoker).await,
         GdprCommand::Download(_) => download(state, invoker).await,
@@ -26,7 +29,7 @@ async fn delete(
     state: SlashState,
     cmd: GdprCommandDelete,
     invoker: MemberDisplayInfo,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     if cmd.user == invoker.id {
         let mut txn = state.db.begin().await?;
         xpd_database::delete_levels_user(&mut txn, invoker.id).await?;
@@ -35,20 +38,22 @@ async fn delete(
         txn.commit().await?;
         Ok(
             XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
-                .ephemeral(true),
+                .ephemeral(true)
+                .into_interaction_response(InteractionResponseType::ChannelMessageWithSource),
         )
     } else {
         Ok(XpdSlashResponse::with_embed_text(
             "Please make sure the username you entered is correct!",
         )
-        .ephemeral(true))
+        .ephemeral(true)
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
     }
 }
 
 async fn download(
     state: SlashState,
     invoker: MemberDisplayInfo,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let invoker = Arc::new(invoker);
     let levels = xpd_database::get_all_levels(&state.db, invoker.id).await?;
 
@@ -74,7 +79,8 @@ async fn download(
     Ok(XpdSlashResponse::new()
         .content("Here you go!".to_string())
         .attachments(attachments)
-        .ephemeral(true))
+        .ephemeral(true)
+        .into_interaction_response(InteractionResponseType::DeferredChannelMessageWithSource))
 }
 
 #[derive(Serialize)]

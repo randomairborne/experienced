@@ -20,6 +20,7 @@ mod rewards;
 use std::{future::Future, sync::Arc, time::Instant};
 
 pub use error::Error;
+use response::XpdInteractionResponse;
 pub use response::XpdSlashResponse;
 use sqlx::PgPool;
 use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
@@ -30,13 +31,12 @@ use twilight_model::{
     application::interaction::Interaction,
     channel::message::MessageFlags,
     gateway::{payload::incoming::InteractionCreate, Intents},
-    http::interaction::{InteractionResponse, InteractionResponseType},
+    http::interaction::InteractionResponseType,
     id::{
         marker::{ApplicationMarker, GuildMarker, UserMarker},
         Id,
     },
 };
-use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_common::{EventBusMessage, GuildConfig, RequiredDiscordResources};
 use xpd_rank_card::SvgState;
 use xpd_util::LogError;
@@ -96,27 +96,25 @@ impl XpdSlash {
         let response = self.run(interaction_create.0).await;
         let total_time = process_start.elapsed();
         info!(?total_time, "processed interaction in time");
-        self.client()
-            .interaction(self.state.app_id)
-            .create_response(ic_id, &interaction_token, &response)
-            .await
-            .log_error("Failed to ack discord gateway message");
+        if !response.inhibit {
+            let response = response.into();
+            self.client()
+                .interaction(self.state.app_id)
+                .create_response(ic_id, &interaction_token, &response)
+                .await
+                .log_error("Failed to ack discord gateway message");
+        }
     }
 
-    async fn run(&self, interaction: Interaction) -> InteractionResponse {
+    async fn run(&self, interaction: Interaction) -> XpdInteractionResponse {
         Box::pin(dispatch::process(interaction, self.state.clone()))
             .await
             .unwrap_or_else(|error| {
                 error!(?error, "got error");
-                InteractionResponse {
-                    kind: InteractionResponseType::ChannelMessageWithSource,
-                    data: Some(
-                        InteractionResponseDataBuilder::new()
-                            .flags(MessageFlags::EPHEMERAL)
-                            .content(error.to_string())
-                            .build(),
-                    ),
-                }
+                XpdSlashResponse::new()
+                    .ephemeral(true)
+                    .content(error.to_string())
+                    .into_interaction_response(InteractionResponseType::ChannelMessageWithSource)
             })
     }
 

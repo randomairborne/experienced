@@ -1,16 +1,16 @@
 use twilight_model::{
-    http::attachment::Attachment,
+    http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{marker::GuildMarker, Id},
 };
 use xpd_slash_defs::audit::AuditLogCommand;
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
 
 pub async fn process_audit_logs(
     command: AuditLogCommand,
     guild_id: Id<GuildMarker>,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let mut logs =
         xpd_database::get_audit_log_events(&state.db, guild_id, command.user, command.moderator)
             .await?;
@@ -31,5 +31,7 @@ pub async fn process_audit_logs(
         filename: "audit_log.txt".to_string(),
         id: 0,
     };
-    Ok(XpdSlashResponse::new().attachments([attachment]))
+    Ok(XpdSlashResponse::new()
+        .attachments([attachment])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }

@@ -1,7 +1,10 @@
 use mee6::LevelInfo;
-use twilight_model::id::{
-    marker::{GenericMarker, GuildMarker},
-    Id,
+use twilight_model::{
+    http::interaction::InteractionResponseType,
+    id::{
+        marker::{GenericMarker, GuildMarker},
+        Id,
+    },
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
 use xpd_common::MemberDisplayInfo;
@@ -9,14 +12,14 @@ use xpd_database::CardUpdate;
 use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand};
 
-use crate::{Error, SlashState, UserStats, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, UserStats, XpdSlashResponse};
 
 pub async fn user_card_update(
     command: CardCommand,
     invoker: MemberDisplayInfo,
     state: &SlashState,
     guild_id: Option<Id<GuildMarker>>,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let (contents, target) = match command {
         CardCommand::Reset(_reset) => (process_reset(state, invoker.id.cast()).await?, invoker),
         CardCommand::Fetch(fetch) => {
@@ -49,14 +52,15 @@ pub async fn user_card_update(
     Ok(XpdSlashResponse::new()
         .attachments([card])
         .ephemeral(true)
-        .embeds([embed]))
+        .embeds([embed])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 pub async fn guild_card_update(
     command: GuildCardCommand,
     state: &SlashState,
     guild_id: Id<GuildMarker>,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let contents = match command {
         GuildCardCommand::Reset(_reset) => process_reset(state, guild_id.cast()).await?,
         GuildCardCommand::Fetch(_fetch) => process_fetch(state, &[guild_id.cast()]).await?,
@@ -79,7 +83,8 @@ pub async fn guild_card_update(
     Ok(XpdSlashResponse::new()
         .ephemeral(true)
         .attachments([card])
-        .embeds([embed]))
+        .embeds([embed])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 fn process_edit_helper<I: NameableItem>(

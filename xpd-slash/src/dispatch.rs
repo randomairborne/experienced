@@ -6,7 +6,6 @@ use twilight_model::{
             application_command::CommandData, Interaction, InteractionData, InteractionType,
         },
     },
-    http::interaction::InteractionResponse,
     id::{
         marker::{GuildMarker, InteractionMarker},
         Id,
@@ -28,7 +27,8 @@ use xpd_slash_defs::{
 use crate::{
     experience::XpAuditData,
     leaderboard::{process_message_component, process_modal_submit},
-    Error, SlashState, XpdSlashResponse,
+    response::XpdInteractionResponse,
+    Error, SlashState,
 };
 
 #[derive(Clone, Debug)]
@@ -41,12 +41,16 @@ impl Respondable {
     pub fn token(&self) -> &str {
         &self.token
     }
+
+    pub const fn id(&self) -> Id<InteractionMarker> {
+        self.id
+    }
 }
 
 pub async fn process(
     interaction: Interaction,
     state: SlashState,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     trace!(?interaction, "got interaction");
     let respondable = Respondable {
         token: interaction.token.clone(),
@@ -90,6 +94,7 @@ pub async fn process(
                 guild_id.ok_or(Error::NoGuildId)?,
                 invoker.id,
                 state,
+                respondable,
             )
             .await
         }
@@ -106,20 +111,16 @@ async fn process_app_cmd(
     respondable: Respondable,
     invoker: MemberDisplayInfo,
     guild_id: Option<Id<GuildMarker>>,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     match data.kind {
         CommandType::ChatInput => {
             process_slash_cmd(data, guild_id, respondable, invoker, state).await
         }
         CommandType::User => {
-            process_user_cmd(data, guild_id.ok_or(Error::NoGuildId)?, invoker, state)
-                .await
-                .map(Into::into)
+            process_user_cmd(data, guild_id.ok_or(Error::NoGuildId)?, invoker, state).await
         }
         CommandType::Message => {
-            process_msg_cmd(data, guild_id.ok_or(Error::NoGuildId)?, invoker, state)
-                .await
-                .map(Into::into)
+            process_msg_cmd(data, guild_id.ok_or(Error::NoGuildId)?, invoker, state).await
         }
         _ => Err(Error::WrongInteractionData),
     }
@@ -132,9 +133,9 @@ async fn process_slash_cmd(
     respondable: Respondable,
     invoker: MemberDisplayInfo,
     state: SlashState,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     match data.name.as_str() {
-        "help" => Ok(crate::help::help().into()),
+        "help" => Ok(crate::help::help()),
         "rank" => {
             let data = RankCommand::from_interaction(data.into())?;
             let target = data.user.map_or_else(
@@ -162,60 +163,62 @@ async fn process_slash_cmd(
                 state,
             )
             .await
-            .map(Into::into)
         }
-        "xp" => crate::experience::process_xp(
-            XpCommand::from_interaction(data.into())?,
-            state,
-            guild_id.ok_or(Error::NoGuildId)?,
-            XpAuditData {
-                interaction: respondable.id,
-                invoker: invoker.id,
-            },
-        )
-        .await
-        .map(Into::into),
-        "config" => crate::config::process_config(
-            ConfigCommand::from_interaction(data.into())?,
-            guild_id.ok_or(Error::NoGuildId)?,
-            state,
-        )
-        .await
-        .map(Into::into),
-        "admin" => crate::admin::process_admin(
-            AdminCommand::from_interaction(data.into())?,
-            guild_id.ok_or(Error::NoGuildId)?,
-            invoker.id,
-            state,
-        )
-        .await
-        .map(Into::into),
-        "audit" => crate::audit::process_audit_logs(
-            AuditLogCommand::from_interaction(data.into())?,
-            guild_id.ok_or(Error::NoGuildId)?,
-            state,
-        )
-        .await
-        .map(Into::into),
-        "card" => crate::manage_card::user_card_update(
-            CardCommand::from_interaction(data.into())?,
-            invoker,
-            &state,
-            guild_id,
-        )
-        .await
-        .map(Into::into),
+        "xp" => {
+            crate::experience::process_xp(
+                XpCommand::from_interaction(data.into())?,
+                state,
+                guild_id.ok_or(Error::NoGuildId)?,
+                XpAuditData {
+                    interaction: respondable.id,
+                    invoker: invoker.id,
+                },
+            )
+            .await
+        }
+        "config" => {
+            crate::config::process_config(
+                ConfigCommand::from_interaction(data.into())?,
+                guild_id.ok_or(Error::NoGuildId)?,
+                state,
+            )
+            .await
+        }
+        "admin" => {
+            crate::admin::process_admin(
+                AdminCommand::from_interaction(data.into())?,
+                guild_id.ok_or(Error::NoGuildId)?,
+                invoker.id,
+                state,
+            )
+            .await
+        }
+        "audit" => {
+            crate::audit::process_audit_logs(
+                AuditLogCommand::from_interaction(data.into())?,
+                guild_id.ok_or(Error::NoGuildId)?,
+                state,
+            )
+            .await
+        }
+        "card" => {
+            crate::manage_card::user_card_update(
+                CardCommand::from_interaction(data.into())?,
+                invoker,
+                &state,
+                guild_id,
+            )
+            .await
+        }
         "guild-card" => Ok(crate::manage_card::guild_card_update(
             GuildCardCommand::from_interaction(data.into())?,
             &state,
             guild_id.ok_or(Error::NoGuildId)?,
         )
-        .await?
-        .into()),
+        .await?),
         "gdpr" => {
             crate::gdpr::process_gdpr(state, GdprCommand::from_interaction(data.into())?, invoker)
                 .await
-                .map(Into::into)
         }
         "leaderboard" => {
             crate::leaderboard::leaderboard(
@@ -225,21 +228,23 @@ async fn process_slash_cmd(
             )
             .await
         }
-        "manage" => crate::manager::process_manage(
-            ManageCommand::from_interaction(data.into())?,
-            guild_id.ok_or(Error::NoGuildId)?,
-            respondable,
-            state,
-        )
-        .await
-        .map(Into::into),
-        "rewards" => crate::rewards::process_rewards(
-            RewardsCommand::from_interaction(data.into())?,
-            guild_id.ok_or(Error::NoGuildId)?,
-            state,
-        )
-        .await
-        .map(Into::into),
+        "manage" => {
+            crate::manager::process_manage(
+                ManageCommand::from_interaction(data.into())?,
+                guild_id.ok_or(Error::NoGuildId)?,
+                respondable,
+                state,
+            )
+            .await
+        }
+        "rewards" => {
+            crate::rewards::process_rewards(
+                RewardsCommand::from_interaction(data.into())?,
+                guild_id.ok_or(Error::NoGuildId)?,
+                state,
+            )
+            .await
+        }
         _ => Err(Error::UnrecognizedCommand),
     }
 }
@@ -251,7 +256,7 @@ async fn process_user_cmd(
     guild_id: Id<GuildMarker>,
     invoker: MemberDisplayInfo,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
     let resolved = data.resolved.as_ref().ok_or(Error::NoResolvedData)?;
     let user = resolved
@@ -271,7 +276,7 @@ async fn process_msg_cmd(
     guild_id: Id<GuildMarker>,
     invoker: MemberDisplayInfo,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let msg_id = data.target_id.ok_or(Error::NoMessageTargetId)?;
     let resolved = &data.resolved.as_ref().ok_or(Error::NoResolvedData)?;
     let user = resolved

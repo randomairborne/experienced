@@ -1,5 +1,6 @@
 use twilight_model::{
     channel::message::AllowedMentions,
+    http::interaction::InteractionResponseType,
     id::{
         marker::{GuildMarker, InteractionMarker, UserMarker},
         Id,
@@ -10,7 +11,7 @@ use xpd_common::AuditLogEvent;
 use xpd_slash_defs::experience::XpCommand;
 use xpd_util::snowflake_to_timestamp;
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
 
 pub struct XpAuditData {
     pub interaction: Id<InteractionMarker>,
@@ -22,12 +23,13 @@ pub async fn process_xp(
     state: SlashState,
     guild_id: Id<GuildMarker>,
     audit: XpAuditData,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let contents = process_experience(data, guild_id, state, audit).await?;
     Ok(XpdSlashResponse::new()
         .allowed_mentions_o(Some(AllowedMentions::default()))
         .ephemeral(true)
-        .embeds([EmbedBuilder::new().description(contents).build()]))
+        .embeds([EmbedBuilder::new().description(contents).build()])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 async fn process_experience(

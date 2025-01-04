@@ -7,6 +7,36 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
+#[derive(Debug, Clone)]
+#[allow(clippy::module_name_repetitions)]
+pub struct XpdInteractionResponse {
+    pub kind: InteractionResponseType,
+    pub data: Option<XpdSlashResponse>,
+    pub inhibit: bool,
+}
+
+impl XpdInteractionResponse {
+    #[must_use]
+    pub const fn new(kind: InteractionResponseType, data: XpdSlashResponse) -> Self {
+        Self {
+            kind,
+            data: Some(data),
+            inhibit: false,
+        }
+    }
+
+    pub fn inhibit(self, inhibit: bool) -> Self {
+        Self { inhibit, ..self }
+    }
+
+    pub const fn inhibited() -> Self {
+        Self {
+            kind: InteractionResponseType::Pong,
+            data: None,
+            inhibit: true,
+        }
+    }
+}
 
 #[derive(Debug, Default, Clone)]
 #[allow(clippy::module_name_repetitions)]
@@ -21,6 +51,8 @@ pub struct XpdSlashResponse {
     pub flags: Option<MessageFlags>,
     pub title: Option<String>,
     pub tts: Option<bool>,
+    /// If this is set, the response will not be sent at all.
+    pub inhibit: bool,
 }
 
 impl XpdSlashResponse {
@@ -156,6 +188,24 @@ impl XpdSlashResponse {
         self.tts_o(Some(tts))
     }
 
+    /// If this is set, the response will not be sent at all.
+    #[must_use]
+    pub fn inhibit(self, inhibit: bool) -> Self {
+        Self { inhibit, ..self }
+    }
+
+    #[must_use]
+    pub const fn into_interaction_response(
+        self,
+        kind: InteractionResponseType,
+    ) -> XpdInteractionResponse {
+        XpdInteractionResponse {
+            kind,
+            data: Some(self),
+            inhibit: false,
+        }
+    }
+
     #[must_use]
     pub fn ephemeral(mut self, ephemeral: bool) -> Self {
         if let Some(flags) = &mut self.flags {
@@ -168,6 +218,11 @@ impl XpdSlashResponse {
             self.flags = Some(MessageFlags::EPHEMERAL);
         }
         self
+    }
+
+    #[must_use]
+    pub fn inhibited() -> Self {
+        Self::new().inhibit(true)
     }
 }
 
@@ -201,15 +256,26 @@ impl From<InteractionResponseData> for XpdSlashResponse {
             flags: value.flags,
             title: value.title,
             tts: value.tts,
+            inhibit: false,
         }
     }
 }
 
-impl From<XpdSlashResponse> for InteractionResponse {
-    fn from(value: XpdSlashResponse) -> Self {
+impl From<InteractionResponse> for XpdInteractionResponse {
+    fn from(value: InteractionResponse) -> Self {
         Self {
-            data: Some(value.into()),
-            kind: InteractionResponseType::ChannelMessageWithSource,
+            data: value.data.map(Into::into),
+            kind: value.kind,
+            inhibit: false,
+        }
+    }
+}
+
+impl From<XpdInteractionResponse> for InteractionResponse {
+    fn from(value: XpdInteractionResponse) -> Self {
+        Self {
+            data: value.data.map(Into::into),
+            kind: value.kind,
         }
     }
 }

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tokio::time::Instant;
 use twilight_model::{
     channel::{message::AllowedMentions, Attachment},
-    http::attachment::Attachment as HttpAttachment,
+    http::{attachment::Attachment as HttpAttachment, interaction::InteractionResponseType},
     id::{
         marker::{GuildMarker, UserMarker},
         Id,
@@ -12,14 +12,16 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_slash_defs::manage::{ManageCommand, CONFIRMATION_STRING};
 
-use crate::{dispatch::Respondable, Error, SlashState, XpdSlashResponse};
+use crate::{
+    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse,
+};
 
 pub async fn process_manage(
     data: ManageCommand,
     guild_id: Id<GuildMarker>,
     respondable: Respondable,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     let contents = match data {
         ManageCommand::ResetGuild(rg) => {
             reset_guild_xp(state, guild_id, rg.confirm_message).await?
@@ -36,7 +38,8 @@ pub async fn process_manage(
     Ok(XpdSlashResponse::new()
         .allowed_mentions(AllowedMentions::default())
         .ephemeral(true)
-        .embeds([EmbedBuilder::new().description(contents).build()]))
+        .embeds([EmbedBuilder::new().description(contents).build()])
+        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
 
 #[derive(Deserialize, Serialize)]

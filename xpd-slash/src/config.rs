@@ -1,6 +1,7 @@
 use simpleinterpolation::Interpolation;
 use twilight_model::{
     channel::{message::MessageFlags, ChannelType},
+    http::interaction::InteractionResponseType,
     id::{
         marker::{GuildMarker, RoleMarker},
         Id,
@@ -13,13 +14,13 @@ use xpd_database::UpdateGuildConfig;
 use xpd_slash_defs::config::{ConfigCommand, ConfigCommandLevels, ConfigCommandRewards};
 use xpd_util::CanAddRole;
 
-use crate::{Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
 
 pub async fn process_config(
     command: ConfigCommand,
     guild: Id<GuildMarker>,
     state: SlashState,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     match command {
         ConfigCommand::Reset(_) => reset_config(state, guild).await,
         ConfigCommand::Get(_) => xpd_database::guild_config(&state.db, guild)
@@ -30,7 +31,11 @@ pub async fn process_config(
         ConfigCommand::Levels(l) => process_levels_config(state, guild, l).await,
         ConfigCommand::PermsCheckup(_) => process_perm_checkup(state, guild).await,
     }
-    .map(|s| XpdSlashResponse::with_embed_text(s).flags(MessageFlags::EPHEMERAL))
+    .map(|s| {
+        XpdSlashResponse::with_embed_text(s)
+            .flags(MessageFlags::EPHEMERAL)
+            .into_interaction_response(InteractionResponseType::ChannelMessageWithSource)
+    })
 }
 
 async fn process_rewards_config(

@@ -10,25 +10,29 @@ use twilight_util::builder::InteractionResponseDataBuilder;
 use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::CardCommandAutocomplete;
 
-use crate::{manage_card::CUSTOM_CARD_NULL_SENTINEL, Error, SlashState};
+use crate::{
+    manage_card::CUSTOM_CARD_NULL_SENTINEL, response::XpdInteractionResponse, Error, SlashState,
+    XpdSlashResponse,
+};
 
-fn empty_response<T: std::fmt::Debug>(error: T) -> InteractionResponse {
+fn empty_response<T: std::fmt::Debug>(error: T) -> XpdInteractionResponse {
     warn!(?error, "Failed to autocomplete");
     let ird = InteractionResponseDataBuilder::new().build();
     InteractionResponse {
         kind: InteractionResponseType::ApplicationCommandAutocompleteResult,
         data: Some(ird),
     }
+    .into()
 }
 
-pub fn autocomplete(state: &SlashState, data: CommandData) -> InteractionResponse {
+pub fn autocomplete(state: &SlashState, data: CommandData) -> XpdInteractionResponse {
     autocomplete_inner(state, data).unwrap_or_else(empty_response)
 }
 
 pub fn autocomplete_inner(
     state: &SlashState,
     data: CommandData,
-) -> Result<InteractionResponse, Error> {
+) -> Result<XpdInteractionResponse, Error> {
     debug!(options = ?data, "Got autocomplete");
     let choices = match data.name.as_str() {
         "card" => card_autocomplete(data, state)?.into_iter(),
@@ -36,13 +40,11 @@ pub fn autocomplete_inner(
         _ => return Err(Error::NoAutocompleteForCommand),
     };
 
-    let ird = InteractionResponseDataBuilder::new()
-        .choices(choices.take(25))
-        .build();
-    Ok(InteractionResponse {
-        kind: InteractionResponseType::ApplicationCommandAutocompleteResult,
-        data: Some(ird),
-    })
+    let ird = XpdSlashResponse::new().choices(choices.take(25).collect::<Vec<_>>());
+    Ok(XpdInteractionResponse::new(
+        InteractionResponseType::ApplicationCommandAutocompleteResult,
+        ird,
+    ))
 }
 
 fn card_autocomplete(
