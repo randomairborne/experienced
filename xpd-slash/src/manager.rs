@@ -174,6 +174,11 @@ async fn reset_guild_xp(
     if confirmation != CONFIRMATION_STRING {
         return Ok("Confirmation string did not match.".to_string());
     }
-    xpd_database::delete_levels_guild(&state.db, guild_id).await?;
+
+    let mut txn = state.db.begin().await?;
+    xpd_database::delete_levels_guild(&mut txn, guild_id).await?;
+    xpd_database::delete_audit_log_events_guild(&mut txn, guild_id).await?;
+    txn.commit().await?;
+
     Ok("Done. Thank you for using Experienced.".to_string())
 }
