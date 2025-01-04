@@ -20,8 +20,8 @@ mod rewards;
 use std::{future::Future, sync::Arc, time::Instant};
 
 pub use error::Error;
+pub use response::XpdInteractionData;
 use response::XpdInteractionResponse;
-pub use response::XpdSlashResponse;
 use sqlx::PgPool;
 use tokio::{runtime::Handle, sync::mpsc::Sender, task::JoinHandle};
 use tokio_util::task::TaskTracker;
@@ -111,7 +111,7 @@ impl XpdSlash {
             .await
             .unwrap_or_else(|error| {
                 error!(?error, "got error");
-                XpdSlashResponse::new()
+                XpdInteractionData::new()
                     .ephemeral(true)
                     .content(error.to_string())
                     .into_interaction_response(InteractionResponseType::ChannelMessageWithSource)
@@ -204,7 +204,7 @@ impl SlashState {
     /// # Errors
     /// This function reports an error INTERNALLY, but not at the callsite.
     /// Its failures are generally not recoverable to that task, though.
-    pub async fn send_followup(&self, response: XpdSlashResponse, token: &str) {
+    pub async fn send_followup(&self, response: XpdInteractionData, token: &str) {
         trace!(?response, "sending followup message");
         self.client
             .interaction(self.app_id)

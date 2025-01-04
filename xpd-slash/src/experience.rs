@@ -11,7 +11,7 @@ use xpd_common::AuditLogEvent;
 use xpd_slash_defs::experience::XpCommand;
 use xpd_util::snowflake_to_timestamp;
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
 
 pub struct XpAuditData {
     pub interaction: Id<InteractionMarker>,
@@ -25,7 +25,7 @@ pub async fn process_xp(
     audit: XpAuditData,
 ) -> Result<XpdInteractionResponse, Error> {
     let contents = process_experience(data, guild_id, state, audit).await?;
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .allowed_mentions_o(Some(AllowedMentions::default()))
         .ephemeral(true)
         .embeds([EmbedBuilder::new().description(contents).build()])

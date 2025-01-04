@@ -14,7 +14,7 @@ use xpd_database::UpdateGuildConfig;
 use xpd_slash_defs::config::{ConfigCommand, ConfigCommandLevels, ConfigCommandRewards};
 use xpd_util::CanAddRole;
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
 
 pub async fn process_config(
     command: ConfigCommand,
@@ -32,7 +32,7 @@ pub async fn process_config(
         ConfigCommand::PermsCheckup(_) => process_perm_checkup(state, guild).await,
     }
     .map(|s| {
-        XpdSlashResponse::with_embed_text(s)
+        XpdInteractionData::with_embed_text(s)
             .flags(MessageFlags::EPHEMERAL)
             .into_interaction_response(InteractionResponseType::ChannelMessageWithSource)
     })

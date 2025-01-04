@@ -11,13 +11,13 @@ use twilight_util::builder::embed::EmbedBuilder;
 #[allow(clippy::module_name_repetitions)]
 pub struct XpdInteractionResponse {
     pub kind: InteractionResponseType,
-    pub data: Option<XpdSlashResponse>,
+    pub data: Option<XpdInteractionData>,
     pub inhibit: bool,
 }
 
 impl XpdInteractionResponse {
     #[must_use]
-    pub const fn new(kind: InteractionResponseType, data: XpdSlashResponse) -> Self {
+    pub const fn new(kind: InteractionResponseType, data: XpdInteractionData) -> Self {
         Self {
             kind,
             data: Some(data),
@@ -40,7 +40,7 @@ impl XpdInteractionResponse {
 
 #[derive(Debug, Default, Clone)]
 #[allow(clippy::module_name_repetitions)]
-pub struct XpdSlashResponse {
+pub struct XpdInteractionData {
     pub allowed_mentions: Option<AllowedMentions>,
     pub attachments: Option<Vec<Attachment>>,
     pub choices: Option<Vec<CommandOptionChoice>>,
@@ -55,7 +55,7 @@ pub struct XpdSlashResponse {
     pub inhibit: bool,
 }
 
-impl XpdSlashResponse {
+impl XpdInteractionData {
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -226,8 +226,8 @@ impl XpdSlashResponse {
     }
 }
 
-impl From<XpdSlashResponse> for InteractionResponseData {
-    fn from(value: XpdSlashResponse) -> Self {
+impl From<XpdInteractionData> for InteractionResponseData {
+    fn from(value: XpdInteractionData) -> Self {
         Self {
             allowed_mentions: value.allowed_mentions,
             attachments: value.attachments,
@@ -243,7 +243,7 @@ impl From<XpdSlashResponse> for InteractionResponseData {
     }
 }
 
-impl From<InteractionResponseData> for XpdSlashResponse {
+impl From<InteractionResponseData> for XpdInteractionData {
     fn from(value: InteractionResponseData) -> Self {
         Self {
             allowed_mentions: value.allowed_mentions,

@@ -12,7 +12,7 @@ use xpd_slash_defs::card::CardCommandAutocomplete;
 
 use crate::{
     manage_card::CUSTOM_CARD_NULL_SENTINEL, response::XpdInteractionResponse, Error, SlashState,
-    XpdSlashResponse,
+    XpdInteractionData,
 };
 
 fn empty_response<T: std::fmt::Debug>(error: T) -> XpdInteractionResponse {
@@ -40,7 +40,7 @@ pub fn autocomplete_inner(
         _ => return Err(Error::NoAutocompleteForCommand),
     };
 
-    let ird = XpdSlashResponse::new().choices(choices.take(25).collect::<Vec<_>>());
+    let ird = XpdInteractionData::new().choices(choices.take(25).collect::<Vec<_>>());
     Ok(XpdInteractionResponse::new(
         InteractionResponseType::ApplicationCommandAutocompleteResult,
         ird,

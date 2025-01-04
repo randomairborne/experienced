@@ -11,7 +11,7 @@ use xpd_slash_defs::gdpr::{GdprCommand, GdprCommandDelete};
 
 use crate::{
     levels::get_customizations, response::XpdInteractionResponse, Error, SlashState,
-    XpdSlashResponse,
+    XpdInteractionData,
 };
 
 pub async fn process_gdpr(
@@ -37,12 +37,12 @@ async fn delete(
         xpd_database::delete_audit_log_events_user(&mut txn, invoker.id).await?;
         txn.commit().await?;
         Ok(
-            XpdSlashResponse::with_embed_text("All data wiped. Thank you for using experienced.")
+            XpdInteractionData::with_embed_text("All data wiped. Thank you for using experienced.")
                 .ephemeral(true)
                 .into_interaction_response(InteractionResponseType::ChannelMessageWithSource),
         )
     } else {
-        Ok(XpdSlashResponse::with_embed_text(
+        Ok(XpdInteractionData::with_embed_text(
             "Please make sure the username you entered is correct!",
         )
         .ephemeral(true)
@@ -76,7 +76,7 @@ async fn download(
         .filter(|v| !v.file.is_empty())
         .collect();
 
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .content("Here you go!".to_string())
         .attachments(attachments)
         .ephemeral(true)

@@ -13,7 +13,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{DisplayName, MemberDisplayInfo};
 use xpd_rank_card::customizations::{Color, Customizations};
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -63,7 +63,7 @@ pub async fn get_level(
         .await;
     };
     let embed = EmbedBuilder::new().description(content).build();
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .embeds([embed])
         .flags(flags)
         .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
@@ -78,7 +78,7 @@ async fn generate_level_response(
     flags: MessageFlags,
 ) -> Result<XpdInteractionResponse, Error> {
     let card = gen_card(state.clone(), user, Some(guild_id), level_info, rank).await?;
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .attachments([card])
         .flags(flags)
         .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))

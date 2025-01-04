@@ -4,7 +4,7 @@ use twilight_model::{
 };
 use xpd_slash_defs::audit::AuditLogCommand;
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
 
 pub async fn process_audit_logs(
     command: AuditLogCommand,
@@ -31,7 +31,7 @@ pub async fn process_audit_logs(
         filename: "audit_log.txt".to_string(),
         id: 0,
     };
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .attachments([attachment])
         .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }

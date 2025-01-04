@@ -20,7 +20,7 @@ use twilight_model::{
 use xpd_slash_defs::levels::LeaderboardCommand;
 
 use crate::{
-    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse,
+    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdInteractionData,
 };
 
 pub async fn leaderboard(
@@ -52,7 +52,7 @@ async fn gen_leaderboard(
     guild_id: Id<GuildMarker>,
     zpage: i64,
     show_off: Option<bool>,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionData, Error> {
     if zpage.is_negative() {
         return Err(Error::PageDoesNotExist);
     }
@@ -104,7 +104,7 @@ async fn gen_leaderboard(
         components: components.to_vec(),
     });
 
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .allowed_mentions(AllowedMentions::default())
         .components([components])
         .content(description)
@@ -214,7 +214,7 @@ pub async fn process_message_component(
             };
             Ok(XpdInteractionResponse::new(
                 InteractionResponseType::Modal,
-                XpdSlashResponse::new()
+                XpdInteractionData::new()
                     .components([Component::ActionRow(ActionRow {
                         components: vec![Component::TextInput(input)],
                     })])

@@ -13,7 +13,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 use xpd_slash_defs::manage::{ManageCommand, CONFIRMATION_STRING};
 
 use crate::{
-    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse,
+    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdInteractionData,
 };
 
 pub async fn process_manage(
@@ -35,7 +35,7 @@ pub async fn process_manage(
         )?,
         ManageCommand::Export(_) => export_level_data(state, respondable, guild_id)?,
     };
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .allowed_mentions(AllowedMentions::default())
         .ephemeral(true)
         .embeds([EmbedBuilder::new().description(contents).build()])
@@ -70,7 +70,7 @@ fn export_level_data(
 async fn background_data_export(
     state: &SlashState,
     guild_id: Id<GuildMarker>,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionData, Error> {
     let levels: Vec<ImportUser> = xpd_database::export_bulk_users(&state.db, guild_id)
         .await?
         .iter()
@@ -81,7 +81,7 @@ async fn background_data_export(
         .collect();
     let file = serde_json::to_vec_pretty(&levels)?;
     let attachment = HttpAttachment::from_bytes(format!("export-{guild_id}.json"), file, 0);
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .content("Exported your level data!".to_string())
         .attachments([attachment]))
 }
@@ -111,7 +111,7 @@ async fn background_data_import(
     guild_id: Id<GuildMarker>,
     attachment: Attachment,
     overwrite: bool,
-) -> Result<XpdSlashResponse, Error> {
+) -> Result<XpdInteractionData, Error> {
     let start = Instant::now();
 
     let request = state.http.get(attachment.url).send().await?;
@@ -138,7 +138,7 @@ async fn background_data_import(
     txn.commit().await?;
 
     let seconds = start.elapsed().as_secs_f64();
-    Ok(XpdSlashResponse::with_embed_text(format!(
+    Ok(XpdInteractionData::with_embed_text(format!(
         "Imported XP data for {user_count} users in {seconds:.2} seconds!"
     )))
 }
@@ -155,14 +155,18 @@ async fn background_data_operation_wrapper(
             .await
             .unwrap_or_else(|source| {
                 error!(?source, "Failed to import level data");
-                XpdSlashResponse::with_embed_text(format!("Failed to import level data: {source}"))
+                XpdInteractionData::with_embed_text(format!(
+                    "Failed to import level data: {source}"
+                ))
             })
     } else {
         background_data_export(&state, guild_id)
             .await
             .unwrap_or_else(|source| {
                 error!(?source, "Failed to export level data");
-                XpdSlashResponse::with_embed_text(format!("Failed to export level data: {source}"))
+                XpdInteractionData::with_embed_text(format!(
+                    "Failed to export level data: {source}"
+                ))
             })
     }
     .ephemeral(true);

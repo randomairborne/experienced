@@ -15,7 +15,7 @@ use xpd_slash_defs::admin::{
     AdminCommandSetNick,
 };
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
 
 pub async fn process_admin(
     data: AdminCommand,
@@ -40,7 +40,7 @@ pub async fn process_admin(
         AdminCommand::Stats(admin::AdminCommandStats) => get_bot_stats(state).await,
         AdminCommand::InspectCooldown(ic) => inspect_cooldown(state, ic).await,
     }?;
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .ephemeral(true)
         .embeds([EmbedBuilder::new().description(contents).build()])
         .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))

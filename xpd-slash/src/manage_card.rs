@@ -12,7 +12,7 @@ use xpd_database::CardUpdate;
 use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand};
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, UserStats, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, UserStats, XpdInteractionData};
 
 pub async fn user_card_update(
     command: CardCommand,
@@ -49,7 +49,7 @@ pub async fn user_card_update(
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .attachments([card])
         .ephemeral(true)
         .embeds([embed])
@@ -80,7 +80,7 @@ pub async fn guild_card_update(
         .description(contents)
         .image(ImageSource::attachment("card.png")?)
         .build();
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .ephemeral(true)
         .attachments([card])
         .embeds([embed])

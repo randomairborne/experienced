@@ -8,7 +8,7 @@ use twilight_model::{
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_slash_defs::rewards::{RewardsCommand, RewardsCommandAdd, RewardsCommandRemove};
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdSlashResponse};
+use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
 
 pub async fn process_rewards(
     cmd: RewardsCommand,
@@ -20,7 +20,7 @@ pub async fn process_rewards(
         RewardsCommand::Remove(remove) => process_rewards_rm(remove, state, guild_id).await,
         RewardsCommand::List(_list) => process_rewards_list(state, guild_id).await,
     }?;
-    Ok(XpdSlashResponse::new()
+    Ok(XpdInteractionData::new()
         .allowed_mentions(AllowedMentions::default())
         .ephemeral(true)
         .embeds([EmbedBuilder::new().description(contents).build()])
