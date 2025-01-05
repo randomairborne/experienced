@@ -33,5 +33,6 @@ pub async fn process_audit_logs(
     };
     Ok(XpdInteractionData::new()
         .attachments([attachment])
+        .ephemeral(true)
         .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
 }
