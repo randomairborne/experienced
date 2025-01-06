@@ -25,14 +25,21 @@ pub async fn process_audit_logs(
         csv_writer.flush()?;
     }
 
-    let attachment = Attachment {
-        description: Some("Audit logs this server".to_owned()),
-        file,
-        filename: "audit_log.txt".to_string(),
-        id: 0,
-    };
-    Ok(XpdInteractionData::new()
-        .attachments([attachment])
-        .ephemeral(true)
-        .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
+    if file.is_empty() {
+        Ok(XpdInteractionData::new()
+            .content("No moderator actions recorded yet, audit log is empty.".to_string())
+            .ephemeral(true)
+            .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
+    } else {
+        let attachment = Attachment {
+            description: Some("Audit logs this server".to_owned()),
+            file,
+            filename: "audit_log.txt".to_string(),
+            id: 0,
+        };
+        Ok(XpdInteractionData::new()
+            .attachments([attachment])
+            .ephemeral(true)
+            .into_interaction_response(InteractionResponseType::ChannelMessageWithSource))
+    }
 }
