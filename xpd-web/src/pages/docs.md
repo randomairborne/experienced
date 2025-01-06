@@ -75,7 +75,7 @@ The `/rewards` command has three subcommands: `add`, `list`, and `remove`.
 ## Audit
 
 The `audit` command allows you to take an audit log of all manual XP modification actions except imports and resets.
-The audit log will be cleared by `/manage reset-guild`. The user's audit log can also be cleared if the user uses the `/gdpr delete` command. However, these two commands always reset the user to 0 XP.
+The audit log will be cleared by `/manage reset-guild`. The user's audit log can also be cleared if the user uses the `/gdpr delete` command, or if the user is banned. However, these three events always reset the user to 0 XP.
 
 The audit command has two options:
 
