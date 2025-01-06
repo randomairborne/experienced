@@ -279,6 +279,26 @@ pub async fn delete_audit_log_events_user<
     Ok(())
 }
 
+pub async fn delete_audit_log_events_user_guild<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    user_id: Id<UserMarker>,
+    guild_id: Id<GuildMarker>,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "DELETE FROM audit_logs WHERE user_id = $1 AND guild_id = $2",
+        id_to_db(user_id),
+        id_to_db(guild_id)
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
 pub async fn get_last_message<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
