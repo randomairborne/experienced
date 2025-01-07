@@ -267,14 +267,10 @@ async fn handle_event(
                 http.leave_guild(guild_add.id).await?;
                 return Ok(());
             }
-            xpd_database::delete_guild_cleanup(&db, guild_add.id)
-                .await
-                .log_error("Failed to add guild to cleanup system");
+            xpd_database::delete_guild_cleanup(&db, guild_add.id).await?;
         }
         Event::GuildDelete(del) => {
-            xpd_database::add_guild_cleanup(&db, del.id)
-                .await
-                .log_error("Failed to add guild to cleanup system");
+            xpd_database::add_guild_cleanup(&db, del.id).await?;
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         Event::BanAdd(ban) => {
