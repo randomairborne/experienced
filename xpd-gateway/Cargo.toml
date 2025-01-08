@@ -46,4 +46,3 @@ xpd-util = { workspace = true }
 # utilities
 vss = "0.1"
 thiserror = "2"
-valk-utils = "0.1"
