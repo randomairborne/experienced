@@ -17,7 +17,7 @@ resolver = "2"
 
 [workspace.dependencies]
 mee6 = { path = "mee6" }
-simpleinterpolation = { path = "simpleinterpolation" }
+simpleinterpolation = { version = "0.2" }
 xpd-slash = { path = "xpd-slash" }
 xpd-listener = { path = "xpd-listener" }
 xpd-gateway = { path = "xpd-gateway" }
