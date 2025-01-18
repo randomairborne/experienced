@@ -38,6 +38,7 @@ pub struct Respondable {
 }
 
 impl Respondable {
+    #[expect(clippy::missing_const_for_fn)]
     pub fn token(&self) -> &str {
         &self.token
     }
