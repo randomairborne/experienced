@@ -209,7 +209,7 @@ async fn event_loop(
             Ok(event) => event,
             Err(source) => {
                 if shutdown.is_cancelled()
-                    && matches!(source.kind(), ReceiveMessageErrorType::WebSocket)
+                    && matches!(source.kind(), ReceiveMessageErrorType::Reconnect)
                 {
                     break;
                 }
@@ -254,15 +254,15 @@ async fn handle_event(
         }
         Event::MessageCreate(msg) => listener.save(*msg).await?,
         Event::GuildCreate(guild_add) => {
-            if xpd_database::is_guild_banned(&db, guild_add.id).await? {
+            if xpd_database::is_guild_banned(&db, guild_add.id()).await? {
                 debug!(
-                    id = guild_add.id.get(),
+                    id = guild_add.id().get(),
                     "Leaving guild because it is banned"
                 );
-                http.leave_guild(guild_add.id).await?;
+                http.leave_guild(guild_add.id()).await?;
                 return Ok(());
             }
-            xpd_database::delete_guild_cleanup(&db, guild_add.id).await?;
+            xpd_database::delete_guild_cleanup(&db, guild_add.id()).await?;
         }
         Event::GuildDelete(del) => {
             xpd_database::add_guild_cleanup(&db, del.id).await?;

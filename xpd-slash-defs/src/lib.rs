@@ -57,6 +57,7 @@ pub fn admin_commands() -> Vec<Command> {
 }
 
 fn context_cmd(name: impl Into<String>, kind: CommandType) -> Command {
+    #[expect(deprecated)]
     Command {
         name: name.into(),
         kind,
@@ -71,6 +72,8 @@ fn context_cmd(name: impl Into<String>, kind: CommandType) -> Command {
         nsfw: None,
         options: Vec::new(),
         version: Id::new(1),
+        contexts: None,
+        integration_types: None
     }
 }
 

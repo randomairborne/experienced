@@ -8,7 +8,7 @@ tokio = { version = "1", features = ["rt"] }
 
 xpd-slash-defs = { workspace = true }
 
-twilight-http = "0.16.0-rc.1"
-twilight-model = "0.16.0-rc.1"
+twilight-http = "0.16.0"
+twilight-model = "0.16.0"
 
 valk-utils = "0.1"
