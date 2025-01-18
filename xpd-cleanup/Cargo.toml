@@ -16,4 +16,4 @@ xpd-common = { workspace = true }
 # db interaction
 sqlx = { version = "0.8", features = ["postgres", "macros", "runtime-tokio", "tls-rustls"] }
 xpd-database = { workspace = true }
-twilight-model = "0.16.0"
+twilight-model = "0.16"

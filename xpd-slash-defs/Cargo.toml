@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-twilight-interactions = "0.16.0"
-twilight-validate = "0.16.0"
-twilight-model = "0.16.0"
+twilight-interactions = "0.16"
+twilight-validate = "0.16"
+twilight-model = "0.16"
 
 xpd-rank-card = { workspace = true }
 xpd-common = { workspace = true }

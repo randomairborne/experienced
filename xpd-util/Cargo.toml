@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-twilight-cache-inmemory = { version = "0.16.0", features = ["permission-calculator"] }
-twilight-model = "0.16.0"
+twilight-cache-inmemory = { version = "0.16", features = ["permission-calculator"] }
+twilight-model = "0.16"
 
 # error handling
 thiserror = "2"

@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 # misc
 sqlx = { version = "0.8", features = ["postgres", "tls-rustls", "runtime-tokio"] }
-twilight-model = "0.16.0"
+twilight-model = "0.16"
 tokio-stream = "0.1"
 tracing = "0.1"
 
