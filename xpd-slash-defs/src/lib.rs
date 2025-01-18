@@ -73,7 +73,7 @@ fn context_cmd(name: impl Into<String>, kind: CommandType) -> Command {
         options: Vec::new(),
         version: Id::new(1),
         contexts: None,
-        integration_types: None
+        integration_types: None,
     }
 }
 

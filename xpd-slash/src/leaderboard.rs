@@ -6,7 +6,8 @@ use twilight_model::{
     },
     channel::{
         message::{
-            component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle}, AllowedMentions, Component, EmojiReactionType, MessageFlags,
+            component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
+            AllowedMentions, Component, EmojiReactionType, MessageFlags,
         },
         Message,
     },
@@ -119,7 +120,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             label: Some(format!("Page {}", zpage + 1)),
             style: ButtonStyle::Secondary,
             url: None,
-            sku_id: None
+            sku_id: None,
         },
         Button {
             custom_id: Some((zpage - 1).to_string()),
@@ -130,7 +131,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             label: Some("Previous".to_string()),
             style: ButtonStyle::Primary,
             url: None,
-            sku_id: None
+            sku_id: None,
         },
         Button {
             custom_id: Some("jump_modal".to_string()),
@@ -139,18 +140,18 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             label: Some("Go to page".to_string()),
             style: ButtonStyle::Primary,
             url: None,
-            sku_id: None
+            sku_id: None,
         },
         Button {
             custom_id: Some((zpage + 1).to_string()),
             disabled: !next_page_exists,
-            emoji: Some(EmojiReactionType::Unicode{
+            emoji: Some(EmojiReactionType::Unicode {
                 name: "➡️".to_string(),
             }),
             label: Some("Next".to_string()),
             style: ButtonStyle::Primary,
             url: None,
-            sku_id: None
+            sku_id: None,
         },
         Button {
             custom_id: Some("delete_leaderboard".to_string()),
@@ -161,7 +162,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             label: Some("Delete".to_string()),
             style: ButtonStyle::Danger,
             url: None,
-            sku_id: None
+            sku_id: None,
         },
     ]
     .map(Component::Button)
