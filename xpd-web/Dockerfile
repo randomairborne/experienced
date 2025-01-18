@@ -19,3 +19,4 @@ FROM ghcr.io/randomairborne/tunnelbana:latest
 COPY --from=compressor /build/compressed/ /var/www/html/
 
 CMD ["tunnelbana", "/var/www/html"]
+
