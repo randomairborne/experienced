@@ -1,8 +1,8 @@
 use twilight_http::Client;
 use twilight_model::id::{marker::GuildMarker, Id};
 
-#[tokio::main]
-pub async fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     let token = valk_utils::get_var("DISCORD_TOKEN");
     let control_guild: Id<GuildMarker> = valk_utils::parse_var("CONTROL_GUILD");
 
