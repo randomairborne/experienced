@@ -1,16 +1,16 @@
-ARG LLVMTARGETARCH
-FROM --platform=${BUILDPLATFORM} ghcr.io/randomairborne/cross-cargo:${LLVMTARGETARCH} AS builder
-ARG LLVMTARGETARCH
+FROM rust:alpine AS builder
+
+RUN apk add musl-dev
 
 WORKDIR /build
 
 COPY . .
 
-RUN cargo build --release --target ${LLVMTARGETARCH}-unknown-linux-musl
+ENV SQLX_OFFLINE=1
+RUN cargo build --release --package xpd-cleanup
 
 FROM alpine:latest
-ARG LLVMTARGETARCH
 
-COPY --from=builder /build/target/${LLVMTARGETARCH}-unknown-linux-musl/release/xpd-cleanup /usr/bin/xpd-cleanup
+COPY --from=builder /build/target/release/xpd-cleanup /usr/bin/xpd-cleanup
 
 ENTRYPOINT [ "/usr/bin/xpd-cleanup" ]
