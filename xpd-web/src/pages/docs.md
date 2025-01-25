@@ -14,15 +14,15 @@ reset your settings if you wish to disable a setting. This will be improved soon
 
 The variables available in level up messages are:
 
-- `level` The user's level after leveling up.
-- `old_level` The user's level prior to leveling up.
-- `xp` The numeric value of the user's total XP.
-- `old_xp` The numeric value of the user's total XP prior to leveling up.
-- `user_mention` @mention ping for the user who leveled up.
-- `user_username` The @username of the user who leveled up.
-- `user_display_name` The Discord global display name of the user who leveled up. Defaults to `user_username`.
-- `user_nickname` The current guild nickname of the user who leveled up, or their display name if no nick exists.
-- `user_id` The ID of the user who leveled up.
+- `level`: The user's level after leveling up.
+- `old_level`: The user's level prior to leveling up.
+- `xp`: The numeric value of the user's total XP.
+- `old_xp`: The numeric value of the user's total XP prior to leveling up.
+- `user_mention`: @mention ping for the user who leveled up.
+- `user_username`: The @username of the user who leveled up.
+- `user_display_name`: The Discord global display name of the user who leveled up. Defaults to `user_username`.
+- `user_nickname`: The current guild nickname of the user who leveled up, or their display name if no nick exists.
+- `user_id`: The ID of the user who leveled up.
 
 You can use the variables by surounding their names in curly brackets, like so:
 `{user_mention} has leveled up to level {level}!`.
