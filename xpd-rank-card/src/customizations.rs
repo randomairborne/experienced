@@ -197,18 +197,18 @@ mod test {
 
     #[test]
     fn basic_roundtrip() {
-        let mut shared_serialize_string = String::with_capacity(32);
+        let mut shared_serialized = Vec::with_capacity(32);
         for red in u8::MIN..=u8::MAX {
             eprintln!("red progress: {red}");
             for green in u8::MIN..=u8::MAX {
                 for blue in u8::MIN..=u8::MAX {
                     let color = Color::new(red, green, blue);
                     let test_struct = TestsStruct { color };
-                    let serializer = toml::ser::Serializer::new(&mut shared_serialize_string);
-                    test_struct.serialize(serializer).unwrap();
-                    let rt_struct: TestsStruct = toml::from_str(&shared_serialize_string).unwrap();
+                    let mut serializer = rmp_serde::Serializer::new(&mut shared_serialized);
+                    test_struct.serialize(&mut serializer).unwrap();
+                    let rt_struct: TestsStruct = rmp_serde::from_slice(&shared_serialized).unwrap();
                     assert_eq!(color, rt_struct.color);
-                    shared_serialize_string.clear();
+                    shared_serialized.clear();
                 }
             }
         }

@@ -31,3 +31,4 @@ rayon = "1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["fs"] }
+rmp-serde = "1"
