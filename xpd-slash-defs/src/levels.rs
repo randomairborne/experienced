@@ -25,5 +25,5 @@ pub struct RankCommand {
     #[command(desc = "User to check level of")]
     pub user: Option<ResolvedUser>,
     #[command(desc = "Show off this card publicly")]
-    pub showoff: Option<bool>,
+    pub show_off: Option<bool>,
 }

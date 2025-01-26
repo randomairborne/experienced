@@ -160,7 +160,7 @@ async fn process_slash_cmd(
                 guild_id.ok_or(Error::NoGuildId)?,
                 target,
                 invoker.id,
-                data.showoff,
+                data.show_off,
                 state,
             )
             .await
