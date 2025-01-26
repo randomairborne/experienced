@@ -56,7 +56,7 @@ async fn gen_leaderboard(
     if zpage.is_negative() {
         return Err(Error::PageDoesNotExist);
     }
-    let is_ephemeral = !show_off.is_some_and(|v| v);
+    let is_ephemeral = !(show_off.unwrap_or(true));
     let users = xpd_database::get_leaderboard_page(
         &state.db,
         guild_id,
