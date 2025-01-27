@@ -175,7 +175,7 @@ impl Display for GuildConfig {
     }
 }
 
-#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct AuditLogEvent {
     pub guild_id: Id<GuildMarker>,
     pub user_id: Id<UserMarker>,
