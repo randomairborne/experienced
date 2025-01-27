@@ -67,8 +67,10 @@ async fn main() -> Result<(), SetupError> {
             .token(token.clone())
             .build(),
     );
-    let intents =
-        XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILD_MEMBERS; // | Intents::GUILDS
+    let intents = XpdListener::required_intents()
+        | XpdSlash::required_intents()
+        | Intents::GUILD_MEMBERS
+        | Intents::GUILDS;
 
     let current_app = client.current_user_application().await?.model().await?;
     let app_id = current_app.id;
