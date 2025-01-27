@@ -5,7 +5,7 @@ use std::{
 
 use sqlx::{Connection, PgConnection, Postgres, Transaction};
 use twilight_model::id::{marker::GuildMarker, Id};
-use xpd_common::DISCORD_EPOCH_SECS;
+use xpd_common::{UserInGuild, DISCORD_EPOCH_SECS};
 
 #[macro_use]
 extern crate tracing;
@@ -28,8 +28,19 @@ async fn async_main(database_url: &str) -> Result<(), Error> {
     debug!(database_url, "Connecting to database");
     let mut conn = PgConnection::connect(database_url).await?;
     info!(database_url, "Connected to database");
-    let cleanups = xpd_database::get_active_guild_cleanups(&mut conn).await?;
-    info!(?cleanups, count = cleanups.len(), "Got cleanups");
+    info!("Cleaning up guilds we are no longer in");
+    cleanup_guilds(&mut conn).await?;
+    info!("Cleaning up users who have left");
+    cleanup_users(&mut conn).await?;
+    info!("Cleaning up cooldowns");
+    cleanup_cooldowns(&mut conn).await?;
+    info!("Done!");
+    Ok(())
+}
+
+async fn cleanup_guilds(conn: &mut PgConnection) -> Result<(), Error> {
+    let cleanups = xpd_database::get_active_guild_cleanups(&mut *conn).await?;
+    info!(?cleanups, count = cleanups.len(), "Got guild cleanups");
     for guild in cleanups {
         debug!(%guild, "Cleaning guild");
         let mut txn = conn.begin().await?;
@@ -43,8 +54,25 @@ async fn async_main(database_url: &str) -> Result<(), Error> {
         }
         info!(%guild, "Cleaned guild");
     }
-    cleanup_cooldowns(&mut conn).await?;
-    info!("Done!");
+    Ok(())
+}
+
+async fn cleanup_users(conn: &mut PgConnection) -> Result<(), Error> {
+    let cleanups = xpd_database::get_active_user_guild_cleanups(&mut *conn).await?;
+    info!(?cleanups, count = cleanups.len(), "Got user cleanups");
+    for cleanup in cleanups {
+        debug!(guild = %cleanup.guild, user = %cleanup.user, "Cleaning user-guild combo");
+        let mut txn = conn.begin().await?;
+        if let Err(source) = cleanup_user(&mut txn, cleanup).await {
+            error!(guild = %cleanup.guild, user = %cleanup.user, ?source, "Unable to invalidate rewards for user");
+            txn.rollback().await?;
+            continue;
+        }
+        if let Err(source) = txn.commit().await {
+            error!(guild = %cleanup.guild, user = %cleanup.user, ?source, "Unable to commit changes for user");
+        }
+        info!(guild = %cleanup.guild, user = %cleanup.user, "Cleaned user");
+    }
     Ok(())
 }
 
@@ -63,6 +91,18 @@ async fn cleanup_cooldowns(db: &mut PgConnection) -> Result<(), Error> {
         .unwrap_or(0); // nothing can start before 0
     warn!(now_discord, "Deleting cooldowns starting before");
     xpd_database::delete_cooldowns_starting_before(db, now_discord).await?;
+    Ok(())
+}
+
+async fn cleanup_user(
+    db: &mut Transaction<'_, Postgres>,
+    target: UserInGuild,
+) -> Result<(), Error> {
+    debug!(?target, "Deleting user levels in guild");
+    xpd_database::delete_levels_user_guild(db.as_mut(), target.user, target.guild).await?;
+    debug!(?target, "Deleting user audit log events in guild");
+    xpd_database::delete_audit_log_events_user_guild(db.as_mut(), target.user, target.guild)
+        .await?;
     Ok(())
 }
 

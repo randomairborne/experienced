@@ -194,6 +194,12 @@ pub struct UserStatus {
     pub xp: i64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UserInGuild {
+    pub guild: Id<GuildMarker>,
+    pub user: Id<UserMarker>,
+}
+
 #[derive(Debug)]
 pub struct RoleReward {
     pub id: Id<RoleMarker>,

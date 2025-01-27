@@ -21,7 +21,7 @@ use twilight_model::id::{
     Id,
 };
 use util::{db_to_id, id_to_db};
-use xpd_common::{AuditLogEvent, GuildConfig, RoleReward, UserStatus};
+use xpd_common::{AuditLogEvent, GuildConfig, RoleReward, UserInGuild, UserStatus};
 pub async fn guild_rewards<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -764,6 +764,76 @@ pub async fn get_active_guild_cleanups<
             }
         };
         output.push(db_to_id(v.guild));
+    }
+    Ok(output)
+}
+
+pub async fn add_user_guild_cleanup<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild: Id<GuildMarker>,
+    user: Id<UserMarker>,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "INSERT INTO user_cleanups (guild_id, user_id, removed_at) VALUES ($1, $2, NOW())
+        ON CONFLICT (guild_id, user_id) DO UPDATE SET removed_at = excluded.removed_at",
+        id_to_db(guild),
+        id_to_db(user)
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
+pub async fn delete_user_guild_cleanup<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+    guild: Id<GuildMarker>,
+    user: Id<UserMarker>,
+) -> Result<(), Error> {
+    let mut conn = conn.acquire().await?;
+    query!(
+        "DELETE FROM user_cleanups WHERE guild_id = $1 AND user_id = $2",
+        id_to_db(guild),
+        id_to_db(user)
+    )
+    .execute(conn.as_mut())
+    .await?;
+    Ok(())
+}
+
+pub async fn get_active_user_guild_cleanups<
+    'a,
+    D: DerefMut<Target = PgConnection> + Send,
+    A: Acquire<'a, Database = Postgres, Connection = D> + Send,
+>(
+    conn: A,
+) -> Result<Vec<UserInGuild>, Error> {
+    let mut conn = conn.acquire().await?;
+    let mut records = query!(
+        "SELECT user_id, guild_id FROM user_cleanups WHERE removed_at + interval '30 days' < NOW()"
+    )
+    .fetch(conn.as_mut());
+
+    let mut output = Vec::with_capacity(16);
+    while let Some(v) = records.next().await {
+        let v = match v {
+            Ok(v) => v,
+            Err(source) => {
+                tracing::error!(?source, "Error getting guild cleanups");
+                continue;
+            }
+        };
+        let guild = db_to_id(v.guild_id);
+        let user = db_to_id(v.user_id);
+        output.push(UserInGuild { guild, user });
     }
     Ok(output)
 }

@@ -67,7 +67,8 @@ async fn main() -> Result<(), SetupError> {
             .token(token.clone())
             .build(),
     );
-    let intents = XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILDS;
+    let intents =
+        XpdListener::required_intents() | XpdSlash::required_intents() | Intents::GUILD_MEMBERS; // | Intents::GUILDS
 
     let current_app = client.current_user_application().await?.model().await?;
     let app_id = current_app.id;
@@ -202,6 +203,8 @@ async fn event_loop(
     let event_flags = XpdListener::required_events()
         | XpdSlash::required_events()
         | EventTypeFlags::READY
+        | EventTypeFlags::MEMBER_REMOVE
+        | EventTypeFlags::GUILD_DELETE
         | EventTypeFlags::GUILD_CREATE;
     while let Some(next) = shard.next_event(event_flags).await {
         trace!(?next, "got new event");
@@ -266,6 +269,9 @@ async fn handle_event(
         }
         Event::GuildDelete(del) => {
             xpd_database::add_guild_cleanup(&db, del.id).await?;
+        }
+        Event::MemberRemove(mr) => {
+            xpd_database::add_user_guild_cleanup(&db, mr.guild_id, mr.user.id).await?;
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         Event::BanAdd(ban) => {
