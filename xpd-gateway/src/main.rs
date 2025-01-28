@@ -205,6 +205,7 @@ async fn event_loop(
     let event_flags = XpdListener::required_events()
         | XpdSlash::required_events()
         | EventTypeFlags::READY
+        | EventTypeFlags::MEMBER_UPDATE
         | EventTypeFlags::MEMBER_REMOVE
         | EventTypeFlags::GUILD_DELETE
         | EventTypeFlags::GUILD_CREATE;
@@ -274,6 +275,9 @@ async fn handle_event(
         }
         Event::MemberRemove(mr) => {
             xpd_database::add_user_guild_cleanup(&db, mr.guild_id, mr.user.id).await?;
+        }
+        Event::MemberAdd(ma) => {
+            xpd_database::delete_user_guild_cleanup(&db, ma.guild_id, ma.user.id).await?;
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         Event::BanAdd(ban) => {
