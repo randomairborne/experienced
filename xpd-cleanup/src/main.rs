@@ -57,6 +57,7 @@ async fn cleanup_guilds(conn: &mut PgConnection) -> Result<(), Error> {
     Ok(())
 }
 
+#[expect(dead_code)]
 async fn cleanup_users(conn: &mut PgConnection) -> Result<(), Error> {
     let cleanups = xpd_database::get_active_user_guild_cleanups(&mut *conn).await?;
     info!(?cleanups, count = cleanups.len(), "Got user cleanups");
@@ -94,6 +95,7 @@ async fn cleanup_cooldowns(db: &mut PgConnection) -> Result<(), Error> {
     Ok(())
 }
 
+#[expect(dead_code)]
 async fn cleanup_user(
     db: &mut Transaction<'_, Postgres>,
     target: UserInGuild,
