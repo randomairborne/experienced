@@ -30,8 +30,8 @@ async fn async_main(database_url: &str) -> Result<(), Error> {
     info!(database_url, "Connected to database");
     info!("Cleaning up guilds we are no longer in");
     cleanup_guilds(&mut conn).await?;
-    info!("Cleaning up users who have left");
-    cleanup_users(&mut conn).await?;
+    // info!("Cleaning up users who have left");
+    // cleanup_users(&mut conn).await?;
     info!("Cleaning up cooldowns");
     cleanup_cooldowns(&mut conn).await?;
     info!("Done!");
