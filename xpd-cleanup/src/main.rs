@@ -95,7 +95,6 @@ async fn cleanup_cooldowns(db: &mut PgConnection) -> Result<(), Error> {
     Ok(())
 }
 
-#[expect(dead_code)]
 async fn cleanup_user(
     db: &mut Transaction<'_, Postgres>,
     target: UserInGuild,
