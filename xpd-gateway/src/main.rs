@@ -280,13 +280,6 @@ async fn handle_event(
             xpd_database::delete_user_guild_cleanup(&db, ma.guild_id, ma.user.id).await?;
         }
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
-        Event::BanAdd(ban) => {
-            // These values are "best effort", as we can only report the errors to the devs- but unless
-            // we actually delete the levels, we don't want the audit logs deleted
-            xpd_database::delete_levels_user_guild(&db, ban.user.id, ban.guild_id).await?;
-            xpd_database::delete_audit_log_events_user_guild(&db, ban.user.id, ban.guild_id)
-                .await?;
-        }
         _ => {}
     };
     Ok(())
