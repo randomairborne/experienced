@@ -25,7 +25,7 @@ pub async fn process_admin(
 ) -> Result<XpdInteractionResponse, Error> {
     if guild_id != state.control_guild {
         return Err(Error::NotControlGuild);
-    };
+    }
     if !state.owners.contains(&invoker) {
         return Err(Error::NotControlUser);
     }
