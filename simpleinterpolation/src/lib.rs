@@ -182,7 +182,7 @@ impl InterpolationCompiler {
             self.parts.push((to_push, ident));
         } else {
             self.next.push(ch);
-        };
+        }
         self.index += 1;
         Ok(())
     }
@@ -267,7 +267,7 @@ impl std::fmt::Display for RenderError<'_> {
                         write!(f, "{item}")?;
                     } else {
                         write!(f, "{item}, ")?;
-                    };
+                    }
                 }
                 Ok(())
             }
