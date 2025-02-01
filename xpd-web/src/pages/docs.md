@@ -84,3 +84,7 @@ The audit command has two options:
 
 These filters can be combined. If you set both of them, only actions taken by that moderator against that user
 will be returned.
+
+## XP resetting
+
+XP is automatically reset when a user is banned from your server.
