@@ -11,3 +11,14 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+
+[dev-dependencies]
+criterion = { version = "0.3", features = ["html_reports"] }
+
+[[bench]]
+name = "no_interpolation"
+harness = false
+
+[[bench]]
+name = "all_interpolation"
+harness = false
