@@ -72,7 +72,7 @@ impl XpdListenerInner {
         let xp_added: i64 = if config_max_xp_per_msg == config_min_xp_per_msg {
             config_max_xp_per_msg
         } else {
-            rand::thread_rng().gen_range(config_min_xp_per_msg..=config_max_xp_per_msg)
+            rand::rng().random_range(config_min_xp_per_msg..=config_max_xp_per_msg)
         }
         .into();
 
