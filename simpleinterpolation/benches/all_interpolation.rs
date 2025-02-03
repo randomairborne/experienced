@@ -10,7 +10,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         "interp".into(),
         include_str!("very_long_uninterpolated.txt").into(),
     );
-    c.bench_function("no interpolation", |b| b.iter(|| interp.render(&data)));
+    c.bench_function("all interpolation", |b| b.iter(|| interp.render(&data)));
 }
 
 criterion_group!(benches, criterion_benchmark);
