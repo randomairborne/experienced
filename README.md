@@ -27,7 +27,7 @@ You can grab the variables from [here](/.env.example)
 
 Make sure you replace `<token>` and `<db_pass>` with your own bot token and database password for postgres.
 
-## Finally, start the docker with:
+## Finally, start the bot with:
 
 ```bash
 docker compose up
