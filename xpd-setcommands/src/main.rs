@@ -1,10 +1,16 @@
+use std::env::VarError;
+
 use twilight_http::Client;
 use twilight_model::id::{marker::GuildMarker, Id};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let token = valk_utils::get_var("DISCORD_TOKEN");
-    let control_guild: Id<GuildMarker> = valk_utils::parse_var("CONTROL_GUILD");
+    let control_guild: Option<Id<GuildMarker>> = match std::env::var("CONTROL_GUILD") {
+        Ok(v) => Some(v.parse().expect("Could not parse guild ID")),
+        Err(VarError::NotPresent) => None,
+        Err(VarError::NotUnicode(_)) => panic!("Non-UTF-8 CONTROL_GUILD"),
+    };
 
     let client = Client::new(token);
     let app_id = client
@@ -24,9 +30,11 @@ async fn main() {
         .set_global_commands(&cmds)
         .await
         .expect("Failed to set global commands for bot!");
-    client
-        .interaction(app_id)
-        .set_guild_commands(control_guild, &admin_commands)
-        .await
-        .expect("Failed to set admin commands");
+    if let Some(control_guild) = control_guild {
+        client
+            .interaction(app_id)
+            .set_guild_commands(control_guild, &admin_commands)
+            .await
+            .expect("Failed to set admin commands");
+    }
 }
