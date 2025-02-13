@@ -12,14 +12,10 @@ it. [Click here to invite the official instance.](https://discord.com/api/oauth2
 
 While you are legally within your rights to do so, please do not self-host public instances of Experienced.
 
-### Preparing your server
-
-To run experienced, you need [docker](https://docs.docker.com/engine/install/)
-or [podman](https://podman.io/docs/installation). We'll use docker for this tutorial.
-
 ## Using Docker Compose
 
-You can grab the file from [here](/docker-compose.yml)
+To run experienced, you need [docker](https://docs.docker.com/engine/install/).
+You can grab the docker compose file from [here](/docker-compose.yml)
 
 ## Env File:
 
