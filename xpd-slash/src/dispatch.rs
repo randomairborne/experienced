@@ -73,9 +73,7 @@ pub async fn process(
     }
 
     let invoker: MemberDisplayInfo = match interaction.member {
-        Some(val) => val
-            .user
-            .map(|u| MemberDisplayInfo::from(u).with_nick(val.nick)),
+        Some(member) => MemberDisplayInfo::from_partial_member(member),
         None => interaction.user.map(MemberDisplayInfo::from),
     }
     .ok_or(Error::NoInvoker)?;

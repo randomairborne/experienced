@@ -10,7 +10,7 @@ use twilight_cache_inmemory::ResourceType;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::Intents,
-    guild::Member,
+    guild::{Member, PartialMember},
     id::{
         marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
         Id,
@@ -98,6 +98,20 @@ impl MemberDisplayInfo {
     #[must_use]
     pub fn with_nick(self, nick: Option<String>) -> Self {
         Self { nick, ..self }
+    }
+
+    #[must_use]
+    pub fn from_partial_member(member: PartialMember) -> Option<Self> {
+        let user = member.user?;
+        Some(Self {
+            id: user.id,
+            name: user.name,
+            global_name: user.global_name,
+            nick: member.nick,
+            avatar: user.avatar,
+            local_avatar: member.avatar,
+            bot: user.bot,
+        })
     }
 }
 
