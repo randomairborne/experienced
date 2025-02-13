@@ -104,7 +104,8 @@ pub async fn gen_card(
     rank: i64,
 ) -> Result<Attachment, Error> {
     let customizations_future = get_customizations_fields(state.clone(), user.id, guild_id);
-    let avatar_future = get_avatar(state.clone(), user.id, user.avatar);
+    let avatar_ref = AvatarReference::new(user.id, user.avatar, guild_id, user.local_avatar);
+    let avatar_future = get_avatar(&state.http, avatar_ref);
     let (customizations, avatar) = try_join!(customizations_future, avatar_future)?;
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     let percentage = (level_info.percentage() * 100.0).round() as u64;
@@ -184,22 +185,51 @@ fn color_or_default(color: Option<&str>, default: Color) -> Result<Color, Error>
     }
 }
 
-async fn get_avatar(
-    state: SlashState,
-    user_id: Id<UserMarker>,
-    avatar_hash: Option<ImageHash>,
-) -> Result<String, Error> {
-    let url = avatar_hash.map_or_else(
-        || {
-            format!(
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct AvatarReference {
+    id: Id<UserMarker>,
+    kind: Option<AvatarReferenceKind>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum AvatarReferenceKind {
+    Guild(Id<GuildMarker>, ImageHash),
+    User(ImageHash),
+}
+
+impl AvatarReference {
+    pub fn new(
+        id: Id<UserMarker>,
+        user_hash: Option<ImageHash>,
+        guild_id: Option<Id<GuildMarker>>,
+        guild_hash: Option<ImageHash>,
+    ) -> Self {
+        let kind = guild_hash
+            .and_then(|hash| Some(AvatarReferenceKind::Guild(guild_id?, hash)))
+            .or_else(|| user_hash.map(AvatarReferenceKind::User));
+        Self { id, kind }
+    }
+
+    pub fn to_url(self) -> String {
+        let user_id = self.id;
+        match self.kind {
+            Some(AvatarReferenceKind::Guild(guild_id, avatar_hash)) =>format!(
+                "https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar_hash}.png",
+            ),
+            Some(AvatarReferenceKind::User(avatar_hash)) => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png",),
+            None => format!(
                 "https://cdn.discordapp.com/embed/avatars/{}.png",
                 (user_id.get() >> 22) % 6
             )
-        },
-        |hash| format!("https://cdn.discordapp.com/avatars/{user_id}/{hash}.png",),
-    );
+        }
+    }
+}
+
+#[tracing::instrument(skip(client))]
+async fn get_avatar(client: &reqwest::Client, avatar: AvatarReference) -> Result<String, Error> {
+    let url = avatar.to_url();
     debug!(url, "Downloading avatar");
-    let png = state.http.get(url).send().await?.bytes().await?;
+    let png = client.get(url).send().await?.bytes().await?;
     debug!("Encoding avatar");
     let data = "data:image/png;base64,".to_string() + &BASE64_ENGINE.encode(png);
     debug!("Encoded avatar");
