@@ -67,7 +67,6 @@ impl LevelInfo {
 }
 
 #[allow(clippy::suboptimal_flops)]
-#[inline]
 #[must_use]
 pub fn xp_needed_for_level(level: u64) -> u64 {
     let level = level as f64;
