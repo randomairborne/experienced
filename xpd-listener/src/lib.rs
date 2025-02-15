@@ -63,7 +63,7 @@ pub struct XpdListenerInner {
     #[allow(unused)]
     task_tracker: TaskTracker,
     configs: DashMap<Id<GuildMarker>, Arc<GuildConfig>>,
-    rewards: DashMap<Id<GuildMarker>, Arc<Vec<RoleReward>>>,
+    rewards: DashMap<Id<GuildMarker>, Arc<[RoleReward]>>,
     bot_id: Id<UserMarker>,
 }
 
@@ -123,21 +123,21 @@ impl XpdListenerInner {
     pub async fn invalidate_rewards(&self, guild: Id<GuildMarker>) -> Result<(), Error> {
         let mut new_rewards = xpd_database::guild_rewards(&self.db, guild).await?;
         new_rewards.sort_by(xpd_common::compare_rewards_requirement);
-        self.rewards.insert(guild, Arc::new(new_rewards));
+        self.rewards.insert(guild, new_rewards.into());
         Ok(())
     }
 
     pub async fn get_guild_rewards(
         &self,
         guild_id: Id<GuildMarker>,
-    ) -> Result<Arc<Vec<RoleReward>>, Error> {
+    ) -> Result<Arc<[RoleReward]>, Error> {
         if let Some(rewards) = self.rewards.get(&guild_id) {
-            return Ok(Arc::clone(&rewards));
+            return Ok(rewards.clone());
         }
         let mut rewards = xpd_database::guild_rewards(&self.db, guild_id).await?;
         rewards.sort_by(xpd_common::compare_rewards_requirement);
 
-        let new_copy = Arc::new(rewards);
+        let new_copy: Arc<[RoleReward]> = rewards.into();
         self.rewards.insert(guild_id, new_copy.clone());
         Ok(new_copy)
     }
