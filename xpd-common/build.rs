@@ -22,7 +22,6 @@ fn main() {
 
     println!("cargo::rustc-env=GIT_HASH_EXPERIENCED={}", commit_sha);
     println!("cargo::rustc-env=GIT_REV_COUNT_EXPERIENCED={}", rev_num)
-
 }
 
 fn get_sha() -> Result<String, Error> {
@@ -74,13 +73,12 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TryFromString => write!(f, "Invalid UTF-8 in `git` output")?,
-            Self::BadStatus(exit_status) => write!(
-                f,
-                "`git` exited with non-zero status {exit_status}"
-            )?,
+            Self::BadStatus(exit_status) => {
+                write!(f, "`git` exited with non-zero status {exit_status}")?
+            }
             Self::Io(error) => write!(f, "I/O error trying to run `git`: {error}")?,
             Self::NoOutput => write!(f, "No output from `git`")?,
-            Self::ParseInt(error) => write!(f, "Could not convert to int: {error}")?
+            Self::ParseInt(error) => write!(f, "Could not convert to int: {error}")?,
         }
         Ok(())
     }
@@ -103,7 +101,6 @@ impl From<std::io::Error> for Error {
         Self::Io(value)
     }
 }
-
 
 impl From<std::num::ParseIntError> for Error {
     fn from(value: std::num::ParseIntError) -> Self {

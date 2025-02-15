@@ -8,7 +8,9 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS, CURRENT_GIT_REV_COUNT};
+use xpd_common::{
+    CURRENT_GIT_REV_COUNT, CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS,
+};
 use xpd_slash_defs::admin::{
     self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandInspectCooldown,
     AdminCommandLeave, AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
