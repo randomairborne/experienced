@@ -1,5 +1,5 @@
 use std::{
-    process::{Command, ExitStatus},
+    process::{Command, ExitStatus, Stdio},
     string::FromUtf8Error,
 };
 
@@ -12,19 +12,25 @@ fn main() {
         }
     };
 
-    println!("cargo:rustc-env=GIT_HASH_EXPERIENCED={}", commit_msg);
+    println!("cargo::rustc-env=GIT_HASH_EXPERIENCED={}", commit_msg);
 }
 
 fn get_sha() -> Result<String, Error> {
     let output = Command::new("git")
         .arg("rev-parse")
         .arg("HEAD")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(Stdio::null())
         .spawn()?
         .wait_with_output()?;
     if !output.status.success() {
         return Err(Error::BadStatus(output.status));
     }
     let output = String::from_utf8(output.stdout)?.trim().to_string();
+    if output.is_empty() {
+        return Err(Error::NoOutput);
+    }
     Ok(output)
 }
 
@@ -33,17 +39,19 @@ enum Error {
     TryFromString,
     BadStatus(ExitStatus),
     Io(std::io::Error),
+    NoOutput,
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::TryFromString => write!(f, "Invalid UTF-8 in `git rev-parse HEAD` output")?,
-            Error::BadStatus(exit_status) => write!(
+            Self::TryFromString => write!(f, "Invalid UTF-8 in `git rev-parse HEAD` output")?,
+            Self::BadStatus(exit_status) => write!(
                 f,
                 "`git rev-parse HEAD` exited with non-zero status {exit_status}"
             )?,
-            Error::Io(error) => write!(f, "I/O error trying to run `git rev-parse HEAD`: {error}")?,
+            Self::Io(error) => write!(f, "I/O error trying to run `git rev-parse HEAD`: {error}")?,
+            Self::NoOutput => write!(f, "No output from git-rev-parse")?,
         }
         Ok(())
     }
