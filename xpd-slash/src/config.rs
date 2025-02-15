@@ -11,7 +11,9 @@ use xpd_common::{
     GuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, TEMPLATE_VARIABLES,
 };
 use xpd_database::UpdateGuildConfig;
-use xpd_slash_defs::config::{ConfigCommand, ConfigCommandLevels, ConfigCommandRewards};
+use xpd_slash_defs::config::{
+    ConfigCommand, ConfigCommandLevels, ConfigCommandRankCard, ConfigCommandRewards,
+};
 use xpd_util::CanAddRole;
 
 use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
@@ -29,6 +31,7 @@ pub async fn process_config(
             .map_err(Into::into),
         ConfigCommand::Rewards(r) => process_rewards_config(state, guild, r).await,
         ConfigCommand::Levels(l) => process_levels_config(state, guild, l).await,
+        ConfigCommand::RankCard(l) => process_rank_card_config(state, guild, l).await,
         ConfigCommand::PermsCheckup(_) => process_perm_checkup(state, guild).await,
     }
     .map(|s| {
@@ -89,6 +92,7 @@ async fn process_levels_config(
         min_xp_per_message,
         message_cooldown,
         one_at_a_time: None,
+        guild_card_default_show_off: None,
     };
     let mut validate_txn = state.db.begin().await?;
     let config = xpd_database::update_guild_config(&mut validate_txn, guild_id, new_cfg).await?;
@@ -98,6 +102,20 @@ async fn process_levels_config(
     state.update_config(guild_id, config).await;
 
     Ok(msg)
+}
+
+async fn process_rank_card_config(
+    state: SlashState,
+    guild_id: Id<GuildMarker>,
+    options: ConfigCommandRankCard,
+) -> Result<String, Error> {
+    let new_cfg = UpdateGuildConfig::new().guild_card_default_show_off(options.show_off_by_default);
+    let mut update_txn = state.db.begin().await?;
+    let config = xpd_database::update_guild_config(&mut update_txn, guild_id, new_cfg).await?;
+    validate_config(&config)?;
+    update_txn.commit().await?;
+    state.update_config(guild_id, config).await;
+    Ok("Updated rank card config!".to_string())
 }
 
 fn safecast_to_i16(ou16: Option<i64>) -> Result<Option<i16>, Error> {

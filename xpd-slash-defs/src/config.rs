@@ -18,6 +18,8 @@ pub enum ConfigCommand {
     Rewards(ConfigCommandRewards),
     #[command(name = "levels")]
     Levels(ConfigCommandLevels),
+    #[command(name = "rank_card")]
+    RankCard(ConfigCommandRankCard),
     #[command(name = "perms_checkup")]
     PermsCheckup(ConfigCommandPermsCheckup),
 }
@@ -91,3 +93,10 @@ pub struct ConfigCommandGet;
     desc = "See if Experienced has the proper permissions in your server"
 )]
 pub struct ConfigCommandPermsCheckup;
+
+#[derive(CommandModel, CreateCommand)]
+#[command(name = "rank_card", desc = "Change settings for the /rank command")]
+pub struct ConfigCommandRankCard {
+    #[command(desc = "Show off the card to all users by default")]
+    pub show_off_by_default: Option<bool>,
+}

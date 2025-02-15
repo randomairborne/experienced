@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, min_xp_per_message, message_cooldown, one_at_a_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (id) DO UPDATE SET level_up_message = COALESCE($2, guild_configs.level_up_message), level_up_channel = COALESCE($3, guild_configs.level_up_channel), ping_on_level_up = COALESCE($4, guild_configs.ping_on_level_up), max_xp_per_message = COALESCE($5, guild_configs.max_xp_per_message), min_xp_per_message = COALESCE($6, guild_configs.min_xp_per_message), message_cooldown = COALESCE($7, guild_configs.message_cooldown), one_at_a_time = COALESCE($8, guild_configs.one_at_a_time), guild_card_default_show_off = COALESCE($9, guild_configs.guild_card_default_show_off) RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, min_xp_per_message, message_cooldown, guild_card_default_show_off",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "one_at_a_time",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "level_up_message",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "level_up_channel",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "ping_on_level_up",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "max_xp_per_message",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 5,
+        "name": "min_xp_per_message",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 6,
+        "name": "message_cooldown",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 7,
+        "name": "guild_card_default_show_off",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Varchar",
+        "Int8",
+        "Bool",
+        "Int2",
+        "Int2",
+        "Int2",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "0b8b92a871c28dbd866a4b433d6c8d1ca88fd052534e0c2b6d43b1d43e390df3"
+}

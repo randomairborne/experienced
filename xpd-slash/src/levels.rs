@@ -22,8 +22,13 @@ pub async fn get_level(
     showoff: Option<bool>,
     state: SlashState,
 ) -> Result<XpdInteractionResponse, Error> {
-    let rank_stats = state.get_user_stats(target.id, guild_id).await?;
-    let flags = if showoff.is_some_and(|v| v) {
+    let rank_stats = state.get_user_stats(target.id, guild_id);
+    let guild_config = xpd_database::guild_config(&state.db, guild_id);
+    let (rank_stats, guild_config) = try_join!(rank_stats, guild_config)?;
+    let flags = if showoff
+        .or_else(|| guild_config.map(|cfg| cfg.guild_card_default_show_off))
+        .is_some_and(|v| v)
+    {
         MessageFlags::empty()
     } else {
         MessageFlags::EPHEMERAL

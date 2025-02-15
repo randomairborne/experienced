@@ -140,6 +140,7 @@ pub struct GuildConfig {
     pub min_xp_per_message: Option<i16>,
     pub max_xp_per_message: Option<i16>,
     pub cooldown: Option<i16>,
+    pub guild_card_default_show_off: bool,
 }
 
 impl Display for GuildConfig {
@@ -180,10 +181,15 @@ impl Display for GuildConfig {
             self.min_xp_per_message
                 .unwrap_or(DEFAULT_MIN_XP_PER_MESSAGE)
         )?;
-        write!(
+        writeln!(
             f,
             "Cooldown (seconds): {}",
             self.cooldown.unwrap_or(DEFAULT_MESSAGE_COOLDOWN)
+        )?;
+        write!(
+            f,
+            "Show off guild card by default: {}",
+            self.guild_card_default_show_off
         )?;
         Ok(())
     }

@@ -58,7 +58,8 @@ pub async fn guild_config<
     let config = query_as!(
         RawGuildConfig,
         "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up,\
-                 max_xp_per_message, min_xp_per_message, message_cooldown \
+                 max_xp_per_message, min_xp_per_message, message_cooldown, \
+                 guild_card_default_show_off \
                  FROM guild_configs WHERE id = $1",
         id_to_db(guild)
     )
@@ -672,9 +673,11 @@ pub async fn update_guild_config<
                 max_xp_per_message = COALESCE($5, guild_configs.max_xp_per_message), \
                 min_xp_per_message = COALESCE($6, guild_configs.min_xp_per_message), \
                 message_cooldown = COALESCE($7, guild_configs.message_cooldown), \
-                one_at_a_time = COALESCE($8, guild_configs.one_at_a_time) \
+                one_at_a_time = COALESCE($8, guild_configs.one_at_a_time), \
+                guild_card_default_show_off = COALESCE($9, guild_configs.guild_card_default_show_off) \
                 RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
-                max_xp_per_message, min_xp_per_message, message_cooldown",
+                max_xp_per_message, min_xp_per_message, message_cooldown, \
+                guild_card_default_show_off",
                 id_to_db(guild),
                 cfg.level_up_message.map(|v| v),
                 cfg.level_up_channel.as_ref().map(|id| id_to_db(*id)),
@@ -682,7 +685,8 @@ pub async fn update_guild_config<
                 cfg.max_xp_per_message,
                 cfg.min_xp_per_message,
                 cfg.message_cooldown,
-                cfg.one_at_a_time
+                cfg.one_at_a_time,
+                cfg.guild_card_default_show_off
             )
         .fetch_one(conn.as_mut())
         .await?
@@ -955,6 +959,7 @@ pub struct UpdateGuildConfig {
     pub min_xp_per_message: Option<i16>,
     pub message_cooldown: Option<i16>,
     pub one_at_a_time: Option<bool>,
+    pub guild_card_default_show_off: Option<bool>,
 }
 
 macro_rules! setter {
@@ -984,6 +989,8 @@ impl UpdateGuildConfig {
     setter!(message_cooldown, i16);
 
     setter!(one_at_a_time, bool);
+
+    setter!(guild_card_default_show_off, bool);
 
     #[must_use]
     pub fn new() -> Self {
@@ -1050,6 +1057,7 @@ pub struct RawGuildConfig {
     pub min_xp_per_message: Option<i16>,
     pub max_xp_per_message: Option<i16>,
     pub message_cooldown: Option<i16>,
+    pub guild_card_default_show_off: bool,
 }
 
 impl RawGuildConfig {
@@ -1068,6 +1076,7 @@ impl RawGuildConfig {
             min_xp_per_message: self.min_xp_per_message,
             max_xp_per_message: self.max_xp_per_message,
             cooldown: self.message_cooldown,
+            guild_card_default_show_off: self.guild_card_default_show_off,
         };
         Ok(gc)
     }

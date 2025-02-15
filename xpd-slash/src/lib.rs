@@ -190,7 +190,7 @@ impl SlashState {
         &self,
         id: Id<UserMarker>,
         guild_id: Id<GuildMarker>,
-    ) -> Result<UserStats, Error> {
+    ) -> Result<UserStats, xpd_database::Error> {
         let xp = xpd_database::user_xp(&self.db, guild_id, id)
             .await?
             .unwrap_or(0);
