@@ -4,15 +4,25 @@ use std::{
 };
 
 fn main() {
-    let commit_msg = match get_sha() {
+    let commit_sha = match get_sha() {
         Ok(v) => v,
         Err(err) => {
             println!("cargo::warning={err:?}");
-            "(Failed to get version)".to_owned()
+            "(Failed to get git commit sha)".to_owned()
         }
     };
 
-    println!("cargo::rustc-env=GIT_HASH_EXPERIENCED={}", commit_msg);
+    let rev_num = match get_rev() {
+        Ok(v) => v,
+        Err(err) => {
+            println!("cargo::warning={err:?}");
+            "(Failed to get revision number)".to_owned()
+        }
+    };
+
+    println!("cargo::rustc-env=GIT_HASH_EXPERIENCED={}", commit_sha);
+    println!("cargo::rustc-env=GIT_REV_COUNT_EXPERIENCED={}", rev_num)
+
 }
 
 fn get_sha() -> Result<String, Error> {
@@ -34,24 +44,43 @@ fn get_sha() -> Result<String, Error> {
     Ok(output)
 }
 
+fn get_rev() -> Result<String, Error> {
+    let output = Command::new("git")
+        .arg("rev-list")
+        .arg("--count")
+        .arg("HEAD")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(Stdio::null())
+        .spawn()?
+        .wait_with_output()?;
+    if !output.status.success() {
+        return Err(Error::BadStatus(output.status));
+    }
+    let output = String::from_utf8(output.stdout)?.trim().to_string();
+    Ok(output)
+}
+
 #[derive(Debug)]
 enum Error {
     TryFromString,
     BadStatus(ExitStatus),
     Io(std::io::Error),
+    ParseInt(std::num::ParseIntError),
     NoOutput,
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::TryFromString => write!(f, "Invalid UTF-8 in `git rev-parse HEAD` output")?,
+            Self::TryFromString => write!(f, "Invalid UTF-8 in `git` output")?,
             Self::BadStatus(exit_status) => write!(
                 f,
-                "`git rev-parse HEAD` exited with non-zero status {exit_status}"
+                "`git` exited with non-zero status {exit_status}"
             )?,
-            Self::Io(error) => write!(f, "I/O error trying to run `git rev-parse HEAD`: {error}")?,
-            Self::NoOutput => write!(f, "No output from git-rev-parse")?,
+            Self::Io(error) => write!(f, "I/O error trying to run `git`: {error}")?,
+            Self::NoOutput => write!(f, "No output from `git`")?,
+            Self::ParseInt(error) => write!(f, "Could not convert to int: {error}")?
         }
         Ok(())
     }
@@ -72,5 +101,12 @@ impl From<ExitStatus> for Error {
 impl From<std::io::Error> for Error {
     fn from(value: std::io::Error) -> Self {
         Self::Io(value)
+    }
+}
+
+
+impl From<std::num::ParseIntError> for Error {
+    fn from(value: std::num::ParseIntError) -> Self {
+        Self::ParseInt(value)
     }
 }

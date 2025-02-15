@@ -8,7 +8,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS};
+use xpd_common::{CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS, CURRENT_GIT_REV_COUNT};
 use xpd_slash_defs::admin::{
     self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandInspectCooldown,
     AdminCommandLeave, AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
@@ -123,7 +123,7 @@ fn fmt_opt_u64(item: Option<u64>) -> impl Display {
 async fn get_bot_stats(state: SlashState) -> Result<String, Error> {
     let levels_held = xpd_database::total_levels(&state.db).await?;
     Ok(format!(
-        "Roughly {levels_held} levels in database. Bot version `git-{CURRENT_GIT_SHA}`"
+        "Roughly {levels_held} levels in database. Bot git revision `{CURRENT_GIT_SHA}`, commit number `{CURRENT_GIT_REV_COUNT}`"
     ))
 }
 

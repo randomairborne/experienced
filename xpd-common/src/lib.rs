@@ -20,6 +20,7 @@ use twilight_model::{
 };
 
 pub const CURRENT_GIT_SHA: &str = env!("GIT_HASH_EXPERIENCED");
+pub const CURRENT_GIT_REV_COUNT: &str = env!("GIT_REV_COUNT_EXPERIENCED");
 pub const DISCORD_EPOCH_MS: i64 = 1_420_070_400_000;
 pub const DISCORD_EPOCH_SECS: i64 = DISCORD_EPOCH_MS / 1000;
 
