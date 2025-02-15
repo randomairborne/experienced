@@ -8,7 +8,7 @@ fn main() {
         Ok(v) => v,
         Err(err) => {
             println!("cargo::warning={err:?}");
-            err.to_string()
+            "(Failed to get version)".to_owned()
         }
     };
 
