@@ -160,7 +160,6 @@ jobs:
           build-args: TAG=git-${{ github.sha }}
           tags: ghcr.io/randomairborne/experienced:${{ steps.get_tag.outputs.tag }},ghcr.io/randomairborne/experienced:git-${{ github.sha }}
 
-
   set-images:
     needs: [merge]
     if: ${{ github.ref_name == 'prod' }}
