@@ -1,6 +1,6 @@
 FROM rust:alpine AS builder
 
-RUN apk add musl-dev git
+RUN apk add musl-dev git mold
 
 WORKDIR /build
 
