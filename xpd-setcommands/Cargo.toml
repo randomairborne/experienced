@@ -7,6 +7,7 @@ edition = "2021"
 tokio = { version = "1", features = ["rt", "macros"] }
 
 xpd-slash-defs = { workspace = true }
+xpd-common = { workspace = true }
 
 twilight-http = { version = "0.16", features = ["hickory", "rustls-native-roots", "rustls-aws_lc_rs"] }
 twilight-model = "0.16"

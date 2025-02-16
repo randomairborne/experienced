@@ -2,9 +2,11 @@ use std::env::VarError;
 
 use twilight_http::Client;
 use twilight_model::id::{marker::GuildMarker, Id};
+use xpd_common::CURRENT_GIT_SHA;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    eprintln!("xpd-setcommands for xpd-gateway `{CURRENT_GIT_SHA}`");
     let token = valk_utils::get_var("DISCORD_TOKEN");
     let control_guild: Option<Id<GuildMarker>> = match std::env::var("CONTROL_GUILD") {
         Ok(v) => Some(v.parse().expect("Could not parse guild ID")),
@@ -12,6 +14,7 @@ async fn main() {
         Err(VarError::NotUnicode(_)) => panic!("Non-UTF-8 CONTROL_GUILD"),
     };
 
+    eprintln!("Fetching app ID...");
     let client = Client::new(token);
     let app_id = client
         .current_user_application()
@@ -25,16 +28,19 @@ async fn main() {
     let cmds = xpd_slash_defs::get_commands();
     let admin_commands = xpd_slash_defs::admin_commands();
 
+    eprintln!("Setting global commands");
     client
         .interaction(app_id)
         .set_global_commands(&cmds)
         .await
         .expect("Failed to set global commands for bot!");
     if let Some(control_guild) = control_guild {
+        eprintln!("Setting admin commands");
         client
             .interaction(app_id)
             .set_guild_commands(control_guild, &admin_commands)
             .await
             .expect("Failed to set admin commands");
     }
+    eprintln!("All done!");
 }
