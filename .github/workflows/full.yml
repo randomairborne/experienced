@@ -121,6 +121,46 @@ jobs:
         run: |
           docker buildx imagetools create --tag ${{ matrix.package.image }}:${{ steps.get_tag.outputs.tag }} --tag ${{ matrix.package.image }}:git-${{ github.sha }} $(printf '${{ matrix.package.image }}@sha256:%s ' *)
 
+  build-aio:
+    runs-on: ubuntu-latest
+    needs: [merge]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64,arm64
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get docker tag
+        id: get_tag
+        run: ./ci/get-tag.sh
+        shell: bash
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          pull: true
+          context: .
+          file: xpd-all-in-one/Dockerfile
+          build-args: TAG=git-${{ github.sha }}
+          tags: ghcr.io/randomairborne/experienced:${{ steps.get_tag.outputs.tag }},ghcr.io/randomairborne/experienced:git-${{ github.sha }}
+
+
   set-images:
     needs: [merge]
     if: ${{ github.ref_name == 'prod' }}
