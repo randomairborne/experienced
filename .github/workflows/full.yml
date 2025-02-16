@@ -28,7 +28,7 @@ jobs:
             gha-image: ubuntu-24.04-arm
             slug: aarch64
         package:
-          - image: ghcr.io/randomairborne/experienced
+          - image: ghcr.io/randomairborne/experienced-gateway
             name: xpd-gateway
           - image: ghcr.io/randomairborne/experienced-cleanup
             name: xpd-cleanup
@@ -80,7 +80,7 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - image: ghcr.io/randomairborne/experienced
+          - image: ghcr.io/randomairborne/experienced-gateway
             name: xpd-gateway
           - image: ghcr.io/randomairborne/experienced-cleanup
             name: xpd-cleanup
@@ -132,7 +132,7 @@ jobs:
           - image: ghcr.io/randomairborne/experienced-web:git-${{ github.sha }}
             job: deployments/experienced-web
             container: experienced-web
-          - image: ghcr.io/randomairborne/experienced:git-${{ github.sha }}
+          - image: ghcr.io/randomairborne/experienced-gateway:git-${{ github.sha }}
             job: statefulsets/experienced-gateway
             container: experienced-gateway
 
