@@ -133,8 +133,6 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -158,6 +156,7 @@ jobs:
           context: .
           file: xpd-all-in-one/Dockerfile
           build-args: TAG=git-${{ github.sha }}
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/randomairborne/experienced:${{ steps.get_tag.outputs.tag }},ghcr.io/randomairborne/experienced:git-${{ github.sha }}
 
   set-images:
