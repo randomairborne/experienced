@@ -4850,6 +4850,7 @@ name = "xpd-setcommands"
 version = "0.1.0"
 dependencies = [
  "tokio",
+ "tracing-subscriber",
  "twilight-http",
  "twilight-model",
  "valk-utils",

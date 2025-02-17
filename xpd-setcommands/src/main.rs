@@ -6,6 +6,7 @@ use xpd_common::CURRENT_GIT_SHA;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    tracing_subscriber::fmt().init();
     eprintln!("xpd-setcommands for xpd-gateway `{CURRENT_GIT_SHA}`");
     let token = valk_utils::get_var("DISCORD_TOKEN");
     let control_guild: Option<Id<GuildMarker>> = match std::env::var("CONTROL_GUILD") {
