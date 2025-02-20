@@ -279,6 +279,7 @@ impl std::error::Error for RenderError<'_> {}
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::literal_string_with_formatting_args)]
     use std::collections::HashMap;
 
     use super::*;
