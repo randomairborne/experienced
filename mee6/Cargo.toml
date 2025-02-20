@@ -1,7 +1,7 @@
 [package]
 name = "mee6"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 description = "A library to calculate mee6 leveling data"
 license = "MIT OR Apache-2.0"
