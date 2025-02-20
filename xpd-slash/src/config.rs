@@ -1,14 +1,14 @@
 use simpleinterpolation::Interpolation;
 use twilight_model::{
-    channel::{message::MessageFlags, ChannelType},
+    channel::{ChannelType, message::MessageFlags},
     http::interaction::InteractionResponseType,
     id::{
-        marker::{GuildMarker, RoleMarker},
         Id,
+        marker::{GuildMarker, RoleMarker},
     },
 };
 use xpd_common::{
-    GuildConfig, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, TEMPLATE_VARIABLES,
+    DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, GuildConfig, TEMPLATE_VARIABLES,
 };
 use xpd_database::UpdateGuildConfig;
 use xpd_slash_defs::config::{
@@ -16,7 +16,7 @@ use xpd_slash_defs::config::{
 };
 use xpd_util::CanAddRole;
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
+use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 
 pub async fn process_config(
     command: ConfigCommand,

@@ -11,8 +11,8 @@ use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::CardCommandAutocomplete;
 
 use crate::{
-    manage_card::CUSTOM_CARD_NULL_SENTINEL, response::XpdInteractionResponse, Error, SlashState,
-    XpdInteractionData,
+    Error, SlashState, XpdInteractionData, manage_card::CUSTOM_CARD_NULL_SENTINEL,
+    response::XpdInteractionResponse,
 };
 
 fn empty_response<T: std::fmt::Debug>(error: T) -> XpdInteractionResponse {

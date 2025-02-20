@@ -30,11 +30,11 @@ use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     application::interaction::Interaction,
     channel::message::MessageFlags,
-    gateway::{payload::incoming::InteractionCreate, Intents},
+    gateway::{Intents, payload::incoming::InteractionCreate},
     http::interaction::InteractionResponseType,
     id::{
-        marker::{ApplicationMarker, GuildMarker, UserMarker},
         Id,
+        marker::{ApplicationMarker, GuildMarker, UserMarker},
     },
 };
 use xpd_common::{EventBusMessage, GuildConfig, RequiredDiscordResources};

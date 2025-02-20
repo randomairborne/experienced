@@ -7,8 +7,8 @@ use twilight_gateway::EventTypeFlags;
 use twilight_model::{
     gateway::Intents,
     id::{
-        marker::{GuildMarker, UserMarker},
         Id,
+        marker::{GuildMarker, UserMarker},
     },
 };
 use xpd_common::{EventBusMessage, GuildConfig, RequiredDiscordResources, RoleReward};

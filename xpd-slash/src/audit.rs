@@ -1,10 +1,10 @@
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
 };
 use xpd_slash_defs::audit::AuditLogCommand;
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
+use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 
 pub async fn process_audit_logs(
     command: AuditLogCommand,

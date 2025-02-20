@@ -3,12 +3,12 @@ use twilight_model::{
     application::{
         command::CommandType,
         interaction::{
-            application_command::CommandData, Interaction, InteractionData, InteractionType,
+            Interaction, InteractionData, InteractionType, application_command::CommandData,
         },
     },
     id::{
-        marker::{GuildMarker, InteractionMarker},
         Id,
+        marker::{GuildMarker, InteractionMarker},
     },
 };
 use xpd_common::MemberDisplayInfo;
@@ -25,10 +25,10 @@ use xpd_slash_defs::{
 };
 
 use crate::{
+    Error, SlashState,
     experience::XpAuditData,
     leaderboard::{process_message_component, process_modal_submit},
     response::XpdInteractionResponse,
-    Error, SlashState,
 };
 
 #[derive(Clone, Debug)]

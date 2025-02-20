@@ -3,12 +3,12 @@ use std::fmt::Write;
 use twilight_model::{
     channel::message::AllowedMentions,
     http::interaction::InteractionResponseType,
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_slash_defs::rewards::{RewardsCommand, RewardsCommandAdd, RewardsCommandRemove};
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
+use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 
 pub async fn process_rewards(
     cmd: RewardsCommand,

@@ -5,22 +5,22 @@ use twilight_model::{
         message_component::MessageComponentInteractionData, modal::ModalInteractionData,
     },
     channel::{
-        message::{
-            component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
-            AllowedMentions, Component, EmojiReactionType, MessageFlags,
-        },
         Message,
+        message::{
+            AllowedMentions, Component, EmojiReactionType, MessageFlags,
+            component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
+        },
     },
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
-        marker::{GuildMarker, UserMarker},
         Id,
+        marker::{GuildMarker, UserMarker},
     },
 };
 use xpd_slash_defs::levels::LeaderboardCommand;
 
 use crate::{
-    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdInteractionData,
+    Error, SlashState, XpdInteractionData, dispatch::Respondable, response::XpdInteractionResponse,
 };
 
 pub async fn leaderboard(

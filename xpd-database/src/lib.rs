@@ -14,11 +14,11 @@ use std::{fmt::Display, ops::DerefMut};
 
 use simpleinterpolation::Interpolation;
 pub use sqlx::PgPool;
-use sqlx::{query, query_as, Acquire, PgConnection, Postgres};
+use sqlx::{Acquire, PgConnection, Postgres, query, query_as};
 use tokio_stream::StreamExt;
 use twilight_model::id::{
-    marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
     Id,
+    marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
 };
 use util::{db_to_id, id_to_db};
 use xpd_common::{AuditLogEvent, GuildConfig, RoleReward, UserInGuild, UserStatus};

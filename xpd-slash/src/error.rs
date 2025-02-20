@@ -66,7 +66,8 @@ pub enum Error {
     NotControlGuild,
     #[error("This command only works as a control user!")]
     NotControlUser,
-    #[error("That file is too big to import automatically. Please email valk@randomairborne.dev or [join our support server](https://discord.com/invite/KWkPYxqNKe) to set up imports for your server."
+    #[error(
+        "That file is too big to import automatically. Please email valk@randomairborne.dev or [join our support server](https://discord.com/invite/KWkPYxqNKe) to set up imports for your server."
     )]
     ImportFileTooBig,
     #[error("This page does not exist!")]
@@ -103,7 +104,9 @@ pub enum Error {
     NoInteractionInvocationOnInteractionMessage,
     #[error("You didn't create this leaderboard.")]
     NotYourLeaderboard,
-    #[error("Bots do not have leveling data. If one does somehow, you can still use /xp experience reset on it.")]
+    #[error(
+        "Bots do not have leveling data. If one does somehow, you can still use /xp experience reset on it."
+    )]
     BotsDontLevel,
     #[error("Nobody in this server is ranked yet.")]
     NoRanksYet,

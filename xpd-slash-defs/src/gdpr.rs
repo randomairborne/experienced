@@ -1,5 +1,5 @@
 use twilight_interactions::command::{CommandModel, CreateCommand};
-use twilight_model::id::{marker::UserMarker, Id};
+use twilight_model::id::{Id, marker::UserMarker};
 
 #[derive(CommandModel, CreateCommand)]
 #[command(

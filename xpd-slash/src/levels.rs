@@ -4,8 +4,8 @@ use twilight_model::{
     channel::message::MessageFlags,
     http::{attachment::Attachment, interaction::InteractionResponseType},
     id::{
-        marker::{GenericMarker, GuildMarker, UserMarker},
         Id,
+        marker::{GenericMarker, GuildMarker, UserMarker},
     },
     util::ImageHash,
 };
@@ -13,7 +13,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{DisplayName, MemberDisplayInfo};
 use xpd_rank_card::customizations::{Color, Customizations};
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
+use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 
 pub async fn get_level(
     guild_id: Id<GuildMarker>,
@@ -218,14 +218,16 @@ impl AvatarReference {
     pub fn to_url(self) -> String {
         let user_id = self.id;
         match self.kind {
-            Some(AvatarReferenceKind::Guild(guild_id, avatar_hash)) =>format!(
+            Some(AvatarReferenceKind::Guild(guild_id, avatar_hash)) => format!(
                 "https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar_hash}.png",
             ),
-            Some(AvatarReferenceKind::User(avatar_hash)) => format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png",),
+            Some(AvatarReferenceKind::User(avatar_hash)) => {
+                format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png",)
+            }
             None => format!(
                 "https://cdn.discordapp.com/embed/avatars/{}.png",
                 (user_id.get() >> 22) % 6
-            )
+            ),
         }
     }
 }

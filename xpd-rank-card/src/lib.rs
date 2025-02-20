@@ -8,8 +8,8 @@ use std::{collections::HashMap, ops::Deref, path::Path, sync::Arc, time::Instant
 use customizations::Customizations;
 use rayon::ThreadPoolBuilder;
 use resvg::usvg::{
-    fontdb::{Database, Family, Query},
     ImageKind, ImageRendering,
+    fontdb::{Database, Family, Query},
 };
 use tera::{Tera, Value};
 use tracing::debug;

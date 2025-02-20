@@ -2,8 +2,8 @@ use twilight_model::{
     channel::message::AllowedMentions,
     http::interaction::InteractionResponseType,
     id::{
-        marker::{GuildMarker, InteractionMarker, UserMarker},
         Id,
+        marker::{GuildMarker, InteractionMarker, UserMarker},
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
@@ -11,7 +11,7 @@ use xpd_common::AuditLogEvent;
 use xpd_slash_defs::experience::XpCommand;
 use xpd_util::snowflake_to_timestamp;
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
+use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 
 pub struct XpAuditData {
     pub interaction: Id<InteractionMarker>,
@@ -90,7 +90,9 @@ async fn modify_user_xp(
         ("Removed", "from")
     };
     let amount_abs = amount.abs();
-    Ok(format!("{action} {amount_abs} XP {targeter} <@{user_id}>, leaving them with {xp} XP at level {current_level}"))
+    Ok(format!(
+        "{action} {amount_abs} XP {targeter} <@{user_id}>, leaving them with {xp} XP at level {current_level}"
+    ))
 }
 
 async fn reset_user_xp(

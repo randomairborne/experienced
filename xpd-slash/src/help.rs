@@ -1,6 +1,6 @@
 use twilight_model::http::interaction::InteractionResponseType;
 
-use crate::{response::XpdInteractionResponse, XpdInteractionData};
+use crate::{XpdInteractionData, response::XpdInteractionResponse};
 
 pub fn help() -> XpdInteractionResponse {
     const HELP_MESSAGE: &str = "Visit [the docs](<https://xp.valk.sh/docs/>) or [join the discord](<https://valk.sh/discord>)";

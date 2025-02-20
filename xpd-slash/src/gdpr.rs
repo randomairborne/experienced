@@ -4,14 +4,14 @@ use csv::{IntoInnerError as CsvIntoInnerError, Writer as CsvWriter};
 use serde::Serialize;
 use twilight_model::{
     http::{attachment::Attachment, interaction::InteractionResponseType},
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
 };
 use xpd_common::MemberDisplayInfo;
 use xpd_slash_defs::gdpr::{GdprCommand, GdprCommandDelete};
 
 use crate::{
-    levels::get_customizations, response::XpdInteractionResponse, Error, SlashState,
-    XpdInteractionData,
+    Error, SlashState, XpdInteractionData, levels::get_customizations,
+    response::XpdInteractionResponse,
 };
 
 pub async fn process_gdpr(

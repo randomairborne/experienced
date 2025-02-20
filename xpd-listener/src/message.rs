@@ -6,13 +6,13 @@ use twilight_model::{
     gateway::payload::incoming::MessageCreate,
     guild::PartialMember,
     id::{
-        marker::{GuildMarker, RoleMarker, UserMarker},
         Id,
+        marker::{GuildMarker, RoleMarker, UserMarker},
     },
 };
 use xpd_common::{
-    DisplayName, GuildConfig, RoleReward, DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN,
-    DEFAULT_MIN_XP_PER_MESSAGE,
+    DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MESSAGE_COOLDOWN, DEFAULT_MIN_XP_PER_MESSAGE, DisplayName,
+    GuildConfig, RoleReward,
 };
 
 use crate::{Error, XpdListenerInner};

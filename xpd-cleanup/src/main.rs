@@ -4,8 +4,8 @@ use std::{
 };
 
 use sqlx::{Connection, PgConnection, Postgres, Transaction};
-use twilight_model::id::{marker::GuildMarker, Id};
-use xpd_common::{UserInGuild, DISCORD_EPOCH_SECS};
+use twilight_model::id::{Id, marker::GuildMarker};
+use xpd_common::{DISCORD_EPOCH_SECS, UserInGuild};
 
 #[macro_use]
 extern crate tracing;

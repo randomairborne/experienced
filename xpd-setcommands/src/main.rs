@@ -1,7 +1,7 @@
 use std::env::VarError;
 
 use twilight_http::Client;
-use twilight_model::id::{marker::GuildMarker, Id};
+use twilight_model::id::{Id, marker::GuildMarker};
 use xpd_common::CURRENT_GIT_SHA;
 
 #[tokio::main(flavor = "current_thread")]

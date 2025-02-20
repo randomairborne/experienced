@@ -12,31 +12,31 @@ use std::{
 };
 
 use base64::{
-    engine::{GeneralPurpose as Base64Engine, GeneralPurposeConfig as Base64Config},
     Engine,
+    engine::{GeneralPurpose as Base64Engine, GeneralPurposeConfig as Base64Config},
 };
 use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::{LogExporter, WithExportConfig, WithHttpConfig};
-use opentelemetry_sdk::{logs::LoggerProvider, Resource};
+use opentelemetry_sdk::{Resource, logs::LoggerProvider};
 use sqlx::PgPool;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
-use tracing::{error, Level, Metadata};
+use tracing::{Level, Metadata, error};
 use tracing_subscriber::{
+    Layer, Registry,
     layer::{Context, Filter, SubscriberExt},
     util::SubscriberInitExt,
-    Layer, Registry,
 };
 use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
-    error::ReceiveMessageErrorType, CloseFrame, Config, Event, EventTypeFlags, Intents,
-    MessageSender, Shard, StreamExt,
+    CloseFrame, Config, Event, EventTypeFlags, Intents, MessageSender, Shard, StreamExt,
+    error::ReceiveMessageErrorType,
 };
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
     channel::message::AllowedMentions,
     gateway::ShardId,
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
 };
 use xpd_common::RequiredDiscordResources;
 use xpd_listener::XpdListener;

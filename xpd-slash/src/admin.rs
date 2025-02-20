@@ -3,8 +3,8 @@ use std::{borrow::Cow, fmt::Display};
 use twilight_model::{
     http::interaction::InteractionResponseType,
     id::{
-        marker::{GuildMarker, UserMarker},
         Id,
+        marker::{GuildMarker, UserMarker},
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
@@ -17,7 +17,7 @@ use xpd_slash_defs::admin::{
     AdminCommandSetNick,
 };
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, XpdInteractionData};
+use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 
 pub async fn process_admin(
     data: AdminCommand,

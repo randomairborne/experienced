@@ -2,18 +2,18 @@ use http_body_util::{BodyExt, Limited};
 use serde::{Deserialize, Serialize};
 use tokio::time::Instant;
 use twilight_model::{
-    channel::{message::AllowedMentions, Attachment},
+    channel::{Attachment, message::AllowedMentions},
     http::{attachment::Attachment as HttpAttachment, interaction::InteractionResponseType},
     id::{
-        marker::{GuildMarker, UserMarker},
         Id,
+        marker::{GuildMarker, UserMarker},
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_slash_defs::manage::{ManageCommand, CONFIRMATION_STRING};
+use xpd_slash_defs::manage::{CONFIRMATION_STRING, ManageCommand};
 
 use crate::{
-    dispatch::Respondable, response::XpdInteractionResponse, Error, SlashState, XpdInteractionData,
+    Error, SlashState, XpdInteractionData, dispatch::Respondable, response::XpdInteractionResponse,
 };
 
 pub async fn process_manage(

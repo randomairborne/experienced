@@ -12,8 +12,8 @@ use twilight_model::{
     gateway::Intents,
     guild::{Member, PartialMember},
     id::{
-        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
         Id,
+        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
     user::User,
     util::ImageHash,

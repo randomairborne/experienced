@@ -2,8 +2,8 @@ use mee6::LevelInfo;
 use twilight_model::{
     http::interaction::InteractionResponseType,
     id::{
-        marker::{GenericMarker, GuildMarker},
         Id,
+        marker::{GenericMarker, GuildMarker},
     },
 };
 use twilight_util::builder::embed::{EmbedBuilder, ImageSource};
@@ -12,7 +12,7 @@ use xpd_database::CardUpdate;
 use xpd_rank_card::NameableItem;
 use xpd_slash_defs::card::{CardCommand, CardCommandEdit, ColorOption, GuildCardCommand};
 
-use crate::{response::XpdInteractionResponse, Error, SlashState, UserStats, XpdInteractionData};
+use crate::{Error, SlashState, UserStats, XpdInteractionData, response::XpdInteractionResponse};
 
 pub async fn user_card_update(
     command: CardCommand,

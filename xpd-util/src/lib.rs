@@ -2,8 +2,8 @@ use twilight_cache_inmemory::{CacheableRole, InMemoryCache};
 use twilight_model::{
     guild::Permissions,
     id::{
-        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
         Id,
+        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
 };
 
