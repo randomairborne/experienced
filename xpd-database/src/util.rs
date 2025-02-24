@@ -42,3 +42,13 @@ pub fn id_to_db<T>(id: Id<T>) -> i64 {
 pub fn db_to_id<T>(db: i64) -> Id<T> {
     Id::new(db.reinterpret_bits())
 }
+
+pub trait IsExplicitNull {
+    fn is_explicit_null(&self) -> bool;
+}
+
+impl<T> IsExplicitNull for Option<Option<T>> {
+    fn is_explicit_null(&self) -> bool {
+        self.as_ref().is_some_and(Option::is_none)
+    }
+}

@@ -22,7 +22,7 @@ use twilight_model::id::{
     Id,
     marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
 };
-use util::{db_to_id, id_to_db};
+use util::{db_to_id, id_to_db, IsExplicitNull};
 use xpd_common::{AuditLogEvent, GuildConfig, RoleReward, UserInGuild, UserStatus};
 pub async fn guild_rewards<
     'a,
@@ -61,7 +61,7 @@ pub async fn guild_config<
         RawGuildConfig,
         "SELECT one_at_a_time, level_up_message, level_up_channel, ping_on_level_up,\
                  max_xp_per_message, min_xp_per_message, message_cooldown, \
-                 guild_card_default_show_off \
+                 guild_card_default_show_off, set_on_kick, set_on_ban \
                  FROM guild_configs WHERE id = $1",
         id_to_db(guild)
     )
@@ -666,8 +666,12 @@ pub async fn update_guild_config<
     let mut conn = conn.acquire().await?;
     let config = query_as!(
                 RawGuildConfig,
-                "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, min_xp_per_message, message_cooldown, one_at_a_time) \
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) \
+                "INSERT INTO guild_configs
+                (id, level_up_message, level_up_channel, ping_on_level_up, max_xp_per_message, \
+                    min_xp_per_message, message_cooldown, one_at_a_time, guild_card_default_show_off,
+                    set_on_kick, set_on_ban
+                ) \
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $11, $13) \
                 ON CONFLICT (id) DO UPDATE SET \
                 level_up_message = COALESCE($2, guild_configs.level_up_message), \
                 level_up_channel = COALESCE($3, guild_configs.level_up_channel), \
@@ -676,10 +680,12 @@ pub async fn update_guild_config<
                 min_xp_per_message = COALESCE($6, guild_configs.min_xp_per_message), \
                 message_cooldown = COALESCE($7, guild_configs.message_cooldown), \
                 one_at_a_time = COALESCE($8, guild_configs.one_at_a_time), \
-                guild_card_default_show_off = COALESCE($9, guild_configs.guild_card_default_show_off) \
+                guild_card_default_show_off = COALESCE($9, guild_configs.guild_card_default_show_off), \
+                set_on_kick = CASE WHEN $10 THEN NULL ELSE COALESCE($11, guild_configs.set_on_kick) END, \
+                set_on_ban = CASE WHEN $12 THEN NULL ELSE COALESCE($13, guild_configs.set_on_kick) END \
                 RETURNING one_at_a_time, level_up_message, level_up_channel, ping_on_level_up, \
                 max_xp_per_message, min_xp_per_message, message_cooldown, \
-                guild_card_default_show_off",
+                guild_card_default_show_off, set_on_kick, set_on_ban",
                 id_to_db(guild),
                 cfg.level_up_message.map(|v| v),
                 cfg.level_up_channel.as_ref().map(|id| id_to_db(*id)),
@@ -688,7 +694,11 @@ pub async fn update_guild_config<
                 cfg.min_xp_per_message,
                 cfg.message_cooldown,
                 cfg.one_at_a_time,
-                cfg.guild_card_default_show_off
+                cfg.guild_card_default_show_off,
+                cfg.set_on_kick.is_explicit_null(),
+                cfg.set_on_kick.flatten(),
+                cfg.set_on_ban.is_explicit_null(),
+                cfg.set_on_ban.flatten()
             )
         .fetch_one(conn.as_mut())
         .await?
@@ -956,6 +966,8 @@ pub async fn export_bulk_users<
 pub struct UpdateGuildConfig {
     pub level_up_message: Option<String>,
     pub level_up_channel: Option<Id<ChannelMarker>>,
+    pub set_on_kick: Option<Option<i64>>,
+    pub set_on_ban: Option<Option<i64>>,
     pub ping_users: Option<bool>,
     pub max_xp_per_message: Option<i16>,
     pub min_xp_per_message: Option<i16>,
@@ -1055,6 +1067,8 @@ pub struct RawGuildConfig {
     pub one_at_a_time: Option<bool>,
     pub level_up_message: Option<String>,
     pub level_up_channel: Option<i64>,
+    pub set_on_kick: Option<i64>,
+    pub set_on_ban: Option<i64>,
     pub ping_on_level_up: Option<bool>,
     pub min_xp_per_message: Option<i16>,
     pub max_xp_per_message: Option<i16>,

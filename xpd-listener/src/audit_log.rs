@@ -51,14 +51,15 @@ pub async fn audit_log(db: &PgPool, audit_log: GuildAuditLogEntryCreate) -> Resu
             target: target.cast(),
             moderator,
         };
-        take_audit_log_action(&db, ev).await?;
+        take_audit_log_action(db, ev).await?;
     };
     Ok(())
 }
 
 async fn take_audit_log_action(db: &PgPool, event: DiscordAuditLogClearEvent) -> Result<(), Error> {
-    let txn = db.xbegin().await?;
-
+    let config = xpd_database::guild_config(db, event.guild).await?;
+    let mut txn = db.xbegin().await?;
+    
     txn.commit().await?;
     Ok(())
 }

@@ -93,6 +93,8 @@ async fn process_levels_config(
         message_cooldown,
         one_at_a_time: None,
         guild_card_default_show_off: None,
+        set_on_ban: None,
+        set_on_kick: None,
     };
     let mut validate_txn = state.db.xbegin().await?;
     let config = xpd_database::update_guild_config(&mut validate_txn, guild_id, new_cfg).await?;

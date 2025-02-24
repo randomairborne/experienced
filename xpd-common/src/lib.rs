@@ -138,6 +138,8 @@ pub struct GuildConfig {
     pub level_up_message: Option<Interpolation>,
     pub level_up_channel: Option<Id<ChannelMarker>>,
     pub ping_on_level_up: Option<bool>,
+    pub set_on_kick: Option<i64>,
+    pub set_on_ban: Option<i64>,
     pub min_xp_per_message: Option<i16>,
     pub max_xp_per_message: Option<i16>,
     pub cooldown: Option<i16>,
