@@ -7,6 +7,7 @@ use twilight_model::{
     id::{Id, marker::GuildMarker},
 };
 use xpd_common::MemberDisplayInfo;
+use xpd_database::AcquireWrapper as _;
 use xpd_slash_defs::gdpr::{GdprCommand, GdprCommandDelete};
 
 use crate::{
@@ -31,7 +32,7 @@ async fn delete(
     invoker: MemberDisplayInfo,
 ) -> Result<XpdInteractionResponse, Error> {
     if cmd.user == invoker.id {
-        let mut txn = state.db.begin().await?;
+        let mut txn = state.db.xbegin().await?;
         xpd_database::delete_levels_user(&mut txn, invoker.id).await?;
         xpd_database::delete_card_customizations(&mut txn, invoker.id.cast()).await?;
         xpd_database::delete_audit_log_events_user(&mut txn, invoker.id).await?;

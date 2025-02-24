@@ -16,8 +16,6 @@ pub enum Error {
     ImageGenerator(#[from] xpd_rank_card::Error),
     #[error("Database encountered an error")]
     Database(#[from] xpd_database::Error),
-    #[error("Manual SQLx use encountered an error")]
-    Sqlx(#[from] sqlx::Error),
     #[error("Command had wrong number of arguments!")]
     WrongArgumentCount(&'static str),
     #[error("Rust writeln! returned an error")]

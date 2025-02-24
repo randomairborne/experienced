@@ -6,12 +6,14 @@
     clippy::missing_panics_doc
 )]
 
+mod acq_wrapper;
 #[cfg(test)]
 mod test;
 mod util;
 
 use std::{fmt::Display, ops::DerefMut};
 
+pub use acq_wrapper::AcquireWrapper;
 use simpleinterpolation::Interpolation;
 pub use sqlx::PgPool;
 use sqlx::{Acquire, PgConnection, Postgres, query, query_as};
@@ -1079,21 +1081,6 @@ impl RawGuildConfig {
             guild_card_default_show_off: self.guild_card_default_show_off,
         };
         Ok(gc)
-    }
-}
-
-pub trait TransactionWrapper<'c> {
-    type Database: sqlx::Database;
-    type Connection: std::ops::Deref<Target = <Self::Database as sqlx::Database>::Connection> + DerefMut + Send;
-
-    async fn begin(self) -> Result<sqlx::Transaction<'c, Self::Database>, Error>;
-}
-
-impl<'c, DB: sqlx::Database> TransactionWrapper<'c> for &'c sqlx::Pool<DB> {
-    type Database = <&'c sqlx::Pool<DB> as sqlx::Acquire<'c>>::Database;
-    type Connection = <&'c sqlx::Pool<DB> as sqlx::Acquire<'c>>::Connection;
-    async fn begin(self) -> Result<sqlx::Transaction<'c, Self::Database>, Error> {
-        self.begin().await.map_err(Into::into)
     }
 }
 

@@ -10,6 +10,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
+use xpd_database::AcquireWrapper as _;
 use xpd_slash_defs::manage::{CONFIRMATION_STRING, ManageCommand};
 
 use crate::{
@@ -126,7 +127,7 @@ async fn background_data_import(
 
     let data: Vec<ImportUser> = serde_json::from_slice(&body)?;
     let user_count = data.len();
-    let mut txn = state.db.begin().await?;
+    let mut txn = state.db.xbegin().await?;
     for user in data {
         if overwrite {
             xpd_database::set_xp(txn.as_mut(), user.id, guild_id, user.xp).await?;
@@ -182,7 +183,7 @@ async fn reset_guild_xp(
         return Ok("Confirmation string did not match.".to_string());
     }
 
-    let mut txn = state.db.begin().await?;
+    let mut txn = state.db.xbegin().await?;
     xpd_database::delete_levels_guild(&mut txn, guild_id).await?;
     xpd_database::delete_audit_log_events_guild(&mut txn, guild_id).await?;
     txn.commit().await?;

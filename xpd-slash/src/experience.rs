@@ -8,6 +8,7 @@ use twilight_model::{
 };
 use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::AuditLogEvent;
+use xpd_database::AcquireWrapper as _;
 use xpd_slash_defs::experience::XpCommand;
 use xpd_util::snowflake_to_timestamp;
 
@@ -64,7 +65,7 @@ async fn modify_user_xp(
     amount: i64,
     audit: XpAuditData,
 ) -> Result<String, Error> {
-    let mut txn = state.db.begin().await?;
+    let mut txn = state.db.xbegin().await?;
     let xp = xpd_database::add_xp(txn.as_mut(), user_id, guild_id, amount).await?;
     if xp.is_negative() {
         txn.rollback().await?;
@@ -101,7 +102,7 @@ async fn reset_user_xp(
     user_id: Id<UserMarker>,
     audit: XpAuditData,
 ) -> Result<String, Error> {
-    let mut txn = state.db.begin().await?;
+    let mut txn = state.db.xbegin().await?;
     let old_xp = xpd_database::delete_levels_user_guild(txn.as_mut(), user_id, guild_id).await?;
 
     let audit_event = AuditLogEvent {
@@ -130,7 +131,7 @@ async fn set_user_xp(
     setpoint: i64,
     audit: XpAuditData,
 ) -> Result<String, Error> {
-    let mut txn = state.db.begin().await?;
+    let mut txn = state.db.xbegin().await?;
     let old_xp = xpd_database::user_xp(txn.as_mut(), guild_id, user_id)
         .await?
         .unwrap_or(0);

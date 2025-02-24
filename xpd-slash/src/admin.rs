@@ -11,6 +11,7 @@ use twilight_util::builder::embed::EmbedBuilder;
 use xpd_common::{
     CURRENT_GIT_REV_COUNT, CURRENT_GIT_SHA, DEFAULT_MESSAGE_COOLDOWN, DISCORD_EPOCH_SECS,
 };
+use xpd_database::AcquireWrapper as _;
 use xpd_slash_defs::admin::{
     self, AdminCommand, AdminCommandBanGuild, AdminCommandGuildStats, AdminCommandInspectCooldown,
     AdminCommandLeave, AdminCommandPardonGuild, AdminCommandResetGuild, AdminCommandResetUser,
@@ -63,7 +64,7 @@ async fn reset_guild(state: SlashState, leave: AdminCommandResetGuild) -> Result
 }
 
 async fn reset_user(state: SlashState, leave: AdminCommandResetUser) -> Result<String, Error> {
-    let mut tx = state.db.begin().await?;
+    let mut tx = state.db.xbegin().await?;
     let rows = xpd_database::delete_levels_user(tx.as_mut(), leave.user).await?;
     xpd_database::delete_card_customizations(tx.as_mut(), leave.user.cast()).await?;
     Ok(format!(

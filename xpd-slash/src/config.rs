@@ -10,7 +10,7 @@ use twilight_model::{
 use xpd_common::{
     DEFAULT_MAX_XP_PER_MESSAGE, DEFAULT_MIN_XP_PER_MESSAGE, GuildConfig, TEMPLATE_VARIABLES,
 };
-use xpd_database::UpdateGuildConfig;
+use xpd_database::{AcquireWrapper as _, UpdateGuildConfig};
 use xpd_slash_defs::config::{
     ConfigCommand, ConfigCommandLevels, ConfigCommandRankCard, ConfigCommandRewards,
 };
@@ -47,7 +47,7 @@ async fn process_rewards_config(
     options: ConfigCommandRewards,
 ) -> Result<String, Error> {
     let new_cfg = UpdateGuildConfig::new().one_at_a_time(options.one_at_a_time);
-    let mut update_txn = state.db.begin().await?;
+    let mut update_txn = state.db.xbegin().await?;
     let config = xpd_database::update_guild_config(&mut update_txn, guild_id, new_cfg).await?;
     validate_config(&config)?;
     update_txn.commit().await?;
@@ -94,7 +94,7 @@ async fn process_levels_config(
         one_at_a_time: None,
         guild_card_default_show_off: None,
     };
-    let mut validate_txn = state.db.begin().await?;
+    let mut validate_txn = state.db.xbegin().await?;
     let config = xpd_database::update_guild_config(&mut validate_txn, guild_id, new_cfg).await?;
     validate_config(&config)?;
     validate_txn.commit().await?;
@@ -110,7 +110,7 @@ async fn process_rank_card_config(
     options: ConfigCommandRankCard,
 ) -> Result<String, Error> {
     let new_cfg = UpdateGuildConfig::new().guild_card_default_show_off(options.show_off_by_default);
-    let mut update_txn = state.db.begin().await?;
+    let mut update_txn = state.db.xbegin().await?;
     let config = xpd_database::update_guild_config(&mut update_txn, guild_id, new_cfg).await?;
     validate_config(&config)?;
     update_txn.commit().await?;
