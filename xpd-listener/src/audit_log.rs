@@ -6,7 +6,7 @@ use twilight_model::{
         marker::{GuildMarker, UserMarker},
     },
 };
-use xpd_database::PgPool;
+use xpd_database::{AcquireWrapper as _, PgPool};
 
 use crate::Error;
 
@@ -57,9 +57,9 @@ pub async fn audit_log(db: &PgPool, audit_log: GuildAuditLogEntryCreate) -> Resu
 }
 
 async fn take_audit_log_action(db: &PgPool, event: DiscordAuditLogClearEvent) -> Result<(), Error> {
-    let txn = db.begin().await.map_err(xpd_database::Error::from)?;
-    
-    txn.commit().await.map_err(xpd_database::Error::from)?;
+    let txn = db.xbegin().await?;
+
+    txn.commit().await?;
     Ok(())
 }
 

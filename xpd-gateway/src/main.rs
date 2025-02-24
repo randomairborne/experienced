@@ -279,6 +279,7 @@ async fn handle_event(
         Event::MemberAdd(ma) => {
             xpd_database::delete_user_guild_cleanup(&db, ma.guild_id, ma.user.id).await?;
         }
+        Event::GuildAuditLogEntryCreate(gae) => xpd_listener::audit_log(&db, *gae).await?,
         Event::InteractionCreate(interaction_create) => slash.execute(*interaction_create).await,
         _ => {}
     };

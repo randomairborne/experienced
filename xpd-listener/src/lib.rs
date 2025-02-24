@@ -14,7 +14,10 @@ use twilight_model::{
 use xpd_common::{EventBusMessage, GuildConfig, RequiredDiscordResources, RoleReward};
 use xpd_database::PgPool;
 
+mod audit_log;
 mod message;
+
+pub use audit_log::audit_log;
 
 #[macro_use]
 extern crate tracing;
@@ -188,6 +191,8 @@ pub enum Error {
     UnknownPermissionsForMessage(#[from] twilight_cache_inmemory::permission::ChannelError),
     #[error("Failed to check permissions: {0}")]
     PermissionsCalculator(#[from] xpd_util::PermissionCheckError),
+    #[error("{0}")]
+    AuditLogError(#[from] audit_log::AuditLogError),
     #[error("Discord did not send a member where they MUST send a member")]
     NoMember,
 }
