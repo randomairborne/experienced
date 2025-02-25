@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "DELETE FROM audit_logs WHERE guild_id = $1",
+  "query": "DELETE FROM audit_logs WHERE target = $1",
   "describe": {
     "columns": [],
     "parameters": {
@@ -10,5 +10,5 @@
     },
     "nullable": []
   },
-  "hash": "87890d28689634571c09f7890c5ebf9dc7f0b5a8fa138674a429cd7a0f9c15dd"
+  "hash": "f63b229bb2a9e4c43107af3f4137a8cbc021514e33b7aad3b6c1bbd0a34c2c28"
 }

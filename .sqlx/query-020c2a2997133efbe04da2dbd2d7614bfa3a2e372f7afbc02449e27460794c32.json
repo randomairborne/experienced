@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id, moderator,\n        timestamp, previous, delta, reset, set\n        FROM audit_logs WHERE guild_id = $1",
+  "query": "SELECT target, moderator,\n        timestamp, previous, delta, kind\n        FROM audit_logs WHERE guild = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "user_id",
+        "name": "target",
         "type_info": "Int8"
       },
       {
@@ -30,13 +30,8 @@
       },
       {
         "ordinal": 5,
-        "name": "reset",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 6,
-        "name": "set",
-        "type_info": "Bool"
+        "name": "kind",
+        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -50,9 +45,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "197f9be1a027b284f8bd920b6c463e422ad74f8f450173ab97be52a7be671535"
+  "hash": "020c2a2997133efbe04da2dbd2d7614bfa3a2e372f7afbc02449e27460794c32"
 }
