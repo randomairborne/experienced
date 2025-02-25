@@ -212,7 +212,7 @@ pub struct AuditLogEvent {
 #[non_exhaustive]
 #[repr(i16)]
 pub enum AuditLogEventKind {
-    AddSub = 0,
+    AddOrSub = 0,
     Reset = 1,
     Set = 2,
     KickReset = 3,

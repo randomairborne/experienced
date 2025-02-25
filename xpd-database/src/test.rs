@@ -96,7 +96,7 @@ async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::
             timestamp: 50,
             previous: 100,
             delta: -100,
-            kind: AuditLogEventKind::AddSub,
+            kind: AuditLogEventKind::AddOrSub,
         },
         AuditLogEvent {
             guild: Id::new(1),
@@ -105,7 +105,7 @@ async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::
             timestamp: 591,
             previous: 15,
             delta: 50,
-            kind: AuditLogEventKind::AddSub,
+            kind: AuditLogEventKind::AddOrSub,
         },
         AuditLogEvent {
             guild: Id::new(2),
