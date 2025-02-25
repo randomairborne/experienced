@@ -148,7 +148,7 @@ impl XpdListenerInner {
 
 impl RequiredDiscordResources for XpdListenerInner {
     fn required_intents() -> Intents {
-        Intents::GUILDS | Intents::GUILD_MESSAGES
+        Intents::GUILDS | Intents::GUILD_MESSAGES | Intents::GUILD_MODERATION
     }
 
     fn required_events() -> EventTypeFlags {
@@ -166,6 +166,7 @@ impl RequiredDiscordResources for XpdListenerInner {
             | EventTypeFlags::THREAD_LIST_SYNC
             | EventTypeFlags::THREAD_DELETE
             | EventTypeFlags::MESSAGE_CREATE
+            | EventTypeFlags::GUILD_AUDIT_LOG_ENTRY_CREATE
     }
 
     fn required_cache_types() -> ResourceType {
