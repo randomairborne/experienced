@@ -7,7 +7,7 @@ use twilight_model::{
     },
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::AuditLogEvent;
+use xpd_common::{AuditLogEvent, AuditLogEventKind};
 use xpd_database::AcquireWrapper as _;
 use xpd_slash_defs::experience::XpCommand;
 use xpd_util::snowflake_to_timestamp;
@@ -60,26 +60,25 @@ async fn process_experience(
 
 async fn modify_user_xp(
     state: SlashState,
-    guild_id: Id<GuildMarker>,
-    user_id: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+    target: Id<UserMarker>,
     amount: i64,
     audit: XpAuditData,
 ) -> Result<String, Error> {
     let mut txn = state.db.xbegin().await?;
-    let xp = xpd_database::add_xp(txn.as_mut(), user_id, guild_id, amount).await?;
+    let xp = xpd_database::add_xp(txn.as_mut(), target, guild, amount).await?;
     if xp.is_negative() {
         txn.rollback().await?;
         return Err(Error::XpWouldBeNegative);
     }
     let audit_event = AuditLogEvent {
-        guild_id,
-        user_id,
+        guild,
+        target,
         moderator: audit.invoker,
         timestamp: snowflake_to_timestamp(audit.interaction),
         previous: xp + amount,
         delta: amount,
-        reset: false,
-        set: false,
+        kind: AuditLogEventKind::AddSub
     };
     xpd_database::add_audit_log_event(txn.as_mut(), audit_event).await?;
 
@@ -92,60 +91,58 @@ async fn modify_user_xp(
     };
     let amount_abs = amount.abs();
     Ok(format!(
-        "{action} {amount_abs} XP {targeter} <@{user_id}>, leaving them with {xp} XP at level {current_level}"
+        "{action} {amount_abs} XP {targeter} <@{target}>, leaving them with {xp} XP at level {current_level}"
     ))
 }
 
 async fn reset_user_xp(
     state: SlashState,
-    guild_id: Id<GuildMarker>,
-    user_id: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+    target: Id<UserMarker>,
     audit: XpAuditData,
 ) -> Result<String, Error> {
     let mut txn = state.db.xbegin().await?;
-    let old_xp = xpd_database::delete_levels_user_guild(txn.as_mut(), user_id, guild_id).await?;
+    let old_xp = xpd_database::delete_levels_user_guild(txn.as_mut(), target, guild).await?;
 
     let audit_event = AuditLogEvent {
-        guild_id,
-        user_id,
+        guild,
+        target,
         moderator: audit.invoker,
         timestamp: snowflake_to_timestamp(audit.interaction),
         previous: old_xp,
         delta: -old_xp,
-        reset: true,
-        set: false,
+        kind: AuditLogEventKind::Reset
     };
     xpd_database::add_audit_log_event(txn.as_mut(), audit_event).await?;
 
     txn.commit().await?;
 
     Ok(format!(
-        "Deleted <@{user_id}> from my database in this server!"
+        "Deleted <@{target}> from my database in this server!"
     ))
 }
 
 async fn set_user_xp(
     state: SlashState,
-    guild_id: Id<GuildMarker>,
-    user_id: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+    target: Id<UserMarker>,
     setpoint: i64,
     audit: XpAuditData,
 ) -> Result<String, Error> {
     let mut txn = state.db.xbegin().await?;
-    let old_xp = xpd_database::user_xp(txn.as_mut(), guild_id, user_id)
+    let old_xp = xpd_database::user_xp(txn.as_mut(), guild, target)
         .await?
         .unwrap_or(0);
-    xpd_database::set_xp(txn.as_mut(), user_id, guild_id, setpoint).await?;
+    xpd_database::set_xp(txn.as_mut(), target, guild, setpoint).await?;
 
     let audit_event = AuditLogEvent {
-        guild_id,
-        user_id,
+        guild,
+        target,
         moderator: audit.invoker,
         timestamp: snowflake_to_timestamp(audit.interaction),
         previous: old_xp,
         delta: setpoint - old_xp,
-        reset: false,
-        set: true,
+        kind: AuditLogEventKind::Set
     };
     xpd_database::add_audit_log_event(txn.as_mut(), audit_event).await?;
 
@@ -153,7 +150,7 @@ async fn set_user_xp(
 
     let level = mee6::LevelInfo::new(setpoint.try_into().unwrap_or(0));
     Ok(format!(
-        "Set <@{user_id}>'s XP to {}, leaving them at level {}",
+        "Set <@{target}>'s XP to {}, leaving them at level {}",
         level.xp(),
         level.level()
     ))

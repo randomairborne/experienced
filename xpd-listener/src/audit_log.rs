@@ -3,9 +3,10 @@ use twilight_model::{
     guild::audit_log::AuditLogEventType,
     id::{
         Id,
-        marker::{GuildMarker, UserMarker},
+        marker::{AuditLogEntryMarker, GuildMarker, UserMarker},
     },
 };
+use xpd_common::{AuditLogEvent, AuditLogEventKind};
 use xpd_database::{AcquireWrapper as _, PgPool};
 
 use crate::Error;
@@ -51,14 +52,38 @@ pub async fn audit_log(db: &PgPool, audit_log: GuildAuditLogEntryCreate) -> Resu
             target: target.cast(),
             moderator,
         };
-        take_audit_log_action(&db, ev).await?;
+        take_audit_log_action(db, audit_log.id, ev).await?;
     };
     Ok(())
 }
 
-async fn take_audit_log_action(db: &PgPool, event: DiscordAuditLogClearEvent) -> Result<(), Error> {
-    let txn = db.xbegin().await?;
+async fn take_audit_log_action(
+    db: &PgPool,
+    id: Id<AuditLogEntryMarker>,
+    event: DiscordAuditLogClearEvent,
+) -> Result<(), Error> {
+    let mut txn = db.xbegin().await?;
+    let old_xp = xpd_database::user_xp(txn.as_mut(), event.guild, event.target)
+        .await?
+        .unwrap_or(0);
 
+    let kind = match event.kind {
+        DiscordAuditLogClearType::Kick => AuditLogEventKind::KickReset,
+        DiscordAuditLogClearType::Ban => AuditLogEventKind::BanReset,
+    };
+
+    let audit_log_event = AuditLogEvent {
+        guild: event.guild,
+        target: event.target,
+        moderator: event.moderator,
+        timestamp: xpd_util::snowflake_to_timestamp(id),
+        previous: old_xp,
+        delta: -old_xp,
+        kind
+    };
+
+    xpd_database::add_audit_log_event(txn.as_mut(), audit_log_event).await?;
+    xpd_database::delete_levels_user_guild(txn.as_mut(), event.target, event.guild).await?;
     txn.commit().await?;
     Ok(())
 }

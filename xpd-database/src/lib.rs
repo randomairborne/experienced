@@ -23,7 +23,7 @@ use twilight_model::id::{
     marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
 };
 use util::{db_to_id, id_to_db};
-use xpd_common::{AuditLogEvent, GuildConfig, RoleReward, UserInGuild, UserStatus};
+use xpd_common::{AuditLogEvent, AuditLogEventKind, GuildConfig, RoleReward, UserInGuild, UserStatus};
 pub async fn guild_rewards<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -187,17 +187,16 @@ pub async fn add_audit_log_event<
     let mut conn = conn.acquire().await?;
     query!(
         "INSERT INTO audit_logs \
-            (guild_id, user_id, moderator,
-                timestamp, previous, delta, reset, set)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-        id_to_db(event.guild_id),
-        id_to_db(event.user_id),
+            (guild, target, moderator,
+                timestamp, previous, delta, kind)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        id_to_db(event.guild),
+        id_to_db(event.target),
         id_to_db(event.moderator),
         event.timestamp,
         event.previous,
         event.delta,
-        event.reset,
-        event.set
+        event.kind.to_i64(),
     )
     .execute(conn.as_mut())
     .await?;
@@ -210,36 +209,35 @@ pub async fn get_audit_log_events<
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
 >(
     conn: A,
-    guild_id: Id<GuildMarker>,
+    guild: Id<GuildMarker>,
     actions_on_user: Option<Id<UserMarker>>,
     actions_by_moderator: Option<Id<UserMarker>>,
 ) -> Result<Vec<AuditLogEvent>, Error> {
     let mut conn = conn.acquire().await?;
     let mut stream = query!(
-        "SELECT user_id, moderator,
-        timestamp, previous, delta, reset, set
-        FROM audit_logs WHERE guild_id = $1",
-        id_to_db(guild_id)
+        "SELECT target, moderator,
+        timestamp, previous, delta, kind
+        FROM audit_logs WHERE guild = $1",
+        id_to_db(guild)
     )
     .fetch(conn.as_mut());
     let mut logs = Vec::new();
     while let Some(row) = stream.next().await.transpose()? {
-        let user_id = db_to_id(row.user_id);
+        let target = db_to_id(row.target);
         let moderator = db_to_id(row.moderator);
         if actions_by_moderator.is_some_and(|requested_moderator| requested_moderator != moderator)
-            || actions_on_user.is_some_and(|requested_user| requested_user != user_id)
+            || actions_on_user.is_some_and(|requested_user| requested_user != target)
         {
             continue;
         }
         let log = AuditLogEvent {
-            guild_id,
-            user_id,
+            guild,
+            target,
             moderator: db_to_id(row.moderator),
             timestamp: row.timestamp,
             previous: row.previous,
             delta: row.delta,
-            reset: row.reset,
-            set: row.set,
+            kind: AuditLogEventKind::from_i64(row.kind).ok_or(Error::UnknownAuditLogEventKind)?,
         };
         logs.push(log);
     }
@@ -252,12 +250,12 @@ pub async fn delete_audit_log_events_guild<
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
 >(
     conn: A,
-    guild_id: Id<GuildMarker>,
+    guild: Id<GuildMarker>,
 ) -> Result<(), Error> {
     let mut conn = conn.acquire().await?;
     query!(
-        "DELETE FROM audit_logs WHERE guild_id = $1",
-        id_to_db(guild_id)
+        "DELETE FROM audit_logs WHERE guild = $1",
+        id_to_db(guild)
     )
     .execute(conn.as_mut())
     .await?;
@@ -270,12 +268,12 @@ pub async fn delete_audit_log_events_user<
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
 >(
     conn: A,
-    user_id: Id<UserMarker>,
+    target: Id<UserMarker>,
 ) -> Result<(), Error> {
     let mut conn = conn.acquire().await?;
     query!(
-        "DELETE FROM audit_logs WHERE user_id = $1",
-        id_to_db(user_id)
+        "DELETE FROM audit_logs WHERE target = $1",
+        id_to_db(target)
     )
     .execute(conn.as_mut())
     .await?;
@@ -288,14 +286,14 @@ pub async fn delete_audit_log_events_user_guild<
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
 >(
     conn: A,
-    user_id: Id<UserMarker>,
-    guild_id: Id<GuildMarker>,
+    target: Id<UserMarker>,
+    guild: Id<GuildMarker>,
 ) -> Result<(), Error> {
     let mut conn = conn.acquire().await?;
     query!(
-        "DELETE FROM audit_logs WHERE user_id = $1 AND guild_id = $2",
-        id_to_db(user_id),
-        id_to_db(guild_id)
+        "DELETE FROM audit_logs WHERE target = $1 AND guild = $2",
+        id_to_db(target),
+        id_to_db(guild)
     )
     .execute(conn.as_mut())
     .await?;
@@ -1091,6 +1089,7 @@ pub enum Error {
     Database(sqlx::Error),
     Interpolation(simpleinterpolation::ParseError),
     UnspecifiedDelete,
+    UnknownAuditLogEventKind,
 }
 
 impl Display for Error {
@@ -1099,6 +1098,7 @@ impl Display for Error {
             Self::Database(de) => write!(f, "{de}"),
             Self::Interpolation(ie) => write!(f, "{ie}"),
             Self::UnspecifiedDelete => f.write_str("No constraints specified to delete by."),
+            Self::UnknownAuditLogEventKind => f.write_str("Unknown audit log event kind")
         }
     }
 }

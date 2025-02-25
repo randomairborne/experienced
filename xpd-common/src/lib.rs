@@ -6,6 +6,7 @@ use std::{
 };
 
 use simpleinterpolation::Interpolation;
+use strum_macros::FromRepr;
 use twilight_cache_inmemory::ResourceType;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::{
@@ -198,14 +199,48 @@ impl Display for GuildConfig {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct AuditLogEvent {
-    pub guild_id: Id<GuildMarker>,
-    pub user_id: Id<UserMarker>,
+    pub guild: Id<GuildMarker>,
+    pub target: Id<UserMarker>,
     pub moderator: Id<UserMarker>,
     pub timestamp: i64,
     pub previous: i64,
     pub delta: i64,
-    pub reset: bool,
-    pub set: bool,
+    pub kind: AuditLogEventKind,
+}
+
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+    FromRepr,
+)]
+#[non_exhaustive]
+#[repr(i16)]
+pub enum AuditLogEventKind {
+    AddSub = 0,
+    Reset = 1,
+    Set = 2,
+    KickReset = 3,
+    BanReset = 4,
+}
+
+impl AuditLogEventKind {
+    #[must_use]
+    pub fn from_i64(t: i64) -> Option<Self> {
+        let Ok(disc) = t.try_into() else {
+            return None;
+        };
+        Self::from_repr(disc)
+    }
+
+    #[must_use]
+    pub const fn to_i64(self) -> i64 {
+        self as i64
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

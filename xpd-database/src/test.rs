@@ -1,5 +1,6 @@
 use sqlx::PgPool;
 use twilight_model::id::Id;
+use xpd_common::AuditLogEventKind;
 
 use crate::*;
 
@@ -37,14 +38,13 @@ async fn find_deletes_returns_correctly(db: PgPool) -> Result<(), Box<dyn std::e
 #[sqlx::test(migrations = "../migrations/")]
 async fn audit_log_refetch(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
     let original_event = AuditLogEvent {
-        guild_id: Id::new(1),
-        user_id: Id::new(2),
+        guild: Id::new(1),
+        target: Id::new(2),
         moderator: Id::new(3),
         timestamp: 50,
         previous: 100,
         delta: -100,
-        reset: true,
-        set: false,
+        kind: AuditLogEventKind::Reset,
     };
     add_audit_log_event(&db, original_event).await?;
     let roundtripped_event = get_audit_log_events(&db, Id::new(1), None, None).await?;
@@ -56,24 +56,22 @@ async fn audit_log_refetch(db: PgPool) -> Result<(), Box<dyn std::error::Error>>
 async fn audit_log_multi(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
     let original_events = vec![
         AuditLogEvent {
-            guild_id: Id::new(1),
-            user_id: Id::new(2),
+            guild: Id::new(1),
+            target: Id::new(2),
             moderator: Id::new(3),
             timestamp: 50,
             previous: 100,
             delta: -100,
-            reset: true,
-            set: false,
+            kind: AuditLogEventKind::Reset
         },
         AuditLogEvent {
-            guild_id: Id::new(1),
-            user_id: Id::new(4),
+            guild: Id::new(1),
+            target: Id::new(4),
             moderator: Id::new(5),
             timestamp: 591,
             previous: 15,
             delta: 50,
-            reset: false,
-            set: true,
+            kind: AuditLogEventKind::Set
         },
     ];
     for event in &original_events {
@@ -92,34 +90,31 @@ async fn audit_log_multi(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
 async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
     let original_events = vec![
         AuditLogEvent {
-            guild_id: Id::new(1),
-            user_id: Id::new(2),
+        guild: Id::new(1),
+        target: Id::new(2),
             moderator: Id::new(3),
             timestamp: 50,
             previous: 100,
             delta: -100,
-            reset: false,
-            set: false,
+            kind: AuditLogEventKind::AddSub
         },
         AuditLogEvent {
-            guild_id: Id::new(1),
-            user_id: Id::new(4),
+            guild: Id::new(1),
+            target: Id::new(4),
             moderator: Id::new(5),
             timestamp: 591,
             previous: 15,
             delta: 50,
-            reset: false,
-            set: false,
+            kind: AuditLogEventKind::AddSub
         },
         AuditLogEvent {
-            guild_id: Id::new(2),
-            user_id: Id::new(4),
+            guild: Id::new(2),
+            target: Id::new(4),
             moderator: Id::new(5),
             timestamp: 595,
             previous: 100,
             delta: 50,
-            reset: false,
-            set: true,
+            kind: AuditLogEventKind::Set
         },
     ];
     for event in &original_events {

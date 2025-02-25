@@ -6,10 +6,10 @@ CREATE TABLE new_audit_logs (
     timestamp INT8 NOT NULL,
     previous INT8 NOT NULL,
     delta INT8 NOT NULL,
-    kind INT8 NOT NULL,
+    kind INT8 NOT NULL
 );
-CREATE TABLE new_audit_logs AS
-SELECT guild_id as guild, user_id as target, moderator, timestamp, previous, delta,
+
+INSERT INTO new_audit_logs SELECT guild_id as guild, user_id as target, moderator, timestamp, previous, delta,
 CASE
     /* set */
     WHEN set THEN 2
