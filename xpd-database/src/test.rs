@@ -62,7 +62,7 @@ async fn audit_log_multi(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
             timestamp: 50,
             previous: 100,
             delta: -100,
-            kind: AuditLogEventKind::Reset
+            kind: AuditLogEventKind::Reset,
         },
         AuditLogEvent {
             guild: Id::new(1),
@@ -71,7 +71,7 @@ async fn audit_log_multi(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
             timestamp: 591,
             previous: 15,
             delta: 50,
-            kind: AuditLogEventKind::Set
+            kind: AuditLogEventKind::Set,
         },
     ];
     for event in &original_events {
@@ -90,13 +90,13 @@ async fn audit_log_multi(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
 async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
     let original_events = vec![
         AuditLogEvent {
-        guild: Id::new(1),
-        target: Id::new(2),
+            guild: Id::new(1),
+            target: Id::new(2),
             moderator: Id::new(3),
             timestamp: 50,
             previous: 100,
             delta: -100,
-            kind: AuditLogEventKind::AddSub
+            kind: AuditLogEventKind::AddSub,
         },
         AuditLogEvent {
             guild: Id::new(1),
@@ -105,7 +105,7 @@ async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::
             timestamp: 591,
             previous: 15,
             delta: 50,
-            kind: AuditLogEventKind::AddSub
+            kind: AuditLogEventKind::AddSub,
         },
         AuditLogEvent {
             guild: Id::new(2),
@@ -114,7 +114,7 @@ async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::
             timestamp: 595,
             previous: 100,
             delta: 50,
-            kind: AuditLogEventKind::Set
+            kind: AuditLogEventKind::Set,
         },
     ];
     for event in &original_events {

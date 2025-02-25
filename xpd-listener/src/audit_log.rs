@@ -79,7 +79,7 @@ async fn take_audit_log_action(
         timestamp: xpd_util::snowflake_to_timestamp(id),
         previous: old_xp,
         delta: -old_xp,
-        kind
+        kind,
     };
 
     xpd_database::add_audit_log_event(txn.as_mut(), audit_log_event).await?;

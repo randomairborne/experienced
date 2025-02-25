@@ -23,7 +23,9 @@ use twilight_model::id::{
     marker::{ChannelMarker, GenericMarker, GuildMarker, RoleMarker, UserMarker},
 };
 use util::{db_to_id, id_to_db};
-use xpd_common::{AuditLogEvent, AuditLogEventKind, GuildConfig, RoleReward, UserInGuild, UserStatus};
+use xpd_common::{
+    AuditLogEvent, AuditLogEventKind, GuildConfig, RoleReward, UserInGuild, UserStatus,
+};
 pub async fn guild_rewards<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
@@ -253,12 +255,9 @@ pub async fn delete_audit_log_events_guild<
     guild: Id<GuildMarker>,
 ) -> Result<(), Error> {
     let mut conn = conn.acquire().await?;
-    query!(
-        "DELETE FROM audit_logs WHERE guild = $1",
-        id_to_db(guild)
-    )
-    .execute(conn.as_mut())
-    .await?;
+    query!("DELETE FROM audit_logs WHERE guild = $1", id_to_db(guild))
+        .execute(conn.as_mut())
+        .await?;
     Ok(())
 }
 
@@ -271,12 +270,9 @@ pub async fn delete_audit_log_events_user<
     target: Id<UserMarker>,
 ) -> Result<(), Error> {
     let mut conn = conn.acquire().await?;
-    query!(
-        "DELETE FROM audit_logs WHERE target = $1",
-        id_to_db(target)
-    )
-    .execute(conn.as_mut())
-    .await?;
+    query!("DELETE FROM audit_logs WHERE target = $1", id_to_db(target))
+        .execute(conn.as_mut())
+        .await?;
     Ok(())
 }
 
@@ -1098,7 +1094,7 @@ impl Display for Error {
             Self::Database(de) => write!(f, "{de}"),
             Self::Interpolation(ie) => write!(f, "{ie}"),
             Self::UnspecifiedDelete => f.write_str("No constraints specified to delete by."),
-            Self::UnknownAuditLogEventKind => f.write_str("Unknown audit log event kind")
+            Self::UnknownAuditLogEventKind => f.write_str("Unknown audit log event kind"),
         }
     }
 }

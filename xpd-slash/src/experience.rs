@@ -78,7 +78,7 @@ async fn modify_user_xp(
         timestamp: snowflake_to_timestamp(audit.interaction),
         previous: xp + amount,
         delta: amount,
-        kind: AuditLogEventKind::AddSub
+        kind: AuditLogEventKind::AddSub,
     };
     xpd_database::add_audit_log_event(txn.as_mut(), audit_event).await?;
 
@@ -111,7 +111,7 @@ async fn reset_user_xp(
         timestamp: snowflake_to_timestamp(audit.interaction),
         previous: old_xp,
         delta: -old_xp,
-        kind: AuditLogEventKind::Reset
+        kind: AuditLogEventKind::Reset,
     };
     xpd_database::add_audit_log_event(txn.as_mut(), audit_event).await?;
 
@@ -142,7 +142,7 @@ async fn set_user_xp(
         timestamp: snowflake_to_timestamp(audit.interaction),
         previous: old_xp,
         delta: setpoint - old_xp,
-        kind: AuditLogEventKind::Set
+        kind: AuditLogEventKind::Set,
     };
     xpd_database::add_audit_log_event(txn.as_mut(), audit_event).await?;
 

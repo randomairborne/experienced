@@ -208,16 +208,7 @@ pub struct AuditLogEvent {
     pub kind: AuditLogEventKind,
 }
 
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Eq,
-    serde::Serialize,
-    serde::Deserialize,
-    FromRepr,
-)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, FromRepr)]
 #[non_exhaustive]
 #[repr(i16)]
 pub enum AuditLogEventKind {
