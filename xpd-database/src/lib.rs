@@ -347,9 +347,9 @@ pub async fn delete_levels_user_guild<
         id_to_db(user),
         id_to_db(guild)
     )
-    .fetch_one(conn.as_mut())
+    .fetch_optional(conn.as_mut())
     .await?;
-    Ok(output.xp)
+    Ok(output.map_or(0, |v| v.xp))
 }
 
 pub async fn count_with_higher_xp<
