@@ -87,4 +87,5 @@ will be returned.
 
 ## XP resetting
 
-XP is automatically reset when a user is banned from your server.
+XP is automatically reset when a user is banned or kicked from your server, if the "View Audit Log" permission
+is enabled for the bot in the server.
