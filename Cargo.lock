@@ -4780,7 +4780,6 @@ name = "xpd-common"
 version = "0.0.6"
 dependencies = [
  "serde",
- "serde_repr",
  "simpleinterpolation 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "strum",
  "strum_macros",

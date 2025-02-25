@@ -214,8 +214,8 @@ pub struct AuditLogEvent {
     Debug,
     PartialEq,
     Eq,
-    serde_repr::Serialize_repr,
-    serde_repr::Deserialize_repr,
+    serde::Serialize,
+    serde::Deserialize,
     FromRepr,
 )]
 #[non_exhaustive]

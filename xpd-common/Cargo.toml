@@ -18,7 +18,6 @@ twilight-model = "0.16"
 
 # serialize / deserialize
 serde = { version = "1", features = ["derive"] }
-serde_repr = "0.1"
 
 # convert enums to numbers
 strum = "0.27"
