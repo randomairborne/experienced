@@ -18,7 +18,7 @@ use base64::{
 use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::{LogExporter, WithExportConfig, WithHttpConfig};
-use opentelemetry_sdk::{Resource, logs::LoggerProvider};
+use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use sqlx::PgPool;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{Level, Metadata, error};
@@ -294,7 +294,7 @@ impl<S> Filter<S> for PrefixFilter {
     }
 }
 
-fn init_tracing() -> Result<Option<LoggerProvider>, SetupError> {
+fn init_tracing() -> Result<Option<SdkLoggerProvider>, SetupError> {
     let logger = get_var_opt("OTLP_ENDPOINT")?
         .map(|v| make_otlp(&v))
         .transpose()?;
@@ -311,11 +311,13 @@ fn init_tracing() -> Result<Option<LoggerProvider>, SetupError> {
     Ok(logger)
 }
 
-fn make_otlp(endpoint: &str) -> Result<LoggerProvider, SetupError> {
-    let svc_name = Resource::new(vec![KeyValue::new(
-        opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-        env!("CARGO_PKG_NAME"),
-    )]);
+fn make_otlp(endpoint: &str) -> Result<SdkLoggerProvider, SetupError> {
+    let svc_name = Resource::builder()
+        .with_attribute(KeyValue::new(
+            opentelemetry_semantic_conventions::resource::SERVICE_NAME,
+            env!("CARGO_PKG_NAME"),
+        ))
+        .build();
 
     let headers = make_otlp_headers()?;
 
@@ -327,9 +329,9 @@ fn make_otlp(endpoint: &str) -> Result<LoggerProvider, SetupError> {
         .build()?;
 
     // Create a new OpenTelemetry trace pipeline that prints to stdout
-    Ok(LoggerProvider::builder()
-        .with_resource(svc_name.clone())
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+    Ok(SdkLoggerProvider::builder()
+        .with_resource(svc_name)
+        .with_batch_exporter(exporter)
         .build())
 }
 
@@ -407,6 +409,8 @@ pub enum SetupError {
     FromStr(String, Box<dyn std::error::Error>),
     #[error("Failed to build logger: {0}")]
     Otel(#[from] opentelemetry_sdk::logs::LogError),
+    #[error("Failed to build logger SDK: {0}")]
+    OtelSdk(#[from] opentelemetry_sdk::error::OTelSdkError),
     #[error("Failed to build database client: {0}")]
     DatabaseConnect(#[from] sqlx::Error),
     #[error("Failed to run database migrations: {0}")]
