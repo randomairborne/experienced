@@ -14,7 +14,7 @@ categories = ["multimedia::images"]
 tokio = { version = "1", features = ["sync"] }
 
 # image formats
-resvg = "0.44"
+resvg = "0.45"
 png = "0.17"
 
 # error handling
