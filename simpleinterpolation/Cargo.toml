@@ -23,7 +23,6 @@ harness = false
 name = "all_interpolation"
 harness = false
 
-
 [[bench]]
 name = "simple_interpolation"
 harness = false
