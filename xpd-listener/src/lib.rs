@@ -181,7 +181,7 @@ impl RequiredDiscordResources for XpdListenerInner {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Discord error")]
-    Twilight(#[from] twilight_http::Error),
+    Twilight(Box<twilight_http::Error>),
     #[error("database fetch fail: {0}")]
     DatabaseAbstraction(#[from] xpd_database::Error),
     #[error("simpleinterpolation failed")]
@@ -196,4 +196,10 @@ pub enum Error {
     AuditLogError(#[from] audit_log::AuditLogError),
     #[error("Discord did not send a member where they MUST send a member")]
     NoMember,
+}
+
+impl From<twilight_http::Error> for Error {
+    fn from(value: twilight_http::Error) -> Self {
+        Self::Twilight(Box::new(value))
+    }
 }

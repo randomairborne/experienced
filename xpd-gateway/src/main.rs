@@ -418,11 +418,17 @@ pub enum SetupError {
     #[error("Failed to build reqwest client: {0}")]
     Reqwest(#[from] reqwest::Error),
     #[error("Failed to request to Discord API: {0}")]
-    Twilight(#[from] twilight_http::Error),
+    Twilight(Box<twilight_http::Error>),
     #[error("Failed to deserialize from Discord API: {0}")]
     TwilightBody(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Failed to start shard connections to Discord API: {0}")]
     TwilightGateway(#[from] twilight_gateway::error::StartRecommendedError),
+}
+
+impl From<twilight_http::Error> for SetupError {
+    fn from(value: twilight_http::Error) -> Self {
+        Self::Twilight(Box::new(value))
+    }
 }
 
 impl Termination for SetupError {

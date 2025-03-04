@@ -5,7 +5,7 @@ pub enum Error {
     #[error("Processing task panicked!")]
     TaskPanicked(#[from] tokio::task::JoinError),
     #[error("Discord error!")]
-    TwilightHttp(#[from] twilight_http::Error),
+    TwilightHttp(Box<twilight_http::Error>),
     #[error("HTTP error!")]
     ReqwestHttp(#[from] reqwest::Error),
     #[error("Invalid message attachment!")]
@@ -110,4 +110,10 @@ pub enum Error {
     NoRanksYet,
     #[error("This user does not have a most recent message.")]
     NoLastMessage,
+}
+
+impl From<twilight_http::Error> for Error {
+    fn from(value: twilight_http::Error) -> Self {
+        Self::TwilightHttp(Box::new(value))
+    }
 }

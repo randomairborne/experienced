@@ -7,6 +7,8 @@ edition = "2024"
 twilight-cache-inmemory = { version = "0.16", features = ["permission-calculator"] }
 twilight-model = "0.16"
 
+xpd-common = { workspace = true }
+
 # error handling
 thiserror = "2"
 tracing = "0.1"
