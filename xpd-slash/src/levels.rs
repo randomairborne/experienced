@@ -10,8 +10,9 @@ use twilight_model::{
     util::ImageHash,
 };
 use twilight_util::builder::embed::EmbedBuilder;
-use xpd_common::{DisplayName, MemberDisplayInfo};
+use xpd_common::MemberDisplayInfo;
 use xpd_rank_card::customizations::{Color, Customizations};
+use xpd_util::DisplayName;
 
 use crate::{Error, SlashState, XpdInteractionData, response::XpdInteractionResponse};
 

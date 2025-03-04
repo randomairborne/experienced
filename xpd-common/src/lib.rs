@@ -25,38 +25,6 @@ pub const CURRENT_GIT_REV_COUNT: &str = env!("GIT_REV_COUNT_EXPERIENCED");
 pub const DISCORD_EPOCH_MS: i64 = 1_420_070_400_000;
 pub const DISCORD_EPOCH_SECS: i64 = DISCORD_EPOCH_MS / 1000;
 
-pub trait DisplayName {
-    #[must_use]
-    fn display_name(&self) -> &str;
-}
-
-impl DisplayName for User {
-    fn display_name(&self) -> &str {
-        self.global_name.as_ref().unwrap_or(&self.name)
-    }
-}
-
-impl DisplayName for Member {
-    fn display_name(&self) -> &str {
-        self.nick
-            .as_deref()
-            .unwrap_or_else(|| self.user.display_name())
-    }
-}
-
-impl DisplayName for MemberDisplayInfo {
-    fn display_name(&self) -> &str {
-        self.nick.as_ref().map_or_else(
-            || {
-                self.global_name
-                    .as_ref()
-                    .map_or(self.name.as_str(), |global| global.as_str())
-            },
-            |nick| nick.as_str(),
-        )
-    }
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MemberDisplayInfo {
     pub id: Id<UserMarker>,

@@ -1,10 +1,11 @@
 use twilight_cache_inmemory::{CacheableRole, InMemoryCache};
 use twilight_model::{
-    guild::Permissions,
+    guild::{Member, Permissions},
     id::{
         Id,
         marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
+    user::User,
 };
 
 #[macro_use]
@@ -124,4 +125,36 @@ impl<T, E: std::fmt::Debug> LogError for Result<T, E> {
 pub fn snowflake_to_timestamp<T>(id: Id<T>) -> i64 {
     // this is safe, because dividing an u64 by 1000 ensures it is a valid i64
     ((id.get() >> 22) / 1000).try_into().unwrap_or(0)
+}
+
+pub trait DisplayName {
+    #[must_use]
+    fn display_name(&self) -> &str;
+}
+
+impl DisplayName for User {
+    fn display_name(&self) -> &str {
+        self.global_name.as_ref().unwrap_or(&self.name)
+    }
+}
+
+impl DisplayName for Member {
+    fn display_name(&self) -> &str {
+        self.nick
+            .as_deref()
+            .unwrap_or_else(|| self.user.display_name())
+    }
+}
+
+impl DisplayName for xpd_common::MemberDisplayInfo {
+    fn display_name(&self) -> &str {
+        self.nick.as_ref().map_or_else(
+            || {
+                self.global_name
+                    .as_ref()
+                    .map_or(self.name.as_str(), |global| global.as_str())
+            },
+            |nick| nick.as_str(),
+        )
+    }
 }

@@ -4828,6 +4828,7 @@ dependencies = [
  "tracing",
  "twilight-cache-inmemory",
  "twilight-model",
+ "xpd-common",
 ]
 
 [[package]]
