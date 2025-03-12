@@ -30,7 +30,6 @@ use tracing_subscriber::{
 use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
     CloseFrame, Config, Event, EventTypeFlags, Intents, MessageSender, Shard, StreamExt,
-    error::ReceiveMessageErrorType,
 };
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
@@ -42,6 +41,9 @@ use xpd_common::RequiredDiscordResources;
 use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 use xpd_util::LogError;
+
+const SHUTDOWN_FRAME: CloseFrame =
+    CloseFrame::new(1000, "This instance of experienced is shutting down now.");
 
 #[tokio::main]
 async fn main() -> Result<(), SetupError> {
@@ -152,7 +154,6 @@ async fn main() -> Result<(), SetupError> {
             shard,
             client,
             task_tracker.clone(),
-            shutdown.clone(),
             listener.clone(),
             slash.clone(),
             cache.clone(),
@@ -169,7 +170,7 @@ async fn main() -> Result<(), SetupError> {
     debug!("Informing discord of shutdown");
     // Tell the shards to shut down
     for sender in senders {
-        sender.close(CloseFrame::NORMAL).ok();
+        sender.close(SHUTDOWN_FRAME).ok();
     }
 
     debug!("Waiting for background tasks to complete");
@@ -196,7 +197,6 @@ async fn event_loop(
     mut shard: Shard,
     http: Arc<DiscordClient>,
     task_tracker: TaskTracker,
-    shutdown: CancellationToken,
     listener: XpdListener,
     slash: XpdSlash,
     cache: Arc<InMemoryCache>,
@@ -214,16 +214,11 @@ async fn event_loop(
         let event = match next {
             Ok(event) => event,
             Err(source) => {
-                if shutdown.is_cancelled()
-                    && matches!(source.kind(), ReceiveMessageErrorType::Reconnect)
-                {
-                    break;
-                }
                 error!(?source, "error receiving event");
                 continue;
             }
         };
-        if matches!(event, Event::GatewayClose(_)) && shutdown.is_cancelled() {
+        if event == Event::GatewayClose(Some(SHUTDOWN_FRAME)) {
             break;
         }
         trace!(?event, "got event");
