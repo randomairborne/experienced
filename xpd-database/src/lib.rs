@@ -663,7 +663,7 @@ pub async fn update_guild_config<
                 "INSERT INTO guild_configs (id, level_up_message, level_up_channel, ping_on_level_up, \
                     max_xp_per_message, min_xp_per_message, message_cooldown, one_at_a_time,
                     guild_card_default_show_off) \
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) \
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, FALSE)) \
                 ON CONFLICT (id) DO UPDATE SET \
                 level_up_message = COALESCE($2, guild_configs.level_up_message), \
                 level_up_channel = COALESCE($3, guild_configs.level_up_channel), \
