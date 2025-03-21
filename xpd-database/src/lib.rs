@@ -936,7 +936,7 @@ pub async fn export_bulk_users<
         id_to_db(guild)
     )
     .fetch(conn.as_mut());
-    let mut out = Vec::with_capacity(256);
+    let mut out = Vec::with_capacity(records.size_hint().1.unwrap_or(256));
     while let Some(Ok(rec)) = records.next().await {
         let status = UserStatus {
             id: db_to_id(rec.id),
