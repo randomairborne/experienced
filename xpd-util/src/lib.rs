@@ -148,13 +148,9 @@ impl DisplayName for Member {
 
 impl DisplayName for xpd_common::MemberDisplayInfo {
     fn display_name(&self) -> &str {
-        self.nick.as_ref().map_or_else(
-            || {
-                self.global_name
-                    .as_ref()
-                    .map_or(self.name.as_str(), |global| global.as_str())
-            },
-            |nick| nick.as_str(),
-        )
+        self.nick
+            .as_ref()
+            .or(self.global_name.as_ref())
+            .unwrap_or(&self.name)
     }
 }
