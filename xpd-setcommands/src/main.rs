@@ -12,7 +12,7 @@ async fn main() {
     let control_guild: Option<Id<GuildMarker>> = match std::env::var("CONTROL_GUILD") {
         Ok(v) => Some(v.parse().expect("Could not parse guild ID")),
         Err(VarError::NotPresent) => None,
-        Err(VarError::NotUnicode(_)) => panic!("Non-UTF-8 CONTROL_GUILD"),
+        Err(VarError::NotUnicode(e)) => panic!("Non-UTF-8 CONTROL_GUILD value: `{e:?}`"),
     };
 
     eprintln!("Fetching app ID...");
