@@ -403,7 +403,7 @@ pub enum SetupError {
     #[error("Could not parse environment variable {0}: {1}")]
     FromStr(String, Box<dyn std::error::Error>),
     #[error("Failed to build logger: {0}")]
-    Otel(#[from] opentelemetry_sdk::logs::LogError),
+    OtelSetup(#[from] opentelemetry_otlp::ExporterBuildError),
     #[error("Failed to build logger SDK: {0}")]
     OtelSdk(#[from] opentelemetry_sdk::error::OTelSdkError),
     #[error("Failed to build database client: {0}")]
