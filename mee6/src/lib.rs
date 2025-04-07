@@ -63,10 +63,8 @@ impl LevelInfo {
     pub const fn percentage(&self) -> f64 {
         self.percentage
     }
-    // mul_add is not no-std
 }
 
-#[allow(clippy::suboptimal_flops)]
 #[must_use]
 pub fn xp_needed_for_level(level: u64) -> u64 {
     let level = level as f64;
