@@ -23,7 +23,8 @@ impl LevelInfo {
     /// immediately, rather then when the getter is called.
     #[must_use]
     pub fn new(xp: u64) -> Self {
-        // The operation used to calculate how many XP a given level is is (5 / 6) * level * (2 * level * level + 27 * level + 91), but it's optimized here.
+        // The operation used to calculate how many XP a given level is is (5 / 6) * level * (2 * level * level + 27 * level + 91),
+        // but it is not really possible to cleanly calculate the inverse of this
         let level = {
             let mut testxp = 0;
             let mut level = 0;
