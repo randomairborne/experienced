@@ -1,6 +1,6 @@
 [package]
 name = "simpleinterpolation"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 description = "Dead simple string interpolation"

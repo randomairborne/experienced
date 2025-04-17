@@ -3012,15 +3012,15 @@ dependencies = [
 [[package]]
 name = "simpleinterpolation"
 version = "0.2.0"
-dependencies = [
- "criterion",
-]
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c246d870feb932a703fce36a7dbdb4f2a3060c069f2005a2d125655d4a93bc6"
 
 [[package]]
 name = "simpleinterpolation"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c246d870feb932a703fce36a7dbdb4f2a3060c069f2005a2d125655d4a93bc6"
+version = "0.2.1"
+dependencies = [
+ "criterion",
+]
 
 [[package]]
 name = "siphasher"
@@ -4792,7 +4792,7 @@ name = "xpd-common"
 version = "0.0.6"
 dependencies = [
  "serde",
- "simpleinterpolation 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simpleinterpolation 0.2.0",
  "strum",
  "strum_macros",
  "twilight-cache-inmemory",
@@ -4805,7 +4805,7 @@ name = "xpd-database"
 version = "0.1.0"
 dependencies = [
  "futures-core",
- "simpleinterpolation 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simpleinterpolation 0.2.0",
  "sqlx",
  "tokio-stream",
  "tracing",
@@ -4850,7 +4850,7 @@ dependencies = [
  "dashmap",
  "mee6 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.9.0",
- "simpleinterpolation 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simpleinterpolation 0.2.0",
  "thiserror 2.0.12",
  "tokio-util",
  "tracing",
@@ -4903,7 +4903,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "simpleinterpolation 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "simpleinterpolation 0.2.0",
  "sqlx",
  "thiserror 2.0.12",
  "tokio",
