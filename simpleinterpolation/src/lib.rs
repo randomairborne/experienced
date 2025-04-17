@@ -152,12 +152,13 @@ impl InterpolationCompiler {
             escaped: false,
         };
 
-        // for each character, check if the character is a
+        // for each character, check if the character exists, then
+        // feed it into the compiler
         while let Some(character) = compiler.chars.get(compiler.index).copied() {
             compiler.handle_char(character)?;
         }
 
-        compiler.parts.shrink_to_fit();
+        compiler.shrink();
 
         Ok(Interpolation {
             parts: compiler.parts,
@@ -214,6 +215,17 @@ impl InterpolationCompiler {
             self.index += 1;
         }
         Ok(identifier)
+    }
+
+    fn shrink(&mut self) {
+        self.parts.shrink_to_fit();
+
+        for (a, b) in &mut self.parts {
+            a.shrink_to_fit();
+            b.shrink_to_fit();
+        }
+
+        self.next.shrink_to_fit();
     }
 }
 
