@@ -1,9 +1,11 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 //! # `SimpleInterpolation`
 //!
-//! A dead simple interpolation format
-//! `this is an {interpolated} string`
-//! Variable names may have `-`, `_`, `0-9`, `a-z`, and `A-Z`, any other characters will cause errors.
+//! A dead simple interpolation format.
+//!
+//! for example: `this is an {interpolated} string`
+//!
+//! Variable names may have `-`, `_`, `0-9`, `a-z`, and `A-Z`, any other characters will be raised as errors.
 //!
 use std::{borrow::Cow, collections::HashMap, fmt::Formatter};
 

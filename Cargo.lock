@@ -3017,7 +3017,7 @@ checksum = "0c246d870feb932a703fce36a7dbdb4f2a3060c069f2005a2d125655d4a93bc6"
 
 [[package]]
 name = "simpleinterpolation"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "criterion",
 ]
