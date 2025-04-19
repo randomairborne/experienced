@@ -398,7 +398,7 @@ pub enum SetupError {
     UnparsableEnv(String),
     #[error("Environment variable {0} is required!")]
     MissingEnv(String),
-    #[error("Environment variable {0} is required when {1} is set!")]
+    #[error("Environment variable {0} is required when the variable {1} is set!")]
     ReliantEnv(String, String),
     #[error("Could not parse environment variable {0}: {1}")]
     FromStr(String, Box<dyn std::error::Error>),
