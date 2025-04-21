@@ -25,7 +25,9 @@ fn main() {
 }
 
 fn get_sha() -> Result<String, Error> {
-    let output = Command::new("git")
+    let output = Command::new("/bin/sh")
+        .arg("-c")
+        .arg("git")
         .arg("rev-parse")
         .arg("HEAD")
         .stdout(Stdio::piped())
