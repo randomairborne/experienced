@@ -9,6 +9,5 @@ target
 dump.sql
 
 /node_modules
-/package-lock.json
 
 /rendered-cards/
