@@ -170,6 +170,8 @@ async fn main() -> Result<(), SetupError> {
     debug!("Informing discord of shutdown");
     // Tell the shards to shut down
     for sender in senders {
+        // We send and detect a specific frame to know if we should
+        // shut down permanently
         sender.close(SHUTDOWN_FRAME).ok();
     }
 
