@@ -42,9 +42,6 @@ use xpd_listener::XpdListener;
 use xpd_slash::XpdSlash;
 use xpd_util::LogError;
 
-const SHUTDOWN_FRAME: CloseFrame =
-    CloseFrame::new(1000, "This instance of experienced is shutting down now.");
-
 #[tokio::main]
 async fn main() -> Result<(), SetupError> {
     let tracer_shutdown = init_tracing()?;
@@ -172,7 +169,7 @@ async fn main() -> Result<(), SetupError> {
     for sender in senders {
         // We send and detect a specific frame to know if we should
         // shut down permanently
-        sender.close(SHUTDOWN_FRAME).ok();
+        sender.close(CloseFrame::NORMAL).ok();
     }
 
     debug!("Waiting for background tasks to complete");
@@ -220,10 +217,11 @@ async fn event_loop(
                 continue;
             }
         };
-        if event == Event::GatewayClose(Some(SHUTDOWN_FRAME)) {
-            break;
+        if let Event::GatewayClose(Some(gc)) = &event {
+            if gc.code == 1000 {
+                break;
+            }
         }
-        trace!(?event, "got event");
         let listener = listener.clone();
         let http = http.clone();
         let slash = slash.clone();
