@@ -20,8 +20,8 @@ fn main() {
         }
     };
 
-    println!("cargo::rustc-env=GIT_HASH_EXPERIENCED={}", commit_sha);
-    println!("cargo::rustc-env=GIT_REV_COUNT_EXPERIENCED={}", rev_num)
+    println!("cargo::rustc-env=GIT_HASH_EXPERIENCED={commit_sha}");
+    println!("cargo::rustc-env=GIT_REV_COUNT_EXPERIENCED={rev_num}")
 }
 
 fn get_sha() -> Result<String, Error> {
