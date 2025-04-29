@@ -298,7 +298,7 @@ fn init_tracing() -> Result<Option<SdkLoggerProvider>, SetupError> {
         .as_ref()
         .map(OpenTelemetryTracingBridge::new)
         .map(|v| v.with_filter(PrefixFilter));
-    let fmt = tracing_subscriber::fmt::layer();
+    let fmt = tracing_subscriber::EnvFilter::from_default_env();
 
     // Use the tracing subscriber `Registry`, or any other subscriber
     // that impls `LookupSpan`
