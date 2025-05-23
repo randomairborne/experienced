@@ -20,7 +20,7 @@ page = 0
 headers = {
     "Authorization": mee6_auth,
     "Referer": f"https://mee6.xyz/en/leaderboard/{guild}",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
 }
 
 players = []
