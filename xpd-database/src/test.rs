@@ -90,6 +90,15 @@ async fn audit_log_multi(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
 async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::Error>> {
     let original_events = vec![
         AuditLogEvent {
+            guild: Id::new(5),
+            target: Id::new(4),
+            moderator: Id::new(15),
+            timestamp: 0,
+            previous: 100,
+            delta: -100,
+            kind: AuditLogEventKind::AddOrSub,
+        },
+        AuditLogEvent {
             guild: Id::new(1),
             target: Id::new(2),
             moderator: Id::new(3),
@@ -128,7 +137,7 @@ async fn audit_logs_deleted_guild(db: PgPool) -> Result<(), Box<dyn std::error::
     assert!(should_be_nonexistent.is_empty());
     assert_eq!(
         roundtripped_events.sorted_by_timestamp(),
-        vec![original_events[2]]
+        vec![original_events[3]]
     );
     Ok(())
 }
