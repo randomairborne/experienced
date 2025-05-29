@@ -320,7 +320,7 @@ fn make_otlp(endpoint: &str) -> Result<SdkLoggerProvider, SetupError> {
         .with_http()
         .with_endpoint(endpoint)
         .with_headers(headers)
-        .with_http_client(reqwest::Client::new())
+        .with_http_client(reqwest::blocking::Client::new())
         .build()?;
 
     // Create a new OpenTelemetry trace pipeline that prints to stdout
