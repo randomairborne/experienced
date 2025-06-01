@@ -390,7 +390,7 @@ pub enum Error {
 
 #[derive(Debug, thiserror::Error)]
 pub enum SetupError {
-    #[error("No bot returned from discord")]
+    #[error("No bot returned from discord- Probably ratelimited")]
     NoBot,
     #[error("No team members or bot owner returned from discord")]
     NoTeamOrOwner,
@@ -428,6 +428,7 @@ impl From<twilight_http::Error> for SetupError {
 
 impl Termination for SetupError {
     fn report(self) -> std::process::ExitCode {
+        std::thread::sleep(std::time::Duration::from_secs(2));
         eprintln!("{self}");
         ExitCode::FAILURE
     }
