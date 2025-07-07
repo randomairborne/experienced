@@ -20,7 +20,6 @@ twilight-model = "0.16"
 serde = { version = "1", features = ["derive"] }
 
 # convert enums to numbers
-strum = "0.27"
 strum_macros = "0.27"
 
 # internal
