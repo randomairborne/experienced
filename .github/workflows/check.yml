@@ -28,7 +28,7 @@ jobs:
 
       - name: Correct ownership information
         run: chown root:root .
-        
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
