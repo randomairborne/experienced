@@ -29,7 +29,7 @@ use tracing_subscriber::{
 };
 use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
-    CloseFrame, Config, Event, EventTypeFlags, Intents, MessageSender, Shard, StreamExt,
+    error::ReceiveMessageError, CloseFrame, Config, Event, EventTypeFlags, Intents, MessageSender, Shard, StreamExt
 };
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
@@ -155,6 +155,7 @@ async fn main() -> Result<(), SetupError> {
             slash.clone(),
             cache.clone(),
             db.clone(),
+            shutdown.clone()
         ));
     }
 
@@ -191,6 +192,14 @@ async fn main() -> Result<(), SetupError> {
     Ok(())
 }
 
+async fn next_event(shard: &mut Shard, flags: EventTypeFlags, shutdown: &CancellationToken) -> Option<Result<Event, ReceiveMessageError>> {
+    tokio::select! {
+        biased;
+        _ = shutdown.cancelled() => None,
+        v = shard.next_event(flags) => v,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn event_loop(
     mut shard: Shard,
@@ -200,6 +209,7 @@ async fn event_loop(
     slash: XpdSlash,
     cache: Arc<InMemoryCache>,
     db: PgPool,
+    shutdown: CancellationToken
 ) {
     let event_flags = XpdListener::required_events()
         | XpdSlash::required_events()
@@ -208,7 +218,7 @@ async fn event_loop(
         | EventTypeFlags::MEMBER_REMOVE
         | EventTypeFlags::GUILD_DELETE
         | EventTypeFlags::GUILD_CREATE;
-    while let Some(next) = shard.next_event(event_flags).await {
+    while let Some(next) = next_event(&mut shard, event_flags, &shutdown).await {
         trace!(?next, "got new event");
         let event = match next {
             Ok(event) => event,
@@ -217,11 +227,6 @@ async fn event_loop(
                 continue;
             }
         };
-        if let Event::GatewayClose(Some(gc)) = &event {
-            if gc.code == 1000 {
-                break;
-            }
-        }
         let listener = listener.clone();
         let http = http.clone();
         let slash = slash.clone();
