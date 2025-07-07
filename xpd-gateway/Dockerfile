@@ -16,4 +16,6 @@ FROM debian:bookworm-slim AS runtime
 RUN apt-get update && apt-get install -y ca-certificates
 WORKDIR /app
 COPY --from=builder /app/target/release/xpd-gateway /usr/local/bin
+COPY xpd-card-resources xpd-card-resources
+
 ENTRYPOINT ["/usr/local/bin/xpd-gateway"]
