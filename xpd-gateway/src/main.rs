@@ -4,32 +4,20 @@
 extern crate tracing;
 
 use std::{
-    collections::HashMap,
     env::VarError,
     process::{ExitCode, Termination},
     str::FromStr,
     sync::Arc,
 };
 
-use base64::{
-    Engine,
-    engine::{GeneralPurpose as Base64Engine, GeneralPurposeConfig as Base64Config},
-};
-use opentelemetry::KeyValue;
-use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::{LogExporter, WithExportConfig, WithHttpConfig};
-use opentelemetry_sdk::{Resource, logs::SdkLoggerProvider};
 use sqlx::PgPool;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
-use tracing::{Level, Metadata, error};
-use tracing_subscriber::{
-    Layer, Registry,
-    layer::{Context, Filter, SubscriberExt},
-    util::SubscriberInitExt,
-};
+use tracing::error;
+use tracing_subscriber::EnvFilter;
 use twilight_cache_inmemory::{InMemoryCache, InMemoryCacheBuilder};
 use twilight_gateway::{
-    error::ReceiveMessageError, CloseFrame, Config, Event, EventTypeFlags, Intents, MessageSender, Shard, StreamExt
+    CloseFrame, Config, Event, EventTypeFlags, Intents, MessageSender, Shard, StreamExt,
+    error::ReceiveMessageError,
 };
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
@@ -44,7 +32,9 @@ use xpd_util::LogError;
 
 #[tokio::main]
 async fn main() -> Result<(), SetupError> {
-    let tracer_shutdown = init_tracing()?;
+    tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
     info!(
         version = xpd_common::CURRENT_GIT_SHA,
         "Starting experienced!"
@@ -155,7 +145,7 @@ async fn main() -> Result<(), SetupError> {
             slash.clone(),
             cache.clone(),
             db.clone(),
-            shutdown.clone()
+            shutdown.clone(),
         ));
     }
 
@@ -184,15 +174,15 @@ async fn main() -> Result<(), SetupError> {
         .await
         .log_error("Could not shut down config updater");
 
-    if let Some(tracer) = tracer_shutdown {
-        tracer.shutdown()?;
-    }
-
     info!("Done, see ya!");
     Ok(())
 }
 
-async fn next_event(shard: &mut Shard, flags: EventTypeFlags, shutdown: &CancellationToken) -> Option<Result<Event, ReceiveMessageError>> {
+async fn next_event(
+    shard: &mut Shard,
+    flags: EventTypeFlags,
+    shutdown: &CancellationToken,
+) -> Option<Result<Event, ReceiveMessageError>> {
     tokio::select! {
         biased;
         _ = shutdown.cancelled() => None,
@@ -209,7 +199,7 @@ async fn event_loop(
     slash: XpdSlash,
     cache: Arc<InMemoryCache>,
     db: PgPool,
-    shutdown: CancellationToken
+    shutdown: CancellationToken,
 ) {
     let event_flags = XpdListener::required_events()
         | XpdSlash::required_events()
@@ -286,76 +276,6 @@ async fn handle_event(
     Ok(())
 }
 
-struct PrefixFilter;
-
-impl<S> Filter<S> for PrefixFilter {
-    fn enabled(&self, meta: &Metadata<'_>, _cx: &Context<'_, S>) -> bool {
-        *meta.level() >= Level::INFO || meta.module_path().is_some_and(|mp| mp.starts_with("xpd"))
-    }
-}
-
-fn init_tracing() -> Result<Option<SdkLoggerProvider>, SetupError> {
-    let logger = get_var_opt("OTLP_ENDPOINT")?
-        .map(|v| make_otlp(&v))
-        .transpose()?;
-
-    let layer = logger
-        .as_ref()
-        .map(OpenTelemetryTracingBridge::new)
-        .map(|v| v.with_filter(PrefixFilter));
-    let fmt = tracing_subscriber::EnvFilter::from_default_env();
-
-    // Use the tracing subscriber `Registry`, or any other subscriber
-    // that impls `LookupSpan`
-    Registry::default().with(fmt).with(layer).init();
-    Ok(logger)
-}
-
-fn make_otlp(endpoint: &str) -> Result<SdkLoggerProvider, SetupError> {
-    let svc_name = Resource::builder()
-        .with_attribute(KeyValue::new(
-            opentelemetry_semantic_conventions::resource::SERVICE_NAME,
-            env!("CARGO_PKG_NAME"),
-        ))
-        .build();
-
-    let headers = make_otlp_headers()?;
-
-    let exporter = LogExporter::builder()
-        .with_http()
-        .with_endpoint(endpoint)
-        .with_headers(headers)
-        .with_http_client(reqwest::blocking::Client::new())
-        .build()?;
-
-    // Create a new OpenTelemetry trace pipeline that prints to stdout
-    Ok(SdkLoggerProvider::builder()
-        .with_resource(svc_name)
-        .with_batch_exporter(exporter)
-        .build())
-}
-
-fn make_otlp_headers() -> Result<HashMap<String, String>, SetupError> {
-    let Some(username) = get_var_opt("OTLP_BASIC_USERNAME")? else {
-        return Ok(HashMap::new());
-    };
-
-    let password = get_var_opt("OTLP_BASIC_PASSWORD")?.ok_or_else(|| {
-        SetupError::ReliantEnv(
-            "OTLP_BASIC_PASSWORD".to_owned(),
-            "OTLP_BASIC_USERNAME".to_owned(),
-        )
-    })?;
-
-    const B64_ENGINE: Base64Engine =
-        Base64Engine::new(&base64::alphabet::URL_SAFE, Base64Config::new());
-
-    let basic_string = B64_ENGINE.encode(format!("{username}:{password}"));
-    let mut out_map = HashMap::new();
-    out_map.insert("Authorization".to_string(), format!("Basic {basic_string}"));
-    Ok(out_map)
-}
-
 fn get_var_opt(name: &str) -> Result<Option<String>, SetupError> {
     let value = std::env::var(name);
     match value {
@@ -407,10 +327,6 @@ pub enum SetupError {
     ReliantEnv(String, String),
     #[error("Could not parse environment variable {0}: {1}")]
     FromStr(String, Box<dyn std::error::Error>),
-    #[error("Failed to build logger: {0}")]
-    OtelSetup(#[from] opentelemetry_otlp::ExporterBuildError),
-    #[error("Failed to build logger SDK: {0}")]
-    OtelSdk(#[from] opentelemetry_sdk::error::OTelSdkError),
     #[error("Failed to build database client: {0}")]
     DatabaseConnect(#[from] sqlx::Error),
     #[error("Failed to run database migrations: {0}")]
