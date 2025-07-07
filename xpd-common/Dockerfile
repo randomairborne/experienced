@@ -1,16 +1,17 @@
-FROM rust:alpine AS builder
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
+WORKDIR /app
 
-RUN apk add musl-dev git
-
-WORKDIR /build
-
+FROM chef AS planner
 COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-ENV SQLX_OFFLINE=1
-RUN cargo build --release --package xpd-common
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+COPY . .
+RUN cargo build --release
 
-FROM alpine:latest
-
-COPY --from=builder /build/target/release/print-versions /usr/bin/print-versions
-
-ENTRYPOINT [ "/usr/bin/print-versions" ]
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+COPY --from=builder /app/target/release/print-versions /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/print-versions"]
