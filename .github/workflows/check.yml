@@ -28,6 +28,9 @@ jobs:
 
       - name: Correct ownership information
         run: chown root:root .
+        
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Run tests
         run: cargo test --all
@@ -42,6 +45,9 @@ jobs:
     steps:
       - name: Check out code into the proper directory
         uses: actions/checkout@v4
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Install cargo
         uses: dtolnay/rust-toolchain@stable
