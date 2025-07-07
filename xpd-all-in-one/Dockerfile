@@ -6,6 +6,8 @@ FROM ghcr.io/randomairborne/experienced-setcommands:${TAG} AS setcommands
 
 FROM debian:bookworm-slim
 
+RUN apt-get update && apt-get install -y ca-certificates
+
 WORKDIR /var/experienced
 
 COPY --from=gateway /usr/local/bin/xpd-gateway /usr/local/bin/xpd-gateway
