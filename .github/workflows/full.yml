@@ -38,7 +38,7 @@ jobs:
             name: xpd-setcommands
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -90,7 +90,7 @@ jobs:
             name: xpd-setcommands
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download digests
         uses: actions/download-artifact@v4
@@ -126,7 +126,7 @@ jobs:
     needs: [merge]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
