@@ -62,7 +62,10 @@ impl Interpolation {
     /// interpolation values from. Said values *must* be strings.
     /// # Errors
     /// If an interpolation value is not found, it is added to the [`RenderError`].
-    pub fn try_render(&self, args: &HashMap<Cow<str>, Cow<str>>) -> Result<String, RenderError> {
+    pub fn try_render<'a>(
+        &'a self,
+        args: &HashMap<Cow<str>, Cow<str>>,
+    ) -> Result<String, RenderError<'a>> {
         let mut output = self.output_string();
         for (raw, interpolation_key) in &self.parts {
             output.push_str(raw);
