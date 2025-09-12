@@ -3,7 +3,7 @@
 set -e
 
 echo "Setting bot commands"
-/usr/bin/xpd-setcommands
+xpd-setcommands
 echo "Starting bot"
-/usr/bin/xpd-gateway
+xpd-gateway
 echo "Bot shut down"
