@@ -35,8 +35,7 @@ pub fn autocomplete_inner(
 ) -> Result<XpdInteractionResponse, Error> {
     debug!(options = ?data, "Got autocomplete");
     let choices = match data.name.as_str() {
-        "card" => card_autocomplete(data, state)?.into_iter(),
-        "guild-card" => card_autocomplete(data, state)?.into_iter(),
+        "card" | "guild-card" => card_autocomplete(data, state)?.into_iter(),
         _ => return Err(Error::NoAutocompleteForCommand),
     };
 
