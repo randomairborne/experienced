@@ -199,7 +199,7 @@ impl InnerSvgState {
                 resolve_string,
             },
             image_rendering: ImageRendering::OptimizeSpeed,
-            font_family: context.customizations.font.to_string(),
+            font_family: context.customizations.font.clone(),
             fontdb: self.fontdb.clone(),
             ..Default::default()
         };
