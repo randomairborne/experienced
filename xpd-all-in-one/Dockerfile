@@ -4,7 +4,7 @@ FROM ghcr.io/randomairborne/experienced-gateway:${TAG} AS gateway
 ARG TAG=latest
 FROM ghcr.io/randomairborne/experienced-setcommands:${TAG} AS setcommands
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 RUN apt-get update && apt-get install -y ca-certificates
 

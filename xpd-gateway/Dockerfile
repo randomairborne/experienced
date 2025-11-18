@@ -12,7 +12,7 @@ COPY . .
 ENV SQLX_OFFLINE=true
 RUN cargo build --release
 
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim
 RUN apt-get update && apt-get install -y ca-certificates
 WORKDIR /app
 COPY --from=builder /app/target/release/xpd-gateway /usr/local/bin
