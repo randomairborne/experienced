@@ -13,7 +13,7 @@ build = "build.rs"
 [dependencies]
 # twilight
 twilight-gateway = { version = "0.16", default-features = false }
-twilight-cache-inmemory = "0.16"
+twilight-cache-inmemory = "0.17"
 twilight-model = "0.16"
 
 # serialize / deserialize
