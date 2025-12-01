@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 twilight-interactions = "0.16"
-twilight-validate = "0.16"
+twilight-validate = "0.17"
 twilight-model = "0.16"
 
 xpd-rank-card = { workspace = true }

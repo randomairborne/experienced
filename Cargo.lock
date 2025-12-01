@@ -3619,7 +3619,7 @@ dependencies = [
  "bitflags 2.10.0",
  "dashmap",
  "serde",
- "twilight-model",
+ "twilight-model 0.16.0",
  "twilight-util",
 ]
 
@@ -3641,7 +3641,7 @@ dependencies = [
  "tracing",
  "twilight-gateway-queue",
  "twilight-http",
- "twilight-model",
+ "twilight-model 0.16.0",
 ]
 
 [[package]]
@@ -3675,8 +3675,8 @@ dependencies = [
  "tokio",
  "tracing",
  "twilight-http-ratelimiting",
- "twilight-model",
- "twilight-validate",
+ "twilight-model 0.16.0",
+ "twilight-validate 0.16.0",
 ]
 
 [[package]]
@@ -3696,7 +3696,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f04837fa6d36de8c1446dd314095bcdc59a7c8021bf0dbf1dd0a846f1c146244"
 dependencies = [
  "twilight-interactions-derive",
- "twilight-model",
+ "twilight-model 0.16.0",
 ]
 
 [[package]]
@@ -3724,13 +3724,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "twilight-model"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "416247a86048c1909954c95c64ca4c7fbbcb44c36e9cbed8c008e7e40988f610"
+dependencies = [
+ "bitflags 2.10.0",
+ "serde",
+ "serde-value",
+ "serde_repr",
+ "time",
+]
+
+[[package]]
 name = "twilight-util"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5777d71286611c1639021f5f6e6b40300eb8da278449ac1cf6da01c94053425"
 dependencies = [
- "twilight-model",
- "twilight-validate",
+ "twilight-model 0.16.0",
+ "twilight-validate 0.16.0",
 ]
 
 [[package]]
@@ -3739,7 +3752,16 @@ version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f8d106028ede53708526364b03318bbf846babe146e3ff9e39821a0ca25ff4"
 dependencies = [
- "twilight-model",
+ "twilight-model 0.16.0",
+]
+
+[[package]]
+name = "twilight-validate"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6a27472e023e3841d1c4e4e20253ed796e8440aada8b5205b8544f1172e661d"
+dependencies = [
+ "twilight-model 0.17.0",
 ]
 
 [[package]]
@@ -4485,7 +4507,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
- "twilight-model",
+ "twilight-model 0.16.0",
  "valk-utils",
  "xpd-common",
  "xpd-database",
@@ -4500,7 +4522,7 @@ dependencies = [
  "strum_macros",
  "twilight-cache-inmemory",
  "twilight-gateway",
- "twilight-model",
+ "twilight-model 0.16.0",
 ]
 
 [[package]]
@@ -4512,7 +4534,7 @@ dependencies = [
  "sqlx",
  "tokio-stream",
  "tracing",
- "twilight-model",
+ "twilight-model 0.16.0",
  "xpd-common",
 ]
 
@@ -4530,8 +4552,8 @@ dependencies = [
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
- "twilight-model",
- "twilight-validate",
+ "twilight-model 0.16.0",
+ "twilight-validate 0.17.0",
  "vss",
  "xpd-common",
  "xpd-database",
@@ -4554,7 +4576,7 @@ dependencies = [
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
- "twilight-model",
+ "twilight-model 0.16.0",
  "xpd-common",
  "xpd-database",
  "xpd-util",
@@ -4583,7 +4605,7 @@ dependencies = [
  "tokio",
  "tracing-subscriber",
  "twilight-http",
- "twilight-model",
+ "twilight-model 0.16.0",
  "valk-utils",
  "xpd-common",
  "xpd-slash-defs",
@@ -4610,7 +4632,7 @@ dependencies = [
  "twilight-gateway",
  "twilight-http",
  "twilight-interactions",
- "twilight-model",
+ "twilight-model 0.16.0",
  "twilight-util",
  "xpd-common",
  "xpd-database",
@@ -4624,8 +4646,8 @@ name = "xpd-slash-defs"
 version = "0.1.0"
 dependencies = [
  "twilight-interactions",
- "twilight-model",
- "twilight-validate",
+ "twilight-model 0.16.0",
+ "twilight-validate 0.17.0",
  "xpd-common",
  "xpd-rank-card",
 ]
@@ -4637,7 +4659,7 @@ dependencies = [
  "thiserror 2.0.17",
  "tracing",
  "twilight-cache-inmemory",
- "twilight-model",
+ "twilight-model 0.16.0",
  "xpd-common",
 ]
 
