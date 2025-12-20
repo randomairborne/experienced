@@ -60,7 +60,8 @@ async fn process_levels_config(
     guild_id: Id<GuildMarker>,
     options: ConfigCommandLevels,
 ) -> Result<String, Error> {
-    if let Some(interp_template) = options.level_up_message.as_ref() {
+    let level_up_message = options.level_up_message.map(|s| s.replace("\\n", "\n"));
+    if let Some(interp_template) = level_up_message.as_ref() {
         if interp_template.len() > 512 {
             return Err(Error::LevelUpMessageTooLong);
         }
@@ -85,7 +86,7 @@ async fn process_levels_config(
     let message_cooldown = safecast_to_i16(options.message_cooldown)?;
 
     let new_cfg = UpdateGuildConfig {
-        level_up_message: options.level_up_message,
+        level_up_message,
         level_up_channel: options.level_up_channel.map(|v| v.id),
         ping_users: options.ping_users,
         max_xp_per_message,
