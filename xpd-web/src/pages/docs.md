@@ -28,6 +28,8 @@ You can use the variables by surounding their names in curly brackets, like so:
 `{user_mention} has leveled up to level {level}!`.
 The level-up channel may only be enabled if the level-up message is set.
 
+Newlines can be added to the level up message by using the escape code `\n`.
+
 ### Rewards Configuration
 
 The boolean `one_at_a_time` determines if a user is given all the reward roles they have earned, or only the highest
