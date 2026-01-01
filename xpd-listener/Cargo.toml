@@ -11,7 +11,7 @@ keywords = ["discord-bot", "mee6"]
 
 [dependencies]
 twilight-http = { version = "0.16", features = ["hickory", "rustls-native-roots", "rustls-aws_lc_rs"] }
-twilight-cache-inmemory = { version = "0.16", features = ["permission-calculator"] }
+twilight-cache-inmemory = { version = "0.17", features = ["permission-calculator"] }
 twilight-gateway = { version = "0.16", default-features = false }
 twilight-model = "0.16"
 
