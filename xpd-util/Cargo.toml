@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 twilight-cache-inmemory = { version = "0.16", features = ["permission-calculator"] }
-twilight-model = "0.16"
+twilight-model = "0.17"
 
 xpd-common = { workspace = true }
 

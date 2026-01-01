@@ -14,7 +14,7 @@ build = "build.rs"
 # twilight
 twilight-gateway = { version = "0.16", default-features = false }
 twilight-cache-inmemory = "0.16"
-twilight-model = "0.16"
+twilight-model = "0.17"
 
 # serialize / deserialize
 serde = { version = "1", features = ["derive"] }

@@ -16,7 +16,7 @@ twilight-gateway = { version = "0.16", features = ["rustls-native-roots", "rustl
 twilight-http = { version = "0.16", features = ["hickory", "rustls-native-roots", "rustls-aws_lc_rs"] }
 twilight-cache-inmemory = "0.16"
 twilight-validate = "0.16"
-twilight-model = "0.16"
+twilight-model = "0.17"
 
 # datafetchers
 reqwest = { version = "0.12", features = ["json", "rustls-tls-native-roots", "hickory-dns"], default-features = false }

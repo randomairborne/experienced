@@ -11,6 +11,6 @@ xpd-common = { workspace = true }
 tracing-subscriber = "0.3"
 
 twilight-http = { version = "0.16", features = ["hickory", "rustls-native-roots", "rustls-aws_lc_rs"] }
-twilight-model = "0.16"
+twilight-model = "0.17"
 
 valk-utils = "0.1"
