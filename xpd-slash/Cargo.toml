@@ -16,7 +16,7 @@ twilight-http = { version = "0.16", features = ["hickory", "rustls-native-roots"
 twilight-cache-inmemory = { version = "0.16", features = ["permission-calculator"] }
 twilight-gateway = { version = "0.16", default-features = false }
 twilight-util = { version = "0.16", features = ["builder"] }
-twilight-interactions = "0.16"
+twilight-interactions = "0.17"
 twilight-model = "0.16"
 
 # tokio
