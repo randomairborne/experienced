@@ -10,10 +10,10 @@ categories = ["games"]
 keywords = ["discord-bot", "mee6"]
 
 [dependencies]
-twilight-http = { version = "0.16", features = ["hickory", "rustls-native-roots", "rustls-aws_lc_rs"] }
-twilight-cache-inmemory = { version = "0.16", features = ["permission-calculator"] }
-twilight-gateway = { version = "0.16", default-features = false }
-twilight-model = "0.16"
+twilight-http = { version = "0.17", features = ["hickory", "rustls-native-roots"] }
+twilight-cache-inmemory = { version = "0.17", features = ["permission-calculator"] }
+twilight-gateway = { version = "0.17", default-features = false }
+twilight-model = "0.17"
 
 # tokio
 tokio-util = { version = "0.7", features = ["rt"] }

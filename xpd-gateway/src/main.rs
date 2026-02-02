@@ -35,6 +35,11 @@ async fn main() -> Result<(), SetupError> {
     tracing_subscriber::FmtSubscriber::builder()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
+
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .unwrap();
+
     info!(
         version = xpd_common::CURRENT_GIT_SHA,
         "Starting experienced!"

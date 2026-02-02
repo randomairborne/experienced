@@ -74,10 +74,10 @@ pub enum Error {
     PageDoesNotExist,
     #[error("This modal did not contain any action rows!")]
     NoModalActionRow,
-    #[error("This modal did not contain the required form field!")]
-    NoFormField,
-    #[error("This modal did not contain the required form data!")]
-    NoDestinationInComponent,
+    #[error("This modal did not contain the required form label!")]
+    NoFormLabel,
+    #[error("This modal did not contain the required form input element!")]
+    NoFormInput,
     #[error("HTTP body error!")]
     RawHttpBody,
     #[error("That would make this user's XP negative!")]

@@ -5,6 +5,7 @@ use twilight_model::{
         attachment::Attachment,
         interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
     },
+    poll::Poll,
 };
 use twilight_util::builder::embed::EmbedBuilder;
 #[derive(Debug, Clone)]
@@ -51,6 +52,7 @@ pub struct XpdInteractionData {
     pub flags: Option<MessageFlags>,
     pub title: Option<String>,
     pub tts: Option<bool>,
+    pub poll: Option<Poll>,
     /// If this is set, the response will not be sent at all.
     pub inhibit: bool,
 }
@@ -239,6 +241,7 @@ impl From<XpdInteractionData> for InteractionResponseData {
             flags: value.flags,
             title: value.title,
             tts: value.tts,
+            poll: value.poll,
         }
     }
 }
@@ -256,6 +259,7 @@ impl From<InteractionResponseData> for XpdInteractionData {
             flags: value.flags,
             title: value.title,
             tts: value.tts,
+            poll: value.poll,
             inhibit: false,
         }
     }

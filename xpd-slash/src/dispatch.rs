@@ -98,7 +98,7 @@ pub async fn process(
             .await
         }
         InteractionData::ModalSubmit(mid) => {
-            process_modal_submit(mid, guild_id.ok_or(Error::NoGuildId)?, state).await
+            process_modal_submit(*mid, guild_id.ok_or(Error::NoGuildId)?, state).await
         }
         _ => Err(Error::NoInteractionData),
     }

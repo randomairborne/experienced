@@ -2,13 +2,14 @@ use std::{convert::TryInto, fmt::Write};
 
 use twilight_model::{
     application::interaction::{
-        message_component::MessageComponentInteractionData, modal::ModalInteractionData,
+        message_component::MessageComponentInteractionData,
+        modal::{ModalInteractionComponent, ModalInteractionData, ModalInteractionLabel},
     },
     channel::{
         Message,
         message::{
             AllowedMentions, Component, EmojiReactionType, MessageFlags,
-            component::{ActionRow, Button, ButtonStyle, TextInput, TextInputStyle},
+            component::{ActionRow, Button, ButtonStyle, Label, TextInput, TextInputStyle},
         },
     },
     http::interaction::{InteractionResponse, InteractionResponseType},
@@ -102,6 +103,7 @@ async fn gen_leaderboard(
 
     let components = Component::ActionRow(ActionRow {
         components: components.to_vec(),
+        id: None,
     });
 
     Ok(XpdInteractionData::new()
@@ -121,6 +123,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             style: ButtonStyle::Secondary,
             url: None,
             sku_id: None,
+            id: None,
         },
         Button {
             custom_id: Some((zpage - 1).to_string()),
@@ -132,6 +135,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             style: ButtonStyle::Primary,
             url: None,
             sku_id: None,
+            id: None,
         },
         Button {
             custom_id: Some("jump_modal".to_string()),
@@ -141,6 +145,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             style: ButtonStyle::Primary,
             url: None,
             sku_id: None,
+            id: None,
         },
         Button {
             custom_id: Some((zpage + 1).to_string()),
@@ -152,6 +157,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             style: ButtonStyle::Primary,
             url: None,
             sku_id: None,
+            id: None,
         },
         Button {
             custom_id: Some("delete_leaderboard".to_string()),
@@ -163,6 +169,7 @@ fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
             style: ButtonStyle::Danger,
             url: None,
             sku_id: None,
+            id: None,
         },
     ]
     .map(Component::Button)
@@ -174,13 +181,15 @@ pub async fn process_modal_submit(
     state: SlashState,
 ) -> Result<XpdInteractionResponse, Error> {
     // You can't get this modal unless you are the triggering user
-    let actions = data.components.first().ok_or(Error::NoModalActionRow)?;
-    let field = actions.components.first().ok_or(Error::NoFormField)?;
-    let choice: i64 = field
-        .value
-        .as_ref()
-        .ok_or(Error::NoDestinationInComponent)?
-        .parse()?;
+    let ModalInteractionComponent::Label(ModalInteractionLabel { id: _id, component }) =
+        data.components.first().ok_or(Error::NoModalActionRow)?
+    else {
+        return Err(Error::NoFormLabel);
+    };
+    let ModalInteractionComponent::TextInput(field) = component.as_ref() else {
+        return Err(Error::NoFormInput);
+    };
+    let choice: i64 = field.value.parse()?;
     let zpage = choice - 1;
     Ok(XpdInteractionResponse::new(
         InteractionResponseType::UpdateMessage,
@@ -206,27 +215,29 @@ pub async fn process_message_component(
         return Err(Error::NotYourLeaderboard);
     }
     match data.custom_id.as_str() {
-        "jump_modal" => {
-            let input = TextInput {
-                custom_id: "jump_modal_input".to_string(),
-                label: "Jump Destination".to_string(),
-                max_length: Some(8),
-                min_length: Some(1),
-                placeholder: Some("What page to jump to".to_string()),
-                required: Some(true),
-                style: TextInputStyle::Short,
-                value: None,
-            };
-            Ok(XpdInteractionResponse::new(
-                InteractionResponseType::Modal,
-                XpdInteractionData::new()
-                    .components([Component::ActionRow(ActionRow {
-                        components: vec![Component::TextInput(input)],
-                    })])
-                    .custom_id("jump_modal".to_string())
-                    .title("Go to page..".to_string()),
-            ))
-        }
+        "jump_modal" => Ok(XpdInteractionResponse::new(
+            InteractionResponseType::Modal,
+            XpdInteractionData::new()
+                .components([Component::Label(Label {
+                    id: None,
+                    label: "Jump Destination".into(),
+                    description: None,
+                    component: Box::new(Component::TextInput(TextInput {
+                        custom_id: "jump_modal_input".to_string(),
+                        #[expect(deprecated)]
+                        label: None,
+                        max_length: Some(8),
+                        min_length: Some(1),
+                        placeholder: Some("What page to jump to".to_string()),
+                        required: Some(true),
+                        style: TextInputStyle::Short,
+                        value: None,
+                        id: None,
+                    })),
+                })])
+                .custom_id("jump_modal".to_string())
+                .title("Go to page..".to_string()),
+        )),
         "delete_leaderboard" => {
             let deferred_update = InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
