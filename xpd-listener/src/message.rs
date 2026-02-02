@@ -289,6 +289,8 @@ mod tests {
     fn member_with_roles(roles: impl Into<RoleList>) -> PartialMember {
         PartialMember {
             avatar: None,
+            avatar_decoration_data: None,
+            banner: None,
             communication_disabled_until: None,
             deaf: false,
             flags: MemberFlags::empty(),
