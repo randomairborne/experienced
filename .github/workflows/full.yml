@@ -66,7 +66,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: digests-${{ matrix.package.name }}-${{ matrix.platform.slug }}
           path: /tmp/digests/*
@@ -93,7 +93,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download digests
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: /tmp/digests
           pattern: digests-${{ matrix.package.name }}-*
