@@ -1,6 +1,6 @@
 use std::{borrow::Cow, collections::HashMap};
 
-use rand::Rng;
+use rand::RngExt as _;
 use twilight_model::{
     channel::message::AllowedMentions,
     gateway::payload::incoming::MessageCreate,
