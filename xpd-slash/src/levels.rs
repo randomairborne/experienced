@@ -223,7 +223,7 @@ impl AvatarReference {
                 "https://cdn.discordapp.com/guilds/{guild_id}/users/{user_id}/avatars/{avatar_hash}.png",
             ),
             Some(AvatarReferenceKind::User(avatar_hash)) => {
-                format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png",)
+                format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar_hash}.png")
             }
             None => format!(
                 "https://cdn.discordapp.com/embed/avatars/{}.png",

@@ -14,7 +14,7 @@ pub async fn process_audit_logs(
     let mut logs =
         xpd_database::get_audit_log_events(&state.db, guild_id, command.user, command.moderator)
             .await?;
-    logs.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+    logs.sort_by_key(|a| a.timestamp);
 
     let mut file = Vec::with_capacity(logs.len() * 128);
     {
