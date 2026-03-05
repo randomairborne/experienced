@@ -840,25 +840,18 @@ pub async fn get_active_user_guild_cleanups<
     Ok(output)
 }
 
-pub async fn get_leaderboard_page<
+pub async fn get_guild_leaderboard<
     'a,
     D: DerefMut<Target = PgConnection> + Send,
     A: Acquire<'a, Database = Postgres, Connection = D> + Send,
 >(
     conn: A,
     guild: Id<GuildMarker>,
-    limit: i64,
-    offset: i64,
 ) -> Result<Vec<UserStatus>, Error> {
     let mut conn = conn.acquire().await?;
-    let mut users = query!(
-        "SELECT * FROM levels WHERE guild = $1 ORDER BY (xp, id) DESC LIMIT $2 OFFSET $3",
-        id_to_db(guild),
-        limit,
-        offset
-    )
-    .fetch(conn.as_mut());
-    let mut output = Vec::with_capacity(limit.try_into().unwrap_or(10));
+    let mut users =
+        query!("SELECT * FROM levels WHERE guild = $1", id_to_db(guild),).fetch(conn.as_mut());
+    let mut output = Vec::with_capacity(1024);
     while let Some(rec) = users.next().await.transpose()? {
         let status = UserStatus {
             id: db_to_id(rec.id),

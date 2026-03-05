@@ -22,7 +22,7 @@ use twilight_gateway::{
 use twilight_http::Client as DiscordClient;
 use twilight_model::{
     channel::message::AllowedMentions,
-    gateway::ShardId,
+    gateway::{ShardId, payload::outgoing::request_guild_members::RequestGuildMembersBuilder},
     id::{Id, marker::GuildMarker},
 };
 use xpd_common::RequiredDiscordResources;
@@ -227,8 +227,9 @@ async fn event_loop(
         let slash = slash.clone();
         let db = db.clone();
         let cache = cache.clone();
+        let sender = shard.sender();
         task_tracker.spawn(async move {
-            handle_event(event, http, listener, slash, cache, db)
+            handle_event(event, http, listener, slash, cache, db, sender)
                 .await
                 .log_error("Handler error");
         });
@@ -242,6 +243,7 @@ async fn handle_event(
     slash: XpdSlash,
     cache: Arc<InMemoryCache>,
     db: PgPool,
+    shard: MessageSender,
 ) -> Result<(), Error> {
     cache.update(&event);
     match event {
@@ -264,6 +266,10 @@ async fn handle_event(
                 return Ok(());
             }
             xpd_database::delete_guild_cleanup(&db, guild_add.id()).await?;
+            let member_request = RequestGuildMembersBuilder::new(guild_add.id())
+                .presences(false)
+                .query("query", None);
+            shard.command(&member_request)?;
         }
         Event::GuildDelete(del) => {
             xpd_database::add_guild_cleanup(&db, del.id).await?;
@@ -316,6 +322,8 @@ pub enum Error {
     DeserializeBody(#[from] twilight_http::response::DeserializeBodyError),
     #[error("Postgres error: {0}")]
     Postgres(#[from] xpd_database::Error),
+    #[error("Channel error: {0}")]
+    Channel(#[from] twilight_gateway::error::ChannelError),
 }
 
 #[derive(Debug, thiserror::Error)]

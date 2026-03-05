@@ -18,6 +18,7 @@ use twilight_model::{
         marker::{GuildMarker, UserMarker},
     },
 };
+use xpd_common::UserStatus;
 use xpd_slash_defs::levels::LeaderboardCommand;
 
 use crate::{
@@ -40,56 +41,61 @@ pub async fn leaderboard(
     };
     Ok(XpdInteractionResponse::new(
         InteractionResponseType::ChannelMessageWithSource,
-        gen_leaderboard(&state, guild_id, zpage, guild_command.show_off).await?,
+        gen_leaderboard(
+            &state,
+            guild_id,
+            zpage.try_into().map_err(|_| Error::PageDoesNotExist)?,
+            guild_command.show_off,
+        )
+        .await?,
     ))
 }
 
-const USERS_PER_PAGE_USIZE: usize = 10;
-#[allow(clippy::cast_possible_wrap)]
-const USERS_PER_PAGE: i64 = USERS_PER_PAGE_USIZE as i64;
+const USERS_PER_PAGE: usize = 10;
 
 async fn gen_leaderboard(
     state: &SlashState,
     guild_id: Id<GuildMarker>,
-    zpage: i64,
+    zpage: usize,
     show_off: Option<bool>,
 ) -> Result<XpdInteractionData, Error> {
-    if zpage.is_negative() {
-        return Err(Error::PageDoesNotExist);
-    }
     let is_ephemeral = !(show_off.unwrap_or(true));
-    let users = xpd_database::get_leaderboard_page(
-        &state.db,
-        guild_id,
-        USERS_PER_PAGE + 1,
-        zpage * USERS_PER_PAGE,
-    )
+    let users_in_guild = xpd_database::get_guild_leaderboard(&state.db, guild_id).await?;
+    let cache = state.cache.clone();
+    let users = tokio::task::spawn_blocking(move || {
+        let mut users: Box<[UserStatus]> = users_in_guild
+            .into_iter()
+            .filter(|v| cache.member(guild_id, v.id).is_some())
+            .collect();
+        users.sort_by_key(|v| v.xp);
+        users
+    })
     .await?;
 
     if users.is_empty() {
-        return Err(if zpage == 0 {
-            Error::NoUsersForPage
-        } else {
-            Error::NoRanksYet
-        });
+        return Err(Error::NoRanksYet);
     }
 
-    let one_more_page_bro = users.len() >= (USERS_PER_PAGE_USIZE + 1);
-    let last_user_idx = users.len().clamp(0, USERS_PER_PAGE_USIZE);
-    let users = &users[0..last_user_idx];
+    let first_user_idx = zpage * USERS_PER_PAGE;
+    let last_user_idx = (first_user_idx + USERS_PER_PAGE).clamp(1, users.len()) - 1;
+    let next_page_exists = users.get(first_user_idx + USERS_PER_PAGE).is_some();
+
+    let Some(page_users) = users.get(first_user_idx..=last_user_idx) else {
+        return Err(Error::PageDoesNotExist);
+    };
+
     // this is kinda the only way to do this
     // It's designed to only allocate once, at the start here
     let mut description = String::with_capacity(256 + users.len() * 128);
     writeln!(description, "### Leaderboard")?;
-    for (i, user) in users.iter().enumerate() {
+    for (i, user) in page_users.iter().enumerate() {
         let level = mee6::LevelInfo::new(user.xp.try_into().unwrap_or(0)).level();
-        let rank: i64 = i
-            .try_into()
-            .map_or(-1, |v: i64| v + (zpage * USERS_PER_PAGE) + 1);
+        // first_user_idx is zero-indexed, so we need to add 1
+        let rank = first_user_idx + i + 1;
         writeln!(description, "**#{rank}.** <@{}> - Level {level}", user.id)?;
     }
 
-    let control_options = control_options(zpage, one_more_page_bro);
+    let control_options = control_options(zpage, next_page_exists);
 
     let (components, flags) = if is_ephemeral {
         let second_last_idx = control_options.len() - 2;
@@ -113,7 +119,7 @@ async fn gen_leaderboard(
         .flags(flags))
 }
 
-fn control_options(zpage: i64, next_page_exists: bool) -> [Component; 5] {
+fn control_options(zpage: usize, next_page_exists: bool) -> [Component; 5] {
     [
         Button {
             custom_id: Some("page_indicator".to_string()),
@@ -193,7 +199,13 @@ pub async fn process_modal_submit(
     let zpage = choice - 1;
     Ok(XpdInteractionResponse::new(
         InteractionResponseType::UpdateMessage,
-        gen_leaderboard(&state, guild_id, zpage, Some(true)).await?,
+        gen_leaderboard(
+            &state,
+            guild_id,
+            zpage.try_into().map_err(|_| Error::PageDoesNotExist)?,
+            Some(true),
+        )
+        .await?,
     ))
 }
 
@@ -259,7 +271,7 @@ pub async fn process_message_component(
             // when we create the buttons, we set next and previous's custom IDs to the current page
             // plus and minus 1. This means that we don't have to store which page which
             // message is on, because the component will tell us exactly where it wants to go!
-            let offset: i64 = offset_str.parse()?;
+            let offset: usize = offset_str.parse()?;
             let show_delete_btn = original_message
                 .flags
                 .is_none_or(|f| !f.contains(MessageFlags::EPHEMERAL));
