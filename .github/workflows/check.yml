@@ -8,6 +8,20 @@ jobs:
   cargo-tests:
     runs-on: ubuntu-latest
     container: rust:latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:latest
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Check out code into the proper directory
         uses: actions/checkout@v6
@@ -23,7 +37,7 @@ jobs:
         env:
           # this seems weird, but I don't want to run the migrations for the build, so we do the build offline and then
           # connect to the database for tests
-          DATABASE_URL: postgres://postgres:postgres@sqlx-postgres/postgres
+          DATABASE_URL: postgres://postgres:postgres@postgres/postgres
           SQLX_OFFLINE: true
 
   rust-clippy:
