@@ -126,7 +126,7 @@ impl XpdSlash {
 
 impl RequiredDiscordResources for XpdSlash {
     fn required_intents() -> Intents {
-        Intents::empty()
+        Intents::GUILD_MEMBERS
     }
 
     fn required_events() -> EventTypeFlags {

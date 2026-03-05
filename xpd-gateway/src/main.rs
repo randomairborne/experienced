@@ -268,7 +268,7 @@ async fn handle_event(
             xpd_database::delete_guild_cleanup(&db, guild_add.id()).await?;
             let member_request = RequestGuildMembersBuilder::new(guild_add.id())
                 .presences(false)
-                .query("query", None);
+                .query("", None);
             shard.command(&member_request)?;
         }
         Event::GuildDelete(del) => {
