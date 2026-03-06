@@ -130,7 +130,7 @@ impl RequiredDiscordResources for XpdSlash {
     }
 
     fn required_events() -> EventTypeFlags {
-        EventTypeFlags::INTERACTION_CREATE
+        EventTypeFlags::INTERACTION_CREATE | EventTypeFlags::MEMBER_CHUNK
     }
 
     fn required_cache_types() -> ResourceType {
