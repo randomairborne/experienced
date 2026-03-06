@@ -67,7 +67,7 @@ async fn gen_leaderboard(
             .into_iter()
             .filter(|v| cache.member(guild_id, v.id).is_some())
             .collect();
-        users.sort_by_key(|v| v.xp);
+        users.sort_unstable_by_key(|v| std::cmp::Reverse(v.xp));
         users
     })
     .await?;
