@@ -11,3 +11,5 @@ dump.sql
 /node_modules
 
 /rendered-cards/
+
+/db-data
